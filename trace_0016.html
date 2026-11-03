@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PixelWorld · Code Agent 行为 Trace</title>
+<style>
+:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a7b0bd;--accent:#a5ef83}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f2f5f7;font:15px/1.65 system-ui,-apple-system,sans-serif}a{color:#bdd9ff;text-decoration:none}main{max-width:1050px;margin:auto;padding:28px 22px 60px}
+nav{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:25px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.hero{margin-bottom:23px}.eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px}h1{font-size:34px;line-height:1.15;margin:0 0 10px;letter-spacing:-.7px}.lead{margin:0;color:var(--muted);max-width:760px}
+.layout{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:start}.box{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}.box h2{font-size:18px;margin:0}.boxhead{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.score{font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.screen{background:#090b0d}.screen canvas{display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated}.controls{padding:12px 14px;display:flex;gap:9px;align-items:center}.controls button{font:inherit;border:1px solid var(--accent);background:var(--accent);color:#152111;border-radius:8px;padding:8px 13px;cursor:pointer;font-weight:700}.controls input{flex:1;accent-color:var(--accent)}.time{color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}.phase{padding:0 14px 14px;color:var(--muted);font-size:13px}.phase strong{color:#f2f5f7}
+.prompt{padding:14px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.prompt strong{color:#f2f5f7}.code{margin:0 14px 14px;background:#0e1115;border:1px solid #29303a;border-radius:10px;padding:12px;overflow:auto;color:#dce7ef;font:11px/1.5 ui-monospace,monospace;white-space:pre}
+.trace{padding:10px 17px 16px}.step{display:grid;grid-template-columns:34px 1fr;gap:11px;padding:12px 0;border-bottom:1px solid #2b3139}.step:last-child{border-bottom:0}.num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#26302a;color:var(--accent);font-weight:800;font-size:12px}.step h3{font-size:14px;margin:1px 0 3px}.step p{color:var(--muted);font-size:12px;margin:0}.step code{color:#d8efcb}.timecode{color:#7f8b99;font-variant-numeric:tabular-nums;font-size:11px}.fix{color:#ffc377}.done{color:var(--accent)}
+.bottom{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px}.bottom h2{font-size:18px;margin:0 0 8px}.artifacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.artifacts span,.artifacts a{border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--muted);font-size:12px}.note{color:var(--muted);font-size:12px;margin:7px 0 0}
+@media(max-width:780px){.layout{grid-template-columns:1fr}h1{font-size:28px}main{padding:19px 13px 45px}}
+</style>
+</head>
+<body><main>
+<nav><a href="index.html">← 返回全部视频</a><span class="tag">Case 0016 · ball-in-sand</span></nav>
+<section class="hero"><p class="eyebrow">Observable Agent Trace</p><h1>Code Agent 是怎样生成这段像素视频的？</h1><p class="lead">这里只展示可以从文件和日志核验的行为，不展示或编造隐藏思维链。左边是实际输出，右边是 agent 从接任务到交付的完整动作序列。</p></section>
+
+<div class="layout">
+  <section class="box">
+    <div class="boxhead"><h2>最终像素视频</h2><span class="score">Physics-IQ 87.8134</span></div>
+    <div class="screen"><canvas id="screen" width="256" height="144"></canvas></div>
+    <div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="time" id="time">00 · 0.00s</span></div>
+    <div class="phase">当前帧：<strong id="phase">释放瞬间</strong></div>
+    <div class="prompt"><strong>输入文本：</strong>蓝黑夹具释放蓝色网球，球落到木桌上的绿色动力沙堆中。<br><strong>输入限制：</strong>只允许读取本例首帧与文本描述。</div>
+    <pre class="code">centers = [40.8, 60.0, 86.5, 94.0, 97.0,
+           96.0, 96.6, 96.8, 96.7, 96.7] + [96.7]*10
+
+for t in range(1, 20):
+    canvas = BASE.copy()
+    canvas = draw_contact_patch(canvas, impacts[t])
+    canvas = draw_new_ball_rgb(canvas, centers[t])
+    canvas = draw_front_sand_lip(canvas, impacts[t])
+    frames.append(to_uint8_rgb(canvas))</pre>
+  </section>
+
+  <section class="box">
+    <div class="boxhead"><h2>Agent 行为记录</h2><span class="timecode">总生成约 3分41秒</span></div>
+    <div class="trace">
+      <div class="step"><span class="num">1</span><div><span class="timecode">11:12:33 · fresh agent</span><h3>领取一个隔离 case</h3><p>新 agent <code>pixel_0016</code> 启动，只获得自己的 <code>first_frame.png</code>、<code>prompt.txt</code> 和公共保存规则。</p></div></div>
+      <div class="step"><span class="num">2</span><div><h3>实际打开首帧并测量</h3><p>记录球中心约 (135.5, 41)、半径约 15.5；沙堆范围约 x=89..181、y=84..126；判断主光源在左上方。</p></div></div>
+      <div class="step"><span class="num">3</span><div><h3>先写 20 帧事件表</h3><p>规划“释放 → 下落 → 触沙 → 入沙 → 最深 → 弱回弹 → 沉降 → 静止”，再开始写生成代码。</p></div></div>
+      <div class="step"><span class="num">4</span><div><h3>从零编写 <code>generate.py</code></h3><p>代码重算球的椭圆轮廓、青蓝毛毡、弯曲接缝、阴影、沙坑和前侧沙唇；没有移动首帧里的球贴图。</p></div></div>
+      <div class="step"><span class="num">5</span><div><h3>执行程序并输出像素</h3><p>生成 20 张 256×144 RGB PNG，同时打包为 <code>uint32[144,256,20]</code> 的 <code>0xRRGGBB</code> 像素张量。</p></div></div>
+      <div class="step"><span class="num">6</span><div><h3>打开检查图，自行找问题</h3><p>查看 00/01/02 和 8 个关键时点。<span class="fix">发现球离开后，夹具的蓝色被错误插值进灰墙。</span></p></div></div>
+      <div class="step"><span class="num">7</span><div><h3>修改代码并重新生成</h3><p>排除夹具边缘像素，用同一行两侧墙色修补背景；再次打开检查图，确认无蓝色残影、第二个球或浮空。</p></div></div>
+      <div class="step"><span class="num">8</span><div><span class="timecode">11:16:13 交付 · 11:17:00 根审通过</span><h3 class="done">保存、校验、接受</h3><p>PNG 与像素张量逐像素一致，00 与输入完全一致；根审确认沙唇遮住球底、弱回弹后稳定。</p></div></div>
+    </div>
+  </section>
+</div>
+
+<section class="bottom"><h2>这条 trace 最重要的信息</h2><p class="note">Agent 不是在调用一个视频模型。它先把视觉场景转成坐标、事件和绘制规则，再由 Python 程序为每个时刻计算整张 RGB 数组。生成、查看、发现问题、改代码、重新生成，构成了一个小型的视觉 coding loop。</p><div class="artifacts"><a href="cases/0016_METHOD.md" target="_blank">METHOD.md ↗</a><span>generate.py SHA: a443289b…</span><span>pixels.npz SHA: 3ec2340a…</span><span>20 帧 · 4 fps · 5 秒</span></div></section>
+</main>
+<script>
+'use strict';
+const W=256,H=144,N=20,ASSET='assets/0016-2442a691bfd3.png';
+const phases=['释放瞬间','自由下落','首次触沙','继续入沙','最大入沙深度','弱回弹','碎沙回落','轮廓恢复','沙边安定','最终姿态',...Array(10).fill('完全静止')];
+const canvas=document.getElementById('screen'),ctx=canvas.getContext('2d',{willReadFrequently:true}),seek=document.getElementById('seek'),play=document.getElementById('play');ctx.imageSmoothingEnabled=false;const imageData=ctx.createImageData(W,H);let frames=[],frame=0,timer=null,playing=false;
+function render(){imageData.data.set(frames[frame]);ctx.putImageData(imageData,0,0);seek.value=frame;document.getElementById('time').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s';document.getElementById('phase').textContent=phases[frame]}
+function stop(){playing=false;clearInterval(timer);play.textContent='▶ 播放'}
+function toggle(){if(playing){stop();return}playing=true;play.textContent='❚❚ 暂停';timer=setInterval(()=>{frame=(frame+1)%N;render()},250)}
+play.onclick=toggle;seek.oninput=()=>{stop();frame=+seek.value;render()};
+const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}render();window.__traceReady=true};im.src=ASSET;
+</script>
+</body></html>
