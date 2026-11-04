@@ -1,0 +1,33 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GPT-5.6-Sol · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0016</span></nav><article><h1>GPT-5.6-Sol · 生成方法</h1><h2>方法</h2>
+<ul>
+<li>使用 <code>first_frame.png</code> 作为锁定机位的静态摄影底图；第 00 帧直接复制输入数组，因此与输入逐像素一致。</li>
+<li>对第 01–19 帧，仅在首帧中球和夹具的原遮挡区域建立手工轮廓遮罩，并以 OpenCV Telea 邻域插值恢复暖灰色墙面。桌面、木纹、桌沿透视和原始沙堆主体均保留，不做相机运动或整体重绘。</li>
+<li>夹具由二维多边形逐帧重画：外层深色包边、蓝色内层与窄高光分别计算；释放后爪尖外张并向画外回缩，五帧后保持固定。</li>
+<li>球由二维隐式椭圆逐像素生成，而不是裁剪首帧平移。每帧重新计算轮廓抗锯齿、球面法线光照、左上高光、右下暗边、细微表面噪声、旋转缝线和接触压扁。球心采用手工阻尼轨迹：重力下落、首次压入、一次低幅回弹、二次接触并稳定。</li>
+<li>沙堆保留首帧的真实细碎基底，同时逐帧增加接近阴影、凹坑、左右隆起、前侧包覆唇和确定性颗粒抛物线。绘制次序为后方凹坑/颗粒、球、前侧沙唇，使沙粒正确遮住球的下缘。</li>
+<li>颗粒轨迹是手写二维抛物线；未使用物理引擎、三维渲染器、外部模型或网络资源。</li>
+<li>第 14 帧之后冻结球面相位和沙唇随机种子，使第 14–19 帧逐像素相同，明确表达阻尼后完全静止。</li>
+</ul>
+<h2>实际查看与修复</h2>
+<ul>
+<li>实际查看了 <code>inspection.png</code> 中的 00、02、05、08、11、14、17、19 八个时间点。</li>
+<li>实际查看了 <code>transition_check.png</code>：其中包含 00/01/02 的放大对比，03/04/05/07 的首次接触、最大压入、回弹和二次接触，以及 09/12/16/19 的嵌入遮挡特写。</li>
+<li>第一轮发现第 01 帧起球体比输入球更饱和，构成材质跳变。随后用首帧球心采样值校准程序球体通道偏移，使球心颜色接近 <code>RGB (33,110,142)</code> 后重新生成并复查。</li>
+<li>第二轮未发现残影、重复球体、浮空、桌面涂抹或明显尺寸突变；但发现终态程序纹理仍随帧变化，可能在播放时形成轻微闪烁。随后冻结第 14 帧后的球纹理、旋转和沙唇颗粒布局，再次生成并复查最终检查图。</li>
+<li>最终接触关键帧中，球底部始终由前侧绿色沙唇遮挡；球回弹帧仍通过收紧的接触阴影与堆顶保持空间关系。</li>
+</ul>
+<h2>校验</h2>
+<ul>
+<li>已确认 <code>frames/00.png</code> 至 <code>frames/19.png</code> 共 20 张，均为 256×144 RGB PNG。</li>
+<li>已确认 <code>frames/00.png</code> 与 <code>first_frame.png</code> 逐像素相等。</li>
+<li>已确认 <code>pixels.npz</code> 的 <code>pixels</code> 为 <code>uint32 (144,256,20)</code>，颜色编码为 <code>0xRRGGBB</code>，且从 20 张 PNG 重新打包后的张量逐元素一致。</li>
+<li>已确认第 14–19 帧逐像素相同，终态无程序性闪烁。</li>
+<li><code>index.html</code> 为独立播放器，按 4 fps 播放 20 帧，总时长 5 秒。</li>
+</ul>
+<h2>剩余局限</h2>
+<ul>
+<li>输入只有单帧，夹具被画面上缘截断，因此后续只能忠实延续可见的两条钳臂，无法推断画外机械结构。</li>
+<li>首帧球体带有摄影柔焦；程序化后续球体的轮廓稍清晰。已通过颜色校准和抗锯齿降低跳变，但仍保留轻微清晰度差异。</li>
+<li>沙堆变形为二维视觉近似，细颗粒数量受到 256×144 分辨率限制；设计上选择少量可读颗粒，避免在低帧率下形成噪点闪烁。</li>
+</ul>
+</article></main></body></html>
