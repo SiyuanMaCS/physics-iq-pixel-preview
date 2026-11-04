@@ -1,0 +1,86 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Seed-2.1-Pro-0915 vision-agent</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>METHOD</h1>
+<h2>Inspection modality actually used</h2>
+<ul>
+<li><strong>Visual</strong>: direct image-tool reading of <code>first_frame.png</code>, of 4×–8×
+nearest-neighbour crop enlargements with coordinate grids (ball/grabber and
+sand regions), and of my own generated evidence: ball-vs-source comparison
+strips, the all-20-frames contact sheet, <code>transition_check.png</code>, zoomed
+fall/impact/rest crops, and <code>inspection.png</code>.</li>
+<li><strong>Numeric</strong>: RGB sampling on pixel rows/columns, HSV-like threshold masks and
+connected-component stats for ball/sand/grabber bounds, quadratic wall-model
+residuals, per-frame difference maps against the static plate, mask bounding
+boxes, mean/percentile colour stats, and tensor/PNG equality checks.</li>
+<li>No external images, reference videos, networks, learned weights, physics
+engines, 3D scenes, or meshes were used.</li>
+</ul>
+<h2>What was built</h2>
+<p><code>generate.py</code> produces 20 × 256×144 RGB frames at 4 fps and saves them through
+<code>artifact_io.save</code> (plus <code>transition_check.png</code>).</p>
+<ol>
+<li><strong>Static plate.</strong> Frame 0 is kept byte-identical. For later frames a
+background plate is built once: the ball and its motion-blur halo are
+detected as deviations from a quadratic RGB fit of the plain wall (plus a
+teal-tint test), grabber pixels are spatially protected, and the hole is
+feather-filled with the wall model plus real micro-texture sampled only from
+neighbouring pixels that are themselves verified clean wall. Wall, table,
+sand pile and the blue/black grabber are otherwise untouched and stay
+pixel-static (verified: 0 delta in far wall/table regions; frames 10–19 are
+byte-identical).</li>
+<li><strong>Ball (fully recomputed per frame, 4× supersampled).</strong> Ellipsoid disk with
+analytic front-face normal, Lambert+wrap shading from an upper-front-right
+key light matched to frame 0 (shadow teal ~(15,78,108), lit ~(47,120,153)),
+lower-hemisphere blue-teal occlusion, grazing darkening, low-amplitude felt
+mottle/grain, two projected tennis-seam arcs (thin lit streak + faint
+groove, attenuated at the limb), and a soft irregular felt silhouette with
+sparse fuzz hairs. Spin rotates the seams while falling. Motion blur is
+temporal: 6–12 premultiplied sub-samples across a ~0.12 s shutter. Impact
+squash (1.10×/0.88) and a smaller re-contact squash are included.</li>
+<li><strong>Physics (2D, screen scale).</strong> y = 38.5 + 15t + 27.5t² for the fall
+(contact at frame 5, v≈84 px/s), one small ~4 px rebound on frames 6–7,
+re-seating on frame 9, rest from frame 10 at center y=101.</li>
+<li><strong>Sand.</strong> Largest connected green component defines the pile with a soft
+alpha. Impact creates an elliptical crater via a radial remap (inward
+texture compression + rim push), cavity darkening (strongest under the
+ball), and a lit granular front rim; amplitude evolves 0.75 (impact) →
+1.0 (while the ball is airborne) → 0.85 retained. A soft shadow on the sand
+tightens/darkens as the ball approaches; a thin contact shadow is drawn at
+impact/rest. Eighteen small deterministic grains eject from the contact
+ring on ballistic arcs and disappear by frame 9. The embedded ball gets an
+irregular granular sand crescent wrapping its lower sides (texture sampled
+from the photographed pile, patchy clod highlights).</li>
+</ol>
+<h2>Revisions made after visual inspection</h2>
+<ol>
+<li>First inpainting attempts left ball-coloured ghosts (Telea bleed /
+incorrect mask that deleted ball core while protecting grabber colours);
+fixed with a spatial grabber-protection mask, full-interior fill, feathered
+wall-model fill, and validated clean-wall texture sources.</li>
+<li>Ball sprite initially leaked a faint alpha rectangle (alpha baseline bug),
+was too bright/cyan with strong yin-yang seams, then too dark/mottled;
+retuned palette, occlusion and seam strength/position over three iterations
+to match the frame-0 ball (core mean tracked against the source).</li>
+<li>Crater was initially too subtle and the embedded lip had a straight,
+uniform band; strengthened cavity/rim contrast and rebuilt the lip as an
+irregular crescent (thin at front-centre, wrapping the sides, broken clod
+highlights).</li>
+<li>Impact pose was too flat/high; reduced squash, pressed the ball into the
+pile, replaced a broad dark gap with a thin contact shadow, and moved
+ejecta launch points to the contact ring (grains now composite behind the
+ball instead of onto its face).</li>
+</ol>
+<h2>Visible limitations</h2>
+<ul>
+<li>The synthetic ball matches frame 0's colours and softness but is not
+pixel-identical to the photographed one (frame 0 itself is the original);
+seam placement is an analytic approximation, and per-frame felt mottle is
+procedural, so close freeze-frame comparison with frame 0 shows small
+texture differences even though frame 1 is visually continuous.</li>
+<li>Motion blur is a sub-sampled streak at a long effective interval; very fast
+frames (3–4) are necessarily streak-heavy at 4 fps.</li>
+<li>Crater deformation is a 2D remap/shading model of a single photographed pile
+(no 3D height field); displaced clods are limited to ejecta grains and the
+front lip, and the grabber performs no opening motion (it simply releases).</li>
+<li>Sand interaction is only visible at the impact zone; the rest of the pile
+correctly stays static, and rest frames 10–19 are intentionally identical.</li>
+</ul>
+</article></main></html>

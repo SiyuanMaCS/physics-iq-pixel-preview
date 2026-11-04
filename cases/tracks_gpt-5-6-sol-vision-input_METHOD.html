@@ -1,0 +1,38 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>GPT-5.6-Sol vision-input</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>Method and inspection record</h1>
+<h2>Inspection modality</h2>
+<p>The initial visual observation was made only from the user-supplied multimodal display of <code>first_frame.png</code>. That observation established the scene semantics, approximate silhouettes, depth order, illumination, and expected contact geometry. Source-pixel measurements of that same initial file were then made with Python, PIL, and NumPy to refine bounds and color statistics.</p>
+<p>No generated PNG—including individual frames, <code>inspection.png</code>, or <code>transition_check.png</code>—was supplied to or opened by the model through an image Read/View tool. After generation, all inspection was numeric/programmatic through Python, PIL, NumPy, OpenCV, and shell-reported values. The two contact sheets were written only as deliverables/audit evidence.</p>
+<h2>Construction</h2>
+<ul>
+<li>The original photographic frame is used exactly as frame 00.</li>
+<li>For frames 01–19, the stationary wall, tabletop, wood grain, mound body, and upper grabber are retained. OpenCV's local Telea inpaint reconstructs only the small wall patch hidden by the ball in frame 00; dark pixels belonging to the two grabber tips are restored from the source.</li>
+<li>Ball position follows hand-authored gravity-like samples through first contact, maximum penetration, a small damped recovery, and final settling. The squash values conserve approximate projected area during contact.</li>
+<li>The ball is recomputed in two dimensions for every generated frame at 4× resolution. It uses an elliptical coverage mask, spherical directional shading, deterministic fine fuzz, a cool highlight, and two subtle rotating seam curves. The high-resolution layer is Lanczos-downsampled for antialiased edges.</li>
+<li>A height-dependent soft shadow tightens as the ball approaches the mound.</li>
+<li>Impact deformation is layered in depth order: rear crater and raised shoulders, ballistic granular fragments, ball, then an irregular front lip. The front lip increasingly occludes the lower ball as it becomes embedded.</li>
+<li>The upper grabber and camera remain stationary. The ball's increasing separation is the visible release cue.</li>
+<li>Frames 13–19 are intentionally identical because the ball and kinetic sand have reached rest.</li>
+</ul>
+<h2>Revisions made</h2>
+<p>The first execution found that procedural overlays were rendered at 4× size while the photographic base remained at native size. The shared compositor was revised to downsample overlays to 256×144 before alpha compositing. Pillow calls were also updated to avoid deprecated explicit mode arguments. The video was then regenerated from scratch.</p>
+<p>No output image was visually inspected during revision. The revision was driven by the reported array-size exception and the subsequent numeric checks.</p>
+<h2>Numeric validation</h2>
+<p>The final validation reported:</p>
+<ul>
+<li>20 RGB PNGs, each 256×144, assembled as <code>uint8 (20,144,256,3)</code>.</li>
+<li>Frame 00 is exactly equal to <code>first_frame.png</code> at every channel and pixel.</li>
+<li><code>pixels.npz</code> contains <code>uint32 (144,256,20)</code>, and every element exactly matches PNG pixels packed as <code>0xRRGGBB</code>.</li>
+<li>The ball-like cyan mask follows the planned vertical motion: measured local centroids are approximately y=41.2 (frame 01), 61.4 (03), 71.8 (04), 83.4 (maximum penetration at 05), 77.9 (damped recovery at 06), and 89.4 (rest at 13–19).</li>
+<li>Consecutive changed-pixel bounds remain localized around the grabber/ball/sand action. From frame 01 onward, a large far-background region outside x=73–206 and y=0–132 has zero temporal range.</li>
+<li>Frames 13–19 are byte-identical, confirming a stable final state without jitter.</li>
+<li><code>transition_check.png</code> contains selected frames and 5× amplified consecutive differences. It was saved but not visually read by the model.</li>
+</ul>
+<h2>Limitations</h2>
+<ul>
+<li>The wall pixels initially hidden by the ball cannot be recovered exactly; the small uncovered patch is a local inpaint approximation.</li>
+<li>The grabber's precise mechanism is not inferable from one view, so its upper assembly and tips remain fixed rather than inventing a complex release motion.</li>
+<li>At 4 fps, first contact and peak deformation have only one sample each, so the very brief impact is necessarily coarse in time.</li>
+<li>The ball fuzz, seam, displaced sand clumps, and grains are procedural approximations matched to the source palette and scale. Fine real kinetic-sand fracture detail is below the resolution available here.</li>
+<li>The final front lip is deliberately strong enough to communicate embedding at 256×144; its local mound deformation is stylized rather than a material simulation.</li>
+</ul>
+</article></main></html>

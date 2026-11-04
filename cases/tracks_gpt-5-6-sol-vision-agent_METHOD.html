@@ -1,0 +1,35 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>GPT-5.6-Sol vision-agent</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>Generation and inspection method</h1>
+<h2>Construction</h2>
+<ul>
+<li>Loaded the supplied 256×144 RGB source with PIL and preserved it byte-for-byte as frame <code>00</code>.</li>
+<li>Built one locked clean plate from the source using localized OpenCV inpainting only under the original ball, grabber, pile, and contact shadow. Pixels outside those repair masks retain the photographic source background.</li>
+<li>Recomputed every dynamic element for frames <code>01</code>–<code>19</code> in 2D code: Bezier-like grabber jaws, analytically shaded ball ellipses, a noisy implicit sand silhouette, granular lobes, impact crater/rim, ejected grains, soft table/pile/ball shadows, and foreground sand occlusion.</li>
+<li>Used a hand-authored vertical trajectory with fall acceleration, impact squash, rebound, second contact, damped wobble, and a three-frame still hold. Fixed random seeds make all texture and grain placement deterministic.</li>
+<li>Saved through the required local <code>artifact_io.save(frames, HERE)</code> call, then generated <code>transition_check.png</code> as an additional motion/continuity audit sheet.</li>
+</ul>
+<h2>Inspection modalities actually used</h2>
+<ol>
+<li><strong>Visual image inspection with the image-view tool:</strong> viewed <code>first_frame.png</code> at original resolution before coding.</li>
+<li><strong>Numeric image inspection with PIL/NumPy:</strong> checked dimensions, dtype, representative RGB samples, and broad green/blue/dark color-mask bounds in the source.</li>
+<li><strong>Visual image inspection with the image-view tool:</strong> viewed the generated <code>inspection.png</code> storyboard and <code>transition_check.png</code> at original resolution after the first render.</li>
+<li><strong>Numeric frame/tensor inspection with PIL/NumPy:</strong> measured per-transition changed-pixel counts, mean absolute RGB differences, and maxima; asserted frame <code>00</code> equality; decoded and compared every PNG against every <code>uint32</code> tensor plane.</li>
+<li><strong>Visual image inspection with the image-view tool:</strong> viewed the regenerated <code>transition_check.png</code> after the revision. No browser/video playback inspection was claimed or used.</li>
+</ol>
+<h2>Revision made after inspection</h2>
+<p>The first visual/numeric review showed minor procedural texture shimmer during the intended final hold. I froze the ball's orientation/microtexture phase and the settled sand-rim random seed from frame <code>17</code> onward, regenerated all artifacts, and inspected the revised transition sheet. Frames <code>17</code>, <code>18</code>, and <code>19</code> are now pixel-identical.</p>
+<h2>Verification results</h2>
+<ul>
+<li>Frame stack: <code>uint8 (20, 144, 256, 3)</code>.</li>
+<li>Packed tensor: <code>uint32 (144, 256, 20)</code> encoded as <code>0xRRGGBB</code>.</li>
+<li><code>frames/00.png</code> is pixel-identical to <code>first_frame.png</code>.</li>
+<li>All 20 PNG files match their corresponding packed tensor planes exactly.</li>
+<li>The last two transitions contain zero changed pixels, confirming the final still hold.</li>
+</ul>
+<h2>Visible limitations</h2>
+<ul>
+<li>Frame <code>00</code> is the exact photographic input, while later dynamic actors are procedural; the sand granules, ball surface, and jaw rendering therefore become slightly cleaner and more graphic at the first transition.</li>
+<li>Removing the source actors requires localized inpainting. The repaired wall/table regions are soft and plausible at this small resolution, but they cannot reconstruct hidden photographic detail.</li>
+<li>The ball is described as a tennis ball, but the source has no clearly resolved seam or fuzz. The animation preserves its smooth blue appearance with subtle synthetic surface flecks rather than inventing a strong seam.</li>
+<li>The grabber's support mechanism is cropped out of the source. Only the visible jaws are animated, with their hinge remaining off-screen.</li>
+</ul>
+</article></main></html>

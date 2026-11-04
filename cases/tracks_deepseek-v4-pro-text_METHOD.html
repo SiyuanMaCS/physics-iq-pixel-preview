@@ -1,0 +1,70 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>DeepSeek-V4-Pro text</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>Method</h1>
+<h2>Inspection Modality</h2>
+<p>Programmatic pixel analysis using Python with NumPy, PIL/Pillow, and SciPy. No visual inspection or image generation models were used.</p>
+<h2>Approach</h2>
+<h3>Scene Analysis</h3>
+<ul>
+<li>Loaded <code>first_frame.png</code> as uint8 RGB array (144×256×3)</li>
+<li>Analyzed pixel color distributions to identify distinct regions:<ul>
+<li><strong>Wall background</strong>: Light beige (R≈164-170, G≈154-163, B≈150-160), rows 0-60</li>
+<li><strong>Grabber tool</strong>: Very dark blue-black pixels (brightness &lt; 25), rows 0-56, cols 100-162</li>
+<li><strong>Blue tennis ball</strong>: Blue-dominant pixels (B &gt; R+15, B &gt; G+5, brightness &gt; 20), rows 0-28, cols 109-155, center at (132, 13), radius ≈22</li>
+<li><strong>Green kinetic sand</strong>: Green-dominant (G &gt; R+5, G &gt; B+5), rows 84-125, cols 89-181</li>
+<li><strong>Wooden table</strong>: Brown tones (R≈100-135, G≈75-95, B≈40-55), below sand</li>
+</ul>
+</li>
+</ul>
+<h3>Ball Extraction</h3>
+<ul>
+<li>Created ball core mask using blue-dominant color threshold</li>
+<li>Dilated mask 3 iterations to capture dark ball outline</li>
+<li>Built ball sprite combining original visible pixels with synthesized occluded regions (top of ball hidden behind grabber arms)</li>
+<li>Ball sprite is 29×47 pixels with alpha channel</li>
+</ul>
+<h3>Background Inpainting</h3>
+<ul>
+<li>Removed ball from frame 0 by filling dilated ball mask with wall-like colors</li>
+<li>For each row, interpolated between left and right wall edge colors with noise (σ=1.5)</li>
+<li>Ensured seamless edges through linear interpolation of boundary colors</li>
+</ul>
+<h3>Physics Simulation</h3>
+<ul>
+<li>Gravity: g = 150 px/s² (scaled for pixel space)</li>
+<li>Free fall until ball bottom reaches sand top (row 84)</li>
+<li>Impact time: t = sqrt(2d/g) ≈ 0.81 seconds (frame 3-4)</li>
+<li>Post-impact: damped bounce (4px, damping=3.0, period=0.25s) + exponential settling into sand (max penetration=17px, settle rate=0.9)</li>
+<li>Ball sinks gradually from frame 4 through frame 19</li>
+</ul>
+<h3>Sand Deformation</h3>
+<ul>
+<li>On contact: push sand pixels down and outward from impact center</li>
+<li>Deformation weight: (1 - dist/crater_radius)²·², crater radius = ball_radius × 2.8</li>
+<li>Vertical displacement: up to 1.5× penetration</li>
+<li>Horizontal displacement: up to 0.75× penetration</li>
+<li>Lighting: shadow (×0.45) directly under ball, crater rim highlight (×1.25) at edge</li>
+<li>Per-frame Gaussian noise (σ=1.5) added to sand for grain settling effect</li>
+</ul>
+<h3>Output Verification</h3>
+<ul>
+<li>Frame 0 confirmed pixel-identical to <code>first_frame.png</code></li>
+<li>All 20 frames verified unique</li>
+<li><code>pixels.npz</code> tensor verified against individual PNGs using 0xRRGGBB packed uint32 encoding</li>
+</ul>
+<h2>Revisions</h2>
+<ul>
+<li>v1-v3: Initial ball mask extraction, simple gravity, basic sand deformation</li>
+<li>v4: Added damped bounce and exponential settling physics</li>
+<li>v5-v7: Iteratively improved wall fill to reduce edge seams</li>
+<li>v8: Refactored with cleaner ball mask dilation (iterations=2→3) to eliminate fill boundary artifacts</li>
+<li>v9 (final): Zero visible seams at fill boundaries, all frames unique with continuous motion</li>
+</ul>
+<h2>Known Limitations</h2>
+<ul>
+<li>Wall fill uses interpolated colors rather than actual wall texture, resulting in slightly smoother appearance than original</li>
+<li>Ball top (rows occluded by grabber in frame 0) uses synthetic shading rather than original pixels</li>
+<li>Sand deformation is a 2D displacement map without true granular physics</li>
+<li>No lateral ball movement - purely vertical fall</li>
+<li>Grabber arms remain stationary (no mechanical release animation)</li>
+<li>Camera is static locked-off as specified</li>
+</ul>
+</article></main></html>

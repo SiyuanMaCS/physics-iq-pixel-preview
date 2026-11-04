@@ -1,0 +1,84 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>GPT-6.1-Sol vision-input</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>Generation and inspection method</h1>
+<h2>Initial visual observation</h2>
+<p>The only image supplied to the visual model was the original <code>first_frame.png</code>
+attached to the user's request. That observation established the tabletop,
+gray wall, suspended grabber, blue ball, sand mound, camera direction, and soft
+illumination. <code>OBSERVATION.md</code> was written before <code>generate.py</code>, with image-space
+bounds, support/contact, uncertainties, and all twenty planned frame events.</p>
+<p>The original PNG was additionally opened with PIL and converted to NumPy arrays
+for numeric color samples, color masks, object bounds, and smooth color fitting.
+Those original-input measurements refined the upper-right ball highlight and
+the sand color/contrast estimate. This is distinct from the later inspection
+of generated outputs.</p>
+<h2>Two-dimensional synthesis</h2>
+<p><code>generate.py</code> uses deterministic Python, NumPy, PIL, SciPy array filters, and
+OpenCV raster operations. All files and work remain in the current workspace.
+There was no network access, other agent, external model, learned weight,
+physics engine, mesh, 3D scene, surface-normal calculation, or material renderer.</p>
+<p>Frame 00 is copied exactly from the input. The stationary photographic wall,
+wooden table, grabber, and unaffected outer sand are retained. A tight elliptical
+mask and OpenCV image inpainting restore the wall hidden by the initial ball.
+The tool remains fixed while the ball separates from its tips. A small strip
+of newly exposed table uses nearby static table pixels for background repair.</p>
+<p>The ball is recalculated for every subsequent frame from a tilted ellipse,
+image-space color polynomials, smooth edge shading, curved blue seams, and
+procedural fine fuzz. Its color coefficients come from a least-squares fit to
+initial-input colors; moving ball pixels are never an extracted image patch.
+Position follows a short analytical gravity drop, followed by strongly damped
+penetration into the sand. Release begins at 0.08 s; modeled first contact is
+approximately 0.281 s. At 4 fps the samples show descent at 0.25 s and the
+post-contact state at 0.50 s. Shape compression and rotation decay on impact.</p>
+<p>The moving central sand surface is synthesized using persistent multiscale
+noise and hundreds of small angular cohesive fragments. Its boundary changes
+with local crest compression; elliptical rim and cavity functions add contact
+relief. A ragged front lip covers part of the ball's lower edge. Soft shadow
+fields express the falling ball and sand contact, and eleven small nearby
+fragments follow bounded image-space flight/settling paths. The outer mound
+remains photographic. Four-times raster supersampling antialiases generated
+geometry; the static photographic base uses nearest-neighbor expansion so
+downsampling preserves its pixels exactly.</p>
+<h2>Later numeric inspection and revisions</h2>
+<p>No generated PNG, contact sheet, transition image, or player was opened with
+an image Read/View tool or supplied to the visual model. Generated PNGs were
+opened only with PIL for array comparison and numeric analysis. Inspection
+used Python, NumPy, OpenCV connected-component masks, shell text, and file
+consistency checks. Therefore this report makes no claim of visually reviewing
+the generated continuation.</p>
+<p>The first generation passed the tensor, PNG, player, first-frame, stationary
+region, ball silhouette, and settling checks. Further numeric measurements
+found that the new sand had less local grain contrast than the input. The
+procedural grain contrast was increased by a factor of 1.55, and explicit
+preservation was tightened around the tool boundary, including one nearby
+background pixel changed by inpainting. A remaining blue pixel in the queried
+cleared-wall rectangle was identified numerically as an unchanged original
+grabber pixel at (148, 23), rather than a residual ball pixel. These were
+numeric-driven revisions; no visual output inspection occurred.</p>
+<p>After regeneration, <code>verify.py</code> checks:</p>
+<ul>
+<li>Exactly twenty 256 × 144 RGB PNGs and a <code>uint32 (144, 256, 20)</code> tensor.</li>
+<li>All PNG pixels equal their tensor slices encoded as <code>0xRRGGBB</code>.</li>
+<li>Frame 00 equals the initial input pixel for pixel.</li>
+<li>All twenty standalone-player frames reconstruct exactly from its packets.</li>
+<li>Checked stationary table/wall/tool regions remain pixel-identical.</li>
+<li>A coherent blue connected component descends and then remains in contact.</li>
+<li>Frames 07–19 are identical after residual motion finishes.</li>
+<li>The two required inspection/evidence PNGs are valid image files.</li>
+</ul>
+<p>Results are saved in <code>verification.json</code>; analytical poses and change counts
+are in <code>motion_metrics.json</code>. <code>inspection.png</code>, <code>transition_check.png</code>, and
+<code>change_map.png</code> are saved evidence only and were not viewed by the agent.
+Run <code>python generate.py</code> and <code>python verify.py</code> to reproduce the artifacts.
+<code>artifact_io.save(frames, HERE)</code> exports the required frame stack, packed tensor,
+inspection sheet, and a standalone five-second player at constant 4 fps.</p>
+<h2>Expected visible limitations</h2>
+<p>These limitations follow from the method and numeric checks, rather than
+viewing the outputs. The ball and locally rebuilt sand have procedural detail
+that cannot reproduce every photographic fiber or sand ridge. The concealed
+wall is an inpainted approximation. Perspective, sand cohesion, penetration
+depth, and seam rotation are inferred from a single frame, without calibrated
+physical dimensions. The grabber stays in the supplied pose as the ball drops;
+its small opening motion is not separately resolved. At 4 fps, the fastest
+part of the collision occurs between samples, and the settled final pose lasts
+for most of the clip. Numeric checks establish consistency and localization,
+but cannot establish the full perceptual realism of the generated video.</p>
+</article></main></html>

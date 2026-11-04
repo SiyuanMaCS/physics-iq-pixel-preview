@@ -1,0 +1,91 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Seed-2.1-Pro-0915 text</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>METHOD</h1>
+<h2>Inspection modality</h2>
+<p><strong>Numeric/programmatic inspection only</strong> (Track: Text). <code>first_frame.png</code> was
+never opened with an image Read/View tool and was not seen visually. All
+understanding came from NumPy/PIL/OpenCV array analysis: RGB statistics,
+row/column profiles, color-threshold masks, connected components, ASCII class
+maps, least-squares circle/sphere fits, and held-out reconstruction errors.
+<code>inspection.png</code> and <code>transition_check.png</code> are saved as audit evidence even
+though they were not visually read.</p>
+<h2>Scene model (from numeric inspection)</h2>
+<ul>
+<li>Gray wall (additive row+column lighting model, residual σ ≈ 4), wooden table
+with perspective back edge, flattened green kinetic-sand mound (x 89–182,
+plateau y 84–86), a blue-black inverted-U grabber with static yoke/rails and
+two curved claw fingers cradling the ball, tips meeting near (134,55).</li>
+<li>Blue ball: circle center (136,38), r = 13, with a ~6 px soft felt/fuzz edge
+(coverage measured from the unoccluded top rim: α ≈ 0.94 at r12, 0.74 r13,
+0.52 r14, 0.34 r15, 0.18 r16, 0.08 r17). Color is a smooth shaded sphere
+(fitted coefficients over the unoccluded core): per-channel
+ambient/diffuse/right-sheen terms with light from upper-right, plus fixed
+spatial grain fields. Intrinsic colors clamped to the observed envelope.</li>
+</ul>
+<h2>Generation (20 frames, 256×144, 4 fps)</h2>
+<ol>
+<li><strong>Static background retained</strong>: frame 0 is byte-identical to
+<code>first_frame.png</code> (asserted). Wall, table, pile, and yoke are never moved.</li>
+<li><strong>Wall behind the moving head</strong>: ball disk, anti-alias halo (blue-tinted
+gray pixels B−R &gt; 2), and the two source-pixel finger masks are removed and
+rebuilt per row by linear interpolation between the nearest <em>strictly
+wall-like</em> pixels on either side (dark tool/AA pixels skipped as anchors),
+with a 2.2 px distance-feathered seam and matched σ ≈ 3 grain. Held-out wall
+error is within ~3 levels after this revision.</li>
+<li><strong>Release</strong>: the two fingers are rigid finger sprites rotated about pivots
+(117,29)/(152,29) — 25° at frame 1, 42° from frame 2 on (orientation change
+of the real tool parts; cv2 warpAffine, colors carried from source).</li>
+<li><strong>Ball</strong>: procedurally shaded sphere, 2× supersampled, alpha-composited
+over the live canvas so its soft edge blends with wall/wood/sand correctly;
+frame 1 keeps the exact source ball pixels (still stationary). Free fall
+y = 38 + ½·25·(t−0.25)² from release to contact (frames 2–7), with mild
+3-stamp vertical motion blur when per-frame speed exceeds 14 px/s.</li>
+<li><strong>Impact (frame 8)</strong>: vertical squash (0.90/1.09), embed to center y 76.3;
+sand layer displaced with a smooth field (2 px depressed ring at |dx| 9–13,
+2.8 px raised rim at |dx| 13–19, cosine depth falloff, cv2.remap on the
+pile RGBA) at 70% amplitude; ten 1 px granules on ballistic arcs (g 78)
+frames 8–10 plus fixed rim clumps; soft shadow tightens during descent and
+becomes contact darkening / crater-lip shadows. Frame 9 small rebound
+(y 74.6, relax), frame 10 settles at y 76.2; frames 11–19 are static.</li>
+</ol>
+<h2>Revisions made during QA (all numeric)</h2>
+<ol>
+<li>Ball shading initial diffuse/specular fit was ~15 levels too bright;
+refit on the unoccluded r&lt;8 core using diffuse + broad upper-right sheen
+(interior MAE ≈ 3–5).</li>
+<li>Ball edge changed from a 1.9 px anti-alias to the measured 6 px soft-fuzz
+profile; this also removed a spurious dark fringe above the resting ball.</li>
+<li>Wall reconstruction: cv2.inpaint and an additive model both pulled dark
+tool colors into the lower ball area (errors up to −30 R); replaced with
+strict-anchor row interpolation after discovering loose <code>wallish</code> tests
+admitted blue-gray AA pixels as endpoints.</li>
+<li>Ball halo mask widened (r 19.5→20.5, blue-tint criterion) so faint source
+fringe pixels are removed rather than becoming static ghosts.</li>
+<li>Crater rim strengthened (−2.3→−2.8 px) and rim clumps made symmetric after
+measuring per-column pile tops; added contact-lip shadows; added intrinsic
+color clipping (B had reached 194 vs. source envelope ≤175).</li>
+</ol>
+<h2>Verification</h2>
+<ul>
+<li><code>frames/00.png</code> byte-identical to <code>first_frame.png</code>; all 20 PNGs match the
+packed <code>pixels.npz</code> tensor <code>(144,256,20) uint32 0xRRGGBB</code>; independent delta
+decode of <code>index.html</code> reproduces every frame; frames 11–19 are identical.</li>
+<li>Per-frame changed pixels stay inside the action corridor (head area, fall
+path, impact zone); static yoke rails outside the finger region are
+untouched (max diff 0 at y&lt;22).</li>
+<li>Diagnostics: ball color/interior match, edge-profile match, wall-fill error,
+crater column profile, jaw rotation clearance — measured in scripts.</li>
+</ul>
+<h2>Visible limitations</h2>
+<ul>
+<li>Finger/jaw ownership at r 14–16 (dark finger vs. ball AA) is ambiguous at a
+few pixels; resolved by color thresholds, so the open claw is an idealized
+rigid rotation and slightly soft at the hinges.</li>
+<li>The procedural ball cannot reproduce every source grain mottle; frame 1→2
+shows a small shading change where the source ball was darkened by the claw.</li>
+<li>Crater amplitude, rim clumps, and ejected granules are plausible values, not
+measurable from a single pre-impact frame; the sand surface is a 2-D
+vertical displacement (no side-view granule volume).</li>
+<li>4 fps sampling makes the one-frame impact squash/smear abrupt, and the wide
+soft ball edge is faithful to the source but visibly blends against the
+table during the last frames of the fall.</li>
+</ul>
+</article></main></html>

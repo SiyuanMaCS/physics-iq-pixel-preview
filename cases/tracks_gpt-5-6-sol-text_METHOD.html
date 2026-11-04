@@ -1,0 +1,26 @@
+<!doctype html><html lang=zh-CN><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>GPT-5.6-Sol text</title><style>:root{color-scheme:dark}body{margin:0;background:#101216;color:#eef2f6;font:15px/1.75 system-ui}main{max-width:900px;margin:auto;padding:24px}article{background:#1a1e24;border:1px solid #303741;border-radius:14px;padding:20px}a{color:#bddaff}code,pre{background:#0e1115;border-radius:7px}code{padding:2px 5px}pre{padding:12px;overflow:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #39414c;padding:7px 9px}</style><main><p><a href='../compare_3tracks_0016.html'>← 返回十组对比</a></p><article><h1>Method</h1>
+<h2>Inspection modality used</h2>
+<p>I used only programmatic numeric access to image files. PIL loaded RGB arrays; NumPy measured channel statistics, masks, row/column spans, frame differences, centroids, and tensor equality; OpenCV supplied HSV conversion, connected-component measurements, morphology, and classical inpainting. I also printed coarse ASCII classifications derived from RGB inequalities to check silhouettes. I did not use an image Read/View tool, did not send an image to a visual model, and did not visually inspect any source or generated frame.</p>
+<h2>Generation</h2>
+<ul>
+<li>Frame 00 is copied byte-for-byte from <code>first_frame.png</code>.</li>
+<li>A single locked photographic background is made by masking the measured blue/dark ball-and-grabber region and filling it with OpenCV Telea inpainting. The cropped top edge is stabilized with row-wise interpolation from untouched wall pixels.</li>
+<li>Every later tennis ball is recomputed from an analytic ellipse/sphere field. Its silhouette includes subpixel antialiasing and deterministic edge fuzz; its colors use a fixed directional-light field, deterministic local grain, a small specular term, and two rotating curved tennis seams. Impact frames alter the ellipse axes rather than scaling a source crop.</li>
+<li>The grabber is recomputed from two articulated cubic Bezier jaws, a cropped yoke, dark outlines, blue faces, highlights, and gripping pads. Jaw endpoints rotate outward during release and the assembly retracts upward.</li>
+<li>The ball shadow is a height-dependent soft ellipse. At contact, deterministic procedural sand fields add a compressed dark cavity, side lobes, a granular foreground lip that occludes the lower ball, and a small set of outward-moving clumps. The motion uses authored 2D trajectories; no physics engine or 3D renderer is used.</li>
+<li>The camera/background remains fixed. Only the upper tool corridor and lower ball/sand corridor change.</li>
+</ul>
+<h2>Revisions made</h2>
+<p>The first generated pass revealed, through changed-pixel bounds, that the Gaussian shadow had mathematically tiny tails. Direct float-to-<code>uint8</code> truncation converted those tails into one-code-value darkening over distant background pixels. I revised the shadow to zero values below <code>0.002</code> and to round before integer conversion, then regenerated every output. After this revision, the measured far-field drift across frames 01–19 is exactly zero.</p>
+<h2>Numeric verification</h2>
+<ul>
+<li>Output array is <code>uint8 (20, 144, 256, 3)</code>.</li>
+<li>Frame 00 has maximum absolute error 0 versus <code>first_frame.png</code>.</li>
+<li>All 20 PNG files decode to the same RGB values used for generation.</li>
+<li><code>pixels.npz</code> contains <code>uint32 (144, 256, 20)</code> values packed as <code>0xRRGGBB</code>, and its complete tensor is exactly equal to the values repacked from all PNGs.</li>
+<li>Measured ball-region centroids progress downward from about <code>cy=40</code> to <code>74</code>, compress to about <code>92</code> at maximum penetration, rebound to about <code>89</code>, and settle near <code>93.6</code> after foreground-sand occlusion.</li>
+<li><code>transition_check.png</code> contains selected before/after frames and 4x-amplified numeric RGB differences for release, descent, impact, rebound, and final stabilization transitions.</li>
+</ul>
+<h2>Visible limitations</h2>
+<p>Because inspection was numeric-only, fine semantic boundaries shared by the blue tool and blue ball are inferred. The repaired wall behind the original object may look smoother than the surrounding photographic texture. Procedural ball fuzz, seams, tool paint, and displaced sand approximate the source material at this small resolution rather than reconstructing unseen detail. The 4 fps cadence makes the contact interval necessarily brief, although an impact squash and damped rebound preserve the intended physical reading.</p>
+</article></main></html>
