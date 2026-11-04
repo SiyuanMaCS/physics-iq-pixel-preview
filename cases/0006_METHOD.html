@@ -1,0 +1,108 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0006</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>输出是 20 张 256×144 RGB 图像、4 fps、总长 5 秒。<code>generate.py</code> 只使用本例 <code>first_frame.png</code> 作为视觉资料。先实际打开首图及 4 倍放大图，写 <code>OBSERVATION.md</code> 后才编写生成器。00 帧直接保留原图所有像素；01–19 帧逐帧求值二维颜色数组。没有读取其他案例、参考视频、旧结果、记忆、模型或联网资源。</p>
+<p>纸板每帧由新的四边形覆盖率和纸面灰度函数生成。灰度函数拟合首帧可见纸面的缓慢亮度变化，再添加在纸面坐标上求值的微弱纤维纹理；没有裁取首帧纸板、移动、缩放或镜像其贴图。纸板的底部始终留在平台支撑高度，转动以二维渐窄轮廓、边缘方向和薄暗边表现。球每帧重新求值圆形软边轮廓、橙色径向暗部、细微绒面色差和弯曲的浅色网球缝线。蓝黑工具、灰色轴杆和张开的两爪由当前帧的二维轮廓与亮度函数重绘。球、工具在纸板之前绘制，所以遮挡随当前纸板边界产生。</p>
+<p>桌面、墙面、平台原先可见部分和电线采用固定摄影背景。首次显露的背景属于未知区域，采用非学习的二维调和补全；墙和木桌分开插值，交界 1 像素柔化，木桌增加新求值的细微纹理。平台仅对原纸板遮住的上表面补绘低对比暗色，并为接近接触的球生成局部接触影。全过程没有三维场景、网格、法线、相机投影或物理引擎。</p>
+<p>物理假设：首帧球完全被纸板挡住。工具将球下降到平台后侧上表面，接触后打开并上撤；球保持落定，纸板继续向顺时针方向转窄。球直径约 25 像素，尺寸不随时间变化。采用提示的“在纸板上方持球”动作已在所提供首帧之前完成的时间顺序假设；当前唯一首图无法显示这一阶段，所以没有另造可见初始球。</p>
+<h2>20 帧的实际事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原图精确保留。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>隐藏球心 y=66.3，工具开始下降；纸板轻微转窄。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>球心 y=68，仍被纸板遮住。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>球心 y=72，工具下降。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>球心 y=76，纸板继续收窄。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>球心 y=81，球保持遮挡。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>球心 y=87，主体仍在纸板后。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>球心 y=93，右侧仍几乎完全遮住。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>球心 y=99，右边首次露出很小的橙色弧。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>球心 y=103，接近平台上表面。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>球心 y=104，球底 y≈116.5，接触平台；球停止下降。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>球位置保持，抓取口开始打开。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>球保持接触，工具向上撤回。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>纸板继续转窄，右侧球弧渐多。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>上撤工具已露出纸板上缘，球侧面与浅色缝线可见。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>工具继续撤回，球无滚动。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>工具接近画面上缘，球接触保持。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>工具爪只在上缘可见，球基本显露。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>工具退出上缘，纸板窄侧轮廓，球静止。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>纸板继续小幅转动，球落定，平台与电线固定。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修复记录</h2>
+<p>实际打开首图和 4 倍放大图；打开 <code>inspection.png</code> 的 00、02、05、08、11、14、17、19 共 8 个时点；打开 <code>transition_check.png</code> 的 00/01/02 三倍放大对比及 08/10/14 接触与遮挡图；另生成并打开 <code>contact_check.png</code> 的 09/10/11/12/16/19。</p>
+<p>第一轮看到纸板后面有横向背景补绘接缝，工具原位置有窄黑色残边。第二轮扩大原物体清理边界，改为墙/桌分域调和补全，修复横向接缝及原工具边缘。复查时发现先补纸板再补工具使原工具暗部向未知背景扩散，因此最终将两个区域联合补全，去除这种灰黑晕影。木桌区域补全延伸到真实平台轮廓之外，避免 y=108 横向接缝。最后对墙桌交界作 1 像素柔化。</p>
+<p>00/01/02 放大查看：纸板初始尺度、灰白颜色和薄片外形连续；01 的新绘工具下端较首图更规整，纸面低频亮度近似而非完全复刻。08/10/14 查看：球右侧随纸板变窄显露，球没有穿过纸板，球底与平台局部上表面接触。09/10/11/12/16/19 查看：落定后球中心不再运动，工具撤回而球留在平台；没有双球、重复纸板、背景裁块平移或离地悬浮。</p>
+<h2>仍可见局限</h2>
+<ul>
+<li>原先遮住的木纹只能二维推测补全；新显露区域的木纹较摄影背景柔和，墙桌边界的坡度也根据首帧可见片段外推。</li>
+<li>纸板转动主要以渐窄轮廓表达，缺少真实旋转时复杂的细微反射变化。底边在平台支撑处稍显规整，01 起纸面与工具轮廓比首帧更平滑。</li>
+<li>球表面虽有新绘纹理与缝线，在 256×144 的分辨率下仍偏平滑，不能达到原生摄影级的毛绒细节。</li>
+<li>球下降和抓取释放的大部分阶段被纸板遮住，具体球/工具接触几何属于合理假设，无法从首帧证实。物理动作未作为已知参考视频的复现来声称。</li>
+</ul>
+<p>保存 helper 仅做输出打包。最终核对每张 RGB PNG 等于 <code>uint32 (144,256,20)</code>、<code>0xRRGGBB</code> 的 pixels 张量对应切片，00 与首图逐像素相等。校验结果另存 <code>VALIDATION.json</code>。</p>
+</article></main></body></html>

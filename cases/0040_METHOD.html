@@ -1,0 +1,82 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>刀切橘子 · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0040</span></nav><article><h1>刀切橘子 · 生成方法</h1><p>唯一图像输入是 <code>first_frame.png</code>，唯一场景文字是 <code>prompt.txt</code>。读取本 case 的 <code>case_config.json</code> 确认格式，读取公共规则和输出 helper。没有读取参考视频、其他 case、旧结果、掩码、分数、记忆或其他线程；没有联网、模型 API、权重、物理引擎或三维渲染。</p>
+<h2>首帧观察和事件假设</h2>
+<ul>
+<li>固定相机，木质桌面上有斜放的玻璃切板；左前边缘从约 (14,84) 延伸，后边缘经过 (174,14)。右上照明在玻璃上形成明亮颗粒。</li>
+<li>半个橘子切面大致位于 x144–192、y45–93，果皮边界带橘黄色粗糙环，浅色果膜和中心白芯可见，右侧和底部较暗。</li>
+<li>宽刀从画面上方 x106–125 进入，斜穿橘子中心，尖端约 (200,104)。刀面暖灰色、右侧刀刃略亮；前面的刀面遮挡一部分果肉。切板承托果皮底缘，刀尖在切板附近。</li>
+<li>采用屏幕平面内的摇切假设：先让刀尖接近切板的支点位置保持，再把刀后部下压约 29 度；果肉受压不超过 2%。切到下部果皮后，两个四分之一橘块缓慢外分各约 2.8 像素，并小幅转向、下沉约 0.5 像素。最后向上抬刀至不接触果肉。没有引入新的物体或手。</li>
+</ul>
+<h2>每帧的新 RGB</h2>
+<p><code>generate.py</code> 用 NumPy 数组计算 4 倍二维采样，最后降至 256×144 RGB。第 00 帧精确保留输入。第 01–19 帧重新计算动态区域的颜色和遮挡：</p>
+<ol>
+<li>清除首帧的橘子和刀区域。木背景采用非学习局部修补；玻璃缺失区用同一行可见背景的低频亮度插值，叠加按本图无物体玻璃区域的颗粒方差生成的固定随机细颗粒。静态背景可以保留，此处只测量静态玻璃颗粒方差，不裁用动态对象。</li>
+<li>按首帧遮挡建立两个不等的屏幕轮廓：前下瓣中心约 (164,73.8)、半径约 19.8×17；后上瓣中心约 (171.8,65)、半径约 17.5×19.3。前瓣覆盖后瓣，刀覆盖两者中间。避免用整个均匀圆面代替首帧的不对称半橘。橘皮环宽约 3–4 像素，向底部压暗并增加弧形亮唇缘，表现可见侧壁。果肉包含偏心白芯、九组不等宽瓣、弯曲浅色膜、弧形白膜折纹、果皮小斑点、局部亮度变化和径向汁囊颗粒。全部颜色由当前坐标的公式计算；刀口旁另生成少量不规则白色纤维。接触期间改变压扁程度，切透后形成新的浅色切缘和分离间隙。</li>
+<li>刀的初始二维轮廓按首图人工观察坐标重新描绘：[(106,-2),(123,-2),(199.8,104.2),(183,91),(151,59),(109,13)]，保留首图顶部宽度、中段宽度、尖端和倾角。第 01 帧保持该轮廓，第 02 帧只开始微小摇切。逐帧生成暖灰金属低对比条纹、零散磨痕、锐边和接触处橘色反光。刀面没有使用首帧裁块，也没有将原刀贴图旋转。</li>
+<li>在果皮下方生成软接触阴影，切透后添加小幅湿润反光。橘块外移时阴影只小幅跟随，玻璃板和木桌保持固定。</li>
+</ol>
+<p>这不是原物体裁块的平移、缩放或镜像。位置参数只是规定新轮廓和纹理计算的坐标；动态 RGB 在每个时间点重算。</p>
+<h2>实际查看和修正</h2>
+<p>已查看原图及其 4 倍放大图，实际查看 <code>inspection.png</code> 的 8 个时刻，并额外打开第 02、11、19 帧的放大关键帧。本次返修实际查看 <code>transition_check.png</code> 中 00/01/02 的并排放大图（完整图和橘子局部），重新检查 8 时刻表。时间按公共检查表的每帧结束时间显示。</p>
+<table>
+<thead>
+<tr>
+  <th>帧文件</th>
+  <th style="text-align:right">时间</th>
+  <th>观察到的状态及接触检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00.png</td>
+  <td style="text-align:right">0.25 s</td>
+  <td>原始首帧；刀斜遮挡果肉，果皮底部接板。</td>
+</tr>
+<tr>
+  <td>02.png</td>
+  <td style="text-align:right">0.75 s</td>
+  <td>刀刚开始摇切；返修后刀尖、宽度和初始倾角接近首帧，前下瓣/后上瓣的轮廓、厚果皮稳定。</td>
+</tr>
+<tr>
+  <td>05.png</td>
+  <td style="text-align:right">1.50 s</td>
+  <td>刀后部继续下压，尖端位置保持，果肉轻微压缩。</td>
+</tr>
+<tr>
+  <td>08.png</td>
+  <td style="text-align:right">2.25 s</td>
+  <td>刀接近果皮下部，中心果肉逐步露出，无多余物体。</td>
+</tr>
+<tr>
+  <td>11.png</td>
+  <td style="text-align:right">3.00 s</td>
+  <td>切到下缘，两块之间开始形成细缝，底部仍落在原接触带。</td>
+</tr>
+<tr>
+  <td>14.png</td>
+  <td style="text-align:right">3.75 s</td>
+  <td>切透，两块小幅外分；刀仍贴近切板。</td>
+</tr>
+<tr>
+  <td>17.png</td>
+  <td style="text-align:right">4.50 s</td>
+  <td>刀抬起中，切口打开，阴影贴着果皮下部。</td>
+</tr>
+<tr>
+  <td>19.png</td>
+  <td style="text-align:right">5.00 s</td>
+  <td>刀尖离开果面，两块静止，静态板边缘和桌面保持一致。</td>
+</tr>
+</tbody>
+</table>
+<p>修正了第一轮中原刀边缘的斜向残影：扩大清除边界；修正了刀延伸段的一根孤立细线：重建连续宽刀轮廓；增加汁囊细节，削弱规则瓣膜；增加最后的抬刀距离。最后一轮用固定二维随机玻璃颗粒补回大块过平滑的遮挡区域，改善了背景涂抹感，并避免了纹理平铺造成的重复划痕。</p>
+<h2>返修记录和可见局限</h2>
+<p>上一版 00→01 把不规则厚半橘简化成薄圆片，刀形也发生明显跳变。已删除那个动态构造，重新按首图的可见轮廓建立不等双瓣和厚果皮，重画初始刀多边形；没有通过首帧动态贴图交叉淡入、贴图搬运或缩放掩盖问题。并排比较显示轮廓和初始刀形比上一版接近首帧，但材质仍未完整恢复。</p>
+<ul>
+<li>首帧是实拍照片，后续是二维手工像素重构；从第 01 帧起果肉纹理、形状和金属反光的摄影真实感有所降低，存在外观切换。</li>
+<li>虽然补回可见厚果皮侧缘和不等瓣遮挡，橘子剖面仍比真实果肉规整；首图的湿润半透明果肉、白色膜的复杂折叠和刀面暗橘反射仍无法逐点重构，00→01 的材质切换依旧可见。切块侧壁厚度只用二维宽度与明暗近似，剥离纤维、汁水量及玻璃折射没有充分表现。</li>
+<li>原刀遮挡处的玻璃颗粒是静态修补，近看仍有局部纹理不连续。果块下的反射沿用了局部原图背景，并非精确重构。</li>
+<li>摇切路径和分离幅度仅依据首帧和 caption 作合理假设，不代表未知的真实后续。二维旋转、压缩和阴影是像素构造规则，不是三维或动力学求解。</li>
+</ul>
+<h2>输出和复现</h2>
+<p>运行 <code>python generate.py</code>，调用公共 <code>artifact_io.save</code> 保存：<code>pixels.npz</code>（uint32，144×256×20，0xRRGGBB）、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。20 帧、4 fps、5 秒。另有 <code>input_enlarged.png</code>、<code>input_detail.png</code>、<code>transition_check.png</code> 与三个 <code>key_*.png</code>，仅用于本 case 的视觉检查。</p>
+</article></main></body></html>

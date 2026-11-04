@@ -1,0 +1,140 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>teapot-rotates · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0175</span></nav><article><h1>teapot-rotates · 生成方法</h1><h2>输入和直接像素生成</h2>
+<p>仅阅读当前例首帧、当前提示、case_config.json 以及公共输出 helper。先打开首帧及四倍放大图，再写 OBSERVATION.md，之后独立编写 generate.py。没有读取其他例、参考续写、旧生成器、参考掩码或分数，没有联网、AI API、训练权重、物理引擎或三维场景。</p>
+<p>生成使用四倍分辨率二维覆盖率蒙版后面积平均回到 256×144。腹部、盖、盖钮、足、环把手和弯曲壶嘴由手写二维 Bézier 轮廓重建。每个时点计算新轮廓位置与遮挡顺序，直接计算各像素釉色、细小程序纹理、柔和亮斑、黑点、花瓣缝线和叶脉。腹部不是从首帧裁出的对象贴图；花和叶是逐个绘制的彩色原语。花叶沿二维周期位置规则向左绕行并在边缘收窄；转入视野的背面花纹由同类花叶原语补画，属于明确的假设。</p>
+<p>静止墙面、桌面、黑平台保留摄影背景。先由本首帧对象轮廓及红色边缘建立擦除范围，再用非学习的 OpenCV 二维修补补足以前被遮住的墙面与平台小区。没有读取外部掩码。仅保留一个原地、低通、限幅的首帧色调校准差值，并在前几帧平滑衰减；它没有平移、缩放或镜像。00 直接保存输入像素。其余帧所有动态区域由当前时点的程序蒙版和 RGB 字段合成。</p>
+<p>采用从上方看顺时针、匀速转动约 58°。壶嘴从右侧逐渐转到前方，把手从左侧逐渐转到后方；壶底足始终接触固定平台，不移动整壶，不倾倒，不倒水，不新增物体。盖和底足为同轴形状，轮廓稳定，黑点与底缘花纹转动。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">角度</th>
+  <th>当前事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00°</td>
+  <td>原首帧，逐像素一致。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">3.05°</td>
+  <td>微转，壶嘴开始更靠前；保持尺度和接触。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">6.11°</td>
+  <td>花叶微向左，红嘴保持上弯。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">9.16°</td>
+  <td>前侧壶嘴遮挡渐完整，把手保持后层。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">12.21°</td>
+  <td>红嘴与腹部连接连续，腹纹继续绕行。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">15.26°</td>
+  <td>左把手轮廓轻度收窄。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">18.32°</td>
+  <td>腹部遮住后侧把手内侧接头。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">21.37°</td>
+  <td>红嘴开始明显盖过右腹。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">24.42°</td>
+  <td>盖点、足缘块纹与主体同步转动。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">27.47°</td>
+  <td>左缘花纹退出，右缘新花纹开始转入。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">30.53°</td>
+  <td>红嘴在右前方形成连续前层。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">33.58°</td>
+  <td>检查红嘴中段与腹部遮挡；足底仍贴平台。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">36.63°</td>
+  <td>把手较窄，背面同类花叶转入。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">39.68°</td>
+  <td>红嘴更靠近腹部中央，明暗逐像素重算。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">42.74°</td>
+  <td>后把手大部被腹部遮挡，环上缘仍可见。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">45.79°</td>
+  <td>红嘴覆盖部分右腹花纹。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">48.84°</td>
+  <td>转入花叶延续装饰密度，盖/足轮廓稳定。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">51.89°</td>
+  <td>红嘴明显朝前，厚度随侧向缩短变化。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">54.95°</td>
+  <td>底足与平台接触保持，所有背景固定。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">58.00°</td>
+  <td>最终朝向，前嘴后把手，停止于这次续写末帧。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际图像查看与修复</h2>
+<p>已经实际打开原图与 first_frame_zoom.png。第一轮打开 inspection.png，逐一查看 00、02、05、08、11、14、17、19 八个时点；打开 transition_check.png 查看 00/01/02 放大和 00、01、02、07、11、15、18、19 的对象接触/遮挡裁图；另打开 check_19.png 放大。发现旧把手细红边与旧壶嘴区域亮色补片，以及转到前方后的壶嘴中段被蓝腹过度遮挡。</p>
+<p>第二轮重新保存后实际打开八时点 inspection.png、check_01.png、check_11.png 与 check_19.png。确认红边已去除、前嘴连通和底足稳定；仍看到对象形状的背景灰色补片，因而改用沿源对象边缘的二维非学习修补，再重存所有输出；同时补画转入视野的背面同类装饰。</p>
+<p>最终第三轮实际打开重新保存的 inspection.png，逐一检查 00、02、05、08、11、14、17、19 八个时点；实际打开加高后的 transition_check.png，检查 00/01/02 的二倍全图和 00、01、02、07、11、15、18、19 的三倍接触/遮挡裁图，完整看见底足与平台；另打开 check_02.png、check_11.png、check_19.png 的四倍图。旧红边、灰色对象轮廓补片已消除，前侧壶嘴连续、后侧把手被腹部合理遮挡，未见重复茶壶或浮空底足。00/01/02 的颜色和主体尺度连续，但能看出花瓣和釉面细节的程序简化，作为真实局限保留。</p>
+<h2>真实局限</h2>
+<ul>
+<li>这是一幅摄影首帧的手工二维程序续写。后续釉面细节和花瓣较程序化；细小摄影纹理、花瓣不规则轮廓与真实陶瓷反射未完全复原，00 到 01 可看出装饰的简化。</li>
+<li>仅首帧不能确定背面花纹。新进入视野的花叶是假设的同类装饰，不能声称是被遮住真实面的恢复。</li>
+<li>上弯壶嘴与把手采用二维轮廓变窄和分层遮挡，前视嘴口的截面变化、反光与真实转动可能有差异；没有三维几何。</li>
+<li>墙面的被遮区域只能估计，修补处可能较平滑；盖钮与足缘的小黑白图案也是手绘近似。</li>
+</ul>
+<p>输出为 20 个 256×144 RGB 帧，4 fps、5 秒。artifact_io.save 保存 uint32 (144,256,20) 的 0xRRGGBB pixels 张量、20 PNG、inspection.png 和独立 index.html。脚本逐帧解包张量核对 PNG，并核对 00 与首帧完全相同；不是以帧差或颜色数代替视觉检查。</p>
+<h2>根代理返修：装饰密度与釉面材质</h2>
+<p>根代理查看首续、八时点及晚段放大后指出花叶简化、晚段纯蓝区域过大、红嘴与把手反光不足。这次仅重新实际查看当前首帧，保持原 20 帧运动安排，独立补强以下逐帧像素规则：</p>
+<ul>
+<li>补画边缘和转入背侧的花叶簇；花簇含不规则圆花瓣、弯曲花瓣缝、细枝和分叉。叶片改成带尖端与微凹边的形状，并重算主脉和细侧脉。新增花簇在首视边缘为窄片段、转动后逐渐展开，维持近似首图的装饰密度。</li>
+<li>蓝釉的颜色在当前二维环绕坐标中叠加多尺度微小釉纹与柔和不规则亮暗；轮廓内侧加暗边，前方保留较亮的矩形软箱反射以及较弱的不规则宽反射，避免晚段成为大块均匀纯蓝。</li>
+<li>红嘴和把手按当前形状计算边缘暗色和局部光泽带。把手亮带沿其弯曲上缘与左侧生成；壶嘴窄亮带沿当前上弯曲线逐像素重画，并添加较弱的腹部釉亮与小亮点；没有搬运原红色贴图。</li>
+<li>盖、足加局部边缘阴影、细小釉纹、窄白亮点和较深的轮廓边，靠近首图的黄绿釉面层次。</li>
+</ul>
+<p>本轮首次重存后实际打开 inspection.png 的 00、02、05、08、11、14、17、19 八时点，打开 transition_check.png 重看 00/01/02 和接触/遮挡裁图，并另打开 check_11.png、check_15.png、check_19.png 四倍图。花叶密度、红釉窄反光和盖足亮点已改善，但蓝腹中央仍偏均匀，进一步加强低频色调起伏、宽反射和下腹暗斑后再次重存。最终重存后再次实际打开 inspection.png 的 00、02、05、08、11、14、17、19 八时点，打开 transition_check.png 重看 00/01/02 全图及 00、01、02、07、11、15、18、19 接触/遮挡裁图，并打开 check_11.png、check_15.png、check_19.png 四倍图。晚段原大块纯蓝区域有更多分布的花叶与低频明暗，红嘴具有连续窄反光和暗边，把手亮带、盖足白亮点可见；底足仍接平台，后把手遮挡连续，没有重新引入旧对象残影。首续维持同一蓝、红、黄绿釉色及主体尺度，花瓣与摄影微纹理仍属于手绘近似。生成脚本再次逐帧核对全部 20 PNG 与 uint32 (144,256,20) 0xRRGGBB 张量一致，并确认 00 与首帧逐像素一致。</p>
+<p>返修后仍有可见局限：蓝釉宽反射和红釉反光虽然加强，仍比真实摄影的复杂反射更规则；花瓣、枝脉和小釉纹在 256×144 下较简化，首续细纹不能与摄影完全相同；背侧装饰和朝前嘴口仍是本首帧基础上的二维假设。</p>
+</article></main></body></html>

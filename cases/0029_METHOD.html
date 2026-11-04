@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-train · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0029</span></nav><article><h1>ball-train · 生成方法</h1><p>输入只使用本目录 first_frame.png 和 prompt.txt；case_config.json 只确定规格，shared/artifact_io.py 只负责保存。没有读取其他案例或结果，没有联网、模型、物理引擎、三维场景、网格或法线。先查看首图并写 OBSERVATION.md，再从零写 generate.py。</p>
+<h2>生成方式</h2>
+<p>00 直接返回原图 RGB。静止桌面、管子、沙发保持摄影背景。动态球原位置及原投影用两侧同深度桌面的行均值趋势重建，带亚像素强度的横向木纹，并在修补边界羽化。每个新球用独立二维轮廓、颜色场、弯曲缝线和正弦毛毡纹理重新算像素，4 倍采样后缩至目标尺寸。各球从原图观察得到各自的半径、底部高度、颜色和软焦程度；不是把球的原贴图裁出后平移、缩放或镜像。</p>
+<p>球面上浅下暗，绒面纹理和弯缝随滚动相位改变；接触阴影和朝右柔影按当前球位置重新计算。08–09 灰棕接触时横向轮廓压缩约 1.5–1.8%，底部保持桌面接触。滚动运动由明确的 20 帧位置表直接求值，未使用数值物理引擎。视角、球高和尺度基本固定，不增加弹跳或无理由漂移。</p>
+<h2>20 帧事件</h2>
+<p>00 原图；01–07 灰球 x=107.0→132.2 向右接近，棕橙严格静止；08 灰球 x=136.2 接触棕球；09 灰球减速、棕球稍移、橙球获得冲量；10 橙球分离；11–14 三球同向缓慢滚动并逐渐分离；15 灰球基本停止；16–18 棕球近停止、橙球继续减速；19 灰 x=140.1、棕 x=159.6、橙 x=187.8，全部仍受桌面支撑。逐帧完整坐标和接触假设见 OBSERVATION.md 表格。</p>
+<h2>实际查看和修正记录</h2>
+<ul>
+<li>打开原始首帧、input_enlarged.png 整图以及 initial_contact_detail.png 球体放大图，确认三球尺度、色调、起始贴桌位置、棕橙初始相接及灰球已经离管。</li>
+<li>打开 inspection.png：实际查看 00、02、05、08、11、14、17、19 共八时点的整幅画面。逐点看灰球接近、08 接触、橙球离开、后续三球间距、接触阴影、静止管与背景。</li>
+<li>打开 transition_check.png：查看 00/01/02 放大连续帧，以及 07/08/09/10 的接触与分离，最后 19。00/01 的灰球均为小尺度蓝灰软焦球，续帧曲缝的朝向随向右滚动变化；棕橙到 08 仍保留原像素。</li>
+<li>第一版视觉检查发现灰球旧上缘残影，09 后棕球旧上缘也有残影。扩大修补区域再次生成；第二版放大仍显示原长投影的片段，最终改用覆盖球与投影的桌面矩形修补并羽化。第三次实际打开相同两张检查表，旧球轮廓残影已经消失，三球没有重复或浮空，也没有大小突跳。</li>
+<li>08 灰棕相邻；09 接触传递且橙刚开始分离；10 明显分离。以每球底部对应接触阴影检查未见离桌漂浮。00/01/02 放大可见重建灰球的纹理更规则，首续帧没有出现大幅颜色或几何切换。</li>
+</ul>
+<h2>真实局限</h2>
+<p>首图分辨率低、球面软焦，重建的弯缝及绒毛是根据首图估计的二维图案，不是精确恢复原球隐藏表面的纹理；放大看重建灰球比照片中的灰球轮廓稍规整，棕橙在开始运动后也更规则。被原球/阴影覆盖的木纹不可从单图恢复，修补带的细木纹较原摄影背景平滑，特写能看出。碰撞后速度、质量及阻力由单张图无法测量，位置表是温和冲量传递的一个合理假设。4fps 接触只占两帧，极短的真实形变过程没有充分采样。末帧橙球尚有低速滚动，没有强行在五秒内停住。</p>
+<h2>输出校验</h2>
+<p>由 artifact_io.save 写入 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html；transition_check.png 由本生成器保存。另有初图放大诊断和 model_baseline.png（用于观察独立像素重建在原位置的外观）。以 RGB 解码每张 PNG 并逐像素重打包验证它等于 pixels[:,:,t]；张量必须 uint32 (144,256,20) 且编码为 0xRRGGBB。00 PNG 必须逐像素等于输入。</p>
+</article></main></body></html>

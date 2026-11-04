@@ -1,0 +1,134 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>balls-collide · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0033</span></nav><article><h1>balls-collide · 生成方法</h1><h2>输入与逐像素方法</h2>
+<p>只使用本目录 first_frame.png、prompt.txt 和 case_config.json，读取共享规则及输出 helper；没有读取其他 case、参考视频、掩码、评分、记忆或旧生成脚本，没有联网、调用 AI、学习权重、物理引擎或三维渲染。</p>
+<p>00 直接保留原图逐像素值。01–19 先保留静态摄影背景，对原球与软阴影遮挡的两个小桌面区域，以其左右同一图像行的木纹中值进行插值及边缘羽化。第一次使用局部非学习修补时，实际放大检查发现原蓝球左边有暗斑；已替换为覆盖完整初始球与阴影区域的同行木纹重建。原管口、桌边及远处背景不移动。</p>
+<p>每个时间点重新求二维轮廓覆盖率，用 4× 子像素覆盖率和小尺度高斯软化构造当前球轮廓。颜色由本例首帧内球体的二维颜色回归得到一组低阶系数；这仅拟合每球的色彩场参数，没有裁取、缓存或移动球体贴图。每帧用当前中心、二维局部坐标重新计算全 RGB，重新画毡面细纹及随滚动相位改变的弧形缝线。球边缘保留原图蓝球略锐、黄球略虚的区别，约 7.4×7.2 和 7.9×7.8 px 的半轴。蓝球弧形缝线浅蓝、黄球缝线很弱，符合首图两球纹理辨识差异。</p>
+<p>每帧单独重画接触暗影和软投影。首帧两球的可见阴影方向不同，最终采用分别与首图方向相近的固定投影偏移，而非一个方向突然翻转的阴影；这只是二维摄影近似，无法从一个输入确定真实灯具布局。接触时球轮廓沿运动方向缩窄 5%，垂直略增加 2.8%，两球接触处没有实体穿透；随后恢复轮廓。没有建立球体法线、网格、相机投影或材料渲染模型。</p>
+<h2>物理假设与 20 帧事件</h2>
+<p>首帧球已离开两端管口，故续写直接从其当前桌面位置继续。沿可见管口与球心的桌面投影直线滚动，y 随 x 以 0.1205 的斜率变化。两球相向速度均为每帧 4.88 px（4 fps），第 06 帧接触，第 07 帧反向分离。假设相同质量、接近弹性的反弹，分离初速每帧 3.9 px，然后每帧乘 0.96 的轻微摩擦衰减。两球无跳起，接触阴影始终贴球下缘。球已在管外，不虚构不可见的出管前过程。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00 s</td>
+  <td>首图逐像素保留，两球位于各自管口外。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25 s</td>
+  <td>同速相向各滚动 4.88 px，材质与尺度连续。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50 s</td>
+  <td>相向继续，二维缝线滚动相位变化。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75 s</td>
+  <td>相向继续，无跳跃或轨道偏移。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00 s</td>
+  <td>距离收窄，阴影随球平移并重画。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25 s</td>
+  <td>距接触尚有约 9 px 的表面空隙。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50 s</td>
+  <td>两球接触，短暂轻微压缩，无穿透。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75 s</td>
+  <td>反向分离，恢复轮廓。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00 s</td>
+  <td>继续分离，滚动速度轻微下降。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75 s</td>
+  <td>分离滚动，毡面和缝线相位持续变化。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00 s</td>
+  <td>分离滚动，无初始位置残球或残影。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75 s</td>
+  <td>分离滚动，缓慢减速。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25 s</td>
+  <td>分离滚动，仍在桌上。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50 s</td>
+  <td>分离滚动。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75 s</td>
+  <td>蓝球约 (65.43,48.69)、黄球约 (160.17,60.11)，尚未到管口。</td>
+</tr>
+</tbody>
+</table>
+<p>4 fps 下每帧显示 0.25 s，20 帧总播放时长 5 s。具体像素位置保存在 positions.txt。</p>
+<h2>实际查看与修正</h2>
+<ol>
+<li>实际打开原始 first_frame.png 及 first_frame_enlarged.png，确认边界、明暗、毡面和桌面接触。</li>
+<li>实际打开第一版 inspection.png（00/02/05/08/11/14/17/19 八个时间点），检查两球数量、桌面接触、管子静止和尺寸。</li>
+<li>实际打开第一版 transition_check.png，左列为 00/01/02 的 4× 放大，右列为 05/06/07 的 6× 放大；发现原位置桌面出现残留暗斑。实际打开 background_check.png 确认残影来源。</li>
+<li>重建完整的初始物体加阴影区域，重存所有输出；实际再次查看 background_check.png、transition_check.png、contact_check.png，确认初始蓝球及阴影不再停留在原处。</li>
+<li>第二次放大查看发现续帧软投影偏淡，增加与首图相近的软阴影及接触影，重存。实际第三次查看最终 transition_check.png、inspection.png、contact_check.png。</li>
+<li>最终 contact_check.png 单独展示 00/01/02/05/06/07/12/19 八时点的放大接触区域与完整帧。检查 06 的接触边界闭合，05 与 07 有明确分离，碰撞没有球体互穿；两球无浮空、无重复、无图块残影。</li>
+<li>最终 00/01/02 检查中，球保持蓝色和黄绿色，黄球依旧略大且更虚，轮廓与首帧一致；蓝球不是切换成发亮金属或纯色平面。</li>
+</ol>
+<h2>仍可见的不足</h2>
+<p>单幅首图只有约 15–17 px 球直径，球面缝线与毡面纹理不可恢复完整。续帧蓝球的缝线比原图略简化，黄球纹理弱且边缘比较规则；轮廓与色彩保持了源图尺度，但不具备新拍摄视频的随机摄影噪声。原球与阴影遮挡过的木纹以同排重建，放大看两个小区域较平滑；没有保留暗斑残影，但无法还原被遮挡的真实木纹。软投影为二维近似，两球影子方向的真实光源无法从首图确定。碰撞压缩只有一个 4 fps 时间点，动作采样较粗；反弹质量、弹性和摩擦是文本一致的假设。没有从管内开始滚出，因为初始图已显示球在管外。</p>
+<h2>保存与校验</h2>
+<p>调用 shared/artifact_io.save 写出 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html；另存 transition_check.png、contact_check.png、background_check.png。generate.py 末尾实际读取并校验：pixels 为 uint32 (144,256,20)，编码 0xRRGGBB；每张 PNG 与对应张量严格相等，帧 00 与输入首图逐像素相等。所有图均为 256×144 RGB。</p>
+</article></main></body></html>

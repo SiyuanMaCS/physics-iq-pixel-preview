@@ -1,0 +1,53 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>potato-in-water · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0144</span></nav><article><h1>potato-in-water · 生成方法</h1><h2>方法与依据</h2>
+<p>只使用本目录 first_frame.png（实际打开原图及 4 倍放大图）与 prompt.txt。先写 OBSERVATION.md，再从零独立写 generate.py。未读取其他案例、参考续写、旧生成器、记忆或评分；无联网、AI API、模型权重、物理引擎或三维场景/网格/法线。</p>
+<p>20 帧新 RGB 按二维解析场直接计算。土豆的细长不对称圆角轮廓用两条独立的二维左右边界曲线绘制：上肩、左右鼓度、下端收束分别给出形状，边界只有小于半像素的低幅不规则变化。局部颜色由左右棕金明暗、下端暗化、不等尺度的暖冷棕皮团块、带微亮边的浅眼点、短局部细纹及非平铺低幅细颗粒组成。白色纵向反光的中心随高度轻微弯曲，宽度上窄中宽下收，局部亮度有小幅衰减，末端柔化，不是等宽均匀柱。每一帧独立重新求值这些颜色、轮廓和朝向，未裁取土豆贴图搬移、缩放或镜像。4 倍像素采样与面积积分保持首图柔焦边缘；00 完全保留输入原图。</p>
+<p>被初始土豆遮住的空玻璃区域，仅用本图该区域左右可见背景作逐行插值和小幅二维灰绿变化。其余摄影背景复用，并在降采样后将动态范围外的像素精确恢复为首图。绿色环带同样恢复首图的固定像素。土豆入水后的颜色按液面以下的二维深度与蓝水色混合；液面是杯内的二维浅弧线，入水有小幅衰减波纹，排水使表面上升约5 px。绿色标记在最前，厚杯底覆盖土豆下端，接触处有弱阴影。</p>
+<p>物理假设：普通土豆密度略大于蓝色水，释放后加速下落，入水阻力减速，到杯底仅有小角度偏转与回摆；不会漂浮、弹出或碎裂。夹具本身在首图无法辨认完整钳臂且上沿被截断，按画外夹持释放处理。</p>
+<h2>20 帧事件</h2>
+<p>帧00：首图，土豆悬空，液面约y76。
+帧01：脱离，中心y48，底端近液面。
+帧02：中心y69，下半入水，微波纹。
+帧03：中心y87，大半浸没并减速。
+帧04：中心y98，完全浸没，下端接近杯底。
+帧05：中心y104.95，下端接底，极轻微压缩。
+帧06：中心y105.05，接底后约4度偏转。
+帧07：小回摆，始终接底。
+帧08：回摆收敛，中心y105。
+帧09：杯底稳定，液面余波。
+帧10：余波减弱。
+帧11：最后极小余波。
+帧12：余波归零，液体/土豆稳定。
+帧13：稳定。
+帧14：稳定。
+帧15：稳定。
+帧16：稳定。
+帧17：稳定。
+帧18：稳定。
+帧19：稳定，播放至5秒。</p>
+<p>实际采样时刻为00=0秒、01=0.25秒、…、19=4.75秒；每帧显示0.25秒，总播放5秒。公共 inspection.png 采用帧显示结束时刻标注，放大检查图采用帧采样时刻。</p>
+<h2>实际视觉检查与修正</h2>
+<ol>
+<li>开始实际打开 first_frame.png 与 first_frame_zoom.png，记录土豆x109..131、y9..59的轮廓、白色纵向反光、杯底y130附近以及环带的位置。</li>
+<li>首轮实际打开 material_fit.png，将首图土豆与同位置新绘制材料并排看；随后实际打开 transition_check.png，检查00/01/02首续帧的轮廓、尺度、棕金材质、初始位置残影与入水遮挡。</li>
+<li>实际打开 inspection.png 的00、02、05、08、11、14、17、19八个时点。确认杯/桌/墙无漂移，无第二个土豆，沉底后无无理由运动。</li>
+<li>实际打开 contact_check.png 的02（液面进入）、04（完全浸没）、05（杯底接触）、19（最终接触）四个放大时点。首轮发现杯底接触约有2像素间隔，且静态摄影背景受重采样轻微柔化。</li>
+<li>修正：动态区以外逐像素恢复原背景；绿色环带精确保留原像素；最终中心从y103.35下调到y105，接触阴影移到y130.1。再次保存并实际重开 transition_check.png、inspection.png、contact_check.png。</li>
+<li>再根据 material_fit.png 细化右侧与底端深棕色，保持首图强纵向反光，12帧起取消残余液面波。第三次保存后实际重新打开 material_fit.png、transition_check.png、inspection.png、contact_check.png。最终下端与杯内底部相接，环带始终在土豆前方，初始位置无可辨识重复对象或残留轮廓。</li>
+</ol>
+<h2>可见局限</h2>
+<ul>
+<li>重绘表皮有不均匀色块、浅眼点和细纹，但这些是根据首图特征重新计算的近似；眼点位置及微纹理不能从首图完全可靠恢复，局部仍可能显得程序化。高光的弯曲和局部减弱是近似照明，没有复现真实玻璃与表皮的所有反射细节。</li>
+<li>蓝水下的土豆细节较弱，白反光转为柔暗青色；其可见程度来自假定透射，不是测得的水色吸收。</li>
+<li>只有小幅二维液面波，未表现复杂小滴、三维折射或旋流；沉底动作也只作很小偏转。</li>
+<li>首图的蓝黑夹具钳臂无法辨认，因此没有新增一把可见夹具；释放通过土豆开始下落表现。</li>
+<li>杯内底部由二维玻璃前景覆盖表达，接触位置在该分辨率下约1像素以内，不能恢复真实隐藏杯底形状。</li>
+</ul>
+<h2>保存与格式校验</h2>
+<p>由 shared/artifact_io.py 的 save 保存 pixels.npz、frames/00.png 至19.png、inspection.png、index.html。另保存 transition_check.png、contact_check.png、material_fit.png 和 first_frame_zoom.png。</p>
+<p>运行校验确认：20 PNG 均为256×144 RGB；pixels 的dtype是uint32，shape=(144,256,20)，每个值编码为0xRRGGBB；逐帧PNG打包结果与张量完全相等；00与first_frame.png逐像素相等。validation.json记录校验和固定背景/标记检查结果。</p>
+<h2>根审修订：表皮、轮廓与高光</h2>
+<p>按根审“棕胶囊与等宽白条”的反馈重算动态RGB。左右轮廓改为独立PCHIP标量边界：上肩略偏右、左中下段更丰满，右侧收束更快；细边界变化控制在约0.3像素内，土豆总体宽度约22像素、高度约50像素。表皮新增十组不等尺度的软棕色色差、七个浅眼点及偏心微亮边、四处短细纹和非平铺小幅细颗粒。这些均每帧在二维局部坐标中计算，没有读取/搬移首图土豆像素。</p>
+<p>高光中心随高度轻微弯曲；半宽从上部约1.25–2.3像素，中部约3.2像素，到末端约1.5像素，并有两处局部亮度弱衰减。边缘与末端柔化。第一次修订的放大图显示底端略尖，再次收圆顶部/底部端点并放宽反光末端后重存全部产物。释放、入水阻力减速、杯底位置、弱接触阴影与固定绿带遮挡沿用已经检查的事件。</p>
+<p>最终重存完成后，实际重新打开并查看：transition_check.png 的00/01/02；inspection.png 的00/02/05/08/11/14/17/19；contact_check.png 的02/04/05/19；新增 surface_check.png 的00/01/02等倍8倍像素近景；以及 material_fit.png 的首图与同位新材料。首三帧中不等宽反光和局部棕皮变化可见；未见初始位置残影或第二个土豆；入水时绿带在前，05和19下端接杯内底部。没有把像素变化数量当作视觉审核。</p>
+<p>修订后仍可见局限：在256×144下眼点和短纹只有弱变化，水下进一步被蓝水衰减，无法达到摄影表皮/玻璃反射细节；同位材料图的新轮廓与真实首图仍有亚像素到约1像素的局部差异，高光的局部变宽/变暗是二维近似；表皮在极大放大下仍可能显得程序化。夹具本身继续由画外释放假设处理。本修订的调度状态为generated，是否通过根审由根审另行判断。</p>
+</article></main></body></html>

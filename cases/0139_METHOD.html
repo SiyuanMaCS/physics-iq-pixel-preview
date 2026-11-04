@@ -1,0 +1,131 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>paper-smoke · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0139</span></nav><article><h1>paper-smoke · 生成方法</h1><h2>像素生成方式</h2>
+<p>只读取本目录 first_frame.png，场景解释只使用 prompt.txt。没有参考视频、其他 case、旧生成器、网络、AI API、学习权重、物理引擎或三维渲染。</p>
+<p>先根据首帧逐项观察并写 OBSERVATION.md，再独立编写 generate.py。以原摄影图保留木桌、墙与玻璃板；仅在首帧可见烟丝、火舌、折纸足迹范围做二维非学习补洞。折纸用重新计算的抗锯齿多边形、白色纸面颜色场、灰蓝折痕、暗色内凹面、细白卷边、逐渐扩大的焦黑区域和少量暖色炭点绘制。右面卷缩不到一个输出像素，底部始终落在原玻璃接触位置。</p>
+<p>蓝白火舌是每帧重新求值的二维锥形透明色场，其顶部高度及宽度微变。白烟采用多根半透明二维曲线色带；随高度逐渐扩宽，用向上行进的波动改变弯曲及密度，烟根保持在纸缘。附近暖反光和短接触影随局部燃烧亮度微调。</p>
+<p>为避免 00→01 从模糊的真实纸张突然变成清晰示意图，采用首帧绘制误差的逐像素连续校正：原图与初始重绘的 RGB 差值保持在原图坐标，烟区校正快速衰减，静止纸面校正慢速衰减。因此纸上原有失焦细节会保留一部分。没有裁取物体贴图，也没有平移、缩放或镜像原物体像素；每帧动态轮廓、火舌及烟色带都重新计算。00 完全使用原始 RGB，后续均直接输出计算后的 RGB。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间（秒）</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原始已燃烧状态，逐像素等于首帧。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>细烟向上流动，蓝白火舌顶部轻微改变，底部接触不变。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>烟柱弯曲开始偏右，纸面白色及横折阴影保持。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>左烟带在上部松散，右火舌重新伸长。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>右纸边出现非常轻的加深，烟持续产生。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>烟中部形成弯曲，纸顶白边仍连续。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>火舌微收窄，右纸面局部进一步加深。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>烟上部回摆，右卷边微卷入。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>烟带弯曲向上移动，纸下接触影保持紧贴。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>右纸面焦黑面积增加，纸左面保持原位置。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>烟根仍从纸缘出发，火舌亮度略波动。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>右顶纸边下降约半像素，烟上端变宽变淡。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>右卷曲面轻微内收，白灰烟持续上升。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>上部烟柱弯曲改变，右上边缘进一步焦化。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>炭点轻微变化，纸下缘未离开玻璃。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>右卷面保持暗纹与细浅色边，烟上部回摆。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>右纸边继续内卷，左白色折面仍完整。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>蓝白火舌平均高度略低，烟持续。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>右卷面部分炭化，底部位置和玻璃板不变。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>纸仍有白色部分与深色卷边，未完全烧尽；白烟继续上升。</td>
+</tr>
+</tbody>
+</table>
+<p>4 fps 播放时每帧保持 0.25 秒，因此 20 帧总时长为 5 秒。</p>
+<h2>实际查看及修正记录</h2>
+<ol>
+<li>实际打开了 first_frame.png、first_frame_zoom.png（4倍全图）、setup_zoom.png 和 paper_pixels.png（最近邻纸张像素放大）。确认左折面、右深色卷边、纸下接触点、玻璃四边及烟路径。</li>
+<li>第一版生成后实际打开 inspection.png，逐项检查 00、02、05、08、11、14、17、19 共8时点。检查烟根连续、纸张不漂移、静止玻璃和桌面稳定、未出现第二片纸或原裁块残影。</li>
+<li>实际打开 transition_check.png，上排比较 00/01/02/05 的纸张与烟根4倍图，下排比较08/12/16/19的接触及卷边5倍图，底排还包含00/01/02全图。没有发现00→01明显更换纸张几何或材质；00–02上缘、左折面和底部接触基本连续。</li>
+<li>修正了右上淡烟的背景清除范围，避免原宽烟痕残留过强；增加烟密度的向上波动，提升右纸缘渐进焦化并略扩烟弯曲幅度。重新生成并保存全部输出。</li>
+<li>第二版再次实际打开 inspection.png 与 transition_check.png：纸张及玻璃保持落点；19右卷边更深，左面依然白；01/02相较00没有突然物体替换。关键接触帧08、12、16、19未见浮空、重复纸张或被大块纯色覆盖。烟总体保持连续，弯曲发生在上部。</li>
+</ol>
+<h2>可见局限与物理假设</h2>
+<p>纸张约25×20像素且原图失焦，卷缩与焦化只能非常克制。右面少量原摄影细节由固定坐标的连续校正保留，故形变程度较小；5秒内没有生成完整坍塌或大量灰烬。烟使用连续二维色带而非流体求解，部分烟丝仍比真实湍流规整；火舌较平滑，不能恢复曝光内所有高亮细节。背景补洞区域可能保留少量柔化，主要位于淡烟后方及一直被纸遮住的足迹。蓝白燃烧区的色相取自首帧，不能确定实际燃烧温度或烟气化学成分。</p>
+<h2>保存与验证</h2>
+<p>通过公共 artifact_io.save 保存 pixels.npz、frames/00.png–19.png、inspection.png、index.html。另保存 transition_check.png、上述首帧放大图、OBSERVATION.md、METHOD.md、generate.py。程序实际验证 pixels 为 uint32 (144,256,20)，每个值为0xRRGGBB；逐帧将20个PNG重新读回并打包，全部逐像素等于张量；00逐像素等于原始首帧。</p>
+</article></main></body></html>

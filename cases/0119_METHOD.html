@@ -1,0 +1,137 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mirror-ball-rotate · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0119</span></nav><article><h1>mirror-ball-rotate · 生成方法</h1><p>仅使用本例 first_frame.png 与 prompt.txt。已先打开原图、全图放大、球和镜中球局部，写 OBSERVATION.md 后独立编写 generate.py。没有读取任何他例、参考视频、历史生成器、掩码、分数、记忆或其他线程；未联网、未调用模型/权重/API，未使用物理引擎、三维网格、法线或三维投影。</p>
+<h2>像素构造</h2>
+<p>球心及原地竖直轴自转下不变的二维球轮廓保持固定。静态摄影背景、镜框、平台、线缆和真实软接触阴影保留。主球/镜中球尺寸分别约18/13像素，光照保持固定的上亮下暗黄绿色。</p>
+<p>每帧重新求值二维椭圆掩码、颜色变化及细小绒毛函数；根据累计二维水平表面角相位绘制两个眼的椭圆轮廓、笑口中心线和弯曲灰白接缝，在轮廓边缘压缩和遮挡。镜中图案使用相差半周的表面相位，并反转水平方向。灰白接缝的轮廓重新求值，变化不是复制首图球块进行平移、缩放或镜像。</p>
+<p>从首图固定位置估计干净绒毛的二维颜色多项式；对初始墨迹与接缝局部作非学习颜色修补。摄影色调残差固定在原处，不跟随转角搬动；每帧新增的绒毛、墨迹、接缝由解析二维函数直接写新RGB。初始重建偏差以 exp(-0.85×帧号) 衰减做短暂光学连续校准；00始终直接保存原图，不经重绘。这种校准会使最初数帧的图案有轻微模糊，未将其当作真实新细节。</p>
+<h2>20 帧事件</h2>
+<p>采用俯视顺时针，6.7度/帧，127.3度总转角；球绕自身轴转动，不滚走，平台静止。帧 n 覆盖 n/4 至 (n+1)/4 秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">角度</th>
+  <th>画面事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0</td>
+  <td>逐像素首图；正面左半笑脸，镜中无脸</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">6.7</td>
+  <td>笑脸微向左，首图材质/尺寸连续</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">13.4</td>
+  <td>眼与嘴继续左移压缩，支撑不变</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">20.1</td>
+  <td>左眼靠近侧边，弯接缝转动</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">26.8</td>
+  <td>脸的可见宽度进一步减小</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">33.5</td>
+  <td>笑口及右眼仍有部分可见</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">40.2</td>
+  <td>左眼被侧轮廓遮挡</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">46.9</td>
+  <td>主体脸仅剩左缘片段；镜中图案边缘接近可见</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">53.6</td>
+  <td>主体脸趋向消失，镜中边缘变化很细小</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">60.3</td>
+  <td>主体近无脸侧；镜中左缘出现淡墨迹</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">67.0</td>
+  <td>镜中脸窄幅可见、保持左右反向</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">73.7</td>
+  <td>镜中眼/笑口逐步展开</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">80.4</td>
+  <td>主体无脸，镜中左半脸继续转入</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">87.1</td>
+  <td>接缝及绒毛连续变相位</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">93.8</td>
+  <td>镜中脸可见面积增加，球底固定</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">100.5</td>
+  <td>镜中两眼渐进入视野</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">107.2</td>
+  <td>镜中笑口逐渐完整</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">113.9</td>
+  <td>镜中笑脸靠近中央，主体仍为无脸侧</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">120.6</td>
+  <td>同速继续转动，无跳跃或突然停止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">127.3</td>
+  <td>镜中脸较完整但受13像素宽度限制，主体背侧</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>实际查看 first_frame.png、first_frame_enlarged.png、ball_detail.png、reflection_detail.png，定位边界和平台接触点。</li>
+<li>实际查看首次 inspection.png 和 contact_check.png 的 00、02、05、08、11、14、17、19 共8时点；发现原笑脸暗残痕在中后段还可见。</li>
+<li>实际查看 transition_check.png 的00/01/02全图及主体8倍、镜中8倍对比。01没有改变球半径、平台位置或光照；原标记重建偏差导致短暂软模糊。</li>
+<li>修正颜色修补覆盖：扩展原暗墨迹阈值，加手绘初始墨迹支持，保证暗墨迹核心完整修补。重新生成并重存所有20帧、张量和页面。</li>
+<li>再次实际查看最终 contact_check.png 的8时点和 transition_check.png 的00/01/02；原笑脸残痕明显消除，尺寸/接触稳定。</li>
+<li>实际查看最终 inspection.png，核对背景、平台、线缆没有动或复制残影；实际查看 occlusion_check.png 的07、09、12、19主体/镜中放大，检查笑脸侧缘遮挡和镜中逐步出现。未见明显浮空、重复球或裁块残影。</li>
+</ol>
+<h2>仍可见局限</h2>
+<ul>
+<li>网球只有约18像素、倒影约13像素，微小眼睛在镜中会合并，笑口不够清晰。只保证可见的渐进墨迹与对应关系，不能恢复首图不存在的清晰细节。</li>
+<li>初始1–3帧的手绘脸部与摄影墨迹有少量宽度/模糊度偏差；短暂校准后过渡较软，未达到真实摄影逐纹理对应。</li>
+<li>去掉原脸后的左半球比原有绒毛更平滑；很小的外缘暗色仍可能像表面脏点。细绒毛重绘为低对比二维函数，不能声称恢复真实逐纤维转动。</li>
+<li>镜中视角使用半周相位和二维水平反向近似，不能确定镜面在真实空间的精确角度。没有建立三维模型来验证反射几何。</li>
+<li>原地球自转保持近圆轮廓，不人为加入形变；静态底部阴影不会因细微墨迹转动改变。</li>
+</ul>
+<p>最终格式校验另存 validation.json：20张RGB PNG均逐像素等于 uint32 (144,256,20) 的0xRRGGBB张量，00等于first_frame.png。格式校验只核对保存一致性，不替代上述实际视觉检查。</p>
+</article></main></body></html>

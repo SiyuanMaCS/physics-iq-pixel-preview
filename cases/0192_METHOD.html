@@ -1,0 +1,117 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>weight-on-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0192</span></nav><article><h1>weight-on-paper · 生成方法</h1><h2>输入与实现</h2>
+<p>仅读取本 case 的 first_frame.png、prompt.txt；读取 shared/GENERATION_RULES.md 和输出 helper artifact_io.py。无其他 case、参考续写、掩码、分数、历史结果、联网、模型、学习权重、物理引擎或三维渲染。</p>
+<p>generate.py 用 NumPy 直接求值二维 RGB 场，以4倍采样后降采样抗锯齿。壶铃主体与提手使用独立编写的二维 Bézier 边界；动态铁面由坐标相关的低亮度颜色、两处提手亮边与非学习正弦颗粒重新计算。蓝绿“30 LB”用明确的3×5字形重新绘制，随壶铃附着运动。杯子用当前承重点、桌面底线及压缩程度重新构造外边界、白色泡沫明暗、杯沿厚边、灰色内折线和局部屈曲轮廓。先杯后壶铃的绘制顺序保证壶铃遮挡杯上侧，软阴影贴近桌面支撑。</p>
+<p>没有裁切原物体贴图后平移、缩放或镜像。初始被遮挡的背景用原图外侧可见墙面逐行插值，以及邻近桌面的颜色和新算的低振幅木纹补齐。这个背景修补只用于旧轮廓退开后露出的区域。未受动态物体、旧遮挡或接触阴影影响的像素从首帧原坐标保留。00逐像素等于首图。01与02在相同原坐标上以16%和55%引入新算的像素，平滑极小载荷建立阶段；未将首图像素移动到新位置，03起完全使用重新绘制的物体像素。</p>
+<h2>20 帧事件</h2>
+<p>横躺泡沫杯承受30 lb载荷，自重使壶铃向下压实杯壁；相机、桌子及无关背景固定。首帧未显示外力或杯内状态，不添加手、碎屑飞散、液体或其他物体。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件与壶铃下沉量（像素）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原始摄影，0</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>载荷建立，0.10；杯轮廓基本保持</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>上壁轻微凹陷，0.70</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>承重区域屈曲，2.0</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>杯壁折叠开始，4.0</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>右侧压扁、斜折线可见，7.0</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>中部压缩、杯厚沿变扁，10.0</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>杯前壁向桌面折叠，13.0</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>两侧白壁挤出，16.0</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>接近桌面，19.0</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>压扁杯片承托壶铃，21.0</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>减速至杯片上，22.0</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>轻微进一步压实，22.4</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>0.3像素回弹，22.1</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>22.2；停止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>22.2；停止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>22.2；停止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>22.2；停止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>22.2；停止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>22.2；停止</td>
+</tr>
+</tbody>
+</table>
+<p>杯下缘从初始约y93逐渐展开到y94.2，最终壶铃底部约y92.2，白色杯片在底部两侧及下方留有薄的可见承托层。没有让壶铃越过桌面。</p>
+<h2>实际视觉检查与修正</h2>
+<ol>
+<li>先实际打开256×144原图及 first_frame_enlarged.png 的4倍放大图，确认杯横躺、壶铃宽度约57像素、杯宽约41像素，接触在杯上壁。</li>
+<li>生成后实际打开 inspection.png，逐格检查00、02、05、08、11、14、17、19八个时点。观察到杯连续压缩、壶铃保持直立向下而不横向滑动，最终静止，无第二个对象或浮空。</li>
+<li>实际打开 transition_check.png 的00/01/02四倍局部放大，比较提手边缘、球腹轮廓、蓝绿字样、杯厚沿与摄影明暗。01与首帧形状相近；02只出现亚像素级位置与光泽过渡，没有白杯变色或黑铁突然变成其他材料。</li>
+<li>实际检查同图05、08、10、12的杯与壶铃接触放大，并检查03、07、11、19全景。初稿提手露出的内孔中有一条残留暗线。扩大原始抗锯齿轮廓的擦除掩码后仍有该线，查明逐段修补端点采到另一段黑色轮廓；改为统一使用该行最外侧的可见背景取样，重新生成并实际复查，暗线已消除。</li>
+<li>初稿杯中段轮廓过方正、最终承托层过薄；增加杯右侧屈曲轮廓、边缘软化、斜折线和底部展开厚度。重新打开两张检查图，05与08可见折线；10与12的薄杯片接触桌面，壶铃下侧遮挡正确。</li>
+<li>将动态重算限制在轮廓、旧遮挡和接触阴影区域，复查最终版本两张检查图，背景保持锁定；14–19静止。</li>
+</ol>
+<h2>真实不足</h2>
+<ul>
+<li>新绘制铸铁有连续明暗与颗粒，但比首帧摄影平滑，尤其提手亮边和“30 LB”字形只能近似；02到03可感到细节简化。</li>
+<li>横躺杯的泡沫褶皱是二维线条与边界近似，中段仍较整齐，不能表现真实泡沫材料细密的破裂和层间遮挡。</li>
+<li>首帧提手上缘在画外，后续露出的顶部形状按现有两侧走势补全，无法由首帧唯一确定。</li>
+<li>旧遮挡处墙面与桌纹采用非学习修补，局部墙面更平滑；大范围摄影投影阴影没有精确重新估计。桌面接触阴影随压缩重新求值。</li>
+<li>压缩时序属于与首帧和重量相容的手工物理假设，没有经过力学求解。</li>
+</ul>
+<h2>保存与校验</h2>
+<p>调用 artifact_io.save(frames, CASE) 保存20张RGB PNG、pixels.npz、inspection.png及独立index.html。另保存 transition_check.png。执行验证：数组为 uint8 (20,144,256,3)，pixels 为 uint32 (144,256,20)；逐帧将PNG打包为0xRRGGBB与tensor对应切片完全相等，00与first_frame.png逐像素完全相等。以上验证在最终修改后的实际运行中通过。</p>
+</article></main></body></html>

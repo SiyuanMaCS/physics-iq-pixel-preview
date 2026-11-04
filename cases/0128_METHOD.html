@@ -1,0 +1,114 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>napkin-soak · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0128</span></nav><article><h1>napkin-soak · 生成方法</h1><h2>输入及直接像素方法</h2>
+<p>只以本例 <code>first_frame.png</code> 和 <code>prompt.txt</code> 为视觉及场景输入，并读取本例配置与公共输出 helper。未读取其他 case、旧生成器、参考续写、其他视角、掩码、分数、模型权重或记忆；没有联网、AI API、物理引擎、三维场景、网格或法线渲染。</p>
+<p>帧 00 原样保存输入。<code>generate.py</code> 在 01..19 对新 RGB 直接求值。主纸面使用连续二维上下边界、左右边界和底缘接触约束：释放初期保留原尺度，接触后上部倒伏，原中沟逐渐打开，使横向投影宽度从约 53 像素展开到约 80 像素。展开后轮廓有中央后缘高低变化、左前角收卷、右尖角回折和不规则前缘；不是仅缩短高度和轻微加宽。</p>
+<p>主纸面明暗保留首帧的深竖沟和亮右面。倒伏期间，深沟转为弯曲湿谷，并新增连接着主体的四个转折区域：左角三角翻卷、由原中沟延伸的波状叠褶、右尖角窄回卷、前缘湿折边。每个区域用二维位置和纸面坐标直接求掩码、棉纸细纹、当前灰白/浅蓝颜色、折面明暗和软轮廓，并按折面覆盖顺序重绘。上层覆盖主面的一部分，下缘画窄暗影和亮折边，形成自遮挡与边缘层次；各层均接在同一片纸上，没有独立第二物体。深湿谷不会仅随倒伏消失，右侧仍是较亮大面。</p>
+<p>动态区域没有从首图裁取纸巾贴图，也没有平移、缩放或镜像首图物体。纸面底图、翻卷面、叠褶及湿边均重新生成颜色；透明渐变只用于当前生成的软边和渐进形成的折面，不用于延长首图摄影混合。3 倍采样后缩小仅作抗锯齿。</p>
+<p>静态灰墙、木桌、橙夹具和可见盘沿保留输入；原纸巾遮挡的区域用邻侧颜色、二维木纹、盘沿软曲线与液面平滑颜色场补全。纸巾接触影限制在液面区域，浅涟漪直接求值，并由纸巾覆盖。没有让接触影在可见盘沿上跟随移动。</p>
+<h2>物理假设及 20 帧事件</h2>
+<p>首帧夹具已与纸巾分离且下缘近液面，故假设释放已开始，夹具固定。纸巾底缘先触液，液面限制进一步自由下降；上半片向盘内倒伏，原竖向折沟展开为叠褶，角部卷回并吸水。没有猛烈飞溅、纸巾破裂或新增对象。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>可见状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>逐像素保留输入，深竖沟、右亮面和近液底缘。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>小幅下降，尺度和材质连续，不出现新折面。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>触液约束开始，保留深沟和亮右面，浅涟漪出现。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>上部后倾，底缘接触，横向展开开始。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>左右纸面展开，深沟变为弯曲湿谷。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>中沟下端开始生成连接的叠褶，左角开始转折。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>高度降低并显著展开，叠褶逐步覆盖主面，前缘产生湿折边。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>中央湿谷、层间暗边和左角转折变清楚，右亮面继续展开。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>多个连接折面已可见；左角卷回、右侧回卷和前缘折面出现遮挡层次。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>上缘脱离后盘沿，宽纸片低伏，中央叠褶继续松弛。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>右面充分展开，右尖角形成窄回卷面，湿谷保留。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>主体继续贴近液面，前湿折边与中央叠褶保持连接。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>左角、右回卷和前缘折边基本定形。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>湿润加深，纸巾约 80 像素宽，原中沟转成深弯湿褶。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>多层折面稳定，褶间阴影与亮边清晰，主体仍贴液。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>宽展开的湿白纸巾稳定，左翻卷、中央叠褶、右回卷和前湿折边共存。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>余波很弱，几何保持，缓慢吸液。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>湿润稍加深，右面保持比湿谷明亮。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>稳定折面和连续接触，夹具原位。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>宽展开并带局部叠褶的湿纸巾停在盘内，非规整小条片。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查和返修记录</h2>
+<p>实际打开首图和首图四倍图，确认纸巾软边、中沟、右亮面、非直线底缘与夹具间隙。最初输出实际查看过八时点、00/01/02 放大图和多个接触裁窗，修复了遮挡区盘沿台阶、液面矩形接缝与逐行颜色带。</p>
+<p>根代理再次查看后指出末段纸巾缩成规整小条片、折沟只是变浅。依该反馈，保持原首图连续材质，返修为显著横向展开及上述连接折面，加入湿谷、折面覆盖、窄暗边、亮折边和角卷曲。</p>
+<p>最终重存后再次实际打开：</p>
+<ul>
+<li><code>inspection.png</code> 的 00、02、05、08、11、14、17、19 八时点，检查独立对象数量、初始连续性、横向展开、接触和背景。</li>
+<li><code>transition_check.png</code> 中 00/01/02 全图二倍和纸巾六倍对比，以及 03/05/08/10/15/19 接触近景；确认续帧保留白灰材质、深沟和亮右面。</li>
+<li><code>contact_check.png</code> 的 03、04、06、07、08、09、10、12、15、19 全图及放大接触区域；检查新叠褶逐步形成，未瞬间出现独立纸片，底缘仍处于液面。</li>
+<li><code>fold_detail.png</code> 中 08、15、19 的五倍局部图。08 可见新中央覆面、左角返回面、湿谷与前折边；15/19 可见约 80 像素宽的展开主体、中央叠褶下的遮挡暗边、右侧回卷的窄亮面和湿谷。</li>
+</ul>
+<p>最后将支撑阴影限定到液面，重存并再次打开最终八时点、首续放大对比和 08/15/19 局部，确认盘沿没有跟随纸巾变暗的移动阴影。</p>
+<h2>仍然可见的局限</h2>
+<p>折面是人工二维构造；中央叠褶与前缘折线偏平滑，缺少真实湿纸随机的细小皱裂和不均匀吸水，视觉上仍有些规则波褶的感觉。层间自遮挡由局部覆面及软影表示，没有完整背面的复杂多重折叠。00→01 的细纤维纹理和顶缘灰度仍与摄影首帧有轻微差异。首图原纸巾遮挡的中央木纹和后盘沿是推断补全，比实拍简化。真实倒伏速度和吸液方式无法从单帧确定。</p>
+<h2>输出及逐像素校验</h2>
+<p><code>artifact_io.save</code> 重存 <code>pixels.npz</code>、<code>frames/00.png</code>..<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。同时重存 <code>transition_check.png</code>、<code>contact_check.png</code>、<code>fold_detail.png</code>。<code>validation.json</code> 记录全部 20 张 256×144 RGB PNG 与 uint32 <code>(144,256,20)</code>、<code>0xRRGGBB</code> 张量逐像素一致，以及 00 与输入逐像素一致；4 fps、5 秒。</p>
+</article></main></body></html>

@@ -1,0 +1,108 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>stable-blocks · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0173</span></nav><article><h1>stable-blocks · 生成方法</h1><p>仅使用本目录 <code>first_frame.png</code> 与 <code>prompt.txt</code> 判断场景。先实际看原图及 4 倍放大图，再写 <code>OBSERVATION.md</code>，最后独立实现 <code>generate.py</code>。输出由公共 <code>artifact_io.save</code> 保存，公共 helper 不参与像素生成。</p>
+<h2>逐帧像素方法</h2>
+<p>灰墙、木桌、门架、原来可见的粉块与它們的静态阴影保持首帧摄影像素。动态处理集中在上方 x126–149、y0–35；把旧夹具遮住的窄墙条用同一高度左右可见墙色插值补出，并加极弱的确定性细纹。粉块露出的顶端用二维矩形、约 1 px 的小倒角、正面/右边色带与微小纹理重新计算，在 y33–35 平滑衔接已经可见的原粉块。它的底部与门架接触始终不变。</p>
+<p>夹具通过首图观察得到的二维左右轮廓坐标重新构造：每一帧直接计算当前位置的轮廓、左右夹爪的微小张开、蓝色外壳边带、黑色夹持面、中央缝、接触附近的短程暗部，采用 8× 子像素求值与平均得到 RGB。没有裁出旧工具贴图，也没有平移、缩放或镜像任何物体纹理；没有三维法线、网格、相机投影、物理引擎或模型调用。其移动方向保持垂直，不添加旋转。</p>
+<p>00 完全保留原始像素。01/02 是已经接触后的短暂持稳。03 在原位置渐进释放，04 起向上回收；03 的小幅原位混合仅使最初的亚像素松开连续，05 起工具全部为当前帧独立求值的颜色和轮廓。13–19 是夹具离开后的静止展示。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原图，粉块落在横梁上，夹具仍握住上端。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>接触后的持稳。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>继续持稳，姿态不变。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>夹爪微小张开。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>释放并上升 0.45 px。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>上升 2 px，露出部分顶部。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>上升 5 px，夹具与粉块脱离。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>上升 8.5 px，有清楚的空隙。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>上升 13 px。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>上升 18 px。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>上升 24 px，仅下端仍在画面内。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>上升 31.5 px，夹具离开画面。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>夹具在上方画面外，摆放稳定。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>静止展示。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>最终稳定状态。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ol>
+<li>实际打开 <code>first_frame.png</code> 和 <code>first_frame_zoom.png</code>，确认细长粉块已接触横梁，蓝黑工具下端覆盖其顶部，门架的红/黄腿接触木桌。</li>
+<li>实际打开初版 <code>inspection.png</code>，看 00、02、05、08、11、14、17、19 共 8 个时点，检查物体数量、工具退出过程、静止门架与粉块。</li>
+<li>实际打开初版 <code>transition_check.png</code>，查看 00/01/02 的全幅及放大工具对比；查看 03、04、05、06、07、10、11、12 的工具释放、顶部遮挡和粉块底部接触细节。</li>
+<li>另实际查看 <code>detail_check.png</code> 的 00/03/04/05/06/07/10/12 最近邻放大，发现重画的蓝边在开始释放时略暗；将蓝边向黑面过渡缩窄，并重新匹配蓝色边缘的明暗色带。重跑生成器后实际再次打开最终 <code>inspection.png</code> 和 <code>transition_check.png</code>，确认蓝黑外观过渡更接近首图，没有双工具或遗留旧下端。<code>detail_check.png</code> 是修正前的补充检查记录，最终结果以 <code>frames</code>、<code>inspection.png</code>、<code>transition_check.png</code> 为准。</li>
+<li>检查关键接触细节：03–12 粉块底部均留在同一横梁位置；腿底没有浮起；工具回收没有拖动粉块，06–07 后存在真实灰墙间隙。桌纹、门架和桌面阴影没有涂抹或重绘抖动。</li>
+</ol>
+<h2>校验与可见局限</h2>
+<p>已逐张检查 20 张 PNG 的模式/大小，并把 RGB 按 <code>0xRRGGBB</code> 打包，与 <code>pixels.npz</code> 的 uint32 <code>(144,256,20)</code> 张量逐像素比较，全部相等；00 与输入图逐像素相等。全帧 y≥36 的静态区域与首图一致，帧数、大小、类型符合要求。</p>
+<p>粉块隐藏的顶面高度无法从首图确定，补为 y26.2 的平顶是推断。夹具真实机械结构看不清，释放后的小中央分缝是二维简化，放大时能看出略规整的程序轮廓和比摄影区域平滑的黑面。新露出的粉块顶面和窄灰墙条也比原图局部纹理略干净。初始接触发生在首图之前，因此没有额外大幅下放动作，前三帧与最后八帧持稳是这个可见状态的延续。</p>
+</article></main></body></html>

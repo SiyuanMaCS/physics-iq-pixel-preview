@@ -1,0 +1,186 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>two-balls-pass · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0179</span></nav><article><h1>two-balls-pass · 生成方法</h1><h2>像素生成</h2>
+<p>先实际打开本例首帧，记录 OBSERVATION.md，再独立写 generate.py。唯一场景信息为本例 first_frame.png 和 prompt.txt。使用 NumPy、二维高斯滤波及PIL保存检查图。没有裁取原球贴图，也没有物体贴图平移、缩放或镜像；没有读取他例、参考视频、掩码或分数。</p>
+<p>00帧直接使用输入RGB。01–19帧以固定摄影背景为底，新计算移动球的二维椭圆抗锯齿轮廓、局部色彩场、灰球分段起伏浅缝、多尺度毛面云斑、非对称局部亮斑、棕球持续可见的宽灰带、细小绒毛纹理、顶部柔光和下缘暗色。纹理坐标与弧线随滚动相位变化；原球尺寸为灰约19像素、棕约14×15像素。随着二维路径向前/向远移动，尺寸作很小的连续变化。4×子像素采样用于混合新颜色与背景，没有三维法线或场景。</p>
+<p>原球及阴影占用的两块桌面，通过该横纹行上左右静态木桌颜色插值和新细纹补齐，仅4像素边缘羽化。其余桌面、管、管阴影、黄褐背景固定。球底部有紧贴接触点的窄暗影以及向右延伸的软影。球是滚动而非撞击，未添加无依据的大形变。</p>
+<h2>物理假设与逐帧事件</h2>
+<p>首帧中球已出管口。方向取对应管口到球心的延长线，灰向右下、棕向左略上，纵向错开，互不碰撞。速度只轻微衰减。灰球出画后未知区域不在画内重构。以帧号/4表示采样时刻，20帧按每帧0.25秒播放共5秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>时间s</th>
+  <th>灰球中心</th>
+  <th>棕球中心</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>(72.0,68.5)</td>
+  <td>(140.0,35.7)</td>
+  <td>输入首帧逐像素保持。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>(107.8,76.1)</td>
+  <td>(102.9,33.4)</td>
+  <td>两球沿不同深度的直线路径高速滚动；弧线/灰带随滚动相位变化，保持接地。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>(143.2,83.6)</td>
+  <td>(66.0,31.2)</td>
+  <td>两球沿不同深度的直线路径高速滚动；弧线/灰带随滚动相位变化，保持接地。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>(178.3,91.0)</td>
+  <td>(29.5,29.0)</td>
+  <td>棕球临近左画缘，灰球仍在桌面。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>(213.0,98.4)</td>
+  <td>(-6.8,26.7)</td>
+  <td>棕球轮廓已离开左画边，灰球继续向右下。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>(247.3,105.7)</td>
+  <td>(-42.8,24.5)</td>
+  <td>灰球右侧被画面边界裁切，阴影也同样裁切。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>(281.2,112.9)</td>
+  <td>(-78.6,22.4)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>(314.8,120.0)</td>
+  <td>(-114.0,20.2)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>(348.0,127.0)</td>
+  <td>(-149.2,18.1)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>(380.8,134.0)</td>
+  <td>(-184.1,15.9)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>(413.2,140.8)</td>
+  <td>(-218.8,13.8)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>(445.3,147.6)</td>
+  <td>(-253.1,11.7)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>(477.0,154.4)</td>
+  <td>(-287.2,9.6)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>(508.3,161.0)</td>
+  <td>(-321.0,7.6)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>(539.2,167.6)</td>
+  <td>(-354.6,5.5)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>(569.8,174.0)</td>
+  <td>(-387.8,3.5)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>(600.0,180.4)</td>
+  <td>(-420.8,1.5)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>(629.8,186.8)</td>
+  <td>(-453.5,-0.5)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>(659.2,193.0)</td>
+  <td>(-486.0,-2.5)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>(688.3,199.2)</td>
+  <td>(-518.1,-4.4)</td>
+  <td>两球均已出画；静态桌面和黑管保持。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看及修正</h2>
+<ol>
+<li>已实际打开 first_frame.png，并看 first_frame_enlarged.png，核对灰蓝球、深棕球的尺寸、带状纹理、表面软光和右向影。</li>
+<li>第一版实际看 contact_sheet.png 的00/01/02/03/04/05/06/07/10/13/16/19十二个时点及 object_transition.png 的00/01/02两球6倍局部图，发现二维inpaint留下两个可见暗斑，且新球阴影过窄。</li>
+<li>删除inpaint方法，改用木纹横向行插值与小范围羽化，扩大软影并保留接触暗影，重新生成和重存全部文件。</li>
+<li>第二版实际看更新后的 contact_sheet.png 十二个时点、object_transition.png 和 transition_check.png 的00/01/02整图4倍对比。确认两管、桌子固定；原球位置无重复球及暗影残留，球大小无突然换几何。灰球首续帧未变成亮色塑料球，棕球保持深棕并随转向显隐灰带。</li>
+<li>实际打开 key_frame_check.png 的03/04/05/06三倍图，核对03棕球仍与桌面相接，04棕球出画、05灰球被右画边裁切、06空桌；没有画内碰撞，所以没有虚构碰撞关键帧。已看最终 inspection.png 规定的8时点及 background_check.png，确认后段桌面静止。</li>
+</ol>
+<h2>仍可见的局限</h2>
+<ul>
+<li>手写二维球面颜色和绒毛比摄影首帧更均匀，细纹和转动带的外观不能完全恢复真实毛面，放大时尤其明显；灰球浅缝虽有分段起伏和非均匀亮度，整体仍比摄影首帧的自然毛面细节规则。</li>
+<li>被首帧球遮挡的木纹只能插值，补丁区域略平滑，原球位置的板纹细节并非真实可知。</li>
+<li>4fps高速运动每帧跨约35像素，时序较跳；仅凭单帧推断的速度、摩擦及投影路线存在歧义。两球约1.5秒内出画，其后无可见运动符合这项高速直线假设。</li>
+</ul>
+<h2>输出验证</h2>
+<p>artifact_io.save保存20个256×144 RGB PNG、pixels.npz、inspection.png和独立index.html。已逐帧将PNG打包为0xRRGGBB，与npz的uint32 (144,256,20)逐元素对照全部一致；00帧与first_frame.png逐像素一致。额外诊断为transition_check.png、contact_sheet.png、object_transition.png、key_frame_check.png、background_check.png、first_frame_enlarged.png。生成器只修改本case目录。</p>
+<h2>材质返修与实际复查</h2>
+<p>根审指出旧续帧灰球均匀光滑、棕球宽灰带在01/02几乎不见。返修开始实际重新打开object_transition.png，确认这两个问题。</p>
+<ul>
+<li>灰球新色彩叠加大尺度云斑、中尺度毛面斑纹与细纹；增加左偏窄亮斑和上侧小亮斑。浅缝在中心线、宽度、分段亮度上分别起伏，并在旁边叠加断续毛面明暗。全部由当前帧二维颜色函数计算，不采样原球像素。</li>
+<li>棕球宽灰带不再使用会大幅降低可见度的相位函数。带的宽度、位置、曲率随相位连续变化，可见度仅小幅变化，并在带内重绘毛面云斑与亮度梯度。因此01/02与03可见灰带，其位置依次变化。</li>
+<li>重存全部20帧、张量、播放器和所有生成器内诊断图，key_frame_check.png现已加入自动诊断，后续重运行不会留下旧图。</li>
+<li>实际打开返修后object_transition.png的00/01/02两球6倍近景、transition_check.png的00/01/02全图4倍、contact_sheet.png的00/01/02/03/04/05/06/07/10/13/16/19、key_frame_check.png的03/04/05/06三倍图及inspection.png。已逐个看全部可见移动帧01–05和06离场帧。</li>
+<li>可见改进：灰球01/02重新呈现断续浅缝、局部不对称亮斑与深浅毛面云斑；棕球01/02/03的宽灰带可识别，随转动改变位置和弯曲。球的尺寸、路线、接地软影、05右缘裁切与06完全离场正常，背景没有重新出现旧暗斑。</li>
+<li>仍可见不足：灰球浅缝总体仍较规则；多尺度斑纹是二维近似，在低分辨率下不能恢复真实随机细毛；棕球灰带的出画前各采样相位都保留可见部分，真实球的完整绕球带面形态无法从首帧确定。</li>
+</ul>
+</article></main></body></html>

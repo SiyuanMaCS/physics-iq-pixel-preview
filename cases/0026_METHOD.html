@@ -1,0 +1,172 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-rolls-on-glass · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0026</span></nav><article><h1>ball-rolls-on-glass · 生成方法</h1><p>先查看首帧和放大的球局部，再写 OBSERVATION.md，随后独立实现 generate.py。仅使用本例首图和 prompt；读取公共 artifact_io.py 仅用于输出。没有其他例、参考续帧、模型、权重、API、物理引擎或三维渲染。</p>
+<p>静态墙面、桌沿和玻璃保留摄影像素。初始球和原阴影露出的木桌区域以左右两侧干净木纹的逐行颜色、低振幅固定纹理和柔边混合修补。初版遗漏了向右上方展开的旧阴影；查看检查表后扩大修补范围。第二轮检查发现局部扩散修补的木纹不够连续，最终改为逐行木纹带重建。</p>
+<p>每个续帧直接计算当前球的二维轮廓掩码、低清晰度绒边、深蓝图像平面颜色场、纤维纹理以及随滚动改变的弯曲缝线；纹理坐标与缝线参数随时间重新求值。阴影是当前接触位置生成的柔和二维衰减，在玻璃上减弱。颜色与模糊以预乘掩码求值，避免蓝色裁块边缘。没有裁下原球平移/缩放/镜像，也没有贴图变换。球的直径约20–21像素，整体深蓝，下方较暗，不增加高光塑料材质。</p>
+<p>物理假设：球以每帧8.4像素匀速右滚，球底接触高度沿玻璃的透视方向每帧增加约0.81像素；无弹跳，无支撑面分离。玻璃右边界在画外，因此球只滚向画外，未编造坠落、破碎或玻璃运动。桌与玻璃均静止。所有帧使用相同固定画面。</p>
+<h2>20帧安排</h2>
+<p>时间为帧起点，末帧在4.75秒开始并显示到5秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>秒</th>
+  <th>球中心x</th>
+  <th>接触y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>104.4</td>
+  <td>78.15</td>
+  <td>原始桌面上的球，完全保留首图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>112.8</td>
+  <td>78.96</td>
+  <td>桌面右滚，绒面深蓝与柔边延续</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>121.2</td>
+  <td>79.76</td>
+  <td>桌面滚动，缝线开始转向</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>129.6</td>
+  <td>80.57</td>
+  <td>继续桌上匀速右滚</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>138.0</td>
+  <td>81.38</td>
+  <td>接近桌右边缘</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>146.4</td>
+  <td>82.18</td>
+  <td>右侧球身越过桌边，中心仍在桌上</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>154.8</td>
+  <td>82.99</td>
+  <td>中心跨过桌边，接触转为玻璃</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>163.2</td>
+  <td>83.79</td>
+  <td>完整球身到玻璃上</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>171.6</td>
+  <td>84.60</td>
+  <td>玻璃上滚动，贴面阴影变淡</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>180.0</td>
+  <td>85.41</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>188.4</td>
+  <td>86.21</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>196.8</td>
+  <td>87.02</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>205.2</td>
+  <td>87.83</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>213.6</td>
+  <td>88.63</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>222.0</td>
+  <td>89.44</td>
+  <td>玻璃上向右边界接近</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>230.4</td>
+  <td>90.25</td>
+  <td>继续向画外滚动</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>238.8</td>
+  <td>91.05</td>
+  <td>继续玻璃上滚动</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>247.2</td>
+  <td>91.86</td>
+  <td>右侧轮廓接近画面右缘</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>255.6</td>
+  <td>92.67</td>
+  <td>球被画面右缘部分裁切</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>264.0</td>
+  <td>93.47</td>
+  <td>中心已在右画外，剩左侧弧缘</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ul>
+<li>打开原始 first_frame.png；另存并打开 first_ball_detail.png 放大观察球的软轮廓、暗蓝绒面、下半部浅缝线和向右漫射阴影。</li>
+<li>实际打开 inspection.png，检查00、02、05、08、11、14、17、19共8个时点；首版可见旧阴影暗斑，扩大修补并重存；再查看重存的检查表。</li>
+<li>实际打开 transition_check.png，查看00/01/02的球区域放大对比：尺度保持约20像素，深蓝和较暗下半部连续；续帧的细纹理较简化，未出现大块纯色覆盖或突然变亮塑料材质。</li>
+<li>同一检查表实际查看04、05、06、07、08、18全景放大：05–06桌到玻璃交接未出现第二个球或悬空间隙；07–08球底有贴面柔影，玻璃线保持静止；18正确由画边裁掉球右侧。</li>
+<li>在最终木纹带重建后，再次打开完整 inspection.png 与 transition_check.png，确认原球位置没有残留蓝球或旧的明显暗影，桌边和玻璃保持固定。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>重绘球比首图更规整，绒毛斑块与缝线的局部形状是二维近似，放大后可辨认合成；虽然颜色、尺寸和软边相近，无法逐像素恢复真实滚动的表面。修补的初始位置木纹细节有一定平滑。玻璃上的球影以较弱贴面阴影近似，没有模拟复杂的反射和折射。玻璃画外形状未知，因此最后只显示球离开画面，不确定其之后的运动。</p>
+<h2>输出校验</h2>
+<p>artifact_io.save接收uint8 (20,144,256,3)，保存pixels.npz中的pixels为uint32 (144,256,20)，编码0xRRGGBB。已逐张加载20 PNG重编码并与张量对应层精确比较全部通过；00与first_frame.png逐像素相等。inspection.png、transition_check.png与index.html已保存。</p>
+</article></main></body></html>

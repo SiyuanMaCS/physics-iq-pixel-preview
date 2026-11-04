@@ -1,0 +1,151 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>water-in-juice · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0186</span></nav><article><h1>water-in-juice · 生成方法</h1><p>只读取本例 first_frame.png、prompt.txt、case_config.json 和公共输出 helper；未联网，未读取其他案例、旧结果、参考视频、掩码、评分、记忆或其他生成器。OBSERVATION.md 在 generate.py 之前写入，已实际打开首图及局部放大。</p>
+<h2>逐帧 RGB 方法</h2>
+<p>256×144 图像平面内直接计算 RGB。静止桌面、玻璃杯壁、底部接触阴影、玻璃罐、龙头、编织支座和室内背景沿用首图。流动区域由二维软轮廓重新构造：液体后缘/前缘椭圆随液量上升，杯内主体用首图橙色区域拟合的低阶 RGB 趋势重新求值，加入小幅独立果汁微纹理、渐进稀释和淡色入水羽流。液面自身的横向颜色差、细波纹、微气泡前缘，以及窄透明水柱都按每帧时间重新求值。水柱连接固定龙头到当前液面，不平移物体贴图；仅局部以邻近背景颜色内插移除原细水柱，再重算水柱透明明暗。没有复制、变换或移动原物体纹理，也没有三维几何、法线、物理引擎或学习模型。</p>
+<p>00 是首图逐像素原值。01–03 为橙色主体低频趋势的渐进接替，避免首续写整体变色。杯壁反光保持固定，新进入液体的区域被橙色重新遮挡。液面从中心 y84 上升到 y74.88，水柱到达对应液面；无溢流、无新器具。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">采样时间(s)</th>
+  <th style="text-align:right">液面中心 y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">84.00</td>
+  <td>首图原样，已在倒水</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">83.52</td>
+  <td>细水柱继续，微弱液面扰动</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">83.04</td>
+  <td>液面上升，前缘泡沫重绘</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">82.56</td>
+  <td>主体重绘过渡完成</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">82.08</td>
+  <td>连续注水，轻微稀释</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">81.60</td>
+  <td>新液体遮挡杯后编织纹理</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">81.12</td>
+  <td>入水点小波纹</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">80.64</td>
+  <td>稳定细水柱</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">80.16</td>
+  <td>液面持续升高</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">79.68</td>
+  <td>缓慢扩散淡色羽流</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">79.20</td>
+  <td>泡沫前缘微变</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">78.72</td>
+  <td>液面仍低于杯肩反光</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">78.24</td>
+  <td>杯壁固定，液体背景遮挡增加</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">77.76</td>
+  <td>细水柱逐渐缩短</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">77.28</td>
+  <td>液面接近下部肩反光</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">76.80</td>
+  <td>水柱持续入液</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">76.32</td>
+  <td>橙色仍明显，轻度稀释</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">75.84</td>
+  <td>液面已在肩部下半段</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">75.36</td>
+  <td>稳定接触，未到杯口</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">74.88</td>
+  <td>注水仍继续，无溢流</td>
+</tr>
+</tbody>
+</table>
+<p>输出按 4 fps 播放 20 帧，持续 5 秒；20 个采样时点为 0–4.75 秒。公共 inspection.png 的标签采用帧结束时刻，所以显示 0.25–5.00 秒。</p>
+<h2>实际查看和修正记录</h2>
+<ul>
+<li>已打开原首图、input_enlarged.png、input_detail.png、input_grid.png，核对杯子 x99–139、y61–132，桌面接触与透明玻璃反光。</li>
+<li>第一次打开 inspection.png 的 00、02、05、08、11、14、17、19 共 8 个时点，杯子和罐的尺寸与位置固定，液面递增，桌面和背景未出现新影子或重复物体。</li>
+<li>第一次打开 transition_check.png 中 00/01/02 的 6 倍局部对比，发现重绘液面过均匀、原泡沫边带续写过稀。增加液面横向 RGB 差、细颗粒与较密的不规则泡沫，01 保留少量首图亚像素过渡贡献；重跑并覆盖保存。</li>
+<li>第二次实际打开修订后的 transition_check.png 和 inspection.png，再次检查 00→01→02 的杯壁、橙色主体、液面和底部接触；液面边带已更接近首帧，不出现额外杯子或显著几何切换。</li>
+<li>实际打开 contact_check.png 中 05、11、19 的放大图与水柱细节。水柱固定起点连接当前液面；上升液体遮住进入液体部分的编织纹理；杯底始终贴桌。白色杯壁反光仍固定。最后液面前缘约 y80，距杯口还有空间。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>首帧的气泡、折射和果汁色彩微结构更自然；重绘液面的泡沫边缘仍稍规则、液体主体比照片更平滑。透明水柱的细节有限，入水涟漪很弱，不能准确复现湍流。重新填充区域的复杂编织反射被近似遮挡，未完整计算玻璃折射；少数亮反光保持首图强度。罐内水位保持静止，假设这个细流 5 秒内对较大罐的水位改变不足一个可辨像素。以上都是二维像素近似，未声称精确流体模拟。</p>
+<h2>保存与校验</h2>
+<p>由 shared/artifact_io.py 的 save 保存 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html。另外保存 transition_check.png、contact_check.png。validate.json 记录实际输出 shape、dtype、首帧逐像素相等与 20 PNG 的逐像素编码相等检查。</p>
+</article></main></body></html>

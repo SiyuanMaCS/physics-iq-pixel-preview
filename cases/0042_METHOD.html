@@ -1,0 +1,139 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>cut-orange · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0042</span></nav><article><h1>cut-orange · 生成方法</h1><p>仅将本例 <code>first_frame.png</code> 和 <code>prompt.txt</code> 作为场景依据，实际打开原图、4 倍图及带坐标的放大图后先写 <code>OBSERVATION.md</code>，再独立写 <code>generate.py</code>。没有读取别例、参考视频、外部掩码、旧结果或模型；没有联网、学习模型、物理引擎、三维场景、网格、法线或相机投影。</p>
+<h2>逐帧 RGB 方法</h2>
+<p>在 4 倍二维像素网格中计算每个时点的橘皮轮廓、果肉切面、不等瓣大小的曲折瓣膜、白髓、细小果肉高光和刀面渐变/凹槽，最后按区域平均得到 256×144 RGB。椭圆方程只是二维轮廓和果肉分区；刀用首帧观察到的二维折线边界、长轴/横轴的标量颜色场及一列独立求值的凹槽椭圆。橘肉纹理由多尺度相关噪声、不等分瓣囊、独立汁囊与曲折分叉膜生成。两个切块的表面、刀的每个凹槽及接触遮挡均重新求值，没有裁出原物体后平移、镜像或缩放。</p>
+<p>被首帧遮挡的背景用非学习图像修补及邻近同材质静止像素的颜色估计，其他木桌/玻璃纹理保留原图。运动阴影在当前刀和果皮附近另算。00 直接保存原图；01–06 在原屏幕位置加入递减的首帧与初始二维重绘之间的颜色残差，以避免首续帧突然切换材质。这项残差固定在屏幕坐标，不随物体平移或变形；07 起完全采用重绘表面。</p>
+<p>刀下压最多约 7.2 px、向左 3.2 px；两块橘子总分离约 4.9 px。退出时刀向右上移动，形状和朝向保持一致。果肉切面轻微受压，但橘皮接触底边不升高。刀切割时遮住中间，前侧果皮遮住少量刀下沿；退出后露出白髓切边。没有依据添加手、额外物体或流动果汁。</p>
+<h2>每帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻（秒）</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原首帧，刀已接触半橘</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>极轻微开始下压，保持首帧材质</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>小幅进入切面</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>刀下沿继续压入，中心受压</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>增加压切，瓣膜开始显露</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>刀继续向左下，切块尚紧靠</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>切缝开始张开，果肉压缩接近最大</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>两块轻微分离，当前表面完全重绘</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>刀穿过更多果肉，切缝继续扩大</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>刀接近最低位置，果皮持续接触板面</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>切割最低位置，刀遮住中间切缝</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>开始退出，两块停止继续分离</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>刀向右上退出，受压形变释放</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>白髓切边逐步露出</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>前块切面大部分可见</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>刀继续退出，切块保持支撑</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>刀升高，果肉瓣膜与切边显露</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>动作减速，切块保持静止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>刀停止退出，切块稳定</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>保持结束姿态，播放到 5.00 秒</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ul>
+<li>打开原始首帧、<code>first_frame_large.png</code>、<code>coordinates.png</code>，确认刀尖、橘皮底边和切菜板边界。</li>
+<li>第一版实际打开 <code>inspection.png</code>、<code>transition_check.png</code>、<code>contact_check.png</code>。检查发现 07 以后果肉过平滑、呈纯橙色，背景刀边缘附近有细痕，刀材质偏蓝。</li>
+<li>修正了果肉的瓣膜宽度、白髓不规则边界、局部颜色和湿润高光；增加多尺度细胞纹理，调低刀的过蓝色调，并扩大修补候选区域。</li>
+<li>第二版又打开三个检查表，发现修补候选区域过宽，01 周围的玻璃纹理变软。进一步依据首帧颜色与位置限制真正需要替换的前景区域，并恢复其余静态摄影纹理。动态层按背景增量写回，避免整个背景反复降采样。</li>
+<li>最终版再次打开 <code>inspection.png</code> 的 00、02、05、08、11、14、17、19 八个时点，以及 <code>contact_check.png</code> 的 00、01、02、04、06、08、10、12、14、16、18、19 十二个时点；打开 00/01/02 的全图与接触区域放大对比；另外单独打开 <code>frames/10.png</code> 和 <code>frames/18.png</code>。检查了最低压切、刀/前侧果皮遮挡、退出白髓及切块底边。没有观察到新增第三个物体或切块浮起；首两帧颜色/尺度连续，后期板面仍有局部修补痕迹。</li>
+</ul>
+<h2>仍然可见的局限</h2>
+<p>果肉整体比首帧更规则、较平面，后期表面虽然具有瓣膜和细胞纹理，仍不完全达到原始照片的有机细节；约 03–07 的颜色残差退去时能观察到渐进的纹理重构。刀保持同一朝向，缺少真实持刀手带来的微小姿态变化；退出后仍从切块后上方经过。首帧未显示被遮挡的板面，修补区域纹理有些柔和，刀影也采用二维近似。两块近邻切面的裂开是给定的二维事件过程，没有求解真实果皮断裂应力。</p>
+<h2>输出与数据校验</h2>
+<p><code>artifact_io.save</code> 写出 <code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code> 和自包含 <code>index.html</code>。额外保存 <code>transition_check.png</code>、<code>contact_check.png</code>、原图放大与坐标图。生成程序运行结束逐一读取全部 PNG，确认每张 256×144 RGB 的打包值均等于 <code>pixels.npz</code> 中相应帧；张量 dtype 为 uint32、形状 <code>(144,256,20)</code>、编码为 <code>0xRRGGBB</code>。00 与输入首帧逐像素相同。20 帧按 4 fps 播放，持续 5 秒。</p>
+<h2>根审返修：果肉/刀面重算</h2>
+<p>本次保持轮廓尺度、初始三帧色差校正、既有下压/轻分离/退出路径和支撑位置。以不等角度的瓣膜边界和随半径曲折的路径取代九瓣等间隔辐射线；局部分叉膜在果肉内部终止，避免完整规则星形。周边白髓不再是固定宽度白圈：连续变化厚度、局部软色差、细碎纤维和暖灰缝隙混合成不规则带。中心轴髓偏心、破碎并附有曲折纤维。</p>
+<p>在当前切面上直接计算独立汁囊椭圆，长短、朝向、橘褐色深浅、透明边和短湿润亮点各不相同；它们只在当前果肉区域写入新颜色，没有采用首图果肉贴图。分切面的髓边厚度不一，旁边增添暗湿果肉和短裂纤维。刀面增加短而不均匀的冷/中性反射及弱细拉丝，凹槽重算不对称暗芯、浅底、亮边和短沿口亮点。全部仍为二维像素函数。</p>
+<h3>返修实际查看与末次校验</h3>
+<p>返修重算后实际打开 <code>revision_detail.png</code>（00、01、02、06、10、14、18、19 的果肉/刀近景）、<code>transition_check.png</code>（00/01/02 全图和放大接触区域）、<code>inspection.png</code>（00、02、05、08、11、14、17、19 八时点）及 <code>contact_check.png</code>（十二个接触时点）。近景中等宽白圈已改为断续不等宽的暖色白髓，整齐扇区被不等大小的褐橘瓣囊、曲折膜和局部纤维取代；末段刀面可见较深的不对称凹槽芯与短反光。首两续帧仍保留原始果肉色调、尺度和刀初始形状，切块底边没有浮起。</p>
+<p>第一次返修近景的细汁囊亮点仍偏弱，因此再次调整汁囊混合强度、沿口亮边和少量局部湿亮点，把分切髓边的曲折幅度增加后重算全部 20 帧。末次再次实际打开上述四张检查图，确认没有把亮点铺成整面杂点；它们只出现在局部汁囊边缘。观察 06/10 的压切与 14/18/19 的退出遮挡，刀和前侧橘皮的层次保持，果肉轮廓没有更换物体或忽然变大。</p>
+<p>末次程序逐张读取 20 张 RGB PNG，确认与 uint32 <code>(144,256,20)</code>、<code>0xRRGGBB</code> 张量逐像素一致；00 保持首帧原像素。全部主输出和检查表已重存，额外近景表为 <code>revision_detail.png</code>。</p>
+<h3>返修后仍可见的限制</h3>
+<p>末段果肉的外轮廓和整体切面仍来自简化二维形状，局部瓣囊比原图的复杂实物更规则，纤维和汁囊在低分辨率下有些会合并为纹理，不能声称完全恢复原图的真实湿润和立体细节。刀面仍有较大连续蓝灰区域，短反光和凹槽层次增加但不是实拍金属。首帧色差校正在 03–07 衰减时仍可能看见渐进的表面重构。遮挡板纹的非学习修补及二维刀影继续保留前述局限。</p>
+</article></main></body></html>

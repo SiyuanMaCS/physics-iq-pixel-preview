@@ -1,0 +1,66 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>杯子摔碎 · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0125</span></nav><article><h1>杯子摔碎 · 生成方法</h1><p>唯一输入为本目录 <code>first_frame.png</code>（256×144）及 <code>prompt.txt</code>，并阅读公共生成规则和纯保存 helper。无旧结果、参考续写、掩码、分数、其他 case、联网、学习模型、物理引擎或 3D 输入。所有像素生成及修正均只在本 case 内完成。</p>
+<h2>首帧观察与事件假设</h2>
+<p>屏幕是蓝灰色、微有阴影的白投影幕；蓝黑夹具只在 x≈109–115、y=0–11 可见。黄色杯的杯体约为 x=109–127、y=54–70，杯把向上延伸到 y≈45。杯下方还有向左下方扩散的模糊暗影。混凝土砖约占 x=97–143、y=109–131；其可见顶面由后缘 y≈110 下降至前缘 y≈120。左上方照明使杯上半部较亮，下半部和右侧较暗。砖、夹具、地面、支架保持照片的静止位置。</p>
+<p>首帧已经显示杯位于夹具下方，因此将它当作释放的瞬间，不虚构夹具和杯之间的连接。假设陶瓷杯是脆性、空的，落到刚性砖块后碎裂；砖不移动。画面中杯的位移标尺未知，落砖时间采用约 0.5 s 的二维常加速度路径。这是手写的事件轨迹，无求解器。内部时间 <code>t=i/4</code>，20 帧显示 5 s。</p>
+<table>
+<thead>
+<tr>
+  <th>帧（从 00 起）</th>
+  <th style="text-align:right">时间</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00 s</td>
+  <td>精确保留原图，释放起点</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25 s</td>
+  <td>重画杯体与向上杯把，下落约 12 px，轻微倾转</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50 s</td>
+  <td>杯底最下点到达砖顶面 y=117.2；短接触阴影和下部初裂纹</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75 s</td>
+  <td>新画的杯壁片、内侧片及两个断把段向外弹起</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00 s</td>
+  <td>碎片旋转并向支撑面下降，小片先接近顶面</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25 s</td>
+  <td>大多数碎片落定在砖上；两侧碎片越过边缘后仍向地面下落</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50 s</td>
+  <td>所有碎片落定：砖顶面及两侧地面</td>
+</tr>
+<tr>
+  <td>07–19</td>
+  <td style="text-align:right">1.75–4.75 s</td>
+  <td>同一碎片布局完全静止，不继续漂移</td>
+</tr>
+</tbody>
+</table>
+<h2>逐帧像素构造</h2>
+<p><code>generate.py</code> 先对投影屏局部背景作非学习修补：从本首帧杯和暗影之外的屏幕像素拟合二维二次颜色曲面，并混入同一首帧背景区的小幅高频纹理；边缘羽化，y≥106 的屏幕黑轨和其他静态区域不参与修补。背景保留砖和地面照片。</p>
+<p>落杯是每帧按当前姿态重新栅格化的二维轮廓。杯体、杯把外环/内洞、薄上沿、右侧边缘分别用多边形覆盖率生成；局部纵向颜色梯度和微纹理重画上亮下暗的黄色釉面。4×二维覆盖率抗锯齿后轻度软化。接触帧按当前底部轮廓计算杯中心位置，保证底部接触砖顶面，而非仅移动一个矩形贴图。</p>
+<p>破碎后完全停止画整杯。十块主碎片使用各自新设的不规则锯齿多边形和开口断把轮廓；每帧改变二维位置、平面角度及竖向可见厚度。外釉为暗黄，内面为暖灰白，断口为较亮陶瓷色；薄边和小面积接触阴影增强厚度及支撑关系。五个小瓷屑也直接用新轮廓写像素。所有碎片沿显式连续曲线路径从碰撞区域移向各自终点；只有越过砖侧缘的片段才落到两侧地面。到终点时，其最低轮廓和指定支撑高度重合，此后参数锁定。未切割、搬运、镜像或缩放首图杯子矩形像素。</p>
+<p>生成数组为 RGB <code>uint8 (20,144,256,3)</code>，调用 <code>shared/artifact_io.py.save</code>，产物 <code>pixels.npz</code> 内为 RGB 打包 <code>uint32 (144,256,20)</code>，以及 20 PNG、公共 inspection 和播放页。</p>
+<h2>实际检查与修正</h2>
+<p>实际查看首图及其杯/砖放大细节；生成后实际查看 00、01、02、03、04、05、06、08、11、14、17、19 共 12 个时刻的 <code>review_contact_sheet.png</code>，另看 <code>contact_large.png</code> 和砖面/落点放大图 <code>support_review.png</code>。公共 <code>inspection.png</code> 也已生成。</p>
+<p>首轮发现原杯下方的模糊暗影被局部修补保留，形成显眼暗斑；修补范围扩大到杯下方的投影屏，将颜色拟合样本移到更远的无遮挡屏幕，重新生成并再次观察上述时刻。落杯下半部也曾过亮，已调低黄色并软化轮廓。最终未见重复整杯、矩形裁片、持续悬空碎片或砖块位移；砖顶面和侧边地面分别有稳定碎片落点。数据检查确认首帧逐像素等于输入，格式正确，06–19 完全静止。</p>
+<h2>可见缺点</h2>
+<p>杯只有约 18 px 宽，重画杯把比原图略规整，杯釉的模糊和颜色不完全等同于照片。碎片在放大观看时仍有二维手绘感，某些窄断把片像细条；不表示真实三维杯壁。背景补全处的屏幕比原图稍平滑，细微褶皱和原暗影变化被简化。4 fps 使完整杯在接触帧后直接变成多个碎片，微秒级裂纹扩展不可见；弹起、旋转、摩擦停止采用合理的显式动画假设，未估计真实物理参数或求解碎片之间的碰撞。</p>
+</article></main></body></html>

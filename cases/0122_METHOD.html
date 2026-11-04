@@ -1,0 +1,130 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mirror-teapot-rotate · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0122</span></nav><article><h1>mirror-teapot-rotate · 生成方法</h1><p>输入仅本目录 first_frame.png 与 prompt.txt。在写代码前实际打开了首帧和四倍放大图，并写 OBSERVATION.md。未读取其他案例、参考续帧、掩码、旧生成器、其他线程、记忆、模型、API 或物理引擎。</p>
+<h2>逐帧新 RGB</h2>
+<p>圆壶腹用四段二维曲线构造轮廓；蓝釉直接计算二维光照渐变、轮廓附近暗色、非周期色素和细小随机釉面颗粒。花瓣、花心、藤叶逐个重新求像素，以横向循环相位环绕；靠两侧的图案自然压窄和被边界裁掉。红把手的弯曲环线、壶嘴的弯曲厚管随相位改变横向展开、开口和前后遮挡。红釉用笔画内距离产生明暗和小亮边；前方附件在壶腹上产生短而柔和的接触阴影。镜中壶独立画较小轮廓，采用反向相位与起始相位差。全程五倍二维采样、面积缩小与轻微光学软边。没有三维网格、球体法线、相机投影、学习权重或 API。</p>
+<p>摄影背景、桌子、转台、线材、对称圆壶盖和圈足保持固定。首帧动态壶腹及红色附件后方的少量墙面用非学习局部修补建立静态底图。每帧只向原尺寸固定底图加当前新绘的动态像素，避免重采样让背景漂移。00 逐像素等于原图。01..04 有固定位置的蓝腹初始颜色残差，05 退出；01 只在原红釉与新红釉重合的像素上保留部分初始颜色，不混合旧轮廓。残差从不平移、缩放、翻转或充当移动物体贴图。</p>
+<p>物理假设为绕竖直轴顺时针缓慢转动：前两帧有小幅起转，之后接近均匀角度推进。圆壶体刚性、不倾倒、不平移，无倒水事件。圈足保持固定支撑，壶腹包络与尺度固定。镜中反向相位体现同一转动的镜像观看，初始相位差近似不同观看角。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>时刻</th>
+  <th>主要可见事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00 s</td>
+  <td>原图完全保持，近壶把手在右前方，镜中两附件分开。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25 s</td>
+  <td>极小起转，把手右前方轻移，壶嘴只露出很小红端。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50 s</td>
+  <td>把手向腹中心靠近，花纹开始环绕。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75 s</td>
+  <td>把手开口变窄，镜中把手由腹部遮住根部。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00 s</td>
+  <td>近把手接近正面中央的窄投影。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25 s</td>
+  <td>近把手转到中央偏左；初始蓝釉残差完全退出。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50 s</td>
+  <td>把手进一步左移，镜中壶嘴仍向左伸。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75 s</td>
+  <td>近把手开始露出左侧环形开口，右肩壶嘴小部分出现。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00 s</td>
+  <td>近把手左环更清楚，壶嘴逐渐在右侧显露。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25 s</td>
+  <td>两侧红附件继续分离，花纹由右侧绕入。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50 s</td>
+  <td>把手伸出左轮廓，壶嘴伸出右肩。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75 s</td>
+  <td>近壶侧向姿态清楚，附件根部与蓝腹遮挡连续。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00 s</td>
+  <td>镜中壶嘴靠向腹中央，近壶把手展开加大。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25 s</td>
+  <td>近把手接近最宽开口，镜中把手逐渐转向另一侧。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50 s</td>
+  <td>近壶两侧红附件充分展开，圈足仍落在平台上。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75 s</td>
+  <td>近把手接近左方最大伸出，花纹持续转动。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00 s</td>
+  <td>近把手达到左方最大展开，壶嘴保持右侧。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25 s</td>
+  <td>近把手进入后方绘制层，根部被壶腹遮住；壶嘴进入前方。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50 s</td>
+  <td>右壶嘴根部覆盖右下蓝腹，左把手根部隐藏。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75 s</td>
+  <td>停止在接近侧向稍过半转的姿态，支撑稳定，镜中同步结束。</td>
+</tr>
+</tbody>
+</table>
+<p>20 个 0.25 秒显示区间覆盖 5 秒，采样时刻为 0..4.75 秒。</p>
+<h2>实际查看与修正记录</h2>
+<ul>
+<li>首帧与 first_frame_zoom.png 实际打开：确认蓝釉、黄盖圈足、红把手与镜中壶嘴。</li>
+<li>多次实际打开 inspection.png 的 00、02、05、08、11、14、17、19 时点，确认物体留在原位置，镜面、桌面、转台和线材固定。</li>
+<li>多次实际打开 transition_check.png，逐项比较 00/01/02 的整图与近壶、镜中壶放大局部。首轮镜中壶嘴存在淡双边；通过起始高度校准和仅重合红釉颜色校正，消除了旧轮廓混合。近壶初始壶嘴露出过大，已缩小其朝向相机时的笔画宽度。</li>
+<li>实际查看 contact_check.png 的 00、01、02、05、08、11、14、17、19。重点看 11/14 的两个附件与腹部连接、17/19 的前后遮挡，以及全部圈足平台接触。未发现重复壶体、平台上浮、移动背景或旧附件的固定残留。</li>
+<li>首轮蓝釉偏平且花纹过小，增加了轮廓附近明暗、非周期釉面颗粒与花叶尺寸；去掉了可见的规则斜条纹。红附件增加了内外明暗与柔和腹部接触阴影。</li>
+</ul>
+<h2>真实可见局限</h2>
+<p>续帧的微小花纹和红釉高光仍比首帧摄影更整齐，存在可见的二维重绘风格；00 到 01 的部分花纹笔触及把手上端形状仍有变化，没有声称逐笔恢复原陶瓷。背面图案是假设延续。镜中附件朝向仅二维相位近似，不是精确恢复真实镜面与茶壶朝向。固定圈足和盖的小表面细节没有跟随旋转，转台接触影采用圆壶腹恒定支撑的假设。</p>
+<p>最终数组校验：20 PNG 全为 RGB 256×144，逐一等于 uint32 (144,256,20) 的 0xRRGGBB 张量切片；00 等于首帧。平台外壳、桌面供电线、左侧墙面和镜中平台外壳的固定检查区，20 帧逐像素保持首图。校验记录见 VALIDATION.json。最终重新查看了 00/01/02 放大图及 00/01/02/05/08/11/14/17/19 接触表。</p>
+</article></main></body></html>

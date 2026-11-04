@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>balls-collide · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0031</span></nav><article><h1>balls-collide · 生成方法</h1><h2>输入与生成方法</h2>
+<p>仅使用本目录 first_frame.png、prompt.txt 和输出规格 case_config.json。已先打开原图、4 倍放大首图并写 OBSERVATION.md，再独立编写 generate.py。未读其他 case、旧生成器、参考视频、掩码、分数或记忆；未调用网络、模型 API、学习权重、物理引擎或三维渲染。</p>
+<p>00 完全保留首图像素。01–19 的每一帧直接在二维数组上重算两球轮廓覆盖率、RGB、程序化细绒纹理、投影及接触阴影。使用柔化椭圆轮廓与低阶二维颜色多项式；多项式的少量系数由本首帧球内部颜色拟合，保留右亮左暗的照明，不保存或移植物体贴图。细纹理由当前位置对应的滚动相位重新求值，颜色光照保持在固定光方向。第 07 帧沿相撞方向压缩约 3.5%，垂直方向相应微量增厚，随后恢复；轮廓并非首帧图片的平移、缩放或镜像。先画桌面软阴影，按中心纵向顺序画球，前方蓝球在接触柔边处遮挡后方黄球。</p>
+<p>静态摄影背景保持首图，仅修补最初两球和阴影遮住的木桌：沿可见木纹方向寻找两侧干净桌面 RGB，以距离权重重建和轻微边界融合。这一修补仅处理静态桌面，不用于动态球面。</p>
+<h2>物理假设与 20 帧安排</h2>
+<p>按文本假设两球等质量、同速沿球心连线正碰。两者入射投影速率均约每帧 4 px，碰后同速反向，恢复系数 0.83，按相同滚动阻力减速。木桌与两管全程固定。首图已经显示两球在桌面上，不另补不存在的出管阶段。20 帧每帧持续 0.25 秒，共 5 秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">起始时间</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00 s</td>
+  <td>原始首帧，两球已在桌面。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25 s</td>
+  <td>两球同速相向滚动，各约 4 px。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50 s</td>
+  <td>继续同速，原位置露出木桌。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75 s</td>
+  <td>继续接近。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00 s</td>
+  <td>两球间隙缩小。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25 s</td>
+  <td>继续接近，软阴影随球。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50 s</td>
+  <td>碰撞前最后分离帧。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75 s</td>
+  <td>两球轮廓接触、轻微弹性压缩。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00 s</td>
+  <td>沿原路线反弹，恢复轮廓。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25 s</td>
+  <td>反向分离并减速。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50 s</td>
+  <td>两球同速滚离。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75 s</td>
+  <td>间隙继续增大。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00 s</td>
+  <td>继续滚动减速。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25 s</td>
+  <td>较慢滚动。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50 s</td>
+  <td>较慢滚离。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75 s</td>
+  <td>小幅滚动，仍接触桌面。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00 s</td>
+  <td>继续减速。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25 s</td>
+  <td>接近停止。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50 s</td>
+  <td>极慢滚动。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75 s</td>
+  <td>停止，保持至 5.00 s。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>实际打开 first_frame.png 和 first_frame_zoom.png，观察两球直径、柔焦边界、颜色和左下投影。</li>
+<li>首次生成后，实际打开 contact_review.png，查看 00、01、02、05、06、07、08、11、15、19 共 10 个时点。看到原球和阴影区域的各向同性修补造成木纹涂抹；更换为沿木纹方向的双侧重建，重新保存全部输出。</li>
+<li>实际打开修正版 transition_check.png，逐项看 00/01/02 宽范围放大对比、06/07/08 接触放大、11/15/19 退行与支撑放大。未见旧球残留、重复对象或浮空。首续写球色和直径连续；软影始终连接球下侧。放大后球面仍比原始摄影更光滑。</li>
+<li>最后调整碰撞中心间距，使 07 帧压缩后的二维轮廓真正接触；按桌面纵向深度排序绘制柔边。重新保存，实际打开最终 transition_check.png，以及最终 inspection.png 的 00、02、05、08、11、14、17、19 共 8 个时点。碰后间隙增加、轮廓恢复，管口始终固定，没有明显球体穿透。</li>
+</ol>
+<p>transition_check.png 保留连续早期帧和接触细节；contact_review.png 保留 10 时点；inspection.png 为 artifact_io 保存的 8 时点总览。实际观察是质量检查依据，不以颜色数、帧差或文件数替代。</p>
+<h2>校验与真实局限</h2>
+<p>已用 artifact_io.save 输出 20 张 256×144 RGB PNG、pixels.npz、inspection.png 和 index.html。生成脚本逐像素校验：00 等于 first_frame.png；pixels 为 uint32 (144,256,20)，每个元素为 0xRRGGBB；全部 20 张 PNG 的重新编码结果与张量逐像素相同。</p>
+<p>局限：程序球面比摄影首帧平滑，绒毛和接缝不够丰富；特别是黄球首帧复杂微高光只以平滑梯度近似，放大能辨认差异。原球底部被遮住的木纹无法从单图恢复真实细节，局部木纹为二维重建，近看存在少量纹理接续误差。碰撞压缩只占一个 4 fps 时点，无法表现更高时间分辨率的短暂接触。没有添加首图无法确认的显著接缝或转动标志，所以滚动的角运动主要通过细微纹理相位表现。近似同一深度的等投影速率，不据单图反推精确真实桌面距离或摩擦系数。</p>
+</article></main></body></html>

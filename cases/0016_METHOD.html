@@ -1,0 +1,136 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-sand · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0016</span></nav><article><h1>ball-in-sand · 生成方法</h1><p>实际输入只使用本例 <code>first_frame.png</code>、<code>prompt.txt</code>；读取 shared 的规则与保存 helper。没有读取其他 case、参考视频、结果、掩码、分数、历史脚本或记忆，没有调用联网、AI、学习权重、物理引擎或三维渲染。</p>
+<p>输出为 20 帧、256×144 RGB、4fps、5 秒播放时长。帧 00 逐像素保留首帧；采样时刻为 0.00 至 4.75 秒。</p>
+<h2>像素方法</h2>
+<p>墙、桌、悬挂工具与未受冲击的沙堆保持静止。球原位置的灰墙通过二维调和插值修补；钳口附近边界单独排除蓝色工具像素，避免色彩向墙扩散。背景修补区域不随时间移动。</p>
+<p>每一帧球的 RGB 都从二维椭圆轮廓、低阶颜色多项式、弯曲细接缝和细纤维公式重新计算。颜色多项式仅以首帧可见毛毡颜色作低维标定；没有保存球的裁块、逐像素纹理映射、平移、缩放、镜像源图。三倍子像素计算柔边后降采样。左上较亮、右下较暗的青蓝颜色与首帧保持，落下时接缝缓慢改变位置以表示小幅自转；接触时仅有轻微二维压扁，随后恢复原尺度。</p>
+<p>动力沙接触区使用固定世界坐标的颗粒噪声、短裂隙、局部压实暗色、凹坑周围小碎边重新计算；周围静态沙堆保持原貌。前侧不规则沙唇覆盖球底，避免球完整轮廓穿过沙面。沙唇下面连续连接原有沙堆，不悬空。少量边缘颗粒在数帧内下降落定；不采用液体飞溅。软影在球接近沙堆时增强，接触后由暗凹坑和前侧接触边表现。</p>
+<p>工具首帧钳口已经位于球上方，采用此刻刚松开、钳口保持原位置的假设。没有额外给工具增加不必要的大幅摆动。</p>
+<h2>逐帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻 秒</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>首帧原样，释放瞬间</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>竖直下落，球中心 y=60</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>触沙，球中心 y=86.5，轻微压扁</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>入沙，中心 y=94，沙前缘开始遮挡</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>最深入沙，中心 y=97，凹坑边缘挤起</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>微弱回弹，中心 y=96，仍有连续沙接触</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>中心 y=96.6，碎沙向接触边回落</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>中心 y=96.8，轮廓恢复</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>中心 y=96.7，沙边基本安定</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>最终球位置与接缝方向保持</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>完全静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>完全静止</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ol>
+<li>实际打开首帧原图及 <code>first_frame_large.png</code> 四倍放大，辨认球的左右细缝、球边模糊度、工具接触歧义、绿色沙粗碎轮廓。</li>
+<li>实际打开 <code>contact_inspection.png</code>：00、01、02、03、04、06、10、19 八时点。检查单球、木桌和墙不漂移、入沙顺序、受压后最终静止。没有出现第二球或原位置残留球。</li>
+<li>实际打开 <code>transition_check.png</code>：00/01/02 的五倍邻近区域，以及 02/03/04/05 的接触放大。初版夹具左下方有蓝色扩散的灰墙修补残影；修正插值边界后重生成。曾试用低阶墙色拟合，放大检查发现椭圆区域色差，已弃用并恢复排除工具颜色的调和插值。</li>
+<li>重存后再次实际打开 <code>transition_check.png</code>，看到工具下方没有蓝色涂抹，原球位置为连续灰墙；球大小和青蓝材质连续，接缝没有突然消失；02 到 05 的沙唇逐步遮住球底，无浮空支撑。</li>
+<li>最后实际打开重存后的 <code>contact_inspection.png</code> 与 <code>inspection.png</code>，后者含 00、02、05、08、11、14、17、19，确认最终固定接触与静止背景。</li>
+<li>打包校验逐一比较 20 个 PNG 与 uint32 <code>(144,256,20)</code> 的 <code>0xRRGGBB</code> 张量，同时确认 00 与原图逐像素相等。具体结果保存在 <code>validation.txt</code>。</li>
+</ol>
+<h2>仍然可见的局限</h2>
+<ul>
+<li>新球的毛毡微纹理比摄影首帧略平滑；主色、厚度、轮廓和两条接缝已匹配，但没有重建每根绒毛。</li>
+<li>首图无法确定球是否仍被钳口夹住；这里把首帧作为释放瞬间，工具保持悬挂位置，没有可辨认的独立钳口开合。球下落体现释放结果。</li>
+<li>接触区颗粒为二维重绘，局部沙唇的细裂隙与原图沙纹略不同；没有精确颗粒力学。球只产生弱回弹并较快停止，以符合耗能的动力沙。</li>
+<li>4fps 下释放到接触只有两个采样间隔，快速自由落体没有高帧率细分。</li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,117 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>unstable-block-stack · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0183</span></nav><article><h1>unstable-block-stack · 生成方法</h1><h2>输入和输出</h2>
+<p>只读取本目录 first_frame.png、prompt.txt，以及项目 shared/GENERATION_RULES.md 与输出 helper artifact_io.py；没有读取其他 case、旧结果、参考视频、模型/权重、记忆或评分。没有联网、调用 AI API、物理引擎、三维场景或网格渲染。先实际打开首图与自制中央放大图，再写 OBSERVATION.md，然后独立写 generate.py。</p>
+<p>输出为 20 帧，256×144 RGB，4 fps，5 秒。00 为原图完整直接复制，因此逐像素一致。01–19 的动态物体使用独立二维面轮廓、当前角度/接触位置、程序计算的低幅度漆面纹理和明暗绘制。没有把原图中黄/蓝木块裁出再平移、缩放或镜像。蓝色前面保留由上亮下暗的青蓝梯度，侧面稍暗；黄色有顶、前、侧的柔和差异。每个面的覆盖像素以 4 倍二维掩码抗锯齿并直接求值新 RGB。旋转的是手写二维顶点，纹理来自当前像素位置的正弦细纤维和局部方向，不是原图物体纹理。</p>
+<p>静止墙壁、桌面与红块可见前侧保留摄影像素。动态物体离开后的小区域用同一行左右露出的墙/桌颜色插值修补；露出桌面的新细纹由低幅度斜线函数生成。为了避免红块像素污染背景，桌面修补采样固定在两侧未被装置遮住的位置。黄块离开后露出的红块顶端单独重绘，避免保留原黄色接触边。软阴影为二维接触轮廓模糊，随落地位置调整。</p>
+<h2>物理解释及 20 帧事件</h2>
+<p>首帧的蓝块已在黄色右侧落位，夹具尚未释放。按照相近木块密度，蓝块在悬挑端的重量使系统向右失衡；黄色、蓝色向右倾倒，红块不动。纵深、质量、摩擦系数不可从单图确定，因此落地路径和轻微回弹是定性假设。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原始接触，夹具闭合握持蓝块</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>夹指开始张开，块保持接触</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>夹指上升，蓝块仍落在黄色右端</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>夹具即将退出，黄蓝系统向右转 2°</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>转 7°，黄色右端下沉</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>转 16°，黄色左端抬起</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>转 28°，蓝块仍与黄色接触</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>黄块 43°，蓝块 44°并开始滑离</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>黄块 62°，蓝块 61°，接触分开</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>黄块 77°并向右下移动；蓝块 77°下降</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>黄块 84°、下端落地；蓝块 87°接近长侧落地</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>黄块靠右向长側面翻落，蓝块轻微越过水平角</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>黄块 35°继续翻下；蓝块回弹不足 2°</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>黄块 7°接触长侧面；蓝块稳定</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>黄块小幅回弹到 -3°并回落</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>黄块 1°，落地回弹衰减</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>黄块接近水平，微小滑移</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>黄蓝静止；红块站立</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>静止保持</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>静止保持</td>
+</tr>
+</tbody>
+</table>
+<p>后半段黄色块位于蓝色块前方，末端有少量屏幕重叠，以前后遮挡表达桌面纵深；没有复制出第二个块。</p>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>原图和 first_frame_detail.png 实际打开，辨认蓝块倾斜、黄块厚度、橙黑夹指和红块底部接触。</li>
+<li>inspection.png 实际打开，查看 00、02、05、08、11、14、17、19 八时点，确认握持→释放→倾倒→落地→稳定的过程，未以帧差或颜色计数代替目视检查。</li>
+<li>transition_check.png 实际打开；三列包含完整 00/01/02 和装置 4 倍放大。蓝、黄轮廓与初始宽厚一致；调整蓝漆由上向下的色阶和边缘软度，减轻程序绘制导致的首续帧变化。夹指开合是前两帧的主要事件。</li>
+<li>contact_check.png 实际打开，检查 03、05、06、07、08、09、10、11、12、13、14、19 的接触和遮挡。初稿黄块首次落地离桌面偏高；把 10、11 的垂直位置改到可见桌面接触高度，再保存并重新查看。</li>
+<li>发现在黄色离开后红块右上角有红色修补残线、黄色原始边残留；实际打开 red_contact_detail.png 放大确认。修补的边界取样改为露出桌面，红块保留掩码排除黄色混合边，重绘露出顶部并与前面连续连接。最终红块细节与接触表、八时点表再次实际打开，确认残线/黄色边消失。</li>
+<li>最终 PNG/张量逐帧程序校验通过：20 个文件均为 RGB 256×144；pixels.npz 中 pixels 为 uint32 (144,256,20)，所有 PNG 重新打包的 0xRRGGBB 与对应时间切片精确相等；00 与 first_frame.png 精确相等。</li>
+</ol>
+<h2>仍可见的局限</h2>
+<ul>
+<li>绘制后的蓝黄漆面比摄影原图更规则、纹理更简化；00→01 的局部轮廓和颜色接近，但放大仍可辨认摄影像素与重绘像素的区别。</li>
+<li>倾倒采用二维轮廓而非空间投影；三个可见面的宽度关系随屏幕旋转，不包含真实出平面旋转的透视改变。</li>
+<li>露出的木桌小区域纹理比原桌面平滑，斜纹只是局部近似；动态投影也偏简化。</li>
+<li>倾倒/碰撞节奏按手工时间表安排，4 fps 的快速落地阶段较跳跃；后半段黄蓝前后位置是单图无法确定的假设。</li>
+<li>红块顶面由遮挡解除后重绘，颜色与保留摄影前面的过渡仍比真实木块规整。没有声称这些定性路径是唯一物理解。</li>
+</ul>
+<h2>文件</h2>
+<p>主产物：generate.py、OBSERVATION.md、METHOD.md、pixels.npz、frames/00.png–19.png、inspection.png、transition_check.png、contact_check.png、index.html。补充检查图片：first_frame_detail.png、red_contact_detail.png；验证记录 validation.txt。</p>
+</article></main></body></html>

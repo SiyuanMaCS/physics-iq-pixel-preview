@@ -1,0 +1,135 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-and-dominos · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0055</span></nav><article><h1>duck-and-dominos · 生成方法</h1><p>输入只使用本例 first_frame.png、prompt.txt。先实看原图、四倍原图及接触区放大，并写 OBSERVATION.md。没有参考续写、其他案例、网络、模型、物理引擎或三维场景。</p>
+<h2>逐帧 RGB 求值</h2>
+<p>背景、鸭子和左侧四块骨牌固定。对原图中正在开始运动的右侧骨牌的小轮廓做局部非学习修补，重新计算其接触点周围的二维多边形。每块运动骨牌分别重绘正面、厚度面和顶面；材料颜色、暖色反光、明暗渐变、细微纹理均由当前像素坐标和表面内二维坐标求值，没有复制原物体贴图，也没有原图裁块移动、拉伸或镜像。原始白牌近鸭的一面受暖黄光染色，保留这一显著色差；另一个白牌阴影面灰紫，不能改成亮白矩形。</p>
+<p>转台为固定摄影背景；只有原杆细线区域局部修补，木杆按固定二维轴顺时针重新绘制，每帧计算木色与纹理。运动牌的投影随接触位置重新构造。近鸭的牌在层叠顺序中挡住后方牌，鸭始终遮住进入其二维轮廓的牌。使用四倍采样再缩小形成与输入软焦相近的边缘；静止区域最终逐像素恢复输入。00 完全使用原输入。</p>
+<h2>事件（帧号对应 t=帧号/4 秒）</h2>
+<p>00 原首图；01 杆开始转；02 最右黑牌开始倾倒；03 邻白牌启动；04 第二黑牌启动；05 鸭旁白牌启动；06 三块牌继续倾倒、鸭旁白牌缓慢左倾；07 接触链逐步压紧；08 鸭旁白牌碰到鸭头/肩而受阻；09 出现小幅回弹；10 回弹减小；11 极小幅收敛；12–19 支撑链稳定，杆继续旋转，鸭、两边未受冲击的对象保持不动。详细预先计划在 OBSERVATION.md。</p>
+<h2>可见局限</h2>
+<p>用二维轮廓模拟厚板倾倒，无法准确恢复首图未显示的背面。短距离局部修补会使新露出的桌面木纹比原图更平滑。接触链停下是基于鸭子阻挡的合理假设，鸭子真实柔软程度、转台轴速和质量没有在输入中给出。未预测鸭大幅位移或无依据的左侧牌倒塌。</p>
+<h2>检查记录</h2>
+<p>已实际查看以下本例图像，而非只做帧差统计：</p>
+<ul>
+<li>首帧原图、四倍放大和右侧接触区八倍放大，以及带像素坐标的原始右侧骨牌区域。</li>
+<li>inspection.png 的 00、02、05、08、11、14、17、19 共八个时点，核对鸭轮廓、左侧四块直立牌、转台、木桌及右侧接触链。</li>
+<li>transition_check.png 中 00/01/02 的五倍最近邻放大：检查杆开始转动和第一块牌运动的材料连续性。</li>
+<li>同图 05/06/07/10 和 00/02/06/19 的接触近景：检查牌底贴桌、厚度边、彼此遮挡及鸭子前景遮挡。</li>
+<li>reconstruction_check.png（本例独立重绘的直立材料校准图）与首图对比：近鸭白牌保留暖黄色阴影面，另一白牌保留灰紫阴影面，黑牌保持黑色。</li>
+</ul>
+<p>第一轮看见旧轮廓清理擦到了尚未动的相邻白牌侧边；已恢复每块静止牌的原始轮廓，重新生成后看过 00/01/02，确认白牌边缘完整。第一轮新牌偏锐；已添加 0.32 原生像素的柔化，使模糊程度更接近摄影首帧。第一轮使用牌底中心作旋转点会让一侧角有轻微下沉；已改用倾倒方向的牌底接触角，使支撑角固定。还将木杆远侧的硬截断改成连续、浅一些的二维转动轨迹，避免远侧杆突然缩短。</p>
+<p>计划中的鸭接触时间略延后：实际约在 08 开始抵住鸭；最终支撑链在 12 固定。最终白牌没有穿过鸭，左侧四牌没有运动，未出现复制对象或原来直立牌残留。</p>
+<h2>实际 20 帧安排</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻</th>
+  <th>画面事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00s</td>
+  <td>原始首图。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25s</td>
+  <td>木杆顺时针，所有牌仍直立。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50s</td>
+  <td>最右黑牌左倾约 4.7°。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75s</td>
+  <td>最右黑牌约 21°，相邻白牌约 3.4°。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00s</td>
+  <td>前两牌继续左倾，第三黑牌开始。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25s</td>
+  <td>鸭旁白牌开始极小角度左倾。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50s</td>
+  <td>三牌继续压向鸭旁白牌。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75s</td>
+  <td>鸭旁白牌约 8°，接触链压紧。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00s</td>
+  <td>鸭旁白牌约 10.7°，抵住鸭右侧轮廓。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25s</td>
+  <td>鸭旁白牌约 12.1°，一次很小的接触回弹。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50s</td>
+  <td>回到约 10.6°。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75s</td>
+  <td>约 11.2°，其余牌稳定。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00s</td>
+  <td>最终支撑链约 11°/26°/43°/59°。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25s</td>
+  <td>支撑链不动，杆转向转台远侧。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50s</td>
+  <td>杆在转台远侧连续转动。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75s</td>
+  <td>杆在远侧，所有牌固定。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00s</td>
+  <td>杆继续，鸭及左侧牌固定。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25s</td>
+  <td>杆继续，所有接触点稳定。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50s</td>
+  <td>杆开始转向右方。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75s</td>
+  <td>结束前最后一个采样：鸭支撑右牌、左牌直立。</td>
+</tr>
+</tbody>
+</table>
+<p>20 帧以 4 fps 显示，最后一帧显示至 5.00 秒；不是额外增加 5 秒端点帧。二维面色较原始摄影仍更均匀，局部修补处的桌纹略平滑，杆和厚板远侧的真正透视不能从唯一首帧完整确定。这些是实际可见局限。</p>
+<h2>最终文件校验</h2>
+<p>最后重存后再次实际打开 inspection.png 和 transition_check.png。检查通过：pixels.npz['pixels'] 是 uint32 (144,256,20)，编码 0xRRGGBB；20 张 PNG 均为 RGB 256×144 且逐像素等于对应张量切片；frames/00.png 与 first_frame.png 逐像素一致。结果保存于 validation.json。校验只证明格式和一致性；材料、接触和残影判断使用上面的实际视觉检查。</p>
+</article></main></body></html>

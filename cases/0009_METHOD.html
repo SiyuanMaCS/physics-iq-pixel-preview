@@ -1,0 +1,157 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0009</span></nav><article><h1>ball-hits-duck · 生成方法</h1><p>只使用本例 first_frame.png 和 prompt.txt 作场景输入。先读取公共规则，实际打开首帧及其 4 倍图，写 OBSERVATION.md 后才独立编写 generate.py。无联网、学习权重、AI API、物理引擎、三维几何/网格/法线。公共 artifact_io.py 只用于输出。</p>
+<p>每一帧在 RGB 数组上直接求值。棕球轮廓由二维椭圆覆盖率计算，颜色由二维深棕色涂色带和细颗粒函数重画；弯曲灰缝由随滚动角变化的局部曲线重画，不平移、缩放或镜像首帧球贴图。鸭在碰撞前保持首图静止；碰撞后由新求值的连续二维头颈/胸腹/尾轮廓、嘴/眼/翼部及黄色色带重画，按小幅倾斜、侧面压缩与滑动改变形状，原鸭贴图不用于移动对象。桌面被原物体遮住的静态区域用同一首帧的无遮挡行样本插值修补，并补少量确定性细纹。沙发、桌沿与黑管保留摄影背景。</p>
+<p>阴影为二维柔软椭圆色覆盖，按首图向右后方的方向重画。球底面紧贴路径对应的桌面接触点，鸭以身体底部作倾斜支点。球影只落到桌面，黄色鸭体遮住其后的影子。碰撞时球右轮廓与鸭左侧相接，随后鸭向右滑动、球小幅回弹。</p>
+<p>物理假设是有限摩擦、轻橡胶鸭、低弹性碰撞。首图球已出管，所以只让现有球继续滚动；不添加球，也不让静态黑管运动。5 秒覆盖 20 个等长 0.25 秒播放区间，尺寸 256×144。</p>
+<h2>逐帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">球中心 x</th>
+  <th style="text-align:right">鸭水平位移</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">49.5</td>
+  <td style="text-align:right">0</td>
+  <td>首图逐像素保留，球已经出管</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">61.8</td>
+  <td style="text-align:right">0</td>
+  <td>直线向右滚，球缝开始转动</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">74.0</td>
+  <td style="text-align:right">0</td>
+  <td>继续滚，鸭静止</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">86.1</td>
+  <td style="text-align:right">0</td>
+  <td>继续沿同一直线滚</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">98.1</td>
+  <td style="text-align:right">0</td>
+  <td>滚动、阴影随球移动</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">110.0</td>
+  <td style="text-align:right">0</td>
+  <td>接近桌面中央</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">121.8</td>
+  <td style="text-align:right">0</td>
+  <td>继续接近鸭</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">133.5</td>
+  <td style="text-align:right">0</td>
+  <td>接近鸭左侧</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">145.1</td>
+  <td style="text-align:right">0</td>
+  <td>距离碰撞尚有小段间隔</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">156.0</td>
+  <td style="text-align:right">0</td>
+  <td>右轮廓接触鸭左侧身体</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">158.3</td>
+  <td style="text-align:right">3.6</td>
+  <td>球减速，鸭短时压缩并倾斜 6 度</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">157.0</td>
+  <td style="text-align:right">6.3</td>
+  <td>球小幅回弹，鸭倾角减至 4.2 度</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">155.5</td>
+  <td style="text-align:right">8.4</td>
+  <td>球回弹减弱，鸭继续滑动</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">154.5</td>
+  <td style="text-align:right">9.9</td>
+  <td>鸭回正后轻微反向倾斜</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">154.0</td>
+  <td style="text-align:right">11.0</td>
+  <td>球将停，鸭滑动减速</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">153.8</td>
+  <td style="text-align:right">11.7</td>
+  <td>球停止，鸭最后小幅恢复</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">153.8</td>
+  <td style="text-align:right">12.0</td>
+  <td>鸭趋向静止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">153.8</td>
+  <td style="text-align:right">12.1</td>
+  <td>鸭直立，位置稳定</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">153.8</td>
+  <td style="text-align:right">12.1</td>
+  <td>两物体静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">153.8</td>
+  <td style="text-align:right">12.1</td>
+  <td>结束保持</td>
+</tr>
+</tbody>
+</table>
+<p>球中心 y = 46.1 + (x − 49.5) × 0.173，是桌面上斜向直线路径，不是抛物线下落。</p>
+<h2>已实际打开的检查图和修正</h2>
+<ul>
+<li>实际打开首图和 first_frame_zoom.png：确认鸭头/body 尺度、朝左小嘴、下底接触及棕球灰色球缝。</li>
+<li>多轮实际打开 inspection.png，最终一轮查看 00、02、05、08、11、14、17、19 八个时点：单球连续接近、鸭接触后滑动；黑管/沙发/桌沿静止；后段无明显悬空或重复物体。</li>
+<li>实际打开 transition_check.png：同时查看 00、01、02、08、09、10、11、14；下方额外 00/01/02 为 4 倍球离开原位置对比；碰撞位置另有 4 倍鸭体/接触放大。</li>
+<li>初版桌面在旧球阴影远端留有暗痕：扩大修补范围后重存，最后图中该暗痕消失。</li>
+<li>初版鸭身体轮廓硬、颜色较平：改为圆滑曲线、柔和边缘，增加暖色左侧、绿色右侧、暗颈和底部、低对比度翼部。</li>
+<li>重新查看早期球影后，把影子由偏下修正为首图的右后方向；再检查接触发现球影误覆鸭颈，加入前景遮挡，最终放大图已消除该条暗纹。</li>
+<li>未用帧差数量或新颜色数量代替实际图像检查。</li>
+</ul>
+<h2>可见局限</h2>
+<p>新绘鸭体的翼部、尾部细节仍比原摄影鸭简化，首次滑动时能看出轮廓与局部色调的小差异。球的二维缝纹转动只能近似真实滚动下的表面纹理变化；首图的焦外模糊未能精确重建。旧球和旧鸭遮住的木纹不可恢复，修补区域细纹比原桌面弱。碰撞参数没有质量/摩擦测量，球轻回弹与鸭滑动距离是合理的手工假设，不是数值求解的实测结果。</p>
+<p>已校验 20 张 PNG 均为 RGB 256×144，与 pixels.npz 的 uint32 (144,256,20) 0xRRGGBB 张量逐像素一致，00 与首图逐像素一致；结果见 validation.json。</p>
+<h2>根审返修记录</h2>
+<p>根审指出原碰撞后 10/11/14 帧鸭子出现摄影到简化绘图的明显切换。重新实际查看首图放大后，改为一条连续圆滑轮廓：偏圆的头冠与厚颈衔接、凸胸腹、较平支撑底面以及短小上翘尾。头与身体使用连续软混合黄色颜色场，增加偏绿右侧、暖色左下、头冠柔亮斑、弧形颈下软暗带、底部暖暗影和尾根阴影；不再在身体上直接叠一个单独圆头。颜色与各细节都在当前姿态的逆二维坐标中求值，随小倾斜保持附着。</p>
+<p>嘴重绘为橙色上下唇和柔弱嘴缝，眼重绘为小暗点与极弱亮点。翼部由浅椭圆沟、下缘软暗弧与上缘微亮脊组成；调整初版过强翼亮边和偏直颈暗带。没有搬运首图鸭像素，没有使用 3D 或模型；既有球路径、鸭位移、倾角、支撑点不变。</p>
+<p>新增并实际打开 duck_contact_check.png，检查 00/01/02、09/10/11/14/19 共八幅鸭近景；新增并实际打开 duck_redraw_check.png，把原图与独立生成的同姿态鸭并排比较；多轮实际重看 inspection.png 和 transition_check.png。最终近景中嘴眼、浅沟翼部、头颈阴影和尾根均可见，静止前段和 09 接触帧仍保留首图鸭，10 起发生轻微压缩倾斜并滑动，后段保持接地。</p>
+<p>返修后仍可见限制：在 4 倍近景中，新鸭的头冠及颈边缘比摄影原图更规则，原图低分辨率橡胶反光的局部不规则性无法完全重建；翼沟位置/强度和首图仍有小差异，首次滑动仍能辨认重绘的细微色调变化。改善了先前平滑剪影的问题，但不能宣称与摄影纹理完全一致。</p>
+</article></main></body></html>

@@ -1,0 +1,173 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>balls-collide · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0032</span></nav><article><h1>balls-collide · 生成方法</h1><h2>输入与方法</h2>
+<p>只读取本 case 的 <code>first_frame.png</code>、<code>prompt.txt</code>，以及项目公共保存 helper；未读取其他 case、参考续帧、分数或旧生成器，未使用联网、模型、权重、物理引擎或三维渲染。<code>OBSERVATION.md</code> 在生成脚本前完成。</p>
+<p>首帧直接保留原始 RGB。其余帧先保留静止摄影背景，并在原始两球和投影占据的桌面区域按同一行两侧木桌颜色修补，叠加低幅度的二维解析木纹。每个球按当前中心位置生成新的二维软轮廓，逐像素重新计算归一化横纵坐标、7 项低阶 RGB 色场、低幅度绒纹和随滚动位移转动的弯曲接缝。材质场只有 21 个拟合系数；没有裁取、平移、镜像或缩放原球贴图。光照场维持摄影光照方向，接缝和纹理随滚动改变。桌面投影用偏移的二维高斯软影和紧贴底部的接触影重新求值。07 帧宽度轻压缩约 2.5%，高度仅增约 0.8%，球底保持支撑位置；没有穿透、弹跳或悬浮。</p>
+<p>入射两球速度各约 4.943 px/帧，首帧中心分别 93.0 和 177.8。07 帧名义中心间距为 15.6 px，匹配半径和；中心高度相差 0.75 px，属于首图尺度的亚像素接触歧义。假设两球质量相同，回弹速度为入射速度的 0.84 倍，后续逐帧按 0.97 倍减速。5 秒窗口未加入新对象、管内出球动作或人为停止。</p>
+<h2>20 帧事件</h2>
+<p>表中时间以首帧为 0；播放器按 4 fps 展示 20 帧，总长 5 秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间 / s</th>
+  <th style="text-align:right">蓝球 x</th>
+  <th style="text-align:right">黄球 x</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">93.00</td>
+  <td style="text-align:right">177.80</td>
+  <td>原图逐像素保真</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">97.94</td>
+  <td style="text-align:right">172.86</td>
+  <td>等速相向滚动</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">102.89</td>
+  <td style="text-align:right">167.91</td>
+  <td>等速相向滚动</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">107.83</td>
+  <td style="text-align:right">162.97</td>
+  <td>等速相向滚动</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">112.77</td>
+  <td style="text-align:right">158.03</td>
+  <td>等速相向滚动</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">117.71</td>
+  <td style="text-align:right">153.09</td>
+  <td>等速相向滚动</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">122.66</td>
+  <td style="text-align:right">148.14</td>
+  <td>接触前，保持间隙</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">127.60</td>
+  <td style="text-align:right">143.20</td>
+  <td>正面接触，轻微压缩</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">123.45</td>
+  <td style="text-align:right">147.35</td>
+  <td>回弹开始，球面分离</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">119.42</td>
+  <td style="text-align:right">151.38</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">115.51</td>
+  <td style="text-align:right">155.29</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">111.72</td>
+  <td style="text-align:right">159.08</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">108.05</td>
+  <td style="text-align:right">162.75</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">104.48</td>
+  <td style="text-align:right">166.32</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">101.02</td>
+  <td style="text-align:right">169.78</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">97.67</td>
+  <td style="text-align:right">173.13</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">94.42</td>
+  <td style="text-align:right">176.38</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">91.26</td>
+  <td style="text-align:right">179.54</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">88.20</td>
+  <td style="text-align:right">182.60</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">85.23</td>
+  <td style="text-align:right">185.57</td>
+  <td>反向滚动，摩擦减速</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ul>
+<li>打开原始首帧及 <code>first_frame_enlarged.png</code>（4 倍），确认蓝球为低亮度深蓝，黄球是黄绿色，管口固定，桌面与球均有较软焦散/失焦边缘。</li>
+<li>首次查看 <code>inspection.png</code> 中 00、02、05、08、11、14、17、19 这 8 个时点，发现入射相向速度的求和重复导致球交叉；立即修正为单球速度除以 14，使 07 帧真正接触，重新保存所有最终产物。</li>
+<li>修正后再次实际打开同一 8 时点表：两球一直只有各一个，轮廓尺度一致，相向接近、回弹分离顺序正确，左右管口、桌边和墙面固定。00→02 蓝色与黄色保持材质，没有出现抠图残影或重复球。</li>
+<li>再次实际打开最终 <code>transition_check.png</code>：上排 00/01/02 为 3 倍局部和 1.5 倍全画面。蓝球深蓝色场与原图接近；黄球保持黄绿色，软边保留。球旁投影早期偏弱，已提高蓝球横向软影宽度与两球投影强度，使首续帧的桌面投影更连贯。</li>
+<li>下排实际查看 06/07/08 的 4 倍接触局部：06 帧球面间有约 9.89 px 间隙；07 帧两球在中心相接，轻微压缩后边界只有亚像素接触缝；08 帧已退开约 8.30 px。没有互换左右位置、覆盖另一球的大块涂色、垂直浮空或不合理形变。</li>
+<li>在最终 11/14/17/19 表中观察回弹：球向两边持续移动，接触影随球移动，原球位置没有蓝/黄残留。结束时蓝球中心约 85.23、黄球中心约 185.57，尚未碰到固定管口。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>动态球的绒纹和接缝是二维近似，接缝亮度与首帧的模糊真实网球仍有小差别，蓝球轮廓较规则、黄球明亮区域较平滑。第一续写帧的宽投影与原始摄影投影并非完全同形；球原位置的细木纹修补略平滑，放大时可辨。相碰只占一个采样时点，4 fps 无法展示更短的接触持续时间；轻微接触压缩在原分辨率很难辨认。这些是真实二维续写限制，没有用帧差或新颜色数替代肉眼检查。</p>
+<h2>保存和逐像素校验</h2>
+<p><code>artifact_io.save</code> 保存了 <code>pixels.npz</code>、<code>frames/00.png</code> 至 <code>19.png</code>、<code>inspection.png</code> 与可独立播放的 <code>index.html</code>；脚本另外保存 <code>transition_check.png</code>。读取最终 NPZ，确认 <code>pixels</code> 为 uint32、形状 <code>(144,256,20)</code>。每个元素按 <code>0xRRGGBB</code> 解包后，与对应 20 张 RGB PNG 逐像素完全相等；00 PNG 与输入首图逐像素完全相等。输出生成数组为 uint8 <code>(20,144,256,3)</code>。</p>
+</article></main></body></html>

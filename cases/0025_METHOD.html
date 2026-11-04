@@ -1,0 +1,163 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>球滚过玻璃 · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0025</span></nav><article><h1>球滚过玻璃 · 生成方法</h1><p>唯一输入是本目录 <code>first_frame.png</code> 与 <code>prompt.txt</code>。背景为固定白墙、木桌与透明玻璃板，保留原始像素。首帧球心约 (131, 76)、半径约 11.5 像素，桌面接触位置约 (131, 87)；玻璃左边界由 (163, 65) 斜向 (202, 117)，球的支撑路径约在 y=87。右上方向的漫射照明使球左上面较亮、下缘较暗。玻璃在整个序列中静止。</p>
+<p>事件安排：第 0 帧原样保留；1–4 帧球向右滚动接近玻璃左侧；5–8 帧跨越桌面/玻璃交界；9–15 帧在玻璃表面继续滚动；16–19 帧到达画面右边，最后逐渐离开。没有证据说明可见范围内玻璃结束，因此不虚构坠落或反弹。速度随摩擦小幅降低。以球的行进距离除半径设置缝线顺时针滚动相位，接触高度保持在支撑面。</p>
+<p><code>generate.py</code> 在 NumPy RGB 数组中直接重画每帧。只对首帧原球/阴影范围做相邻木纹逐行插值修补，其余静态背景保留。每帧重新求二维软边轮廓，绘制稍有毛毡起伏的边界、二维渐变明暗、程序生成的毛毡纤维和随转动改变朝向与弯曲程度的缝线。球底在接触处轻微压平。支撑阴影随球移动，透明玻璃区域减弱，并加入很弱的蓝色接触透射/反射。没有提取、平移、缩放或镜像首帧球贴图，没有三维模型、投影、模型调用、物理引擎或参考视频。</p>
+<p>输出为 20 帧 256×144 RGB、4 fps、5 秒，通过公共 <code>artifact_io.save</code> 生成 PNG、uint32 0xRRGGBB 张量、接触表和 HTML 播放器。</p>
+<p>可见局限：原始首帧分辨率低且失焦；逐行木纹修补不能恢复被球遮住的真实木纹。球的缝线与绒毛为二维外观近似，不能表达完整三维转动与真实光学。玻璃厚度和真实摩擦未从单帧得知，假设薄玻璃近乎与桌面平齐，因此跨界只出现亚像素级高度改变。透明表面的阴影和接触蓝光仅作低强度二维近似。</p>
+<h2>实际视觉检查及修正</h2>
+<p>已实际查看首帧放大图、公共 8 时刻接触表（00、02、05、08、11、14、17、19），以及补充关键接触表（01、04、05、06、07、08、10、15）和原球位置/跨界球的局部放大图。首轮修补遗漏了原球右侧阴影，出现暗色圆弧残影；扩大原球与阴影修补范围，并把右侧木纹采样沿桌边移到未受阴影影响处后，重新生成并复查，暗色圆弧和重复球影已消除。球轮廓、毛毡和缝线增加软化，接近输入的低分辨率失焦。检查了桌边到玻璃过渡：球下缘一直在同一支撑高度附近，没有浮空跃迁或大幅尺寸改变。透明玻璃上的接触阴影仍偏弱，是当前可见局限。</p>
+<p>20 帧事件表（坐标是屏幕像素；球底为 cy+11.45）：</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">采样秒</th>
+  <th style="text-align:right">球心 x</th>
+  <th style="text-align:right">球心 y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">131.00</td>
+  <td style="text-align:right">75.80</td>
+  <td>原始木桌接触</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">139.08</td>
+  <td style="text-align:right">75.87</td>
+  <td>木桌上滚动</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">147.13</td>
+  <td style="text-align:right">75.94</td>
+  <td>木桌上滚动</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">155.15</td>
+  <td style="text-align:right">76.01</td>
+  <td>木桌上滚动</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">163.13</td>
+  <td style="text-align:right">76.07</td>
+  <td>木桌上滚动</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">171.08</td>
+  <td style="text-align:right">76.08</td>
+  <td>跨过木桌与玻璃交界</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">178.99</td>
+  <td style="text-align:right">76.03</td>
+  <td>跨过木桌与玻璃交界</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">186.87</td>
+  <td style="text-align:right">75.99</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">194.72</td>
+  <td style="text-align:right">76.02</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">202.53</td>
+  <td style="text-align:right">76.09</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">210.31</td>
+  <td style="text-align:right">76.15</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">218.06</td>
+  <td style="text-align:right">76.22</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">225.77</td>
+  <td style="text-align:right">76.29</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">233.45</td>
+  <td style="text-align:right">76.35</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">241.09</td>
+  <td style="text-align:right">76.42</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">248.70</td>
+  <td style="text-align:right">76.48</td>
+  <td>玻璃上滚动</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">256.28</td>
+  <td style="text-align:right">76.54</td>
+  <td>画面边缘部分遮切</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">263.82</td>
+  <td style="text-align:right">76.61</td>
+  <td>画面边缘部分遮切</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">271.33</td>
+  <td style="text-align:right">76.67</td>
+  <td>完全出画，玻璃静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">278.81</td>
+  <td style="text-align:right">76.74</td>
+  <td>完全出画，玻璃静止</td>
+</tr>
+</tbody>
+</table>
+<p>结构验证通过：20 张 RGB PNG 的尺寸与帧数正确；pixels.npz 为 uint32 (144,256,20)，与 PNG 的 0xRRGGBB 打包逐像素一致；第 00 帧与原始首帧一致。</p>
+</article></main></body></html>

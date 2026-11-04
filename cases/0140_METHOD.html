@@ -1,0 +1,38 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>纸张冒烟 · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0140</span></nav><article><h1>纸张冒烟 · 生成方法</h1><p>唯一视觉输入 <code>first_frame.png</code>，文本输入 <code>prompt.txt</code>；读取共享生成规则和只负责保存的 <code>artifact_io.py</code>。未访问其他 case、历史输出、参考视频、掩码或分数，未调用联网、图像视频 AI、训练权重、物理引擎或三维渲染器。</p>
+<h2>首图判读与约束</h2>
+<ul>
+<li>图像 256×144；镜头、木桌和玻璃板固定。玻璃板的四角约为 <code>(62,57), (196,54), (239,126), (31,128)</code>。</li>
+<li>小张折纸的上沿约 <code>(123,73)</code> 至 <code>(147,72)</code>，左折面延至 <code>(123,91)</code>；右侧破损折角约在 <code>x=134..151,y=76..92</code>。支撑与接触位置在纸张底部 <code>y≈91</code>，不平移整张纸，不增生第二张纸。</li>
+<li>右侧已有深色焦痕，左面白纸仍能看见印刷纹理；原始烟由上沿及右侧升起。桌面右下的强光和玻璃上纸张旁的明亮反射保留。</li>
+<li>采用克制的持续阴燃假设：五秒内只扩展局部焦化，右折角稍卷曲下垂，主体仍站在原支撑点。只在既有焦缝附近保留亚像素大小的暗橙余烬，不添加大火、突然塌落或整个纸张消失。</li>
+</ul>
+<h2>20 帧事件顺序</h2>
+<p>帧 00..19 分别为首图之后 0.25..5.00 秒，固定 4 fps。</p>
+<ul>
+<li>0.25..1.00 秒：纸张轮廓接近首图，细白烟从两处折缝连续发出并缓慢改变弯曲方向。</li>
+<li>1.25..2.50 秒：右侧焦化向内扩展约数像素，折唇稍变暗；上升烟带逐渐分叉，宽度及透明度以连续时间函数改变。</li>
+<li>2.75..3.75 秒：受热右折角略微下垂，焦痕出现暗褐与灰色碎斑；烟的上部更宽更淡，轮廓与细丝位置继续变化。</li>
+<li>4.00..5.00 秒：局部焦化较明显但左面和底部仍保留；烟仍持续发出，分叉和弯曲方向不同于开头，纸张始终接触玻璃。</li>
+</ul>
+<h2>像素生成</h2>
+<p><code>generate.py</code> 使用 NumPy、Pillow 和 OpenCV 的二维操作。所有动态像素在 4 倍采样的二维画布上计算，再面积采样至 256×144，组成 <code>uint8 (20,144,256,3)</code>。</p>
+<p>初始烟的窄带背景采用同一行左右邻近像素插值进行非学习修补，保留墙桌水平交界。静态图像只在明确的烟带、纸张、接触反射区域中改变。</p>
+<p>每帧根据当前时刻独立建立整张画布的烟密度：多条高度相关的弯曲细丝、宽度渐增的半透明外围，以及独立变化的淡弯曲轮廓；叠加连续二维纹理，使用密度转透明度与蓝白颜色混合。烟的源端集中、上部扩散减淡，玻璃后缘附近受光略亮。没有烟贴图裁块、平移或镜像复用，也不对前帧烟像素作整体变换；本帧密度直接从当前二维坐标重新计算。</p>
+<p>纸张主体保留首图可见印刷细节，右侧受热区则每帧计算不规则焦化边缘、变色带、灰色碎斑、细折缝及变化的折唇二维多边形。焦化纹理和轮廓重绘，不以整张纸裁块移动制造变化。极小的接触反射变化局限在原明亮反射附近。</p>
+<h2>实际检查与修正</h2>
+<p>实际查看原图与纸张放大图，查看标准 <code>inspection.png</code> 中 0.25、0.75、1.50、2.25、3.00、3.75、4.50、5.00 秒全部 8 个时间点，并查看同样 8 点的等比放大 <code>smoke_inspection.png</code> 及末帧放大图。检查过程中进行了三项修正：</p>
+<ol>
+<li>初始烟修补范围过窄，残留固定细线；扩大真实烟带范围并清除左侧独立细丝残影。</li>
+<li>Telea 修补在墙桌交界产生固定亮斑；改为沿行插值，使水平背景边界连续。</li>
+<li>末段焦痕过于平整；加入灰色碎斑和纹理，降低纯色感。</li>
+</ol>
+<p>最终检查未见重复纸张、烟裁块矩形边缘、整张纸浮空或凭空大火。所有 20 帧不同；保存后检验 RGB 数组形状及 dtype，并检验 <code>pixels.npz</code> 的 <code>uint32 (144,256,20)</code> 与 PNG 中的 <code>0xRRGGBB</code> 逐像素一致。</p>
+<h2>真实不足</h2>
+<ul>
+<li>原纸张只占约 30×20 像素，右侧细碎卷曲与炭化纹理放大后仍略粗，末段焦角有一定绘制感。</li>
+<li>白烟的变化是二维密度构造，细丝偏光滑，不能还原真实湍流与完整复杂散射；烟量刻意保持细淡。</li>
+<li>原始烟遮挡的局部木纹无法从唯一首图恢复，插值带的细节略少；烟源附近保留原图极短的亮边，仍可能有少量静态亮点。</li>
+<li>只推断局部阴燃与缓慢卷曲，不保证真实实验的燃烧速度、燃烧后结构或烟的细节轨迹。</li>
+</ul>
+<p>运行：<code>python generate.py</code>。必需产物为 <code>pixels.npz</code>、<code>frames/00.png</code> 至 <code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。</p>
+</article></main></body></html>

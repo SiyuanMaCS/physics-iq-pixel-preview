@@ -1,0 +1,152 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-mug · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0076</span></nav><article><h1>light-on-mug · 生成方法</h1><p>使用输入仅为本目录 first_frame.png 与 prompt.txt。实际查看首帧原图和 4 倍放大图后，先写 OBSERVATION.md，再从零写 generate.py。输出为 20 帧 256×144 RGB，播放速度 4 fps，播放器展示总长 5 秒；样本时刻为 0.00–4.75 秒。00 与输入首图逐像素相同。</p>
+<h2>像素生成</h2>
+<p>黄色杯体无图案且近似轴对称，固定位置、固定光照下主体、杯口、杯底和高光保持稳定。重绘运动的是杯把、被杯把遮挡的局部杯壁及墙影。每个角度都重新计算二维轮廓顶点，超采样后生成覆盖率；杯把使用黄釉渐变、窄高光和固定低位强光场重新求值 RGB。朝后时杯体挡住杯把，朝前时杯把覆盖杯壁；侧面展开的开孔逐渐压窄，正前方保留约一像素的边缘厚度。</p>
+<p>大墙影使用独立二维环轮廓，同角度改变左右位置、开孔宽度和遮挡，软化边缘后在固定光照墙面上重新混色。杯体影保持不变。原把手影覆盖的墙面由首帧直接可见墙色的低阶二维拟合补出，原杯把离开处由同一行固定背景和黄色杯壁色场补出。摄影纹理与几何的小校准残差固定在原像素坐标，仅在接近初始视向时低幅补偿；从不把裁出的杯把、杯子或阴影贴图平移、缩放或镜像。</p>
+<p>固定摄影背景、黑色转盘外轮廓、桌纹、电线和光区保留。黑盘没有明显方位标记，采用轴对称转盘的外观假设；固定灯光反射仍留在相机坐标中。未建立三维场景、网格、法线、物理引擎，也未使用联网、模型或其他 case。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间/s</th>
+  <th style="text-align:right">角度</th>
+  <th>杯把与墙影事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">0°</td>
+  <td>输入原图，把手左侧完整可见。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">18°</td>
+  <td>向左后方绕行，保持首图陶瓷和厚度连续。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">36°</td>
+  <td>左侧开孔变窄，杯壁开始挡住接头。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">54°</td>
+  <td>后侧遮挡增多，仅左弧可见。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">72°</td>
+  <td>左外缘进一步收回，墙影与主体相叠。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">90°</td>
+  <td>把手处于背后，由杯体完全遮住。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">108°</td>
+  <td>右后侧开始露出极窄外弧。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">126°</td>
+  <td>右侧外弧和对应墙影逐渐展开。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">144°</td>
+  <td>右侧开孔更清楚。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">162°</td>
+  <td>接近右侧完整侧视。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">180°</td>
+  <td>把手朝右，墙上右侧环影完整。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">198°</td>
+  <td>向右前方转，杯把开始覆盖右杯壁。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">216°</td>
+  <td>前右侧开孔缩窄，杯壁从孔内可见。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">234°</td>
+  <td>前侧黄弧部分挡住杯体亮面。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">252°</td>
+  <td>前环接近中央，墙影与主体重合。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">270°</td>
+  <td>前侧边缘为窄竖向黄/暗线，主体影保持。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">288°</td>
+  <td>把手朝左前方逐渐展开。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">306°</td>
+  <td>左前开孔更宽，黄弧覆盖杯身左侧。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">324°</td>
+  <td>左侧形态接近初始。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">342°</td>
+  <td>接近完整一周，下一时刻可回到初始视向。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看和修正</h2>
+<ul>
+<li>首帧：实际打开 256×144 原图及 first_frame_large.png，确认杯口、黄釉、把手开孔、平台接触和大墙影边缘。</li>
+<li>第一轮 inspection.png：实际查看 00、02、05、08、11、14、17、19 共 8 时点。发现 05/14 中原左把手影有淡残边，杯把背后还有细轮廓。</li>
+<li>第一轮 transition_check.png：实际看 00/01/02 全景和杯把/杯底 4 倍放大，以及 05/10/15 遮挡关键图。00→01 的杯口、杯身厚度、黄釉、高光和底接触连续。</li>
+<li>修正：扩大原把手/影外轮廓的修补范围，去掉暗淡边缘残留；补上前侧正面视向的最小边缘厚度。重新保存全部帧、张量、检查表和播放器。</li>
+<li>第二轮 inspection.png 和 transition_check.png：实际再次打开。后侧把手与原影残边消失；侧面把手伸出与杯壁相接，杯身没有更换材质或忽然放大。</li>
+<li>contact_check.png：实际打开 05、10、15、19 的 3 倍局部，以及各自杯底的 5 倍局部。05 把手隐藏、10 右侧展开、15 前侧遮挡、19 左侧回转均符合顺序；杯底一直压在盘面上，固定光斑没有追着把手移动。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>墙面遮挡处只能用二维色场估计，放大后可看出比周围摄影墙面稍平滑。杯把正面视向只剩一两像素，黄釉立体感和开孔厚度较简化；补出的杯壁左侧有窄色带，与真实陶瓷摄影纹理仍存在差异。墙影用二维轮廓近似，不能精确复原光源投影的纵深变形。黑色平台自身没有可追踪标记，其转动主要由杯把来表达。初始输入没有给转速，完整一周是独立选择的运动假设。</p>
+<h2>数组校验</h2>
+<p>实际逐张读取全部 20 PNG 并转为 0xRRGGBB，确认与 pixels.npz 的 pixels 数组完全相等；数组 dtype 为 uint32，shape 为 (144,256,20)。另确认 00 与 first_frame.png 逐像素相同。这些校验仅保证保存格式，视觉质量依据上面的实际查看记录。</p>
+</article></main></body></html>

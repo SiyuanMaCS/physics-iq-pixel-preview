@@ -1,0 +1,132 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>single-cradle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0162</span></nav><article><h1>single-cradle · 生成方法</h1><h2>像素方法</h2>
+<p>唯一输入是本目录的 <code>first_frame.png</code> 与 <code>prompt.txt</code>。先实际打开首帧与放大图，写 <code>OBSERVATION.md</code>，之后独立编写 <code>generate.py</code>。未读取其他案例、参考视频、掩码、旧生成程序或结果；未联网、调用模型、权重、物理引擎、三维场景或法线渲染。</p>
+<p>输出按 4fps 播放，共 20 帧、5 秒，RGB 256×144。00 直接保存输入原图，逐像素一致。01–19 在二维坐标数组中直接求当前 RGB：两端球圆形边界按当前中心重新求值；深色边缘、偏灰的顶部反射、左侧冷白高光、下半部暖色亮带均由当前局部二维距离场和高斯斑块重新生成。亮带随摆幅少量调整倾斜和暖色比重，不提取或移动首帧球贴图。这里是二维颜色场，没有球体法线、光线投射或三维材质模型。</p>
+<p>左、右端球的中心沿从首图估计的二维悬摆弧线运动，前后吊点固定，绳线每帧重新求距离并作亚像素透明混合。中央三球保持静止。右端球尚未摆出时保留原位实拍外观；摆出后才重绘它，避免首续帧让静止球突然换外观。前框立柱保持原始像素并置于动态球、绳线前；后框立柱在球之后。底座倒影由二维弱亮斑重新绘制，并限制在黑底座足迹中。</p>
+<p>背景、木桌、夹具、静止的框和中间球保留摄影像素。动态球和原绳线留下的孔洞仅局部非学习修补。第一次查看发现临近镀铬球的修补在右端空球位带入灰色残影，最终版对此小区域按可见黑底座色及细微变化直接重绘；没有复制原球移动，也没有大块纯色覆盖。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻（秒）</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原图，左球由静止夹具保持在振幅端</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>释放后左球向右下进入摆弧</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>左球继续向球列加速</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>左球归位，五球接触</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>右球离开，部分被前立柱遮挡</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>右球向外升高，在后立柱前方</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>右球第一次振幅端</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>右球回落</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>右球接近接触区，再被前立柱部分遮挡</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>右球归位，五球接触</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>左球开始向外摆出</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>左球继续升高</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>左球到略衰减的振幅端</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>左球开始回落</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>左球接近球列</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>左球归位，五球接触</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>右球第二次离开，立柱部分遮挡</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>右球升高</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>右球到略衰减的振幅端</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>右球开始回落；最后一帧显示至5.00秒</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉查看与修正</h2>
+<ol>
+<li>实际打开 <code>first_frame.png</code>，随后打开 4 倍 <code>first_frame_enlarged.png</code> 和局部 <code>input_detail.png</code>，确认球径、色彩、原亮带、支撑框与接触关系。</li>
+<li>第一次保存后实际打开 <code>inspection.png</code> 的 00、02、05、08、11、14、17、19 八时点；另打开 <code>transition_check.png</code> 的 00、02、03、06、09、12、15、18 接触表，以及 00/01/02 的 3 倍放大对比和 03/06/09/15 局部。</li>
+<li>发现首续帧金属高光偏硬、线条偏亮，降低吊线不透明度、增大亚像素线宽，柔化球缘及亮斑，加回左摆球的暖色下半反射；右球静止时恢复原位外观。再次运行保存并实际查看新的 <code>transition_check.png</code>。</li>
+<li>补看 <code>occlusion_check.png</code> 的 04、05、07、08、16、17 帧局部，确认前立柱遮挡球体、后立柱被球体遮住的顺序。发现原右球位置的修补灰斑，局部重绘空出的黑底座并再次保存。</li>
+<li>实际重新打开最终 <code>transition_check.png</code> 和 <code>occlusion_check.png</code>。00/01/02 保持同样球径与金属色系；03/09/15 形成五球接触；右端摆出时中间三球留在原处。未观察到复制球、残留的球状灰影或支撑接触悬空。最终版的 <code>inspection.png</code> 也已由同次保存重新生成。</li>
+</ol>
+<h2>物理假设与仍可见局限</h2>
+<p>采用两端交换、轻微衰减的理想牛顿摆近似；中央三球没有显著移动，未表现亚帧级弹性压缩、机械振动或声波。夹具保持原位，释放动作通过球离开钳具区域表现；首帧钳口的精确握持关系不清楚，没有补造钳口运动。</p>
+<p>动态球保持约 11 像素直径和镀铬色，但二维重绘的亮斑比实拍更规则。放大 00/01 仍能辨认球面细纹和反射不是实拍延续，右端球摆出后的亮带也略整齐；没有声称完全重建实拍镜面反射。极细吊线在 256×144 下仍有轻微采样颗粒。原球遮住的桌面或底座只能局部估计，缺少真实遮挡后纹理。4fps 对撞击时刻的采样较粗，碰撞以整帧归位表现。</p>
+<h2>文件与数据核验</h2>
+<p><code>artifact_io.save</code> 保存 <code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。另有 <code>transition_check.png</code>、<code>occlusion_check.png</code> 供检查。</p>
+<p>程序逐帧重新打开全部 PNG，核验 RGB 三通道按 <code>R&lt;&lt;16 | G&lt;&lt;8 | B</code> 打包后与 <code>pixels.npz['pixels'][:,:,t]</code> 完全相等。张量 dtype 为 uint32，形状为 <code>(144,256,20)</code>，编码为 <code>0xRRGGBB</code>；输入帧与 00 也完全相等。这些核验仅用于文件一致性，质量判断来自上述实际查看。</p>
+</article></main></body></html>

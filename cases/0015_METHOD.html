@@ -1,0 +1,146 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0015</span></nav><article><h1>ball-in-basket · 生成方法</h1><h2>方法</h2>
+<p>读取且实际打开唯一首图后先写 OBSERVATION.md，再独立编写 generate.py。没有读取其他案例、视频、已有生成器、模型、分数、参考遮罩或记忆。</p>
+<p>20 帧为 uint8 RGB (20,144,256,3)，4fps，每帧持续0.25秒。00逐像素使用输入。01–19 的篮球轮廓用当前中心、横纵半径的二维椭圆软边直接求值；橙色主体、窄纵接缝、轻微纹理、双竖向高光和边缘暗化全部重新计算，无球面法线、三维场景、裁块贴图、平移/缩放原物体。</p>
+<p>静态桌面、箱外墙、肋条和摄影背景沿用首图。移走首球后，其后方墙面以左右邻近灰墙逐行插值补全，用宽边界柔和混合。遮挡分成箱沿上方的外露球，以及提手/格孔后受弱照明的球面。实际首图的亮孔位置与局部暗孔二维多边形共同定义开孔；箱外实体结构保持固定。箱内球面另用二维径向软暗化、偏左柔亮面、上箱板遮光和下半部暗化重新求值；短反光与细接缝片段先画在球面再由真实开孔裁显，实体肋条不添加橙色反射。</p>
+<h2>20 帧事件与假设</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间(s)</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原图，篮球下部已经在箱沿后</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>首次落到底附近；椭圆略横扩、竖压，前孔露出橙色</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>弹起，球上极短暂越过箱沿；球仍在箱内</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>再次触底，较小压缩</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>低幅二次弹起</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>回落，轻微压缩</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>不足一像素的最后回弹</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>恢复近圆，停在箱底</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>静止，最后一帧显示至5.00s</td>
+</tr>
+</tbody>
+</table>
+<p>采用球能够穿过箱口、箱底内平面约 y127 的解释。静止球中心约(109.2,96)，半径约(29,31)，下极 y127。箱底支撑在桌面不动。弹跳时形变只约2像素；纵接缝轻微转动后停止。该轨迹是根据首图尺度手写的衰减事件采样，不宣称由测量恢复真实弹性参数。</p>
+<h2>实际检查与修正</h2>
+<ol>
+<li>已查看原图、first_frame_zoom.png 和 crate_zoom.png；原球为光滑橙色、有一条细纵缝、两个竖向高光，并非粗颗粒多黑线球。</li>
+<li>首轮实际打开 inspection.png 的00、02、05、08、11、14、17、19共8时点，以及 transition_check.png 的00/01/02放大与01/03/04/07箱沿、提手和格孔。</li>
+<li>首轮发现灰墙插补的硬椭圆边缘形成明显球形残影，以及提手边缘未被新球面完整遮住。改用灰墙逐行插值和宽边界混合，扩大提手内部开孔到正确的边缘范围，重新生成全部输出。</li>
+<li>第二轮重新实际打开相同两张检查图，确认球形背景残影消失；箱沿处没有复制球/橙色拖尾，箱体和桌面没有运动；02露出的球上弧颜色、细接缝与首球一致，其他接触帧球面在格栅之后。</li>
+<li>另实际打开 event_check.png，查看00、01、02、03、04、05、06、07、10、19，确认衰减反弹后静止，未人为增加后段抖动。</li>
+<li>保存 transition_check.png；它包含全帧00/01/02、球/箱沿/提手的4倍最近邻放大，以及01/03/04/07的箱沿到箱底区域。</li>
+</ol>
+<h2>真实不足</h2>
+<ul>
+<li>4fps下初次下落在00→01跨越约58像素，快速下落的中间过程没有被采样，接触持续时间只能近似表达。</li>
+<li>箱底内部不可见，球下极与箱底的接触是依赖二维推断的事件。实际画面只显示开孔中的球面和箱沿附近反弹。</li>
+<li>灰墙补全平滑，原球后方真实背景与阴影未知；细看与左右摄影噪声仍有差异。补出的箱后沿也只能近似。</li>
+<li>暗格孔的多边形边界及内球面比较简化，部分近孔边界仍不能从单帧完全区别前壁反光与后方透光；下部暗孔与斜肋条位置经过再次坐标核对，但仍是近似。孔后球面已包含径向软明暗、短反光和接缝片段，低对比纹理仍比首图更平滑。</li>
+<li>动态球是二维橙色软椭圆材质近似，箱内光照、高光衰减和微转接缝没有恢复不可见真实结构。它与真实摄影仍有差距。</li>
+</ul>
+<h2>输出校验</h2>
+<p>调用 shared/artifact_io.save 保存 pixels.npz、frames/00.png–19.png、inspection.png 与独立 index.html。完成后重新读取每个 PNG，把 RGB 编为 0xRRGGBB，逐个验证等于 pixels.npz 的相应 uint32 切片，张量形状为 (144,256,20)；再次验证00与 first_frame.png 完全相等。验收依据是上述实际视觉查看，张量校验只用于确认编码一致性。</p>
+<h2>根审返修：箱内球面与肋条</h2>
+<ul>
+<li>实际重新打开首图箱体放大，另保存并查看 aperture_coordinate_check.png 和 aperture_lift_check.png，以坐标格和亮度提升核对本图中的暗格孔、中央实体柱与斜向肋条。</li>
+<li>原先较大的暗孔菱形多边形覆盖范围过大，部分位置没有保住暗肋条。将其收紧为小暗孔，结合原图暗孔像素核与实体中央柱/斜肋条遮挡约束。原亮孔在球占据范围内改用完整新RGB，避免留下漂白小片；球轮廓外的孔后背景仍保留。</li>
+<li>箱内颜色不再只是外球乘统一亮度。按当前球中心与形变重新求值二维径向软暗化、偏左柔亮面、固定箱板上侧遮光、下半球边缘暗化；绘制柔短反光和纵接缝片段，再全部经过开孔遮挡。实体前壁/肋条保持原静态像素，不叠加橙色亮化。</li>
+<li>重新生成20帧、pixels.npz、index.html 和各检查图。实际查看 interior_revision_check.png 的00/01/02/03/04/07/19箱孔近景，确认球面亮度随球位置改变，下部暗化、反光片段及接缝可见，已不呈现此前统一平填的橙色大菱形。</li>
+<li>实际重新查看 transition_check.png 的00/01/02衔接及01/03/04/07箱沿与格孔；重新查看 inspection.png 的00/02/05/08/11/14/17/19八时点，以及 event_check.png 的10个事件帧。箱体桌面固定、下落与衰减反弹轨迹保持，00依然逐像素原图。</li>
+<li>局限：黑色箱壁内部深度仍不可恢复；部分暗孔边界依靠二维解释。极小反光片段可能在4fps采样间显著跳位，孔后纹理仍较简化；初次下降时间跨度与不可见箱底接触的限制仍然存在。</li>
+</ul>
+</article></main></body></html>

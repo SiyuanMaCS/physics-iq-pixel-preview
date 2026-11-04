@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-sand · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0017</span></nav><article><h1>ball-in-sand · 生成方法</h1><p>视觉输入仅为本例 <code>first_frame.png</code>，场景文本仅为本例 <code>prompt.txt</code>。先实际打开首帧及 4 倍放大图，写 <code>OBSERVATION.md</code>，随后独立编写 <code>generate.py</code>。未读取其他 case、其他视角、旧生成器、参考视频、分数、记忆或其他线程，也未联网、调用模型、物理引擎或三维渲染器。</p>
+<p>输出为 20 帧 256×144 RGB，4fps，总播放时长 5 秒。00 是原始首帧的逐像素拷贝。灰墙、木桌、静态夹爪及未受压的沙外围保留摄影像素。原球位置的灰墙用周围无物体灰墙样本拟合二维颜色多项式并加弱固定噪声修补；夹爪的真实轮廓单独保留，修补区没有移动物体贴图。</p>
+<p>01–19 的球由每帧当前中心和朝向直接生成新的二维轮廓、RGB 色场、上下明暗、弯曲浅色网球缝线、低频绒毛条纹及细噪声；4 倍采样并柔化边缘，保持约 30 像素球径。球未用首帧裁块平移、缩放或镜像。冲击区的沙由二维多尺度颗粒场和 110 个不规则小团块逐帧重算，压力改变这些小团块的二维位置和局部阴影，再与静止外围渐接；前侧粗糙沙缘遮住球底，接触阴影置于遮挡边界。没有球面法线、三维物体、光线追踪或物理求解器。</p>
+<p>物理假设是短距离竖直释放，动力沙迅速耗散冲击，允许一次很小的回弹和缓慢压入。固定夹爪不添加无依据运动。因球底距沙顶仅约 30 像素，检查后将初次触沙提前至首个 0.25 秒采样间隔内；相应更新了 <code>OBSERVATION.md</code> 中的事件安排。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">球中心 y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">35.30</td>
+  <td>原首帧；释放起点。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">72.00</td>
+  <td>竖直落下并初触沙。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">84.00</td>
+  <td>初次压入；局部沙坑形成。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">81.30</td>
+  <td>小幅回弹，坑保留。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">85.10</td>
+  <td>重新接触并压入。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">87.00</td>
+  <td>沙继续压缩，前沙缘遮球底。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">88.00</td>
+  <td>沉降衰减。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">88.60</td>
+  <td>低幅沉降。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">88.90</td>
+  <td>接触趋于稳定。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">89.00</td>
+  <td>极小余量沉降。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">89.05</td>
+  <td>到达最终位置。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">89.05</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">89.05</td>
+  <td>最终嵌入沙中的稳定状态。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录</h2>
+<ul>
+<li>首帧与 <code>first_frame_large.png</code>：记录真实球径、青蓝绒面、两条浅色缝线、黑蓝夹爪厚度、沙的粗糙轮廓和桌面接触。</li>
+<li>首版 <code>transition_check.png</code> 的 00/01/02 放大比较：发现新球过于平滑、原球靠夹爪左尖处有小块青色残影；降低球底亮度、增加绒面微纹理、降低缝线蓝通道增量并柔化轮廓，收窄不正确的夹爪保留区后重新保存。</li>
+<li>首版 <code>contact_check.png</code>：中心重绘沙略过于青绿且细节偏平；将中心底色改为更接近首帧的 (29,109,38)，增加细颗粒和小阴孔，再重新保存。</li>
+<li>最终 <code>inspection.png</code>：实际查看 00、02、05、08、11、14、17、19 八个时点，检查无第二个球、原悬空球区无明显残影、固定桌纹与夹爪稳定、球始终单一尺度、后段保持静止。</li>
+<li>最终 <code>transition_check.png</code>：再次实际查看 00/01/02 全图与 4 倍球/夹爪/接触局部；青蓝色、弯曲缝线和下缘暗部一致，首个间隔内的位移表现快速下落，无纯色球块或突然换物体。</li>
+<li>最终 <code>contact_check.png</code>：实际查看 01、02、03、04、05、07、10、19 的 2 倍接触局部；01 球底触沙，02 局部压入，03 回弹后仍在原坑附近，后续球下缘由不规则前沙缘遮挡，未见悬空缝隙。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>球的二维绒毛纹理较原摄影纹理规则，放大时仍可看出程序式的纵向条纹；原始浅色缝线和下缘绒毛也未完全恢复为同一摄影细节。沙只重绘中央受压区域，外围轮廓基本保持原图，因此侧向挤开比较克制，颗粒级抛散与坑内深层流动不明显。0.25 秒采样无法展示完整空中轨迹和最初接触的瞬间。释放、回弹和沉降是依据单张图设定的二维时序，并非实测动力学。</p>
+<h2>保存与校验</h2>
+<p>通过只负责保存的 <code>shared/artifact_io.py</code> 输出 <code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。另保存 <code>transition_check.png</code> 与 <code>contact_check.png</code> 供检查。生成结束后实际读取全部 20 个 PNG 并以位移/按位或重新编码；每张 PNG 均与 <code>pixels.npz['pixels'][:,:,t]</code> 严格相等。张量已验证为 uint32，形状 (144,256,20)，编码 0xRRGGBB；00 PNG 与原首帧严格相等。</p>
+</article></main></body></html>

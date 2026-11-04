@@ -1,0 +1,110 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>cut-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0043</span></nav><article><h1>cut-paper · 生成方法</h1><h2>输入与像素生成</h2>
+<p>仅使用本目录 first_frame.png 和 prompt.txt 作为场景输入；读取本例 case_config.json 和公共输出 helper。未读取其他 case、参考续写、旧脚本、掩码、模型、分数或记忆；未联网、未调用 AI API/学习权重/物理引擎/三维渲染，也未另开代理。</p>
+<p>00 直接使用原始 RGB，不经过重采样。01–19 使用 4 倍二维像素坐标重新评估再抗锯齿缩小。动态绿色薄纸的边界由独立编写的二维曲线与共享锯齿裂线构造；裂线按时间自顶部向下扩展，裂线下未断的区域保持两片相连。夹持角位移与抓夹位移一致。纸面颜色逐像素计算：绿色底色、原图可见弯曲区域的连续暗带、右上折面的深绿、很弱的纸面细纹。释放拉力后重新评估边缘下垂与衰减回摆，撕口少量纤维色线跟随新轮廓。</p>
+<p>黑蓝抓夹每帧用当前轮廓重画黑壳、灰色上缘高光、蓝色内环、孔内露出的桌面、深色内斜边和两颗浅银铆钉。先绘制夹具、再绘制纸片，因此纸保持对右夹口的遮挡。新阴影按当帧二维纸片/工具边界生成柔化掩码。</p>
+<p>动态对象没有首帧裁块的平移、缩放或镜像。为避免摄影首图到计算色场的瞬时明暗跳变，01–03 仅在腐蚀后的对象内部应用固定画面坐标上的首图与初始计算图颜色残差，权重 .82/.48/.18，之后为零；该残差不移动、不承担轮廓或运动生成。首图静止桌面在未遮挡区保持；原对象后方的未知桌面，使用 y&gt;=112 的实际可见静止木纹样本生成纹理，并以邻近可见桌面的二维归一化模糊估计低频色。静止背景修补结果对所有续帧固定。</p>
+<h2>20 帧实际事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>逐像素原图，两夹点抓住完整弯曲纸。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>左夹向外 .23px，右夹 .184px，纸仍完整，极小收紧。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>左夹位移 .60px，原下垂形状轻微收紧。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>左夹位移 1.11px，纸弯曲暗带连续变化。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>左夹位移 1.76px，顶凹角仍完整。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>左夹位移 2.55px，裂口自 (139,33) 附近向下约 5px。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>裂口下延约 10px，下部纸连接。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>裂口下延约 15px，双方拉开上部。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>裂口下延约 21px，剩余下半仍连接。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>裂口下延约 26px，顶裂缝明显张开。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>裂口下延约 31px，下部仍有细连接。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>裂口下延约 36px，剩余末端约 5px 纸桥。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>裂口贯穿，两片分离；夹具左移 12px、右移 9.6px。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>两端进一步小幅分开，自由撕边开始下垂。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>释放后边缘一次小幅回摆。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>两片回摆衰减，持续夹持。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>裂口与纸边稳定，阴影随当前悬垂轮廓更新。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>位移与回摆趋于末态。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>各自被夹住的两片保持张开。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>两片分离末态，工具位置趋稳。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ol>
+<li>编写代码前实际打开 first_frame.png，并保存/打开 first_frame_enlarged.png；观察纸轮廓、首图软暗带、右上折面及两个夹点。</li>
+<li>第一轮生成后实际打开 inspection.png（00、02、05、08、11、14、17、19 八个时点）和 transition_check.png（00/01/02 放大比较及05、08、11、12、15、19接触/遮挡特写）。确认完整纸→部分裂口→下部桥接→完全分离的顺序，两个夹点没有脱开，未多出纸片/工具。</li>
+<li>00/01/02 下缘发现细紫色残差边，修正为仅在腐蚀后内部作用的固定位置颜色残差，重新保存并实际查看同一两张图；紫色边已消除。</li>
+<li>另打开 key_frames_enlarged.png 的03、05、10、12放大图，发现原纸上缘有少量绿色残迹；从首帧绿色像素建立仅用于清理背景的覆盖区，扩大背景恢复区。没有把该掩码作为后续纸片生成轮廓。</li>
+<li>扩大恢复区后重新查看两张检查图，发现恢复桌面边缘的色块感；加入可见静止桌面低频色匹配。第一版归一化模糊样本不足时出现过暗区域，扩大采样半径后重新生成并实际查看最终 inspection.png 与 transition_check.png。最终不再有绿色残迹、紫色边或黑色洞。</li>
+<li>最终00/01/02保持同一绿色薄纸、相近厚度与轮廓；01/02软暗带没有瞬时消失。05起裂、08部分裂口、11最后桥接、12断开，15/19两片分离；裂缝内露出桌面，夹具未穿过纸面。最终 key_frames_enlarged.png 已刷新到最终版本。</li>
+</ol>
+<h2>仍可见局限</h2>
+<p>这是独立二维像素续写。续帧纸面的摄影细节与真实纸纤维有限，后半段绿色明暗比首图更平整，黑蓝塑料高光和细节也更简化。裂口采用预定的不规则路径，末态锯齿有轻微规律感；不是微观裂纹模拟。原图遮住的木纹不可从单帧恢复，撕开后局部桌面纹理较均匀，放大可见修补区细节弱于原始可见桌面。单视角不能确定真实离桌高度，阴影和轻微下垂依据二维可见边界近似。256×144 下夹尖及纸厚不到一像素，无法表现完整夹爪机构或纸厚层次。</p>
+<h2>输出校验</h2>
+<p>validate.json 记录实际逐 PNG 校验结果：20 PNG 均为 RGB 256×144；pixels.npz 的 pixels 为 uint32 (144,256,20)，所有 PNG 每像素都与 0xRRGGBB 张量解码相等；00 PNG 和张量00都与 first_frame.png 逐像素相等。检查没有以帧差、新颜色数或文件数量代替视觉检查。</p>
+</article></main></body></html>

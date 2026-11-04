@@ -1,0 +1,125 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mirror-ball-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0117</span></nav><article><h1>mirror-ball-fall · 生成方法</h1><p>输入仅为本目录的 first_frame.png 与 prompt.txt；先打开首图及放大图并写 OBSERVATION.md，再独立编写 generate.py。未读取其他case、旧续写、参考视频、模型、网格或物理引擎。公共 artifact_io.py 仅用于输出。</p>
+<p>每帧以静止摄影背景为底。原球、绳、挂环、磁铁和镜中局部轮廓用局部非学习修补去除；镜框旁墙面采用相邻同一行灰色背景拟合并重建原有边缘的暗化，避免黑色边框渗入修补区域。动态球使用当前中心位置和微小接触形变构造新的二维覆盖掩码，RGB由首图球面内像素拟合的低阶二维平滑颜色系数求值，再加入当前局部坐标下的细纹和浅色弯曲接缝。只保存少量颜色系数，未裁取、平移、缩放或镜像首图球贴图。轮廓采用4倍采样，新像素相对背景的差值降采样叠回背景，静止背景不整体重采样。</p>
+<p>金属环、绳结、受力杆和厚磁铁均由当前帧二维线、轮廓和多色小面重新绘制。绳从相同画面顶点到下降后的绳结延长，球不旋转、不摇摆，接缝朝向稳定。镜像是另一组当前帧直接求值像素；颜色比前景暗，横向位置固定，下降位移同步，按从首图估计的固定斜镜框裁剪。上方镜中挂环被边框遮住，不凭空添加可见挂环。靠近木面时固定落点的宽软影收紧，最后两帧加窄接触影及不足一像素的底部压缩。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">竖直下移(px)</th>
+  <th>具体事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0</td>
+  <td>首图RGB逐像素保留，悬挂球。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.7</td>
+  <td>开始缓慢下放；保留球的暖橙色、尺寸及厚磁铁。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">1.6</td>
+  <td>球和镜像同步连续下降，绳延长。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">2.7</td>
+  <td>维持悬挂连接和稳定朝向。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">4.0</td>
+  <td>缓慢下降，镜框不动。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">5.5</td>
+  <td>下降，球下影弱且弥散。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">7.2</td>
+  <td>绳受力绷直，挂环同步。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">9.0</td>
+  <td>球不横移或旋转。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">11.0</td>
+  <td>同步下放，镜框遮去反射右半。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">13.1</td>
+  <td>球越过原先墙面后缘的图像高度。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">15.3</td>
+  <td>落点固定，阴影渐集中。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">17.5</td>
+  <td>前景球位于木面上方。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">19.7</td>
+  <td>球与磁铁连接不分离。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">21.9</td>
+  <td>下降，接缝与球朝向保持一致。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">24.0</td>
+  <td>靠近支撑面，反射更受斜镜框遮挡。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">26.0</td>
+  <td>接近木面，下降减速。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">27.7</td>
+  <td>下降进一步减缓。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">29.0</td>
+  <td>球底接近固定接触点。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">29.8</td>
+  <td>形成窄接触阴影，轻微压缩。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">30.0</td>
+  <td>下放结束，球底约y121，磁铁与绳仍连接。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录</h2>
+<ul>
+<li>生成前实际打开 first_frame.png、first_frame_zoom.png、object_zoom.png 和 mirror_zoom.png；这些放大图只来自本例唯一首帧。</li>
+<li>实际打开 inspection.png 查看00、02、05、08、11、14、17、19八个时点；确认单个实球及局部镜像同步下降，固定摄影背景，橙绳持续连接，无第二个实体球、横向摆动或原位置重复球。</li>
+<li>实际打开 transition_check.png 对比00/01/02全图、挂环/磁铁/球和镜框放大图。第一轮发现镜中额外挂环及边框修补灰色缺口；删除被遮挡挂环，并由原图的静态边缘像素校正斜边位置、局部壁色和反射暗橙色。重新生成后再次实际打开对比图，灰色缺口已消除，球保持暖橙色及同量级厚度；接缝较第一版更接近首图。</li>
+<li>实际打开 contact_check.png 查看14、17、18、19前景球底与镜面边缘放大；接近木面时接触影收紧，没有明显穿入木面或磁铁脱离。</li>
+<li>最后一版修改仅在本例：反射尺度略校正，静止背景改为差值降采样叠回。保存后再次检查上述三张图。</li>
+</ul>
+<h2>真实局限</h2>
+<p>球的二维拟合纹理仍比首图摄影里的毛毡细节平滑，挂环和磁铁的细小杂乱高光也经过简化，放大00/01可辨出重绘。镜像的横向中心、尺度和同步位移来自单幅图像推断，无法确定真实镜面透视；所选最后轻触木面是对“缓慢降低”的合理续写假设，提示词本身未指定最终停止高度。接触压缩较弱，球不发生旋转、碰撞反弹或滚动。局部墙面修补在高倍放大下纹理较平，但不随时间移动。视频为20帧、4fps、每帧保持0.25秒；最后采样时间为4.75秒，总播放长度5秒。</p>
+</article></main></body></html>

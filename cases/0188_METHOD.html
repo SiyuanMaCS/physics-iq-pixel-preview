@@ -1,0 +1,130 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>weight-on-ceramic · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0188</span></nav><article><h1>weight-on-ceramic · 生成方法</h1><h2>方法</h2>
+<p>唯一场景输入是本目录 first_frame.png 和 prompt.txt。先实际查看原图与 4 倍最近邻放大图，再完成 OBSERVATION.md，最后独立编写 generate.py。未读取其他 case、旧脚本、参考视频、掩码、分数、记忆、网络或模型；只使用公共 artifact_io.save 做保存。</p>
+<p>本例的可见事件是<strong>已完成放置后的静态承载</strong>。黑色 30LB 壶铃下缘已经靠在黄色杯口，杯底落在桌面上。无手、无坠落距离、无可见裂缝；陶瓷承受压载是一个合理且不需额外未观察事件的解释。固定机位和恒定照明下，每帧在固定二维屏幕坐标逐通道求值该静止场景的 RGB，位移、形变和光照变化均为零。所有 20 帧故意与首帧相同。</p>
+<p>这不是裁一个物体再平移/缩放/镜像的生成：没有任何对象裁块运动，也没有修改纹理或补画画外区域。本例没有有依据的动态对象，因此也没有人为重绘动态几何。保留静止摄影表面避免 00→01 的釉面切换、壶铃形状变更或文字漂移。该实现是一段静止续写，不声称完成了动态图像合成。</p>
+<h2>20 帧安排</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">显示区间（秒）</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00–0.25</td>
+  <td>首帧原像素，已接触的稳定摆放</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25–0.50</td>
+  <td>杯口承受壶铃压载，位置不变</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50–0.75</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75–1.00</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00–1.25</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25–1.50</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50–1.75</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75–2.00</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00–2.25</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25–2.50</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50–2.75</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75–3.00</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00–3.25</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25–3.50</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50–3.75</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75–4.00</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00–4.25</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25–4.50</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50–4.75</td>
+  <td>稳定压载</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75–5.00</td>
+  <td>稳定压载至结束</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查</h2>
+<ol>
+<li>实际打开 first_frame.png：确认壶铃握把顶部在画外，杯柄右侧孔透出背景；没有擅自补齐握把。</li>
+<li>实际打开 initial_detail.png（全图 4 倍）：检查 x≈136..170、y≈71..104 杯身边界、x≈169..183 杯柄与壶铃下缘的遮挡。杯底暗接触和杯口遮挡完整。</li>
+<li>实际打开 inspection.png：观看 00、02、05、08、11、14、17、19 八个时点。杯体尺度、黄色渐变、黑色圆钝主体、灰墙和木纹连续，无重复对象、浮空或涂抹。</li>
+<li>实际打开 transition_check.png：查看 00/01/02 全图 3 倍对比，以及杯口/壶铃和杯底/桌面的 8 倍关键区域。黑色下缘与杯口相接；杯底暗边仍贴在桌上；杯柄孔的明暗边、黄色釉面渐变和字样连续，没有首续写材质或几何切换。</li>
+<li>实际打开 contact_check.png：查看 00、01、02、05、08、11、14、19 八个时点的 4 倍支撑区域。两处接触和杯柄孔均保持完整。</li>
+<li>检查图修正：最初 transition_check 画布高度不足，裁掉接触放大图的底部；已把画布增高到 880 px，重存所有输出，再实际打开完整图。视频帧本身没有需要修复的新增残影。</li>
+</ol>
+<p>以上结论来自实际观看，不以帧差数量或颜色统计代替。静止输出的逐像素一致性是另外的交付校验。</p>
+<h2>文件校验与限制</h2>
+<p>运行 generate.py 后重新读取 pixels.npz 和全部 frames/00.png..19.png：张量为 uint32 (144,256,20)，编码 0xRRGGBB；全部 PNG 均为 256×144 RGB，各 PNG 与张量对应切片逐像素相等；00 与 first_frame.png 逐像素相等。artifact_io.save 输出 inspection.png、index.html 和 20 张 PNG。播放为 20 帧、4 fps、5 秒。</p>
+<p>真实限制：整个续写没有可见运动，不包含举起/放下壶铃的过程，也没有新增动态像素或程序化重绘材料。杯口被壶铃遮挡，图像无法确定杯壁厚度、不可见裂纹和刚放下时的冲击，因此不能证明这只具体杯子一定耐受载荷；如果意图是压碎演示，本例静态解释不会体现该事件。保留了首图本身的低分辨率软焦点和弱文字对比，没有凭空增加细节。</p>
+</article></main></body></html>

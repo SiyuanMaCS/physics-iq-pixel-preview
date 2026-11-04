@@ -1,0 +1,110 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>blow-balloon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0038</span></nav><article><h1>blow-balloon · 生成方法</h1><h2>生成方法</h2>
+<p>输入仅为本目录 <code>first_frame.png</code>、<code>prompt.txt</code>。先实际打开首帧及四倍放大图，写 <code>OBSERVATION.md</code>，随后独立实现 <code>generate.py</code>。使用共享 <code>artifact_io.save</code> 保存结果。</p>
+<p>每一帧直接计算一个新 RGB 数组。黑气球的轮廓为由首图观察记录的二维扫描线左右边界，当前边界按固定连接点 (137,87) 扩张；轮廓内的黑橡胶底色、两处反光、柔和亮边、底部褶皱和微弱纹理由解析二维颜色场重新求值。轮廓边界施加约半像素的光学软化，保持首图的摄影质感。高光采用二维高斯亮斑，无三维场景、法线或物理引擎。没有裁取、移动、缩放、镜像首图气球贴图。</p>
+<p>未被动态气球覆盖的墙、桌、椅背和绿色物品保持首图像素。气球下缘收束后露出的少量墙面用同一扫描线两侧的静态墙色插值补全；颈、蓝箍、黑管的固定段保留，因为它们没有移动。增加幅度很小的左侧柔软投影以配合气球扩张。初帧 00 完整逐像素保留输入。</p>
+<h2>物理假设与 20 帧事件</h2>
+<p>泵气不中断、五秒内不爆裂，不额外加入人物、器具、摇摆。气球体积增长，轮廓尺寸按 <code>(1+1.5*t/19)^(1/3)</code> 增加；这个标量只是二维充气日程，并不建立三维物体。最终宽度约71像素，相对初始约53像素。连接颈保持在原软管位置。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>当前事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原始气球与装置；像素完全不变</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>开始小幅膨胀，原黑色材质与两反光位置连续</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>顶部抬高，两侧小幅外扩</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>继续膨胀，连接点固定</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>两侧增加宽度</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>上半部继续抬高</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>轮廓更饱满，底部细褶幅度微减</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>两处反光随表面扩张自然分开</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>中段增大，检查颈与软管接触</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>连续充气，黑色底色稳定</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>主体直径继续增加</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>上缘上升，左右轮廓平滑</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>两处柔和反光仍然可见</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>保持固定颈，继续膨胀</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>表面更绷紧、轮廓更宽</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>投影随主体扩张极轻微加深</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>连续增大，不引入额外动作</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>接近当前段最终尺寸</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>最后小幅充气</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>当前五秒段结束，保持完整并连接软管</td>
+</tr>
+</tbody>
+</table>
+<h2>实际图像查看与修正</h2>
+<ol>
+<li>打开原图与 <code>first_frame_enlarged.png</code>，确定主体约 x122–174、y32–84，确认左下细颈、蓝箍、黑管和木桌前景遮挡。</li>
+<li>实际打开第一版 <code>inspection.png</code>，逐一查看 00、02、05、08、11、14、17、19，共八个时点：检查一个气球、持续膨胀、顶部不出画、桌面及背后固定物体不跳动。</li>
+<li>实际打开第一版 <code>transition_check.png</code>，查看 00/01/02 五倍像素放大，以及 00/08/19 的连接处七倍放大。发现新轮廓比首图略硬；为透明度场增加 0.48 像素二维高斯软化，随后全部重存。</li>
+<li>实际打开修正后的 <code>inspection.png</code> 和 <code>transition_check.png</code>，复查上述八时点、00/01/02 材质衔接、颈与蓝箍接触：未见原气球残影、重复对象或脱离软管的空隙。气球下缘与细颈处有连续的暗轮廓，软管下段被木桌按原图遮挡。</li>
+<li>实际单独打开最终 <code>frames/19.png</code>，确认顶部留有约11像素画内空间，最大气球没有覆盖桌面或绿色物品。</li>
+</ol>
+<h2>输出与校验</h2>
+<p>输出为20帧、256×144 RGB、4 fps、5秒。保存 <code>frames/00.png</code>–<code>19.png</code>、<code>pixels.npz</code>、<code>inspection.png</code>、<code>transition_check.png</code>、<code>index.html</code>。</p>
+<p>生成脚本逐一读取20张 PNG，与 <code>pixels.npz</code> 中对应帧作完整像素比较；全部一致。张量 dtype 为 uint32、shape 为 (144,256,20)，元素为 0xRRGGBB。00 与输入逐像素一致。检查图的编号文字由共享 helper 写入检查表，实际视频帧没有叠加文字。</p>
+<h2>仍可见的局限</h2>
+<p>首帧的真实细微相机噪声和复杂高光由解析纹理近似；00→01 放大查看时高光分布仍有很轻的差别，主体颜色、两反光、尺寸和形状连续。轮廓在高倍放大下仍有扫描线台阶，顶端和细颈附近形变比真实橡胶简化。墙面投影仅有微弱二维变化，并未精确恢复真实照明。气球在五秒内保持同一倾斜朝向，这是固定软管和稳定充气的假设；首帧无法确定实际泵气速率，最终尺寸属于合理推演。</p>
+</article></main></body></html>

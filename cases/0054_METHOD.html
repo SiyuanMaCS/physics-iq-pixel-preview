@@ -1,0 +1,114 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>double-cradle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0054</span></nav><article><h1>double-cradle · 生成方法</h1><h2>输入、方法及物理假设</h2>
+<p>只读取本例 first_frame.png、prompt.txt 和 case_config.json 以及公共保存 helper。先实际查看原图、4 倍全图及装置 8 倍局部图，并先写 OBSERVATION.md，再独立编写 generate.py。没有读其他 case、参考视频、旧脚本、结果或记忆，没有联网、调用模型或学习权重、物理引擎、三维场景或球面法线。</p>
+<p>00 帧逐像素保留输入。从 01 起，移动球用当前中心和轮廓重新计算二维 RGB 场：椭圆边界、上部蓝灰反射、横向白亮带、暗窗反射、下部黄褐反光、侧面细亮点与细微纹理。所有亮带均在当前局部坐标直接求值，没有裁出原球并移动、缩放或镜像。悬线由当前球顶连接到固定横杆上的二维悬点。抓手也用独立二维多边形与蓝黑色场重画；上下爪开启后沿左侧退出，未平移原抓手贴图。</p>
+<p>固定摄影背景保留。初始动态区域与旧倒影用非学习图像修补及仅由可见桌面拟合的二维木色、方向纹理补全；底座中被抓手反射遮住的局部使用渐变黑色重建。每帧分别计算模糊球倒影和随抓手退出消退的蓝色倒影。前后立柱、底座银色前沿和黑色前脸用固定遮挡区保留，球不能覆盖前景立柱。动态重画采用 4 倍分辨率计算后降采样，并用约半像素柔化匹配原图的焦外程度；静态背景像素再恢复，避免全图随帧变糊。</p>
+<p>释放假设：01 时爪已开始打开，两球仍近初始最高点；随后摆动的约 1 秒周期对应小型装置。左右末端成对交替外摆，摆弧高度由横向位移的平方求值，约 3.2% 每秒振幅衰减，中间球位置固定。接触处五球保持首图约 10–11 像素直径和略向右下倾斜的排列。金属球接触形变远小于一个像素，未添加橡胶式压扁。</p>
+<h2>最终 20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原图；抓手夹住左侧两球，左侧两球在外摆振幅处</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>蓝黑爪小幅开启并开始退出；左侧两球从最高点释放</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>左侧两球回到接触列，五球接触，向右传递动量</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>右侧两球右摆至振幅附近，抓手向左退出，右球受前右支柱遮挡</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>右侧两球回到接触列，抓手只剩左缘部分</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>左侧两球左摆，抓手完全退出</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>左侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>右侧两球右摆</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>右侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>左侧两球左摆</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>左侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>右侧两球右摆</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>右侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>左侧两球左摆，振幅较前减小</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>左侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>右侧两球较小振幅右摆</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>右侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>左侧两球较小振幅左摆</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>左侧两球回到接触列</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>右侧两球较小振幅右摆；装置与底座固定</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ul>
+<li>输入：实际打开 first_frame.png；保存并打开 first_frame_zoom.png 和 detail_input.png，检查五球尺度、爪口、两侧立柱与底座支撑。</li>
+<li>第一轮：实际打开 inspection.png，逐格查看 00、02、05、08、11、14、17、19；实际打开 transition_check.png 的 00/01/02 放大以及 02/03/04/05/06/07 接触与遮挡区。发现工具轮廓偏硬、细线偏亮以及工具倒影残留。</li>
+<li>第一轮修正：削弱悬线、柔化重画轮廓、增加抓手颜色细变、将蓝色底座反光随工具退出而消退，并重建旧球影区域。</li>
+<li>第二轮：重新实际打开上述两张检查图；五球接触列和两端成对摆动一致，右摆时前右柱遮住部分金属球。发现底座前沿也被反射修补覆盖。</li>
+<li>第二轮修正：将底座银色前沿与厚黑色前脸加入固定保留区，恢复其位置和厚度；降低抓手下爪约 2–3 像素过厚部分，并将蓝色包胶调回首图较亮颜色。</li>
+<li>第三轮：最终重存后再次打开 inspection.png 与 transition_check.png，复查 8 时点、首三帧放大、02/04/06 的接触列和 03/07 右柱遮挡。固定银色前沿恢复，无重复球或平移裁块；没有用帧差数或颜色数代替这些视觉查看。</li>
+</ul>
+<h2>格式验证</h2>
+<p>生成器最后读取所有 20 个 PNG，逐像素将 RGB 打包成 0xRRGGBB 并与 pixels.npz 比较。张量 dtype 为 uint32、形状 (144,256,20)，PNG 为 RGB 256×144；全部一致。00 与输入逐像素相等。输出由 artifact_io.save 统一保存，包含 20 帧、inspection.png 和独立播放 index.html；另保存 transition_check.png。</p>
+<h2>仍可见局限</h2>
+<p>金属球亮带是二维手工反射图案，精细房间映像和每球微小差异比首图简化；抓手重绘的包胶边缘仍比摄影纹理规整。被工具遮住的木桌只能从周边可见背景补全，局部纹理较平滑。低帧率下接触与振幅帧交替，完整过渡弧在采样之间；周期及轻微衰减是从单帧无法唯一确定的假设。静态支架保留了首图部分微弱蓝色反光，工具退出后这一小块反光没有完全消失。</p>
+<h2>根审材质连续性返修</h2>
+<p>本轮只返修抓手的二维几何与 RGB 求值，保留已有球体 RGB 计算、悬挂轨迹、成对交替事件、固定支架与底座遮挡及退出时序。上下壳及包胶的二维轮廓用观察点的 Catmull-Rom 连续曲线构造，替代明显折角的多边形。分别计算包胶内侧凹面的窄暗带、外侧软亮边、拐弯处较暗的蓝色反光、薄下内衬的亮脊以及末端暗区；局部短亮点、磨损与微小不均匀纹理均用当前工具坐标重新求值。黑塑料壳增加圆边低亮带、下爪厚度暗面及断续蓝灰反光，仍不复制首帧工具贴图，不使用三维计算。</p>
+<p>全部输出已重存。本轮实际打开新增的 tool_detail_check.png，逐个查看 00/01/02 的 8 倍工具近景；再实际打开 inspection.png 的 00、02、05、08、11、14、17、19 八时点，以及 transition_check.png 的 00/01/02 与 02/03/04/05/06/07 接触、支柱遮挡关键帧。重画后的蓝色内衬可见沿曲边的明暗过渡，下爪包胶与壳体分层，未出现额外爪或抓手残块。首图原有材质和细小摄影纹理仍无法由二维手绘完全重现：包胶局部与黑色大面仍较首图光滑，弯曲边界与原工具有小幅轮廓差别；这些是本次返修后仍可见的不足。</p>
+<p>生成器再次完成所有 20 PNG 与 uint32 (144,256,20) 0xRRGGBB 张量逐像素比对；00 仍与输入完全一致。另新增 tool_detail_check.png，便于复查本轮工具材质。</p>
+</article></main></body></html>

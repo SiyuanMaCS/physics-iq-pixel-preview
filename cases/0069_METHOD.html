@@ -1,0 +1,110 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>glass-stays-same · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0069</span></nav><article><h1>glass-stays-same · 生成方法</h1><h2>输入与场景判断</h2>
+<p>本例唯一场景输入为 first_frame.png 与 prompt.txt。Caption 明确指定 stationary，首帧未提供流柱、滴落、液面余波或其他动作证据。透明分饮器保持篮上支撑，半杯红液体的玻璃杯保持桌面接触，所有玻璃高光、液面、材质与阴影均静止。</p>
+<p>初稿加入摄录前余波，并用多项式重算杯内液面颜色，该假设缺乏输入证据。按根审纠正，generate.py 已删除全部微波、液面多项式、纹理重算与反射变化，重新保存所有输出。</p>
+<h2>RGB 生成方式</h2>
+<p>generate.py 读取首图为 uint8 (144,256,3)，在20个采样时刻逐像素保持该RGB数组，输出 uint8 (20,144,256,3)。本例没有动态区域需要重绘；整幅摄影画面保持不变是明确 stationary 场景的续写。没有对物体作裁切贴图平移、缩放或镜像，也没有引入无证据的摄录前运动。</p>
+<p>artifact_io.save 保存 pixels.npz、20张PNG、inspection.png 与 index.html。transition_check.png 是输出帧的放大审查图，其裁剪与缩放只用于检查，未参与生成。没有使用其他案例、参考续写、AI API、学习权重、联网、物理引擎或三维渲染。</p>
+<h2>20 帧事件安排</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>精确保留首图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>继续保持完全静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>继续保持完全静止</td>
+</tr>
+</tbody>
+</table>
+<p>采样时刻为 0,0.25,...,4.75 秒，每帧保持0.25秒，总时长5秒。</p>
+<h2>返修后实际查看记录</h2>
+<ul>
+<li>重新打开重存的 inspection.png，实际看了00、02、05、08、11、14、17、19八个时间点。对象位置、红液位、液面纹理、篮子织纹、杯壁反光和阴影均相同；没有液面运动或材料变化。</li>
+<li>重新打开重存的 transition_check.png，实际检查00/01/02杯子四倍放大，以及容器、龙头三倍放大。三帧液面纹理完全保持，没有初稿的轻微纹理平滑或微反射变化，玻璃轮廓与材质无突变。</li>
+<li>检查同图00/05/10/19杯底接触与前景遮挡。杯底持续接触桌面，玻璃厚底、杯子遮挡篮子的边缘和阴影都保持首帧。没有重复物体、浮空、残影或新增遮挡。</li>
+<li>重新打开全部20张PNG进行数值校验：每张均为RGB、256×144，并逐像素等于首图RGB。pixels.npz 的 pixels 为 uint32 (144,256,20)，每片均逐像素等于首图的0xRRGGBB编码，也逐像素等于对应PNG的打包RGB。全部断言通过。</li>
+</ul>
+<h2>实际局限</h2>
+<p>本例输出完全静止。首帧本身的分辨率、轻微摄影模糊、玻璃透明折射细节与顶部裁切都原样保留。不能据单张首帧判断未描述的后续动作，因此未生成注水或任何微动。</p>
+<h2>文件</h2>
+<p>OBSERVATION.md、generate.py、METHOD.md、pixels.npz、frames/00.png–19.png、inspection.png、transition_check.png、index.html。first_frame_zoom.png 与 glass_zoom.png 为首图审查放大图。</p>
+</article></main></body></html>

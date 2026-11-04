@@ -1,0 +1,168 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>weight-protects-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0197</span></nav><article><h1>weight-protects-duck · 生成方法</h1><h2>输入与生成方式</h2>
+<p>只读取本例 first_frame.png、prompt.txt、case_config.json 和共享输出 helper。首先实际查看原首帧，并在编写生成器之前保存 OBSERVATION.md；随后又查看放大首帧 first_frame_detail.png。没有读取其他例、参考续写、旧生成器或记忆，没有联网、模型调用、学习权重、物理引擎、三维网格或法线渲染。</p>
+<p>帧00直接保留原图的 uint8 RGB。后续背景以原摄影图为底，只在原球与其投影所在的小区域，用左右相邻完好木桌的逐行颜色、固定细微木纹恢复露出的桌面。此修补固定于桌面位置。黑管、壶铃、鸭子、沙发和其余桌面保持静止。</p>
+<p>动态球逐帧在4倍局部二维栅格中直接计算新的 RGB 和覆盖率：近椭圆的柔轮廓、轻微轮廓不规则、灰蓝色二维色素场、随滚动相位变化的低频云斑、非对称断续淡斑和斜向浅色绒束、不规则下半部暗绒、断续弯曲浅缝及细纤维扰动。宽范围光照与表面毛斑分别计算，避免用单一中心亮区表达全部材质。每帧独立求值，不裁切、移动、缩放或镜像首帧球的贴图，也不从另一例搬用代码。接触帧横向宽度略压缩、纵向略伸长，随后恢复。球的右向软投影与下方接触阴影逐帧重绘。撞击时保留静止壶铃的可见深色轮廓作为遮挡边界。</p>
+<p>二维像素运动安排采用重壶铃不动、小球反弹并在桌面摩擦减速的假设。球的桌面底部约 y=63，碰撞时球右缘约 x=155，与壶铃左边界相接。没有人为加入鸭子移动、壶铃倾倒或球离桌弹起。</p>
+<h2>20帧安排</h2>
+<p>帧采样在 t=i/4 秒；20帧各显示0.25秒，总播放5秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>t秒</th>
+  <th>球中心x</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>95.3</td>
+  <td>逐像素原首帧；球已出管。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>122.0</td>
+  <td>迅速向右滚动。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>148.15</td>
+  <td>右侧碰到壶铃，横向轻微压缩。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>138.0</td>
+  <td>回弹向左，恢复轮廓。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>130.0</td>
+  <td>继续向左滚。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>124.0</td>
+  <td>开始明显减速。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>119.0</td>
+  <td>摩擦减速。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>115.0</td>
+  <td>继续回滚。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>112.0</td>
+  <td>回滚速度降低。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>109.7</td>
+  <td>缓慢回滚。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>107.8</td>
+  <td>缓慢回滚。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>106.4</td>
+  <td>进一步减速。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>105.4</td>
+  <td>接近停止。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>104.7</td>
+  <td>微小位移。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>104.2</td>
+  <td>微小位移。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>103.9</td>
+  <td>轻微滚动。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>103.7</td>
+  <td>即将停止。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>103.6</td>
+  <td>到达停止位置。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>103.6</td>
+  <td>静止。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>103.6</td>
+  <td>保持静止，显示至5秒。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查与修正</h2>
+<p>实际打开了首帧及其4倍放大图。首轮生成后实际打开了 transition_check.png、contact_check.png 和 inspection.png：00/01/02放大对比，以及00、01、02、03、05、08、12、19八个时点的接触局部和完整画面。inspection.png另包含00、02、05、08、11、14、17、19八个时点。</p>
+<p>首轮查看发现新绘球较原图边缘偏清晰，投影比首帧淡。修改 generate.py，略增常态横向半径、拓宽边缘覆盖过渡并增加色素场柔化，同时增强和略延长右向软投影，之后重新保存所有输出。</p>
+<p>修正后再次实际打开 transition_check.png 与 contact_check.png，逐项查看：</p>
+<ul>
+<li>00保持摄影首图；01的球宽度、灰蓝色范围和接触高度与首帧接近，旧位置没有第二个球或成块残影。</li>
+<li>02放大检查球的右缘与壶铃左缘接触，球底仍贴桌；壶铃仍位于原支撑点，鸭子不动。</li>
+<li>03检查反弹后球与壶铃分离、圆轮廓恢复，无穿过壶铃的残块。</li>
+<li>05、08检查回滚路径和接触阴影随球回移，没有浮起或多个轮廓。</li>
+<li>12、19检查减速与静止，没有桌面轮廓涂抹、尺寸跳变或静止物件抖动。</li>
+</ul>
+<p>检查并没有依赖像素差数量或新颜色数来判定质量。</p>
+<h2>仍可见的局限</h2>
+<p>返修后新球已有非对称浅斑、下部暗绒和低频云斑，但摄影首帧中逐像素的绒面分布仍不能准确重建；局部仍较平滑，轮廓比原图更规则，放大比较仍能辨认出首帧与解析重绘之间的质感差异。柔投影近似了首帧方向，但未完全复现原投影略不规则的边界。原球处露出的木桌是局部二维修补，细木纹无法从遮挡下准确恢复，放大时有轻微平滑。网球的微弱旋转接缝在256×144尺寸下不容易辨识，运动主要由滚动轨迹、接触与回弹表达。碰撞只被0.25秒采样到一次，不呈现更细的毫秒级压缩过程。没有声轨。</p>
+<h2>保存与数据校验</h2>
+<p>artifact_io.save 保存 pixels.npz、frames/00.png–19.png、inspection.png、index.html。另保存 transition_check.png、contact_check.png、material_check.png、first_frame_detail.png、generate.py、OBSERVATION.md 和本 METHOD.md。</p>
+<p>生成器逐一重新读取20张PNG，验证其打包 RGB 与 pixels.npz 的每个切片完全相等；张量为 uint32 (144,256,20)，每值编码为0xRRGGBB。帧00与输入RGB逐像素相等。</p>
+<h2>根审材质返修与复查</h2>
+<p>根审指出首轮续帧偏均匀光滑。此次保持既有全部20帧位置、接触形变、接地阴影、壶铃与鸭子不动，重写二维色素求值：加入有连片结构的低频云斑、随滚动相位缓变的非对称淡斑、断续局部亮区、斜向浅绒束、边界不规则的下半部暗绒、局部暗绒团和不规则断续浅缝。细纤维只辅助毛面，不靠加随机噪声代替材质。不读取或搬运首图球纹理；没有三维法线、模型调用。</p>
+<p>返修第一次重存后，实际打开 material_check.png、transition_check.png、contact_check.png、inspection.png。00/01近景可见左上淡斑和下半部暗绒，但02中央仍较均匀；因此进一步降低大范围中心亮区权重，增强连片毛斑和局部淡斑，加入不规则断续斜向浅绒束，再重存所有输出。</p>
+<p>最终再次实际打开上述四张图：</p>
+<ul>
+<li>material_check.png 的00/01/02/03以12倍最近邻放大逐一比较。01有偏左上断续淡斑、右部较暗绒面，02有偏右上淡区和不均匀下缘，03回弹后浅斑朝向改变。没有变为亮白接缝球、纯色蓝球或斑点噪声覆盖球。</li>
+<li>同图的02/03碰撞局部以9倍放大查看：02右缘与壶铃左缘相接，轻微压缩；03恢复圆形并分离，球底部持续贴桌，软影与球同步。</li>
+<li>transition_check.png 再看00/01/02完整近景与全图，尺寸和灰蓝色基调延续，旧位置没有额外球残影，背景修补固定。</li>
+<li>contact_check.png 逐项查看00、01、02、03、05、08、12、19八个时点，全图与局部均没有增加物件或壶铃/鸭子移动。inspection.png 同时复查00、02、05、08、11、14、17、19。毛斑随滚动相位缓变并在17–19停止，不会停球后继续闪烁。</li>
+</ul>
+<p>仍可见限制：毛斑是从本首帧观察建立的二维近似，不能复原摄影中每条绒毛；低分辨率使细纹和浅缝仍弱，放大时解析色素比摄影图局部更平滑。高速移动下每0.25秒的旋转相位差较大，因此早期浅斑位置变化较明显。桌面修补与阴影边缘的近似限制仍存在。</p>
+</article></main></body></html>

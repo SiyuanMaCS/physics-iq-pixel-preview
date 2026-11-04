@@ -1,0 +1,180 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>juice-in-water · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0070</span></nav><article><h1>juice-in-water · 生成方法</h1><h2>方法</h2>
+<p>先实际查看首帧、4 倍放大图及坐标图，然后写 OBSERVATION.md；随后独立编写 generate.py。视觉/场景输入仅本例 first_frame.png 与 prompt.txt；case_config.json 用于输出规范，shared/artifact_io.py 仅用于保存。没有读取其他案例、旧生成器、参考续写、分数、掩码或记忆；没有网络、AI API、权重、物理引擎和三维渲染。</p>
+<p>每一帧在 256×144 数组中直接求值新 RGB：用二维杯内边界和曲底掩码重算上升液面的椭圆、前后界面与流柱遮挡；橙褐液体颜色场由首帧无扰动下半液体的低频色彩系数及微弱时变正弦纹理生成；新浸湿部分按光学深度混合颜色，削弱原来可见的篮纹；细流用随时间重算的弯曲中心线、宽度、柔和高光及入水小涟漪绘制。原液面和旧落水痕迹被当前液体覆盖。没有剪取物体贴图并平移、缩放或镜像。</p>
+<p>保留摄影背景与静止器具的固定边缘、厚度、杯壁高光、杯底折射以及接触暗线。首图中已存在的液体不需移动其整体材质：下部保持静态玻璃的摄影光照，只直接改变微弱混合色；当前液面区域和新液体区域重新求值。窄流柱原位置的局部透明背景以两侧背景颜色插值修补，属于非学习图像修补。储液罐前后液面均下降约 4.5 px，保留原玻璃竖纹，并以二维清玻璃颜色插值处理露出的带状区域。</p>
+<p>首帧严格返回原 RGB。首两续帧仅对细部变化作平滑启动，避免 00→01 换几何或材质。摄影机、杯、罐、托架和龙头一直静止。帧 19 杯液面中心约 y81.2，前缘约 y85.8，低于杯口；流柱持续，5 秒内没有关阀、移动杯子或溢流。4 fps 下 20 帧占 5 秒播放时长，离散采样时点为 0 至 4.75 秒。</p>
+<h2>20 帧事件</h2>
+<p>下面是所求值的液面参数；01、02 的画面细部过渡另有平滑启动。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>采样秒</th>
+  <th>液面上升 px</th>
+  <th>液面中心 y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>0.00</td>
+  <td>100.00</td>
+  <td>首图原样，已开始流入。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>0.67</td>
+  <td>99.33</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>1.48</td>
+  <td>98.52</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>2.34</td>
+  <td>97.66</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>3.23</td>
+  <td>96.77</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>4.16</td>
+  <td>95.84</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>5.11</td>
+  <td>94.89</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>6.08</td>
+  <td>93.92</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>7.07</td>
+  <td>92.93</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>8.08</td>
+  <td>91.92</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>9.10</td>
+  <td>90.90</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>10.14</td>
+  <td>89.86</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>11.19</td>
+  <td>88.81</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>12.24</td>
+  <td>87.76</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>13.31</td>
+  <td>86.69</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>14.39</td>
+  <td>85.61</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>15.48</td>
+  <td>84.52</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>16.58</td>
+  <td>83.42</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>17.69</td>
+  <td>82.31</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>18.80</td>
+  <td>81.20</td>
+  <td>细流保持连接，液面/前后弧/入水小涟漪重算，静态杯壁和支撑保留。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录及修正</h2>
+<ol>
+<li>实际打开 first_frame.png、first_frame_enlarged.png、coordinates.png，确定杯底在 y136–140 接触桌面、龙头出口在 x168/y63、杯液面和罐液面的可见轮廓。</li>
+<li>实际查看 inspection.png 的 00、02、05、08、11、14、17、19 共 8 时点：杯、托架、阀门、背景稳定；液面逐步上升；流柱始终连接；杯底暗线保持，无浮空或重复杯子。</li>
+<li>实际查看 transition_check.png 的 00/01/02 全景和杯/流柱 4 倍放大：01 保持原橙褐材质和杯体轮廓，02 小幅推进。没有物体尺寸跳变或大块纯色覆盖。</li>
+<li>第一版后段液面呈过粉的浅色。原因是低频色彩场在原液体以上外推；改为约束高度系数、保留首图橙褐颜色，重生成并重新打开 8 时点表与 transition_check.png。</li>
+<li>原液面消隐范围扩大到 y109–115 的柔和过渡区，避免 y105 附近残留第二条液面。重新保存后实际查看关键帧 05/10/15/19 的杯底、旧液面位置、流柱入水接触。</li>
+<li>实际查看 contact_detail.png 的 00/08/19：杯壁轮廓、底部玻璃亮线及桌面接触固定；新液体遮住篮纹，没有裁块残影。储液罐初期只处理前缘，后补入背缘下降和露出的清玻璃，最后重看 contact_detail.png 和 inspection.png。</li>
+<li>最终重看 transition_check.png，确认 00/01/02 的轮廓与材质连续，以及 05/10/15/19 的流柱和液面接触。</li>
+</ol>
+<h2>校验</h2>
+<p>generate.py 调用 artifact_io.save(frames, CASE)，frames 为 uint8 (20,144,256,3)。实际逐一读取 20 个 PNG，确认其 RGB 打包值全部等于 pixels.npz 内 uint32 (144,256,20) 的 pixels 张量（0xRRGGBB），并逐像素校验 00 与 first_frame.png 相同。播放器由公共 helper 保存为自包含 index.html。</p>
+<h2>仍可见的局限</h2>
+<ul>
+<li>新生成的上层果汁比首帧下层更平滑，细微不规则光学纹理较少，4 倍放大时液面椭圆仍略显规则。</li>
+<li>流柱仅约 1–2 像素宽，细滴和快速表面扰动无法在 4 fps/256×144 中充分表现；入水扰动比真实果汁流偏温和。</li>
+<li>罐与杯的体积变化只按可见尺度近似协调，没有求解流量守恒；罐内背侧折射界面还保留一些静态摄影细节。</li>
+<li>首帧无法区分杯内水/果汁比例，选择已开始混合的浅橙褐液体，浓度变化克制；没有清水到橙汁的强烈分层或涡旋。</li>
+</ul>
+</article></main></body></html>

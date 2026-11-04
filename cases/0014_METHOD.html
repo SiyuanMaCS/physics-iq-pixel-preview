@@ -1,0 +1,26 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>篮球落入黑筐 · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0014</span></nav><article><h1>篮球落入黑筐 · 生成方法</h1><p>唯一输入是本目录 <code>first_frame.png</code> 和 <code>prompt.txt</code>，遵循共享 <code>GENERATION_RULES.md</code>。实际场景是木桌上的黑色塑料筐；没有篮球架。没有读取参考视频、外部掩码、评测分数、其他 case、记忆或旧生成；没有联网、调用图像/视频模型、权重、物理引擎或三维渲染器。</p>
+<h2>首帧观察和事件顺序</h2>
+<p>画面固定，256×144。木桌上表面约在 y=98–137；塑料筐约占 x=98–173、y=55–120。上沿 y≈58，提手孔位于 y≈65–69，正面上部细网格和下部大菱形网格遮住筐内部。篮球可见橙色轮廓约在 x=107–158、y=11–58，首帧下端已经被筐沿遮住。白色小高光在球两侧，橙色由中心向边缘变暗；左侧及中右各有一条弯曲的黑色球缝。筐和桌保持首帧位置。</p>
+<p>20 帧按 4 fps 播放，0–19 帧各显示 0.25 秒，合计 5 秒：</p>
+<ul>
+<li>第 0 帧原样保留输入；第 1 帧球下落，提手孔开始看到球。</li>
+<li>第 2 帧约 0.50 秒，球落到推定的筐内底部，竖向压扁并横向略微扩张，下轮廓接触位置保持 y≈115。</li>
+<li>第 3 帧约 0.75 秒，球反弹，顶部短暂高于筐沿。</li>
+<li>第 4–5 帧第二次轻微接触和衰减；第 6 帧以后停止位移和转动，球留在筐内。下半球被筐底部不透明壁遮住，孔洞中的橙色随位置和光照改变。</li>
+</ul>
+<h2>逐帧二维像素重绘</h2>
+<p><code>generate.py</code> 直接计算 uint8 RGB 数组。每个动态帧都在 3×二维子像素网格上重新计算椭圆轮廓、接触压扁量、边缘覆盖、两条弯曲黑色缝线、细颗粒纹理、二维橙色渐变和白色椭圆高光。轻微滚动由缝线曲线参数随时间改变体现，没有裁切、搬运、缩放或镜像首帧篮球贴图。颜色是二维坐标函数，没有球体法线、三维网格、材质或相机投影。</p>
+<p>原球遮住的墙面，用首帧两侧可见墙面的逐行三次 Hermite 插值修补，并用纵向二次拟合消除采样横带；边缘用宽矩形平滑权重过渡。原球及其模糊边缘、筐沿和提手孔里的橙色残留分别清除。木桌和塑料筐结构像素保留。上部孔洞根据首帧灰度推定抗锯齿透明度，下部暗孔洞用二维菱形网格方程推定；新画的球先在筐内变暗，再通过孔洞显示，黑色前壁和交叉杆位于它前方。柔和墙面阴影按当前球位置重新计算，落下后被筐遮住。</p>
+<p>运动是手写的一维自由下落及两次衰减抛物线段，接触附近有短时轮廓形变；这只是标量位置公式，不是物理引擎。公共 <code>artifact_io.save</code> 仅保存已生成的 RGB 数组、打包 0xRRGGBB 张量、20 张 PNG、检查表和 HTML。</p>
+<h2>实际检查和修正</h2>
+<p>查看了输入原图及放大图；逐轮查看 0、1、2、3、4、5、8、12、16、19 共 10 个时间点的输出接触表，另单独查看下落、首次触底、反弹关键帧和最终共享检查表。第一次输出发现圆形墙面修补边缘，改用更宽的矩形插值过渡，再加入纵向平滑拟合；清理了黑色上沿和提手孔中与原球有关的橙色残留。最终检查中球数量为一个，桌和筐不移动，前壁遮挡连续，下落区域没有球贴图残影。</p>
+<h2>真实局限</h2>
+<ul>
+<li>单张首帧不能确定筐深度、内部底部、真实球径、释放速度或弹性；底部 y≈115、首次触底 0.50 秒和反弹衰减是符合画面的人工假设。</li>
+<li>4 fps 对快速触底很稀疏。首次压扁被特意安排到一个采样帧；运动没有真实摄影的连续运动模糊。</li>
+<li>遮挡位置由二维图像和显式网格推定。下部黑暗孔洞看不清，其网格线可能与真实塑料杆有约 1 像素偏差；内壁、球的深度和真实反射均为近似。</li>
+<li>球面条纹和光泽是二维解析绘画，颜色能接近输入但皮面纹理、缝线滚动和高光不具备完整照片级细节；第 0 帧照片到第 1 帧重绘仍有外观差异。</li>
+<li>补出的墙面比未知真实背景平滑；这里修补的是首帧从未显露的区域，不能恢复原有细微纹理。筐内未可见的真实接触阴影也只能用二维变暗近似。</li>
+</ul>
+<p>输出：<code>generate.py</code>、<code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>；<code>inspection_detail.png</code> 是额外的 10 时间点检查表。</p>
+</article></main></body></html>

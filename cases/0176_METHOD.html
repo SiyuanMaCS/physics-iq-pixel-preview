@@ -1,0 +1,128 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>teapot-rotates · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0176</span></nav><article><h1>teapot-rotates · 生成方法</h1><p>视觉与动作来源仅为本目录的 first_frame.png、prompt.txt。先看原图和6倍局部，再写 OBSERVATION.md；生成过程没有读取其他例、参考续写、掩码、分数或旧生成器，没有联网、调用模型、权重、物理引擎或三维渲染。</p>
+<h2>方法</h2>
+<p>在4倍二维像素网格上用Bezier轮廓逐帧构造壶腹、盖子、壶钮、足部、把手与弯曲壶嘴。角度逐帧直接求值0–36度。把手位于壶腹后，嘴部在壶腹前，空孔显示静态背景。瓷器颜色由二维渐变、轻微纹理、固定照明的小片高光和当前部件轮廓求值；花朵由带细纹的橙色花瓣、绿叶、枝条和黑点重画，曲面装饰带的相位随角度变化。盖与足部保持支撑高度，花纹点随角度改变。没有裁取壶贴图作平移、缩放或镜像，也没有网格、法线或相机投影。</p>
+<p>原图只提供静态摄影背景及首时点。原壶位置被二维颜色插值背景修补覆盖；不同帧的新轮廓覆盖修补区。首帧00直接保存原RGB。01–05使用衰减的、固定像素位置的初始颜色误差校准来减轻手工材料重建的突变；该校准没有移动原图对象，之后完全由新轮廓、新装饰和材料场构成。低频误差图会留下橙色花纹色晕，检查后已删除，只保留常数色彩校准。</p>
+<h2>20帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>角度</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.0°</td>
+  <td>原图，壶足接触黑台。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>1.9°</td>
+  <td>嘴与花纹开始缓慢转动。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>3.8°</td>
+  <td>主体稳定，装饰相位继续变化。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>5.7°</td>
+  <td>把手转后、嘴口略向前。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>7.6°</td>
+  <td>嘴腹逐渐遮右腹。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>9.5°</td>
+  <td>陶瓷持续匀速旋转。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>11.4°</td>
+  <td>把手宽度开始减小。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>13.3°</td>
+  <td>花叶逐渐横向收缩。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>15.2°</td>
+  <td>嘴口下移，盖仍闭合。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>17.1°</td>
+  <td>支撑点稳定。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>18.9°</td>
+  <td>嘴腹继续覆盖腹部右侧。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>20.8°</td>
+  <td>嘴口内部可见性略增加。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>22.7°</td>
+  <td>把手仍在壶后。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>24.6°</td>
+  <td>花纹持续转过正面。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>26.5°</td>
+  <td>足部黑点随朝向移动。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>28.4°</td>
+  <td>口端右侧跨度变小。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>30.3°</td>
+  <td>不倾斜、不平移。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>32.2°</td>
+  <td>嘴继续朝前转。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>34.1°</td>
+  <td>落台接触保持。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>36.0°</td>
+  <td>匀速转动结束采样。</td>
+</tr>
+</tbody>
+</table>
+<p>时刻取 t/4，20帧为0–4.75秒；页面以4fps播放，完整持续5秒。公共helper的检查表标题使用(t+1)/4，因此最后显示5.00秒。</p>
+<h2>具体视觉核查</h2>
+<p>实际打开首帧及 first_frame_detail.png；查看 inspection.png 中00、02、05、08、11、14、17、19八个时点，检查壶体唯一性、尺度、盖合、无浮空、静止背景与逐渐改变的嘴/把手朝向。实际打开 transition_check.png，比较00、01、02全图2倍及壶/接触4倍局部；原版本花叶太锐、低频校准色晕明显，已删除花纹色晕、调暗叶色、增加花瓣细纹与釉面高光。关键接触和遮挡帧05、11、19在 keyframes_detail.png 中放大查看，确认足部下沿持续接触台面、嘴部在前、把手在后；原把手偏长，已收短其下缘。最终检查图再重新保存并实际查看。</p>
+<h2>仍可见的不足</h2>
+<p>二维人工重建的花叶比原始摄影纹理规整，首几帧误差校准消失时仍可看到细花纹变简洁。把手与嘴口的真实立体曲率只能用二维轮廓近似，嘴口内侧仍偏规则；盖、钮和足的光泽比照片更均匀。视角含义由文字推定为俯视顺时针，5秒36度也为独立假设。背景修补处细木纹没有原摄影区域那么丰富。上述是可见的真实局限，不以帧差或颜色数证明质量。</p>
+<p>最终重新打开 inspection.png 的8个时点、transition_check.png 的00/01/02放大比较、keyframes_detail.png 的05/11/19接触遮挡局部。所有20张PNG与uint32 (144,256,20)张量逐像素一致；00与first_frame.png逐像素一致。校验结果见 validation.txt。</p>
+<h2>根审材料与装饰返修</h2>
+<p>根审指出05/11/19中的花纹过于稀疏、三叶规整，盖和圈足趋平色。返修保持全部轮廓运动、0–36度事件和固定支撑：花饰改为7–9片大小不等、不同角度的重叠外瓣与4片内瓣，逐瓣绘制颜色与短曲线花瓣折痕；叶片使用不对称尖叶、多种长宽和朝向，并有细枝、叶脉与少量独立花苞。增加少量按首图画风推定的侧面花饰，初始被壶腹/嘴遮挡，后随转动从右侧露出。每一笔都直接落到当前帧的二维像素中，无源贴图搬运。</p>
+<p>蓝腹软明暗由当前二维轮廓的逐行宽度包络、右侧暗带与腹部下沿衰减构成，并有不对称的宽蓝光晕、小白反光和较弱短反射，釉面高光覆盖花饰和蓝底。黄盖采用顶部、右缘和中央弧带不同的二维软渐变，黑线有轻微曲线起伏、左右小反光不等；足部采用颈部暗带、弧形亮带、底沿阴影以及不等大小的左右釉面反光。壶嘴在原二维转动轮廓内逐像素计算红釉软光带、收暗边缘、几处短反光及嘴口内侧深浅。改进来自可见装饰与反射层次，未用噪声替代材料结构。</p>
+<p>第一轮返修已实际打开00/01/02、八时点和05/11/19，发现花冠仍偏小、右侧转入的花饰偏少；随后增宽不规则花瓣并调整侧面花饰转入的位置。仍存在人工花饰和釉面重建与原摄影细节的差异，特别是细花纹的笔触不完全一致。由于只允许首帧，隐藏侧纹饰是独立推定；二维嘴口曲率仍近似，背景修补处木纹较简单。</p>
+<p>最终第二轮返修已重新实际打开 inspection.png 的00/02/05/08/11/14/17/19八时点、transition_check.png 的00/01/02全图与4倍局部、keyframes_detail.png 的05/11/19接触遮挡局部。观察到晚期右侧有逐渐转入的花朵，花叶排列不再完全相同；足部下缘一直落在台面，盖子保持盖合，壶嘴柔光带未闪跳，桌面与平台固定。仍可见花瓣笔触较摄影简洁、部分小枝叶在256×144与缩图中难以分辨，初期颜色校准退出时细纹变化仍可见。没有宣称恢复完全摄影质感。最终20PNG与张量逐像素比对通过，00与首图一致；validation.txt已更新为根审返修结果。</p>
+</article></main></body></html>

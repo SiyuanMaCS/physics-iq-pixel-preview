@@ -1,0 +1,111 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0004</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>只读取本目录的 first_frame.png、prompt.txt，以及公共输出保存器；未读取其他 case、参考视频、旧生成器、记忆、掩码或分数。未联网，未调用模型、权重、物理引擎或三维渲染。OBSERVATION.md 在 generate.py 之前完成。</p>
+<p>00 直接保留输入 RGB。01…19 每帧重新求值二维轮廓与颜色数组：卡纸两面由四角的连续变化构成，正面从首帧内部的颜色统计拟合低频二次照明场，每帧重新计算纸面的坐标场、细颗粒和薄下沿；没有复制、平移、缩放或镜像原纸面贴图。黑蓝夹具以新的细杆、夹柄多边形、曲线夹爪和蓝色内衬逐帧重绘。球由二维圆形覆盖率、暖橙色绒面强度、细纹理和一条弯曲浅色缝线重绘，不使用球体法线。球、夹具、折背面、前纸面的遮挡按明确顺序合成。球与纸在平台上的软接触投影逐帧求值。</p>
+<p>静态墙面、木桌、现有平台可见部分和右侧电线保留摄影像素。原动态轮廓下面的墙面采用边界约束二维调和插值，桌面采用从可见桌面拟合的暖色缓变场、二维平滑的边界颜色残差和新绘低对比木纹；墙桌交界连接首帧两侧可见桌沿，使用浮点边界和柔和覆盖率，并以约 6 像素平滑羽化带接到未改摄影背景；被遮住的平台部分用二维椭圆与侧壁色场补足。它们是首帧未知背景的近似，不是物体贴图平移。</p>
+<h2>实际 20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原图；夹具左蓝爪可见，球完全遮住。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>小幅转纸，夹具和球开始向右下方降低，纸材质连续。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>夹具继续降低，球仍隐藏；纸前面略收窄。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>纸后折面转动；夹具大部分进入纸后。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>球随夹具继续向台面移动，无独立跳动。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>球接近台面，大部分仍被遮住。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>球临近平台的最后下降阶段。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>球到达 (162,115)、半径 11，纸下方开始露出小橙弧；夹爪低位。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>球稳定支撑，夹爪开始张开。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>夹具张开并回升，球位置固定。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>夹具继续回升，纸转窄，球露出量增加。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>黑色夹柄和一侧蓝爪从纸旁升出；球接触不改变。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>夹具上升，纸在球前继续遮挡其左半部分。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>右爪与球明显分离，缝线部分露出。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>夹具升高；纸正面略变暗、宽度继续收窄。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>球大部分可见，折背面与前纸面仍接触平台。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>球继续静止；夹具接近上沿。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>夹爪末端仍在画面顶端，球与纸没有跟随运动。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>夹具接近完全退出，卡纸下沿保持平台接触。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>夹具退出；橙球完整可见，卡纸为较窄的斜向正面与较暗折背面。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ul>
+<li>打开原始 256×144 首帧和 4 倍 first_frame_zoom.png，确认纸边、蓝色内衬、黑台顶部与侧壁以及静态线缆。</li>
+<li>实际打开最终 inspection.png，逐一查看 00、02、05、08、11、14、17、19 八个时点，检查纸底支撑、球静置、夹具退出和遮挡变化。</li>
+<li>实际打开 transition_check.png 的 00/01/02 整图与三倍动态区域对比：保持首帧灰白纸色与约 70 像素宽的初始正面，薄纸下沿没有变成厚描边。</li>
+<li>实际查看 07、13、19 的放大接触/遮挡区域：07 球到台面；13 张开的夹爪已离球；19 球底与台面接触，纸脚在黑色圆台上。</li>
+<li>第一轮发现旧细杆残留和旧弯爪的虚线残影；扩大原夹具精确清除轮廓后重新生成，最终图中只有一个夹具。</li>
+<li>首次背景补绘出现横向块状补丁，改用边界约束调和插值和独立木色场，去除突出的旧边缘残留；再次实际看了整张接触表和过渡表。</li>
+<li>调整末态纸脚高度到平台顶面的可见范围，避免纸脚越过台面形成视觉悬空；提高夹具回升速度，使 19 完全退出。</li>
+<li>root 复查指出原墙桌交界仍有明显阶梯与横向块边，原版未通过；针对本首帧重新放大查看 table_edge_input.png，确认左桌沿约 (96,89)、右转角约 (194,80.7)，以贯通的二维浮点线连接，并对边界使用约 1–2 像素柔和覆盖率。删除逐行简单填充，改为连续墙/桌颜色场并羽化到摄影像素；保护原有黑台与线缆。</li>
+<li>修复后实际打开 background_transition_check.png，逐一查看 13、19 的四倍墙桌交界放大：原有长台阶和水平矩形补丁消失，桌沿平滑连接右侧桌角。再实际查看 inspection.png 的 00、02、05、08、11、14、17、19 八时点，并复查 transition_check.png 的 00/01/02 及接触关键帧。</li>
+</ul>
+<h2>仍然可见的局限</h2>
+<p>旋转是二维手工角点路径，能表达正面收窄与折背面显露，但折纸背面在中段偏像硬直三角片，透视和弯曲比实拍简化。球在首帧不可见，22 像素直径、位置和浅色缝线是据夹具尺度做的假设；绒面细节与真实网球相比仍较规整。夹具张开后两爪的几何比原始不完全可见的夹具简化。新露出的墙面和木纹较原摄影背景平滑，木纹的真实细节无法由首帧被遮区域确定；墙面上方仍有轻微低频亮度不均匀，但墙桌交界已用连续软边连接，原阶梯与横向矩形边界已修复。球从 07 起保持固定，没有不必要的滚动或弹跳。</p>
+<h2>序列与保存校验</h2>
+<p>最终 generate.py 运行通过：frames 为 uint8 (20,144,256,3)，保存 20 张 256×144 RGB PNG；pixels.npz 的 pixels 为 uint32 (144,256,20)，编码 0xRRGGBB。逐张解码张量并与 PNG 做完全相等校验，20 张全部通过；00 与输入首帧逐像素完全相等。artifact_io.save 输出 inspection.png、独立播放器 index.html 和张量。过渡检查图另存 transition_check.png。播放器为 4 fps、20 帧，总长 5 秒。</p>
+</article></main></body></html>

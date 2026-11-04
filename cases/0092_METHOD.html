@@ -1,0 +1,131 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lit-candle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0092</span></nav><article><h1>lit-candle · 生成方法</h1><p>只使用本目录 first_frame.png 和 prompt.txt；先实际查看首帧并写 OBSERVATION.md，再编写独立 generate.py。没有访问其他案例、参考续写、其他视角、模型 API、训练权重、物理引擎或三维场景。</p>
+<h2>新像素计算</h2>
+<p>续写是安静室内左烛持续燃烧。静止的蜡烛、黄铜烛台、右侧未燃烛芯、木桌和墙壁直接保留摄影背景。动态区域为左烛芯上方，主要在 x=86–102、y=10–30 内。</p>
+<p>对首帧每个火焰高度的横截面，用非学习最小二乘拟合灰壁斜率、二维窄发光核及宽软光晕。模型是二维像素亮度函数，包含曝光饱和，分别计算 RGB。每帧直接重新计算火焰中心线弯曲、横向宽度、纵向伸缩、黄白内核和橙色光晕，根部始终固定在 y=30。顶端摆动幅度约半像素、高度变化约 0.6 像素，符合无强风环境中的轻微燃烧波动。</p>
+<p>保存静止的摄影光学残差 <code>首帧 - 初始拟合发光场</code>，逐帧加入新求值的发光场。残差始终位于固定像素坐标，保留失焦、细小烛芯和融蜡色彩，避免火焰第一帧变成干净的几何色块。没有裁出火焰贴图并平移/缩放/镜像；空间变化来自新求值的光场，而不是移动原 RGB 块。00 不经过拟合，逐像素返回原图。</p>
+<p>5 秒内蜡烛可见消耗和滴蜡并无首帧证据，均不加入。不会让右烛自燃、加入手或改变烛台接触关系。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>采样时刻</th>
+  <th>左侧火焰状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00 s</td>
+  <td>原图，初始高度与倾斜</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25 s</td>
+  <td>微微左偏、形状接近原图</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50 s</td>
+  <td>稍长、轻微左偏</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75 s</td>
+  <td>尖端回正、略宽</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00 s</td>
+  <td>轻微收缩</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25 s</td>
+  <td>上部向右偏</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50 s</td>
+  <td>稍宽稍长</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75 s</td>
+  <td>尖端右偏、根部固定</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00 s</td>
+  <td>回正、略短</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25 s</td>
+  <td>向左轻偏</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50 s</td>
+  <td>较细较长、轻微左偏</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75 s</td>
+  <td>左偏减弱</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00 s</td>
+  <td>接近直立</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25 s</td>
+  <td>尖端右偏、稍长</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50 s</td>
+  <td>收缩、仍轻右偏</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75 s</td>
+  <td>尖端左偏</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00 s</td>
+  <td>重新拉长</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25 s</td>
+  <td>尖端趋中</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50 s</td>
+  <td>稍短、轻微右偏</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75 s</td>
+  <td>接近原始高度</td>
+</tr>
+</tbody>
+</table>
+<p>20 帧以 4fps 播放占 5 秒。所有帧右烛不燃烧，烛身和烛台静止。</p>
+<h2>实际视觉检查与修正</h2>
+<ol>
+<li>打开原始首帧、1024×576 整图放大和 20 倍火焰局部放大：确认左烛白黄失焦火焰、厚约 10 像素的红烛、底部烛台及右侧弯黑芯。</li>
+<li>打开第一版 inspection.png 的 00、02、05、08、11、14、17、19 八个时点，并打开第一版 transition_check.png 的 00/01/02 整图与 8 倍火焰、烛芯及蜡顶接触对比。发现直接平滑拟合压掉烛芯的细小褐色变化，并产生过平的黄色火焰底部。</li>
+<li>修正摄影光学残差的保留策略，不再在亮部去除细小颜色残差；重新生成并保存全部输出。</li>
+<li>实际再次打开最终 inspection.png 和 transition_check.png，核看上述八时点及 00/01/02 放大对比。火焰底部细节延续首图、与蜡顶相接；两烛轮廓和铜器大小未变；没有第二个火焰、浮空烛身、移动烛台、大片背景涂抹或首续写突然变材质。接触关键帧包含 02 的伸长、05 的右偏、14 的收缩及 19 的归稳。</li>
+</ol>
+<h2>可见局限</h2>
+<p>火焰只有约 5×16 像素，4fps 下变化非常细微；二维拟合及固定光学残差使它比真实火焰更稳定。8 倍放大可见部分饱和白核较整齐、尖端轻微水平光晕；没有解析湍流或模拟复杂燃烧纹理。铜器上微弱反射未随火光更新，维持原图可见高光。没有加入首图无证据的流蜡/烟。上述局限没有隐藏为额外事件。</p>
+<h2>文件与编码校验</h2>
+<p>通过 artifact_io.save 写出 pixels.npz、frames/00.png–19.png、inspection.png、index.html；额外保存 transition_check.png、generate.py、OBSERVATION.md 和本文件。已校验每张 PNG 为 256×144 RGB，00 等于原图；pixels 是 uint32 (144,256,20)，逐帧逐像素等于 PNG 按 0xRRGGBB 打包的值。另验证 y&gt;=31 的所有静止像素、右側 setup 完全等于输入。该数值校验独立于上述视觉核查。</p>
+</article></main></body></html>

@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>double-cradle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0053</span></nav><article><h1>double-cradle · 生成方法</h1><p>本例仅使用 first_frame.png、prompt.txt，并读本例配置及共享输出 helper。先实际打开首帧、整图放大与局部放大，写 OBSERVATION.md 后独立编写 generate.py。没有读取他例、旧生成器、参考视频、掩码、分数、记忆、网络、模型权重或物理/三维渲染工具。</p>
+<p>输出为 20 张 256×144 RGB、4 fps，播放器以每帧 0.25 秒展示，合计 5 秒。00 完全保留输入。其余帧直接计算当前二维像素：球轮廓采用二维椭圆覆盖，每个球分别拟合首帧中宽窄不同的二维冷暖反光项，包含宽灰光、窄白光、暗分隔区域、左侧冷蓝竖反射、右侧暖黄反射、暗外缘和底边。少量紧凑高斯颜色项随小幅摆动角改变坐标，从函数逐像素重新求值，不搬移或缩放球的图像块；不以均匀银色横带充当金属材质。球顶部另画逐渐收窄的肩部、带暗孔的小吊耳和细侧高光。悬丝逐帧重画，黑底座上的暗倒影与冷暖反射随球心和抬升变化。</p>
+<p>蓝黑工具使用独立平滑二维轮廓：上蓝弧和下蓝衬分别绘制，孔内露出木桌，上夹口端为圆钝轮廓。上弧从较暗孔内缘到较亮弧面变化，包含不规则窄反光和细模具线；下衬重画亮顶弧面、暗下弧、右弯端厚度。黑壳重画深色厚度、细亮上缝、弱蓝灰边反射、模具细纹与小灰反光点。颜色使用少量从首帧总结的二维宽窄光学项，加解析曲线反光，每个当前轮廓独立计算 RGB。工具释放时末端小幅打开，随后左撤，保持前立柱遮挡。没有移动首图裁块。</p>
+<p>工具退出后露出的木桌以附近可见木桌的低阶颜色趋势及细木纹二维函数修补。静止墙、右桌面、支架和底座前沿保留摄影背景。中央球始终静止；右两球仅在最初两个未运动帧保留静止摄影样貌，此后始终使用重新求值的金属光学场，避免反复切换到照片块。五球数量不变。</p>
+<p>物理假设：首帧左侧两球相对自然排列左移约 16 像素，吊长约 77 像素，球径约 12 像素，接触间距 12.5 像素。两球保持接触同摆；接触时动量经中间球传向另一端的两球。使用解析二维时间曲线控制外端摆动，不使用物理引擎。周期约 1.25 秒，幅度缓慢衰减。球上升量以小角度二次关系近似。OBSERVATION.md 是生成前安排；实际实现的转折采样调整如下，碰撞时间落在部分采样之间。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>t / s</th>
+  <th>最终事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>左两球在抓取端，原图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>工具松开左撤 4 px；左两球偏移 −12.99 px，向中央</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>工具左撤 19 px；左两球偏移 −4.92 px，接近接触</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>右两球接替外摆 +9.27 px；工具左撤 38 px</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>右两球近右端 +14.88 px；工具左撤 64 px</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>五球暂时归拢，回传接触；工具彻底退出</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>左两球外摆到 −14.62 px</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>左端回摆至 −8.96 px</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>右端接替外摆 +8.88 px</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>右端近转折 +14.24 px</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>五球再次归拢，回传接触</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>左端外摆 −13.99 px</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>左端回摆 −8.57 px</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>右端外摆 +8.50 px</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>右端转折附近 +13.63 px</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>再次归拢，回传接触</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>左端外摆 −13.39 px</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>左端回摆 −8.21 px</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>右端外摆 +8.13 px</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>右端近转折 +13.05 px</td>
+</tr>
+</tbody>
+</table>
+<p>实际检查记录：</p>
+<ul>
+<li>打开原图、4 倍首帧与 (0,65)–(170,137) 局部放大，检查工具厚度、五球位置和反光。</li>
+<li>多轮实际打开 inspection.png 的 00、02、05、08、11、14、17、19 八个时点。确认固定机位、五球数量、左/右两球交替、工具退出、没有孤立复制球或浮空底座。</li>
+<li>多轮实际打开 transition_check.png，第一行比较 00/01/02 放大后的球径、蓝黑工具、银色横亮带、底座反射。后两行具体查看 01、02、03、05、07、10、13、16 的接触和立柱遮挡。最终版本重新打开两张检查图确认修正结果。</li>
+<li>首轮发现球上方蓝色背景块、金属亮带弱、立柱旁蓝色工具残留、中央反射剪切边及左下底座边角被清理。已修补蓝色块，重画银色亮带和全部五球倒影，缩窄立柱静态遮罩，去掉残留的蓝色工具颜色，恢复静止底座前沿，并修正工具厚度与下沿。没有用帧差或颜色数量代替视觉检查。</li>
+</ul>
+<h2>根审查后的返修与最终实际复查</h2>
+<p>根审查指出原版本 00→01 的蓝内衬过平、尖叶化，孔厚度和蓝漆/黑壳层次丢失，金属球顶连接与反光也简化。返修前重新实际打开首帧与放大图，把细节观察追加到 OBSERVATION.md。独立重画上下蓝弧、圆钝末端、孔内侧边、下衬弧面阴影、不规则窄蓝反光和黑壳细缝/反光。金属球改成每球独立的宽窄冷暖二维反光项，补肩部、暗孔小吊耳与细边高光，保持既有两球交替时序、悬丝、前架遮挡和底座接触。</p>
+<p>返修后实际打开最终 first_frame.png、transition_check.png、inspection.png、material_check.png。检查了 00/01/02 材料首续放大、00/02/05/08/11/14/17/19 八时点，以及 01/02/03/05/07/10/13/16 接触遮挡放大。另看 material_check.png 中 00/01/02/03/05/07/10/13 的夹具和球面材料独立放大。根据中间复查修正左蓝弧过亮、下衬局部过暗、下衬右端形状与球顶过尖。最后全部重存，未用帧差、颜色数或数量计数代替视觉检查。</p>
+<p>仍可见局限：首续夹具的孔内弧线与蓝面宽度仍有可见小差异，蓝色模具纹和弧面窄反光虽已重绘，仍比首帧照片平滑；动态左两球的横向反光略规整、球肩吊耳在放大图显得较清楚，缺少真实摄影模糊的全部层次；右两球从最初静止照片转入动态光学场时仍有少量纹理差异。工具退出后的木桌修补比附近原图木纹平滑，边缘在放大图可辨；底座反射缺少精细镜面细节。4 fps 不能逐帧展示极短碰撞压缩。</p>
+<p>generate.py 在每次保存后校验：pixels.npz 中 pixels.dtype 为 uint32、shape 为 (144,256,20)；所有 20 张 PNG 的 RGB 与 0xRRGGBB 解包逐像素相等；frames/00.png 与 first_frame.png 逐像素相等。所有校验通过。</p>
+</article></main></body></html>

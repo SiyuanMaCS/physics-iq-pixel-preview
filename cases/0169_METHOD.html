@@ -1,0 +1,175 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>solid-ball-peakaboo · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0169</span></nav><article><h1>solid-ball-peakaboo · 生成方法</h1><h2>方法和输入</h2>
+<p>仅使用本目录 first_frame.png、prompt.txt 作为场景输入；读取本目录 case_config.json 与公共保存 helper。先实际打开首帧及4倍放大，写 OBSERVATION.md 后独立写 generate.py。未读取其他案例、参考续写、旧结果、掩码、评测分数、记忆或其他线程；无联网、AI API、学习权重、物理引擎、三维场景、网格、法线或渲染器。</p>
+<p>00逐像素保留首图，01作为0.25秒原位停顿也保留首图。02至19每帧重新计算二维轮廓内的RGB：</p>
+<ul>
+<li>篮侧为带底缘弧线的二维覆盖区域。横织条、竖短条、交叉亮纤维及微小色差由当前位置、编织行列和确定性的细纹函数求值。顶部另画同一深棕色材料的压扁椭圆编织表面、磁铁附近暗凹区和约2像素厚的前滚边；侧壁向底部内收，底沿有柔暗和弧形卷边。并未裁取或移动原篮贴图。</li>
+<li>磁铁为黑色二维弧底侧面和灰银椭圆帽；吊链由不对称、局部折弯的长环与扭斜下环逐帧重新画出，并分段添加金属亮点。篮、磁铁、链环共同上升，画框自然截掉越界部分。宽度、编织条尺度和厚度固定，无随机摇晃。</li>
+<li>橙球按固定圆形边界、二维亮度函数、细绒变化与一条浅色曲线接缝求新RGB。球心始终(132,117.2)，半径10.7像素。先画球，后画篮，实现真实遮挡次序。不是根据露出程度缩放球。</li>
+<li>阴影先于物体写入桌面：球接触阴影固定；篮下方阴影随高度减弱、轻微变宽。无重复对象、旧篮残影或跟着篮上升的球影。</li>
+<li>静态摄影背景在可见区域保留。原遮挡区域以可见灰墙/木桌的低频二维颜色拟合修补；细木纹仅取同首帧明确可见的静态桌面残差。桌面后的直边按可见边缘推断，并以约一像素混合防止硬台阶。没有用原物体贴图合成运动。</li>
+<li>在4倍二维像素网格直接写RGB后用Lanczos得到256×144。所有动态像素均来自当前帧重绘，没有镜像、物体裁块平移或缩放。</li>
+</ul>
+<h2>物理假设及20帧事件</h2>
+<p>首帧篮子已经把球遮住，故接续直接提篮，不增加一次下降。磁铁只带动篮子；球自由放在桌面，不因篮的提升而飞起。吊点足够稳定，无需编造大幅旋转和形变。每帧时间为编号除以4，20帧播放共5秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>时间/s</th>
+  <th>升高/px</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>0</td>
+  <td>原始完整遮挡</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>0</td>
+  <td>原位短暂停顿</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>1</td>
+  <td>篮底离桌</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>3</td>
+  <td>小缝与球下缘开始出现</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>7</td>
+  <td>球下部露出</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>13</td>
+  <td>球下半部露出，上部仍被篮遮挡</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>20</td>
+  <td>球大部露出，篮底仍遮住顶部</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>29</td>
+  <td>球完整露出、静止着桌</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>39</td>
+  <td>篮继续上升，阴影减弱</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>49</td>
+  <td>吊链上端越出画框</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>58</td>
+  <td>篮顶接近画框顶边</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>66</td>
+  <td>篮顶越出画框</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>73</td>
+  <td>篮上部被框截断</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>78</td>
+  <td>开始减速</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>82</td>
+  <td>保持轮廓与厚度继续上升</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>85</td>
+  <td>慢速上升</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>87</td>
+  <td>接近终点</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>88</td>
+  <td>篮底约y=40</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>89</td>
+  <td>微量上升</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>90</td>
+  <td>篮底约y=38，球原位</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>实际打开首帧256×144和 first_enlarged.png，记录篮宽68像素、底部接触约y128、链和磁铁位置。由此确定篮与球尺度；没有读取球的被遮挡真值。</li>
+<li>实际查看 inspection.png 的00、02、05、08、11、14、17、19，共8时点。确认篮整体提升，球露出后不动，静态摄影机，篮顶越框时没有重复磁铁或新绳头。</li>
+<li>实际查看 transition_check.png 中00/01/02的4倍近景及03、04、05、06、07、10、14、19全帧。首版织纹过度规则且过平，修正为有轻微弯曲、交叉纤维、每小段亮暗变化的细编织纹；00→01完全一致，02保持棕色编织篮材质与同一外轮廓尺寸。</li>
+<li>实际查看 contact_details.png 的03、05、07、19放大图：03只有球极小下缘；05篮遮住球上半部；07球已与篮分离；19球下缘与桌面小阴影接触，无浮空。</li>
+<li>原静态修补区域有矩形边界和横向木纹涂抹。修改为真实遮挡掩码、灰墙/木桌低频颜色拟合、可见静态木纹细残差，并修正桌后缘约1像素偏差及其混合边缘。磁铁直角底面改为弧底，链环加细厚度。</li>
+<li>最后一次重存后再次实际打开8时点检查表、00/01/02及关键接触放大图。检查没有原篮残影、第二个球、物体大小突变、球随篮运动或大块单色物体覆盖。检查以图像为依据，不以帧差和颜色数替代。</li>
+</ol>
+<h2>真实可见局限</h2>
+<ul>
+<li>原图编织材料的每根纤维相位无法从单张图精确续写。02之后虽保留暖棕编织材质、尺度、厚度和密度，仍比首图略均匀，01→02可看到细织纹排列和局部光泽的变化；没有声称逐纤维摄影一致。</li>
+<li>重画链环已有折弯、左右不对称和金属亮点，但局部扭斜与接头亮暗仍非逐像素复刻，磁铁高光较简化；升高时不模拟额外复杂摆动。</li>
+<li>原来篮遮住的球、木纹和墙面都不可见。球尺度/接缝与隐藏桌面纹理是明确假设；局部木纹接续和灰墙明暗仍可辨认出修补，4倍查看更明显。</li>
+<li>球在22像素左右显示，绒毛和接缝只有有限像素；球明暗为二维近似。没有借助不可用的三维真值。</li>
+</ul>
+<h2>文件与校验</h2>
+<p>artifact_io.save 接收uint8 (20,144,256,3)，保存 pixels.npz、frames/00.png..19.png、inspection.png、index.html。额外保存 transition_check.png、contact_details.png、material_check.png、first_enlarged.png。代码逐帧重新读取20张RGB PNG并打包，已确认每张等于pixels.npz对应切片；张量为uint32 (144,256,20)，0xRRGGBB，00与first_frame逐像素相同。</p>
+<h2>根审返修后的重存与实际复查</h2>
+<p>根代理指出首版01→02由原深棕粗纵肋变成浅棕细网格、侧壁直筒、上沿厚度不足、吊链规则。收到意见后再次实际打开唯一首帧与4倍放大，先在 OBSERVATION.md 追加结构观察，再独立重写 basket 和 suspension 的新RGB函数。没有搬运源篮贴图，也没有通过源篮纹理平移来掩盖差异。</p>
+<ul>
+<li>侧面改为约12条宽度不等的纵肋，每条有轻微不齐与局部扭转；横条改为短织段，各小段宽度、粗细、亮暗独立变化。新生成的低频纤维不规则值与细亮线补足粗编织层次。去掉原来的均匀浅网格配色，改为原图较深的棕色与近中性的亮暗纤维。</li>
+<li>外形向底部明显内收；左右边缘与底弧具有柔暗，底沿保留略厚织层。顶编织面增加凹暗、较粗织条和独立前滚边，避免薄盖板观感。</li>
+<li>链环改为手观察记录的不对称折弯线轮廓：长环顶端偏右、左边弯曲、底端收窄；下环扭斜成不规则近菱形，并有不连续灰银亮点。磁铁保留黑色弧底侧面与局部细高光。</li>
+<li>00/01原位摄影首帧、球固定桌面支撑、提升距离和前后遮挡事件不变。</li>
+</ul>
+<p>返修最后一次重存后实际查看：transition_check.png的00/01/02四倍放大以及03、04、05、06、07、10、14、19；inspection.png的00、02、05、08、11、14、17、19；contact_details.png的03、05、07、19；新增material_check.png的00/02/05吊链、磁铁、篮整体四倍图，以及00/02/05/10篮织层三倍图。深棕材料、宽纵肋、顶层与底部柔暗比首版接近首图，不再表现为浅棕均匀细网格。球露出次序和桌面支撑保持。</p>
+<p>真实余差仍存在：原摄影纵肋的逐根位置、交错相位和局部粗纤维形状不能通过独立二维公式完全重建；首图至重画像素之间仍有细织纹排列的差异，原图编织起伏比新像素更复杂。根审的视觉结论需要以新增material_check.png与transition_check.png复核，未以均值、帧差或颜色数替代该检查。</p>
+<p>重存程序再次报告：00逐像素保持首图，20张PNG均逐帧等于uint32 (144,256,20)、0xRRGGBB张量。提交调度核验与根代理重审。</p>
+</article></main></body></html>

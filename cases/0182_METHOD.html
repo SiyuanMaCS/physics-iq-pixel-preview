@@ -1,0 +1,106 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>unstable-block-stack · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0182</span></nav><article><h1>unstable-block-stack · 生成方法</h1><p>已完成 20 帧、256×144 RGB、4 fps，播放总长 5 秒。第 00 帧直接保留 first_frame.png 的逐像素 RGB。唯一场景输入为本目录首图、prompt.txt；未读取其他 case、参考视频、旧结果、掩码、分数、记忆或其他线程，未联网、未调用模型/权重/API/物理引擎，未启动额外代理。</p>
+<h2>像素生成</h2>
+<p>先查看首图及四倍图，写 OBSERVATION.md，再独立写 generate.py。运动的黄条、蓝块和橙黑夹爪分别用首图测得的二维轮廓顶点重新填充，逐帧重新计算朝向后的可见面、边界、低幅木纹、渐变和细小色差。绘制在四倍二维数组中，再积分缩小到输出尺寸。材料颜色取自本首图的可见颜色，细纹由确定的解析函数和固定种子噪声直接求值；没有裁取物体像素贴图进行平移、缩放、镜像。</p>
+<p>00–02 黄蓝块尚未运动，所以保持原像素以避免松爪前材质闪变；夹爪从 01 起独立重绘。03 开始所有运动木块都重画。红柱的可见正面保持原图，原先被黄条盖住的柱顶和极窄上正面用连续二维面补出。背景保留原摄影图，原物体占据的区域用非学习图像修补、可见邻域按行插值和羽化补齐。阴影每帧按落点移动和加深，红柱排除在运动阴影色变之外。</p>
+<p>没有三维场景、网格、法线、相机投影或材料渲染模型。二维可见面转向、各面颜色和纹理直接产生新 RGB。</p>
+<h2>物理假设</h2>
+<p>夹爪在开始承担蓝块载荷，松开后载荷施加在黄条右悬臂；未假定任何隐藏固定，黄条和蓝块失稳。初期二者共同顺时针倾斜，后期分离，端部触桌面后回摆，最终黄条较靠后、蓝块较靠前，屏幕上的少量边缘遮挡表示前后位置。红块保持原位置直立。碰撞和摩擦采用手工连续事件安排，并没有求解动力学。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>原首图，蓝块由夹爪保持在黄条右端</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>夹爪轻微张开，块体仍静止</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>夹爪进一步张开，载荷转移</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>夹爪开始上撤，黄蓝块顺时针 1°</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>绕支撑边倾斜到 4°，蓝块底部保持接触</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>倾斜到 12°，右端下降，左端上升</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>倾斜到 24°，接触支撑范围缩小</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>黄条右下移、倾斜到 38°，蓝块开始独立运动</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>黄条 53°、蓝块 55°，二者短暂接近后分离</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>黄条 63°、蓝块 70°；蓝块移到右侧，减少实体重叠，黄条端部触桌面</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>黄条回摆至 48°；蓝块 82°，下侧触桌面</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>黄条回摆到 25°，蓝块 94°，有小幅碰撞回摆</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>黄条 8°，蓝块 90°，两者接近平放</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>黄条平放，蓝块小幅回摆到 87°</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>蓝块回摆到 91°，黄条保持静止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>蓝块回到 90°，余振结束</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>最终状态保持</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>最终状态保持</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>最终状态保持</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>最终状态保持</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修复</h2>
+<p>实际通过图片查看工具打开：原首图、initial_zoom.png；每次修订后的 inspection.png 和 contact_check.png（00/02/05/08/11/14/17/19 共八个时点）；transition_check.png 中 00/01/02 全图与五倍放大的夹爪/蓝块/黄条区域，并查看 04/06/09/11/12/19 的接触及遮挡局部。额外打开 extra_check.png 中 02/03 的重绘交接，以及 09/10 的首次落地。</p>
+<p>检查发现并修复：原蓝块上方修补造成的矩形墙面延伸，改成按原图邻近行补齐桌面后沿；原黄条位置被红柱颜色污染造成的红色虚假柱顶/红色轮廓，清理颜色污染并羽化背景修补，重新补连续柱顶；运动木块边缘过硬，增加轻微光学软化；09–11 蓝块与黄条重叠过多，调整蓝块侧向分离和落地位置。重存所有输出后重新打开八时点检查、transition_check.png 和 extra_check.png。</p>
+<p>00→01→02 放大查看中黄蓝块的轮廓、颜色、厚度完全延续，变化主要为松爪。02→03 出现小角度转向和重新绘制的颜色，蓝面与黄面维持原色系及尺寸。04/06 的支撑转移和 09/10 的落地边界经实际查看。最终画面保持三个块体各一个，没有旧蓝块、旧黄条残留，没有液体或文字。</p>
+<h2>仍可见的局限</h2>
+<p>新绘的木块比摄影首帧平整，微木纹和夹爪轮廓的细节简化，尤其夹爪从 01 开始比首图更规整。背景旧黄条及蓝块位置的修补仍略平滑，桌面细纹连续性不如真实摄影。整个倾倒采用二维面旋转，不能准确表现真实空间中的侧面透视改变；后期黄条靠后、蓝块靠前的分离只是二维假设，最后一小段边缘遮挡仍有空间歧义。第 09 帧蓝块侧向分离较快；接触后的反弹与衰减为手动事件安排，不能认为质量、摩擦和转动惯量已经物理校准。未通过让红柱跟着倒下掩盖上述问题。</p>
+<h2>输出和校验</h2>
+<p>artifact_io.save 保存 pixels.npz（键 pixels，uint32，形状 144×256×20，0xRRGGBB）、frames/00.png–19.png、inspection.png、index.html。transition_check.png、contact_check.png、extra_check.png 为实际检查图片。validation.json 保存校验结论：20 张 PNG 均逐像素等于对应张量切片，00 与原首图完全一致。generate.py、OBSERVATION.md、METHOD.md 全部在本 case 目录。</p>
+</article></main></body></html>

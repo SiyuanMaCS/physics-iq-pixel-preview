@@ -1,0 +1,130 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-mug · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0077</span></nav><article><h1>light-on-mug · 生成方法</h1><p>输出为固定机位、4 fps、20 帧、256×144 RGB；20 帧各显示 0.25 秒，共 5 秒。00 完全保留首图。只读取本例首图、提示和配置，以及共享输出 helper。没有读取其他例、视频、掩码、旧脚本或结果；没有联网、AI 调用、学习权重、物理引擎或三维渲染。</p>
+<h2>像素方法</h2>
+<p>独立 generate.py 使用二维三次曲线定义杯柄和杯柄影的内外轮廓，在 6 倍分辨率求掩码后抗锯齿。角度每帧增加 18 度；二维横向投影直接在本帧坐标求值，后半周将杯柄绘于杯身前，前半周则先画杯柄、用不透明杯身挡住它。杯柄的金黄色、暗边和固定光源的局部亮线都重新求 RGB，没有裁取首图杯柄再平移、缩放或镜像。前方杯柄给杯身添加轻微、附着的接触影。</p>
+<p>杯身近圆柱且无印花，绕竖轴转动后轮廓及固定灯光下的主反光接近不变。通过首帧约 10×11 个二维颜色观测点标定平滑黄色陶瓷色场，每帧重新求内部颜色和窄高光；杯口以二维椭圆重绘。轮廓约 1 像素的摄影抗锯齿带以及下部接触反光保留在固定坐标，避免第一张续帧换物体边缘。没有复制对象贴图到另一位置。转台为无清晰纹样的圆形黑台，轴对称的轮廓、固定灯光反光及支撑保持原位，转动由同步的杯柄朝向展示。</p>
+<p>墙面圆柱杯影随轴对称杯身保持相同主体，杯柄影按相同转角重新计算缩窄和侧向轮廓；固定灯光产生软边暗褐色轮廓。在原杯柄影位置以未遮挡墙面拟合二维低阶亮度场，原实物杯柄位置根据同一行可见背景重建墙、黑色支架和台面。只修补这两个会显露的局部；其余静态摄影背景保持原图。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻秒</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>首图逐像素不变，左柄、左侧杯影柄</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>左柄开始向后转，保持黄色陶瓷和接触</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>左柄缩窄，影柄同步缩窄</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>左后柄大部分被杯身挡住</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>后柄仅有窄边可见</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>正后方柄遮挡，墙影柄与主体合并</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>后右方柄仍被主体挡，露出趋势开始</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>右后方柄边缘露出</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>右侧柄逐渐完整，右侧杯影柄清楚</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>右侧柄近完全展开</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>右侧极值，右侧柄完整</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>柄开始向右前方，前后遮挡关系切换</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>右前方柄覆盖杯身右边</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>前右方柄变窄且更贴杯身投影</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>前柄窄视角，杯影柄并入主体</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>正前方柄呈窄条，主体接触不变</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>前左方柄显露，位于杯身前面</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>左前方柄向外展开</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>左侧柄接近完整，墙影柄返回左侧</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>342 度，接近初始左柄朝向</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修复</h2>
+<ol>
+<li>写代码前实际查看 first_frame.png 与 first_frame_zoom.png：确认黑杯口、黄色圆柱身、左侧中空柄、下缘高亮、黑台接触与墙上的放大杯影。</li>
+<li>首次查看 inspection.png 的 00、02、05、08、11、14、17、19 共 8 时点，且查看 transition_check.png 的 00/01/02 三倍放大和 05/10/15。发现原左侧柄及影柄的弱残影，在 05、10、15 尤其明显。</li>
+<li>扩大原杯柄及影柄的背景修补范围，重新生成全部帧及所有输出。第二次实际查看这两张检查图，确认 05 与 10 原左侧不再保留空杯柄，墙面旧影柄也没有重复。</li>
+<li>实际查看 contact_check.png 的 03、04、06、09、12、13、16、18：后方柄被不透明杯身挡住，前方柄覆盖主体；杯底无位移或浮空，底部高亮持续落在同一支撑面，没有重复杯子。</li>
+<li>00/01/02 放大对比确认杯身高度、宽度、黑口、黄色主明暗及白色下缘反光保持相近，01 有色场重建带来的轻微柔化，未出现大块换色或更换材质。</li>
+</ol>
+<h2>可见局限</h2>
+<p>角速度和整圈时长是单首帧下的合理假设。二维杯柄在正前方时细节较简化，边缘亮线与原摄影陶瓷不完全同样细腻；右侧柄相对首帧柄也更规整。墙面原柄影显露区域的纹理比未修补墙面稍平滑。杯身色场相对原图略柔化；转台没有可辨认的标记，转动主要从杯柄看出。杯影主体按轴对称假设固定，未计算额外微小非轴对称变化。使用二维轮廓缩窄与遮挡近似，不能恢复未知的真实三维杯柄细节。</p>
+<h2>输出校验</h2>
+<p>artifact_io.save 保存 pixels.npz、frames/00.png 至 19.png、inspection.png 与独立 index.html。重新读回全部 20 个 PNG，逐像素打包 RGB，并与 uint32 (144,256,20) 的 pixels 数组每个对应片段比较相等。00 与 first_frame.png RGB 数组完全相等。另保存 transition_check.png 和 contact_check.png 作为实际查看证据；程序中的断言通过。</p>
+</article></main></body></html>

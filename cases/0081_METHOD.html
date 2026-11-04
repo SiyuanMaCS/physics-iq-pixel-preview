@@ -1,0 +1,159 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-mug-block · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0081</span></nav><article><h1>light-on-mug-block · 生成方法</h1><h2>方法与输入</h2>
+<p>仅读取本目录 first_frame.png 与 prompt.txt 作为视觉/场景输入；读取本 case_config.json 和公共保存 helper。没有访问其他 case、参考视频、掩码、评测结果或旧生成器；没有联网、调用 AI API、学习权重、物理引擎或三维模型。generate.py 是本例独立实现。</p>
+<p>先实际打开首帧和四倍放大图，写 OBSERVATION.md，再写代码。第 00 帧直接使用首图 RGB，保持逐像素一致。其他帧在 4 倍二维数组上重新求值杯/块轮廓、圆柱侧面色带、窄高光、杯口与底部釉面反光、蓝块正面/侧面/顶面和下边倒角，再抗锯齿缩回 256×144。全部动态像素由当帧的二维距离、归一化坐标、多边形、色彩函数与混合权重生成；没有裁取物体贴图作平移、缩放或镜像。</p>
+<p>固定背景保留首图；首次遮挡区域的墙光由首图未遮挡墙面采样，以非学习的薄板样条插值估计，桌面则做局部扫描线色彩插值并重建少量纹理。背景修补只做一次。黑盘以固定二维椭圆重建被杯和蓝块挡住的位置。静态光斑与桌后沿没有主动运动。动态墙影是直接生成的新二维轮廓，包括杯大影、蓝块细长影以及桌墙交界的低位连接影，不搬运原影子。</p>
+<p>顺时针角速度设为约29.5度/秒；共同角度控制两物体的盘面椭圆脚点。脚点深度控制轻微尺度变化和从后到前绘制顺序；杯与块不滑动、不倾倒。接触暗线、低软阴影和淡黄色/蓝色盘面反光随脚点重绘。未创建三维场景或表面法线。</p>
+<h2>实际 20 帧事件</h2>
+<p>采样时间 0.00–4.75 秒，4 fps，20 帧，每帧显示0.25秒，总播放5秒。下表是最终实现发生的顺序；相较预定观察计划，遮挡从第05帧就开始，随后连续加强。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>时间(s)</th>
+  <th>累计顺时针角度</th>
+  <th>实际事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>0.0</td>
+  <td>首帧原样保留：杯左后，蓝块右前</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>7.4</td>
+  <td>顺时针约7.4度：杯微向后，蓝块接近前方</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>14.7</td>
+  <td>杯向后侧继续移，墙影右移</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>22.1</td>
+  <td>杯、块边界开始接近，蓝块前脚点仍接盘</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>29.5</td>
+  <td>蓝块在前方，杯向后中心方向移</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>36.8</td>
+  <td>蓝块开始遮挡杯右下边界，杯身高光连续</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>44.2</td>
+  <td>蓝块遮挡杯下部，两物体各有独立接触点</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>51.6</td>
+  <td>杯居后、蓝块居前，墙上影子开始重叠</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>58.9</td>
+  <td>前后遮挡最明显，蓝块窄侧面仍可见</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>66.3</td>
+  <td>蓝块向左前、杯向右后运动</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>73.7</td>
+  <td>横向中心交叉，蓝块前景遮挡杯左下部</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>81.1</td>
+  <td>杯逐渐从蓝块右后露出，阴影同相变化</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>88.4</td>
+  <td>杯右后、蓝块左前，重叠减少</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>95.8</td>
+  <td>杯与块侧缘接近分离，保持原物体尺度</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>103.2</td>
+  <td>两物体边界基本分开，杯向右前移</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>110.5</td>
+  <td>左右位置交换，杯右、蓝块左</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>117.9</td>
+  <td>杯接近盘右侧，蓝块向左后移动</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>125.3</td>
+  <td>物体接触影和反射仍局限于盘面</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>132.6</td>
+  <td>杯继续向前，杯影稍向下增长</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>140.0</td>
+  <td>累计约140度，继续匀速旋转，不停止</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>打开原始首图和 first_frame_enlarged.png，确认黄色杯约30像素宽、深色杯口、白黄窄高光和蓝块较薄的深蓝右面。</li>
+<li>首次生成后实际打开 inspection.png、transition_check.png、contact_check.png。查看 00、01、02、05、08、11、15、19 的完整场景与杯/块接触放大区域，并在 inspection 里另看 02、05、08、11、14、17、19。</li>
+<li>00/01/02 四倍对比显示：第一版杯身偏暗、杯上口偏水平、蓝块右侧总厚度偏大；墙影修补的顶部有水平条带、原低位影子清除不全。修正了亮黄色侧面和高光、倾斜杯口、蓝块面中心偏置与下边倒角；用首图墙面采样的平滑插值替换扫描线墙面修补，并羽化外缘，清除原固定影子。</li>
+<li>第二次实际打开 00/01/02 对比及 08、10、12、19 的遮挡关键帧，补画随杯运动的桌墙交界低位投影，将其下端拉到后沿附近，减少悬空的投影感。</li>
+<li>最终重新生成并实际打开 inspection.png、transition_check.png、contact_check.png。确认 00/01/02 的杯和蓝块颜色、宽高基本连续；05/08/11 中蓝块位于杯前且没有双物体残影；15/19 左右位置交换后，脚点与暗盘接触；固定桌面、外侧光斑没有漂移。transition_check.png 保存了最终全图、初始三帧4倍接触对比和08/10/12/19关键帧。</li>
+</ol>
+<h2>仍可见局限</h2>
+<p>这是一幅摄影首帧后的程序式二维近似：01起杯表面比原图更干净、轮廓和高光更规则，局部底缘不及原图柔和；颜色和尺度保留了，但不能声称完全恢复真实摄影材质。蓝块的朝向变化用二维面宽和侧面比例近似，5秒内变化偏保守，未精确描述每个实体面的光照。遮挡区域墙面的恢复较平滑，细看与原墙面的轻微噪声不完全一致；低位墙影比首图的模糊影子更规整，影子透视仅是二维放大映射。杯把手在首图不可辨，最终没有添加明显的新把手；盘面被遮挡部分和反光是重建而非原摄影细节。转速、光源距离和盘面深度不可由单帧唯一确定，采用了上述保守假设。</p>
+<h2>输出与数据核验</h2>
+<p>artifact_io.save(frames,D) 保存 pixels.npz、frames/00.png–19.png、inspection.png 和独立 index.html。另保存 transition_check.png、contact_check.png、OBSERVATION.md、METHOD.md、generate.py 与 validation.txt。最终程序核验 uint32 张量为 (144,256,20)、0xRRGGBB 编码；20张 PNG 均为256×144 RGB，逐张与相应张量切片完全相同；00与首图逐像素一致。视觉判断来自上述实际打开检查，未用帧差或颜色计数替代。</p>
+<h2>根审返修：釉面与蓝块表面（最终版本）</h2>
+<p>收到根审反馈后，仅查看本例首帧和本例当前输出。重开首帧4倍图、00/01/02过渡对比及八时点接触表，确认旧版均匀亮黄、规则竖白高光、灰底环和平直口沿造成摄影材质突变。保持原有 positions() 的共同角度、独立脚点、深度排序和阴影运动不变，只替换 cup() / block() 的逐像素外观求值。</p>
+<p>杯的新颜色由左右窄暗区、暖色边缘、上颈低亮区、二维局部釉色与低幅散光纹理叠加生成，避免大范围黄色通道饱和。高光分成上窄下宽的两段软反射，中间柔和连接，横向中心随高度微弯，宽度随高度变化；独立软化颜色与边界，去掉硬白竖线。杯口使用深色外椭圆、弯曲前沿和厚度随位置变化的暖色口沿，底部改为侧边上收的弧形釉面脚跟，并把低亮灰褐反光局限在局部曲边，没有再画环状灰条。所有纹理与颜色是当前帧二维函数直接产生，没有搬运、缩放或采样原杯贴图。</p>
+<p>蓝块重新求值中部较亮的青蓝涂层、顶部低亮渐变、横纵低幅起伏、斜向倒角，以及首图可见的较暗底部；窄侧面保留厚度但加入柔和棱线与不均匀深蓝明暗。全部面仍为当帧新多边形与颜色函数，未裁贴原蓝块。</p>
+<p>重存全部产物后实际再次打开最终 transition_check.png，逐一看00/01/02全图及4倍杯/块对比；再次打开 contact_check.png 的00、01、02、05、08、11、15、19完整场景与接触放大；并打开 inspection.png 的00、02、05、08、11、14、17、19。观察到首续帧的杯边和反射变软、强亮白条不再等宽连续、旧灰底环消失、杯口呈弯曲厚缘；蓝块中间与上下颜色有自然亮度差，前后接触与遮挡没有改变。05/08/11仍由前方蓝块遮杯，15/19交换左右后两脚点仍落盘面，未出现重复物体。</p>
+<p>仍有局限：杯的程序式釉色仍比首帧摄影更平滑；高光分段的位置和宽度是单帧证据下的解析近似，不能保证真实曲面每一角度的反射。杯口和脚跟的模糊细节没有完全复现；蓝块斜倒角及底部暗涂层是首帧外观的保守拟合。墙影与修补区域沿用已有实现，仍较规整且略平滑。没有新增无法从首帧辨认的把手或其他物体。</p>
+<p>返修后格式核验再次通过，详细结果见validation.txt。交付给调度做格式检查和重新登记状态。</p>
+</article></main></body></html>

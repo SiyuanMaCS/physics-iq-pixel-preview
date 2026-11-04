@@ -1,0 +1,112 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>double-cradle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0052</span></nav><article><h1>double-cradle · 生成方法</h1><p>唯一视觉/场景来源：本目录 first_frame.png 与 prompt.txt。读取了本 case 配置与公共输出 helper；没有其他 case、参考续写、网络、模型权重、AI API、物理引擎或三维场景输入。观察先于代码，见 OBSERVATION.md。</p>
+<h2>生成方式</h2>
+<p>00 原样保留首帧。01–19 在 RGB 数组中重新绘制动态部分，使用 4 倍二维栅格采样后降采样。摆动球的椭圆边界、深灰肩部、斜银色上反光、青白横亮带、右侧暖金反光及底座上虚化倒影都按当帧中心重新求值；没有裁取、平移、缩放或镜像球体贴图。蓝黑夹具使用独立二维弧形轮廓重绘，蓝面包含暗外边、明暗过渡、弯曲亮带、细槽、暗内唇与微小纹理；黑壳包含窄反光、内孔与铆钉。01 每爪仅张开约 0.45 像素，保持原位置；02 才向左下退去。夹具在内孔露出的桌面上留下随夹具退开而消失的二维软投影。</p>
+<p>静止支架覆盖动态球和夹具，保持原摄影像素；前左柱的确切遮挡尤其保留。静止的中间球，以及暂时归队静止的右端球，允许保留原位置摄影像素，保留的像素从不位移或缩放；这些球一旦摆出就由独立函数重绘。细悬挂线每帧连接前后横梁与当前球顶，低透明度避免变成粗白实线。</p>
+<p>静态背景从原图保留，原动态区域用非学习二维修补清除。夹具揭示的木桌用本首帧未遮挡区域估计色调并加入细木纹；在边界上做二维调和残差衔接。球体移开后的黑底座用独立暗色场与边界残差恢复，以免木色涂抹进底座。夹具遮挡的后支架下段用细金属条重建。没有三维球法线或任何场景渲染。</p>
+<h2>物理假设和 20 帧事件</h2>
+<p>五球等尺寸，左两球被释放，传递冲量后右两球摆出；右两球归队再驱动左两球。振幅缓慢减小，约 2 秒完成一轮左右循环。屏幕摆动路径包含桌面透视导致的倾斜与抬升。采样时间为 00=0.00 秒，19=4.75 秒，总播放 5 秒、4 fps。碰撞常发生在两个离散采样之间，未给钢球加入肉眼不可见的大形变。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>首图，夹具保持左两球</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>张爪，左两球开始回落</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>左两球靠近队列，夹具后退</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>冲量传递，右两球开始摆出</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>右两球在右侧幅峰</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>右两球回摆</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>右两球接近队列</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>右侧碰撞后左两球摆出</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>左两球在左侧幅峰</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>左两球回摆</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>左两球接近队列</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>左侧碰撞后右两球摆出</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>右两球在较小幅峰</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>右两球回摆</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>右两球接近队列</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>右侧碰撞后左两球摆出</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>左两球在较小幅峰</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>左两球回摆</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>左两球接近队列</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>左侧碰撞后右两球再次摆出</td>
+</tr>
+</tbody>
+</table>
+<h2>已实际查看与修正</h2>
+<p>实际查看原图 4 倍全图放大和 10 倍球/夹具接触区域放大。第一版查看了 transition_check.png 的 00/01/02 全图及球区放大，以及 03/04/07/08/10/13 接触与摆幅图；查看了 contact_sheet.png 的 00/01/02/03/04/07/08/19，和 helper 输出 inspection.png 的 00/02/05/08/11/14/17/19。</p>
+<p>第一版发现后左支架保留区域带回原蓝夹具残片、前左柱旁残留蓝色、退夹后的木桌过暗。第二版收紧支架掩码、重绘原被遮挡支架下段、扩展夹具擦除范围，并调整蓝色夹爪色泽和轮廓。查看第二版同一组对比图后确认蓝残片消失，但发现木桌补绘边界有接缝、移开球后的底座偏浅；随后加入木桌边界调和修正及底座分区修补。背景单独放大查看，确认深色底座与木桌边界恢复，没有大块木色晕染覆盖底座。</p>
+<h2>可见局限</h2>
+<p>只有首图，左球真实轮廓和摆动平面部分被夹具遮挡，因此摆幅、支点映射和退夹轨迹是二维合理假设。运动球的金属反射比摄影首图更规则，蓝色夹爪仍比原图纹理简单；夹具撤开后的木纹细节为推断，无法恢复真实被遮挡桌面。模糊底座倒影仅作二维近似，接触瞬间的短促碰撞与微小振动受 4 fps 限制。没有声学或实际测得的周期数据。</p>
+<h2>最终检查与一致性校验</h2>
+<p>最终重存后实际再次查看 transition_check.png（00/01/02 全图和接触放大，03/04/07/08/10/13 关键区域）、contact_sheet.png（00/01/02/03/04/07/08/19）和 inspection.png（00/02/05/08/11/14/17/19），并额外查看 keyframes_check.png 的 04/07/15/19 两倍全图。确认原蓝残片未返回，木桌接缝显著消减，底座没有木色涂抹，前左柱持续遮挡左球。仍保留上述反射、纹理及倒影近似局限。</p>
+<p>程序逐帧验证 20 个 PNG 均为 256×144 RGB，逐像素等于 pixels.npz 的 uint32 (144,256,20) 0xRRGGBB 张量；00 与首图数组逐像素相等。完整校验结果保存在 validation.json。</p>
+<h2>root 复核后的夹具/底座最终修订</h2>
+<p>重新查看 first_frame.png 全图四倍及 (0,90)-(128,144) 八倍夹具放大后，确认旧版蓝爪近纯色、内孔偏亮、初始开口过大。现以手工观察点重建上爪圆弧和下爪弧度，用二维曲线插值平滑轮廓；沿轮廓的相对带宽分别写入暗边、蓝色面明暗、窄亮带、细槽和内唇。外侧黑壳独立绘制，其内孔露出当帧新计算的背景；黑壳加入柔和蓝灰反光与小铆钉。内孔桌面的软阴影在画球之前绘制，避免直接压暗球的亮带。没有使用原夹具或球体裁块作为动态贴图。</p>
+<p>01 夹具平移量为零，上下爪绕左侧近轴区域各开启最多 0.45 像素；02 平移 (-8,+3) 像素，此后逐渐退出。重新对照首图调整下蓝爪左端和中段，避免初续帧开口和弧线突然变化。</p>
+<p>未知底座左角从旧版 (83,121) 尖伸区域收至后左柱附近约 (90,122)，绘制小倒角和窄侧面反光，使用四倍栅格后降采样的边界透明度衔接木桌；后左支架下段接到此角。首图能看到的底座摄影像素继续保留。这个左角并非真实测得几何：首图被夹具遮挡，其完整厚度、角的位置、倒角宽度只能合理推断；露出的底座侧面仍较简洁，倒影仍是二维近似。</p>
+<p>最终实际查看 tool_material_check.png 的 00/01 夹具八倍图，base_edge_check.png 的 00/01/04/08 底座放大，transition_check.png 的 00/01/02 和六个接触/摆动区域，contact_sheet.png 的 00/01/02/03/04/07/08/19，inspection.png 的 00/02/05/08/11/14/17/19，以及 keyframes_check.png 的 04/07/15/19 全图。检查中修正了下蓝爪曲线和偏亮内孔，确认现在有蓝爪/黑壳材料层次、初始小幅开口、较收敛的底座左角和连续支撑遮挡。</p>
+<p>仍可见的材料限制：蓝爪与黑壳的包边比首图更规则、局部对比偏强，细纹不等于真实摄影纹理；运动金属球反射较规则。投影、被遮挡桌面木纹、底座左角和底座反射没有独立观测，不能认为是首图真实场景的精确恢复。</p>
+</article></main></body></html>

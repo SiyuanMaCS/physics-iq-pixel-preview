@@ -1,0 +1,198 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>blow-balloon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0039</span></nav><article><h1>blow-balloon · 生成方法</h1><h2>输出与方法</h2>
+<p>已完成 20 帧 256×144 RGB，4 fps，连续播放长度 5 秒。00 直接保留首帧像素；01–19 每帧在数组中重新计算黑气球的二维轮廓和 RGB。使用首图实际观察得到的横向半宽控制点与 PCHIP 曲线描述轮廓，以固定颈口 (110.45,82.2) 为充气锚点。尺寸从约 49×51 增至约 72×75 像素，顶部约从 y=32 上移至 y=7，底部继续连接原颈口。</p>
+<p>没有裁气球贴图，没有平移、缩放或镜像原气球 RGB。变化的是二维轮廓参数；乳胶内部每个采样点由暗色底色、距轮廓的弱边缘亮度、两处解析柔反光、下部环境色和低幅程序噪声重新赋值。4 倍子像素采样平均后得到 256×144 的轮廓抗锯齿。原图只作为静态摄影背景；气球扩展区域由新的 RGB 覆盖，弱墙面阴影随轮廓扩大，桌面、绿色物体、座椅、颈口下方绑扎和黑管保持静止。没有三维场景、网格、法线、物理引擎、学习权重或网络调用。</p>
+<p>物理假设是持续泵入空气、压力增长使膨胀速度略有减缓。尺寸倍率采用 <code>1 + 0.48*(1.13*p - 0.13*p*p)</code>，<code>p=t/19</code>，保持严格连续增大。气球不爆裂，不脱落，不发生未要求的整体漂移。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间 s</th>
+  <th style="text-align:right">尺寸倍率</th>
+  <th>当前事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">1.0000</td>
+  <td>原始充气初态，所有像素准确保留。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">1.0284</td>
+  <td>初次小幅充气，轮廓与双反光连续。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">1.0564</td>
+  <td>再扩大，固定底部接管。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">1.0841</td>
+  <td>顶部上升，左右向外延展。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">1.1114</td>
+  <td>拉紧表面，重算反光位置与宽度。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">1.1384</td>
+  <td>持续扩大，软管不动。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">1.1651</td>
+  <td>上方空间缩小，仍无画外裁切。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">1.1914</td>
+  <td>壁面弱阴影随尺寸缓慢扩大。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">1.2173</td>
+  <td>中等尺寸，颈口连接不变。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">1.2429</td>
+  <td>保持黑乳胶反射、继续进气。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">1.2682</td>
+  <td>圆滑外形持续变大，接管仍在原位。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">1.2931</td>
+  <td>反光扩展，尺寸稳定增长。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">1.3177</td>
+  <td>下部汇向原颈口，桌后遮挡不变。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">1.3419</td>
+  <td>左右扩展，表面无突然色变。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">1.3658</td>
+  <td>较大尺寸，顶部仍可见。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">1.3893</td>
+  <td>膨胀速度略减，没有放气。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">1.4125</td>
+  <td>持续充气，底部不漂移。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">1.4354</td>
+  <td>接近最终尺寸，平滑黑色轮廓。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">1.4578</td>
+  <td>最后少量持续膨胀。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">1.4800</td>
+  <td>约 72×75 像素的最终气球，没有爆裂。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录</h2>
+<ol>
+<li>在编码前打开 <code>first_frame.png</code> 和 <code>input_large.png</code>，确认对象边界、黑乳胶反光、固定颈口/蓝绑扎及软管桌后遮挡。</li>
+<li>生成后实际打开 <code>inspection.png</code>，同时查看下列 8 个时点，均看到一个逐步增大的气球，静态桌缘与桌后物体不动。</li>
+</ol>
+<table>
+<thead>
+<tr>
+  <th>查看帧</th>
+  <th>实际观察</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>首图原样，气球与颈部正确接触。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>细微增大、两反光仍保留，无双重轮廓或贴图残影。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>顶部上移，宽度增加，颈口没有浮空。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>轮廓稳定，左右扩展，无不合理侧向漂移。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>表面黑色保持，扩大的反光柔和，软管不动。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>较大气球仍在画内，桌缘和绿色物体遮挡没有变。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>没有重复气球；颈口连接、反光与尺寸保持连续。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>最终轮廓完整，软管和蓝绑扎仍可见，气球底部没有脱离。</td>
+</tr>
+</tbody>
+</table>
+<ol start="3">
+<li>实际打开 <code>transition_check.png</code>：上排为 00/01/02 的 4 倍放大，下排为 00/02/10/19 的颈部、绑扎和软管 8 倍放大。黑乳胶在首续写帧仍是低亮度黑色，左侧大反光和右侧小反光延续；没有突然更换材质或物体几何。底部连接没有缝隙和多余颈管。</li>
+<li>实际打开 <code>final_check.png</code>（19 全图 4 倍最近邻放大），检查上缘、左右轮廓和接管关系：未见旧气球残影、重复对象、浮空、大片纯色覆盖或背景涂抹。</li>
+</ol>
+<h2>校验</h2>
+<p><code>validation.txt</code> 记录了实际断言：<code>pixels.npz</code> 中 <code>pixels</code> 为 uint32 <code>(144,256,20)</code>；全部值属于 <code>0xRRGGBB</code> 范围；每一帧 RGB PNG 都与张量解码精确相等；00 与输入逐像素相同；PNG 恰好 20 张；rows 105–143 的桌面及桌后静态物体在全部帧逐像素不变。张量编码校验与上述视觉查看分别进行。</p>
+<h2>仍可见局限</h2>
+<ul>
+<li>新表面采用解析柔反光和细噪声，整体比真实乳胶摄影更规整；首图中极细的不规则反射纹理没有逐一复现，00→01 能在放大图上看到细微的噪声与反光形状差异。</li>
+<li>充气轮廓近对称、变化平缓，缺少真实薄膜偶发的局部伸展或微小摇摆；选择固定颈口是对文本和画面约束的保守物理假设。</li>
+<li>弱阴影是二维近似，没有恢复被初始气球遮住的墙面；由于全程膨胀而不收缩，被遮蔽区持续被新轮廓覆盖。</li>
+<li>256×144 限制下，最近邻放大的边缘可见像素阶梯；原尺寸下轮廓采用子像素平均且无明显破碎。</li>
+</ul>
+</article></main></body></html>

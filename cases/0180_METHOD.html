@@ -1,0 +1,128 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>two-balls-pass · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0180</span></nav><article><h1>two-balls-pass · 生成方法</h1><p>0180，20 帧 256×144 RGB，4 fps，播放5秒。00直接使用首帧RGB，不改任何像素。仅使用本案例首帧、文本要求和输出助手；没有读参考视频、其他案例、学习权重或物理引擎。</p>
+<p><code>generate.py</code> 对每一续帧从静态背景重建新的RGB。旧球及软影位置的木桌采用非学习二维填补：从两侧无遮挡木纹列沿首帧可见的浅斜木纹方向采样、插值，六像素渐变边界，重新求值弱微纹理；管、软垫和其他背景保持原图。动态球没有从首帧裁图，不平移/缩放/镜像贴图。当前帧的二维椭圆轮廓、轻微边缘不规则、左上亮右下暗的色彩渐变、绒面解析微纹理、随滚动相位改变朝向和弯曲程度的接缝、抗锯齿以及摄影柔化均逐像素计算。软影位于右侧，底部有接触暗边；下落时影子扩散和减弱，且只投在可见桌面。棕球下落经过左管时，下缘由静态管唇遮住。</p>
+<p>运动假设来自首帧管口与相应球位置的直线：灰球向右下，棕球向左上，互不相交。每帧灰球初始横移32px、棕球−26px，有很小的滚动减速。灰球接近画面底边时尺度缓慢增大，棕球向远侧滚动时缓慢变小。棕球的支撑轨迹与桌面左斜边相交后水平运动连续，二维下落位移与离边时间平方成正比。没有三维模型或物理引擎。两球从首帧即已离管，不重复喷出。</p>
+<h2>20帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间秒</th>
+  <th>可见事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原图，灰(54,74)、棕(132,45)，接触软影保持。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>灰约(86,87)、棕约(106,40)，反向快速滚动，缝线换相位。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>灰约(117,100)、棕约(80,36)，各自接触桌面。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>灰约(149,113)、棕约(55,32)，棕接近左斜桌边。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>灰约(180,125)、棕约(30,28)，棕刚离桌边，水平速度连续。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>灰约(211,138)，底缘被画框裁断；棕约(5,39)，向下且左侧裁断，管唇遮住底部。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>棕已离场；灰约(241,150)，仅顶缘的少量像素在底边。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>两球均完全离场，静态空桌。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>静态空桌。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>静态空桌，最后一帧显示至5.00秒。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<p>实际打开原图与<code>first_frame_enlarged.png</code>，不是只计算帧差。生成后打开<code>contact_check.png</code>，逐格查看00/01/02/03/04/05/06/08/12/19共10时点。打开<code>transition_check.png</code>查看00/01/02的2倍全景和两球6倍接触细节；打开<code>edge_check.png</code>检查04/05桌边失撑、画框裁断和管唇遮挡；打开<code>inspection.png</code>查看00/02/05/08/11/14/17/19，另打开<code>material_calibration.png</code>比较原图与同位置诊断重绘的尺度、颜色、缝线和影子。</p>
+<p>第一版发现影子太浅、轮廓和接缝过清晰，以及旧球位置填补块的色差。已增强右向软影和底部接触暗边，增加摄影边缘柔化，扩大接缝柔化，匹配灰色的蓝分量、棕色的暗红棕与左侧亮部，并设置左管遮挡。尝试二维局部修补后仍有木纹涂抹，最终改为沿木纹方向的列采样插值与平滑过渡，重存全部文件并再次打开最终检查图。最终10时点检查未见重复球、旧位置残球、额外物体或悬浮接触；离场后没有无理由变化。首帧00仍逐像素相同。</p>
+<h2>仍可见的局限</h2>
+<ul>
+<li>6倍放大时程序绒面比首帧更均匀，接缝为近似的二维曲线，无法复原首帧球面所有摄影微纹理。重绘和摄影首图仍有细小质感差异。</li>
+<li>遮住的桌纹不能由单帧唯一恢复，填补区的细纹统计略平滑；最终图中没有早期明显色块，但细看仍可能识别局部纹理差别。</li>
+<li>速度、滚动相位和棕球离桌时机是依据单帧几何推定；棕球落边的画外结果未知，未再生成新事件。</li>
+<li>高速球在约1.5秒内离开固定画面，因此07–19刻意保持空桌。没有为了增加动态而放慢或重新入场。</li>
+</ul>
+<h2>文件格式</h2>
+<p><code>artifact_io.save</code>保存<code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、<code>index.html</code>。额外诊断图是<code>contact_check.png</code>、<code>transition_check.png</code>、<code>edge_check.png</code>、<code>material_calibration.png</code>及首帧放大图。最后用逐帧PNG打包成0xRRGGBB对照NPZ，验证uint32 <code>(144,256,20)</code>，00等于原始RGB；详见<code>validation.json</code>。</p>
+</article></main></body></html>

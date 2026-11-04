@@ -1,0 +1,109 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>match-blows-balloon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0112</span></nav><article><h1>match-blows-balloon · 生成方法</h1><p>输出为 20 张 256×144 RGB PNG、4 fps、5 秒，及 uint32 <code>(144,256,20)</code> 的 <code>0xRRGGBB</code> 张量。<code>generate.py</code> 只读取本 case 的首帧（文本约束已人工读取），调用 shared/artifact_io.py 保存结果。未读取其他 case、其他视角、视频、旧生成器、掩码、评分或记忆，未调用网络、模型、物理引擎或三维渲染。</p>
+<h2>像素方法</h2>
+<p>00 直接保留首帧每一像素。01–04 中尚未破裂的气球、平台、桌面、墙保持原摄影像素，不移动原气球贴图。动态细杆每帧通过二维端点和中点重新画出 1 px 左右的轮廓、暗侧与米黄色亮侧；角度由 158.65° 每帧增加 1.84°，图像坐标中是顺时针。火柴头用新绘暗红椭圆、小橙色及黄色火焰构成。早期杆在气球后方的部分由原位气球遮挡，仅接触点显露暖色火焰。</p>
+<p>05–07 中失压乳胶采用各帧独立的闭合二维轮廓，轮廓先经过三轮角点切分形成圆滑卷边，再直接按当前轮廓内的位置计算新的黑色 RGB、低幅纹理明暗和弱窄褶皱线；原充气气球的贴图没有被裁取、平移或缩放。05 轮廓已明显收缩，06 进一步变扁落下，07 接触桌面，08 小幅弹性回弹，09 后碎片的位置与轮廓固定。阴影随当前薄片高度由较软变为贴地窄影。二维描画使用 4 倍工作栅格抗锯齿再生成目标 RGB；没有构造三维球体、法线或网格。</p>
+<p>首帧原杆被细窄邻域静态背景插值移除。气球消失后才显露的墙与桌面由连续二维颜色场补出。灰墙使用连续 x/y 渐变与很宽的柔和亮区；木桌使用连续纵向亮度、紧凑的平台旁软阴影及多尺度、相位缓慢弯曲的纵向木纤维，参数只按本首图可见邻域确定。桌沿为 <code>y = 82.1 - 0.1042 x</code>，每个目标像素用 4×4 亚像素位置的软覆盖率积分，避免按行选墙/桌造成的整像素阶梯。颜色场以连续 smoothstep 权重和原摄影背景接续；背景部分没有逐行离散颜色取样，没有把原杆高光带入木纹，也没有事后对整个画面模糊。平台的原轮廓和侧壁固定，仅原杆遮挡过的细像素做静态修补。</p>
+<p>物理假设是普通充气空气气球：小火焰加热薄乳胶后破裂，失压回缩成黑色薄片，落在原接触点附近；没有额外液体。真实破裂速度快于 4 fps，因此 04→05 是一次明显、快速的失压跃迁。轴位置和杆的离桌高度按可见连接点推定。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>输入首帧，气球贴桌、杆向左下。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>杆开始顺时针缓慢转动，小暖色火焰，气球固定。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>杆头靠近气球下缘，气球材质和轮廓固定。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>小火焰开始接触气球右下缘。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>接触处持续受热，暖点增强，大气球仍保持原位。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>快速破裂失压，收缩为有径向褶皱的黑乳胶。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>黑乳胶进一步变扁、下落到桌面附近。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>碎乳胶贴桌，卷边和接触阴影出现。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>约 1.4 px 的小幅弹性回弹，仍在原底部附近。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>碎乳胶沉降后固定。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>杆继续穿过原气球右下区域，火焰微小闪动。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>顺时针旋转，平台及乳胶静止。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>顺时针旋转，固定支撑保持。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>小火焰变化，碎乳胶保持轮廓。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>杆接近水平向左。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>杆越过水平，小火焰缩小。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>杆轻微向左上，小余焰。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>杆继续缓慢扫动，平台不动。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>杆接近最后方向，头部微弱发亮。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>杆达到最终角度，桌上碎乳胶固定。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看和修正</h2>
+<p>实际打开原首帧及 <code>input_zoom.png</code> 的 4 倍放大图。每次生成后实际查看 <code>inspection.png</code> 的 00、02、05、08、11、14、17、19 八个时点，观察气球接触、失压后薄片的位置、固定平台和旋转杆。实际查看 <code>transition_check.png</code> 的 00/01/02 放大并列图和 03、04、05、06、07、19 接触/遮挡放大图，确认首帧与首续写之间没有更换气球材质或几何。</p>
+<p>第一轮看到补出背景的浅圆形残影和从旧杆亮点延伸的水平亮线；重做墙颜色延伸、取样避开杆、扩大墙面连续补全。第二轮仍有旧杆局部白色斜段；改为先清除原杆、再与背景补全合成，去掉白色重复。随后看到平台左侧在修补中被改变的暗条；改为只修补原杆的亮像素，保留其余原平台摄影像素。把 06 薄片改为更低、更扁的轮廓，使其不再维持 05 的高度。最终再次打开八时点检查表及全部过渡表。</p>
+<h2>根代理复审后返修记录</h2>
+<p>根代理指出此前 05 后桌沿台阶和横向亮暗带在原尺度可见，必须修复。此次删除了补全区域中全部按整数 y 逐行取样、临界行切换和旧的局部高斯模糊，改成连续二维墙/木桌颜色场。桌面原来从平台邻域取出的深色行被扩展成横带；现在由有限范围的二维软影表达平台附近阴影，因此不会贯穿整幅补全区域。桌沿以 16 个亚像素覆盖率样本积分，隐蔽区域与左右原桌沿平滑相接，保留原走向。边界外保留原平台和邻域木纹，以连续渐变权重接续新纤维。</p>
+<p>乳胶轮廓新增三轮角点切分，将尖锐折线变成柔和弧形，径向褶皱亮度和透明度均降低，去掉高对比的尖亮线。仍保留 05 向底部收缩、06 变扁下落、07 贴桌和 08 小幅回弹的事件。</p>
+<p>返修后实际重新打开 <code>inspection.png</code> 的 00、02、05、08、11、14、17、19 八个时点，重新打开 <code>transition_check.png</code> 的 00/01/02 及 03–07、19 放大图，并打开新增 <code>background_check.png</code> 的 05、06、08、19 破裂后背景 4 倍放大图。查看确认原尺度中原先明显的桌沿阶梯、横向色带和旧杆白色残留已消除，平台不移动，桌沿走向连续，乳胶轮廓已更圆滑。再次生成后重新打开三张检查表，检查记录针对当前最终文件。</p>
+<h2>真实局限</h2>
+<p>原气球覆盖的桌面只能从首图可见邻域推断，补出的纵向纤维比真实木纹规则，缺少摄影中的随机微小木纹和局部斑点；没有声称恢复真实隐藏纹理。黑乳胶的卷边和径向褶皱已圆滑和减弱，但仍是二维简化绘制，细微乳胶透亮与褶皱微结构不足。火焰只有约数个像素，缺少真实燃烧的细微烟气。4 fps 下不能表现毫秒级破裂细节，失压转换较突然。这些是可见视觉局限，而不是用帧差统计代替视觉检查。</p>
+<h2>数据验证</h2>
+<p>生成脚本逐张重新读 20 个 PNG，将 RGB 编为 <code>0xRRGGBB</code> 后与 <code>pixels.npz</code> 的对应帧逐像素比较；全部一致。确认 tensor dtype 为 uint32、shape 为 <code>(144,256,20)</code>，所有 PNG 为 RGB 256×144，且 00 与 first_frame.png 逐像素相等。<code>artifact_io.save</code> 已保存 pixels.npz、frames/00.png–19.png、inspection.png、index.html；另保存 transition_check.png、background_check.png、OBSERVATION.md 和本说明。</p>
+</article></main></body></html>

@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>paper-fall-water · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0133</span></nav><article><h1>paper-fall-water · 生成方法</h1><p>本例仅以本目录 first_frame.png、prompt.txt 为场景输入。实际打开首帧后先写 OBSERVATION.md，再独立编写 generate.py。没有读取其他 case、参考续帧、参考掩码、模型权重、旧代码或评分，没有联网、调用 AI API、物理引擎或三维渲染器。</p>
+<p>逐帧生成 uint8 (20,144,256,3) RGB。00 原封不动使用首帧像素。静态墙、桌、玻璃碗及夹具上端保留摄影像素；纸团及夹爪弧部的旧区域由相邻可见墙色的二次二维颜色场修补。修补掩码有扩边和柔化，避免旧橙边/纸尖残留。固定杆和中央夹具壳体 y≤24 精确保留首图。</p>
+<p>纸团由手工观察得到的约 26×33px 不规则轮廓、24 个二维褶片颜色场和多条细折痕直接写入当前 RGB。每帧根据当时位置、偏转、触水压缩、缓慢湿塌调整轮廓和折片；细纹是固定解析正弦场，避免帧间随机闪烁。局部抗锯齿和约 0.4px 柔焦接近原摄影失焦。没有裁下首图纸团、复制后移动或镜像/缩放任何原物体贴图；当前形状、色场、湿润边界与水纹每帧重新求值。夹爪用二维曲线状多边形重画橙色垫和黑框，小幅张开后固定。没有建立三维场景、球体、法线或三维网格。</p>
+<p>水面限制在碗内二维椭圆区域。触水时画底端接触阴影、小水花和前后两段同心椭圆纹；先画后段水纹，再画纸团，再画水面前段及贴纸底端的湿接触亮线，表达遮挡。浸没的下端折片降低对比，湿纸逐渐变暗。普通未完全浸湿的轻纸团在 5 秒内漂浮是本例的假设；没有证据可强制沉底。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">采样秒</th>
+  <th>实际事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>首图逐像素一致，纸团位于夹爪间。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>夹爪张开约 0.8px，纸团中心 y49.5；下移约 2px。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>中心 y71，纸团下落并小幅偏转，仍在水面上方。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>中心 y103，底端首次触水，轻压缩、细水花和波纹。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>中心 y105，最深位置，湿下端保留透水可见褶纹。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>中心 y100.5，浮起，水花消退。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>中心 y102，小幅回落。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>中心 y100.8，较弱浮动。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>中心 y101.7，波纹衰减。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>中心 y101.1，继续轻漂。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>中心 y101.5，湿润范围上移。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>中心 y101.25，浮动趋弱。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>中心 y101.45，湿褶小幅压缩。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>中心 y101.4，纸底仍接水。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>中心 y101.5，慢转，弱水纹。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>中心 y101.5，下端继续湿润。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>中心 y101.55，接近稳定。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>中心 y101.6，剩余运动很小。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>中心 y101.6，稳定漂浮。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>中心 y101.6、x137.9，结束漂浮，纸褶可辨。</td>
+</tr>
+</tbody>
+</table>
+<p>4fps 连续播放 20 帧共 5 秒，采样为 0.00–4.75s。公共 inspection.png 使用 helper 的“帧播放结束时间”标签（0.25–5.00s）；上表是各帧采样时间。</p>
+<h2>具体实际查看与修正</h2>
+<ol>
+<li>实际打开 first_frame.png、first_frame_zoom.png 全景和 paper_initial_zoom.png 局部，识别纸团形状、灰褐阴影和橙爪反色。</li>
+<li>初稿实际打开 inspection.png，逐格看 00/02/05/08/11/14/17/19 共 8 时点。纸团初稿明显偏浅；全景还看到夹爪上边有残边。</li>
+<li>实际打开 transition_check.png 的 00/01/02 放大比较。原始纸团深褶较重，初稿亮片过白、暗褶不足，因此根据首图本例的颜色观察重新调整褶片色场、加长中央深折痕、收窄左外边、缩短纸尖，并让左侧橙反色在脱离后缓慢减弱。</li>
+<li>修补掩码扩边消除原夹爪边缘残影；保持原图固定杆及中央黑壳，避免固定上端突然重画造成细缝。</li>
+<li>实际打开 contact_check.png，查看 02/03/04/05/07/10/14/19 的碗内放大。02 仍悬空，03/04 水花只发生在纸团底端，05 后底部持续接水，前碗缘没有被盖掉；水纹起始半径和强度适度提高，让纸离手和接水不是仅在空气中停住。</li>
+<li>每次修改后重跑并重存全部产物。最终再次实际打开 transition_check.png、inspection.png 和 contact_check.png；确认原位无第二个纸团，无移动裁块边缘、明显背景涂抹或大块纯色覆盖。桌/碗/杆固定，湿纸灰白材质连续，底端不无故离开水面。</li>
+</ol>
+<h2>校验与局限</h2>
+<p>generate.py 保存后校验 pixels.npz 的 pixels 为 uint32 (144,256,20)，数值为 0xRRGGBB；读取所有 20 张 RGB PNG，逐像素重新打包并与每层张量相等，同时确认 00 精确等于 first_frame.png。数值校验只用于格式和保存一致性，视觉判断以上述实际看图为准。</p>
+<p>可见局限：纸褶是二维近似，01 的折痕细节不能与原始摄影逐处完全一致；纸团外轮廓与灰白材料尺度相近，但相同纸的自然扭动仍较简化。夹爪弧部的重绘与固定中心壳连接处略显程序化。原图透明水位不明显，本例接触平面位置依照碗内可见亮线推定；水波与湿润较轻，玻璃中的精确折射没有重新计算。落水事件在 4fps 下只有少量采样，细微水花不能呈现高帧率形态。最终纸保持漂浮是合理假设，而非对未知纸质与吸水速度的实测预测。</p>
+</article></main></body></html>

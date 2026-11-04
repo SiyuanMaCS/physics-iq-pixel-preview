@@ -1,0 +1,160 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>weight-protects-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0196</span></nav><article><h1>weight-protects-duck · 生成方法</h1><h2>输入与输出</h2>
+<p>唯一视觉来源是本目录 <code>first_frame.png</code>，唯一场景文本是 <code>prompt.txt</code>。已先实际查看首帧及其放大图并写 <code>OBSERVATION.md</code>，然后独立编写 <code>generate.py</code>。未读其他 case、旧结果、参考视频或记忆，未联网、调用 AI API、学习权重、物理引擎或三维渲染。</p>
+<p>输出 20 帧 256×144 RGB，4fps。帧的起始时间为 0.00、0.25、…、4.75 秒，每帧显示 0.25 秒，总播放 5 秒。公共 helper 的 inspection 标注时间是各帧结束时间。00 与首图逐像素相同。</p>
+<h2>逐帧直接生成 RGB</h2>
+<p>固定桌面、黑管、壶铃、鸭子和背景来自固定摄影首帧。首图中被球遮住的约 29×26 像素桌面区域由左右相邻木桌行颜色插值重建，并加入低幅二维木纹；球的原始影像不被复制。</p>
+<p>动态球每帧由当前位置和轻微碰撞压缩状态直接求二维软轮廓。用平面坐标上的柔和色团、低幅灰蓝色毛绒细纹及明暗变化重绘表面，细纹依据累计滚动角变化。球大小为约 17×16 像素，与首图接近；保持首图的软焦灰蓝色材料。接触压缩时半宽减小约 8.5%、半高增加约 5.5%，回弹帧恢复。接触影和偏右软投影逐帧重算，并与球底保持接触。壶铃暗色前景像素在碰撞处保留，正确挡住接触侧极小的轮廓重叠。</p>
+<p>没有裁取原球贴图平移、缩放或镜像；没有三维球体、法线、网格或投影模型。代码中的二维径向软轮廓与色团只直接赋予图像数组颜色。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">起始秒</th>
+  <th style="text-align:right">x 中心</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">119.0</td>
+  <td>输入原图，球已经出管</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">138.0</td>
+  <td>向右快速滚动</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">157.0</td>
+  <td>接近壶铃左下侧</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">173.0</td>
+  <td>左下侧接触，轻微压缩，右上弧与壶铃相接</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">159.5</td>
+  <td>向左回弹、恢复轮廓</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">151.5</td>
+  <td>向左滚动</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">144.4</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">138.2</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">132.9</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">128.5</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">125.0</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">122.4</td>
+  <td>摩擦减速</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">120.6</td>
+  <td>低速滚动</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">119.4</td>
+  <td>低速滚动</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">118.7</td>
+  <td>接近停止</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">118.3</td>
+  <td>接近停止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">118.1</td>
+  <td>停止</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">118.1</td>
+  <td>保持静止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">118.1</td>
+  <td>保持静止</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">118.1</td>
+  <td>保持静止</td>
+</tr>
+</tbody>
+</table>
+<p>物理假设：30lb 壶铃质量远大于灰色网球，受撞后在桌面静止；球向左回弹并被摩擦耗散运动。鸭子不接触球，不移动。首图不提供精确速度、恢复系数或深度，因此采用简明的二维接触路径；y 中心从首图 53.0 随向右行进略降至 51.54，反映木桌平面的轻微退深。</p>
+<h2>实际视觉检查和修正</h2>
+<ol>
+<li>实际打开原图、4 倍整图、球的 16 倍局部图，确认灰蓝色软焦外形、桌面接触和壶铃左下边界。</li>
+<li>实际查看 <code>inspection.png</code> 中 00、02、05、08、11、14、17、19 八个整图时点：只一颗球，无管口新球；原球位置未留下第二颗球；壶铃和鸭子位置一致；静止末段球不再晃动。</li>
+<li>实际查看 <code>early_comparison.png</code> 的 00/01/02 放大图，检查尺度、厚度、外缘、材料明暗和原球位置。续帧保留灰蓝材料及模糊尺度，原位置补为木桌，没有裁块边缘或复制物体。</li>
+<li>实际查看初版 <code>transition_check.png</code> 的 00、01、02、03、04、08、12、16、19 九个局部时点，以及 03 的 16 倍 <code>impact_detail.png</code>。发现初版 x=168.4 的球与壶铃仍有几像素间隙。</li>
+<li>根据本例首帧壶铃左缘在 y=46..49 的 x=178..181 边界，将碰撞中心修正为 x=173.0，保留壶铃前景像素，重存全部输出。</li>
+<li>实际再次查看修正后的 <code>transition_check.png</code> 和 <code>impact_detail.png</code>：03 球右上弧贴合壶铃左下边；04 已向左脱离；球底软影随球移动。没有悬空间隙、明显穿透或另一颗球。</li>
+</ol>
+<h2>实际限制</h2>
+<ul>
+<li>续帧球比首图的非对称模糊形状更规则、更圆，表面细纹偏弱；灰蓝颜色和尺度已保留，但不能完整恢复首图局部随机绒毛。</li>
+<li>原球位置露出的木纹通过二维局部插值近似，放大时比相邻桌面纹理略平滑。</li>
+<li>4fps 对快速接触的采样稀疏，碰撞压缩仅持续一帧；没有从单张图推断不可见的精确接触动力学。</li>
+<li>球的转动主要表现为很弱的毛绒细纹变化，首图未显示明确缝线，未额外虚构清晰白缝。</li>
+</ul>
+<h2>编码验证</h2>
+<p><code>generate.py</code> 已在最终重存后完成：20 个 PNG 均为 uint8 RGB <code>(144,256,3)</code>；逐一打包 <code>R&lt;&lt;16 | G&lt;&lt;8 | B</code> 与 <code>pixels.npz</code> 中 uint32 <code>(144,256,20)</code> 的对应切片完全相等；00 PNG 与首帧完全相等。该数值检查用于确认文件格式，视觉判断来自上述真实查看记录。</p>
+</article></main></body></html>

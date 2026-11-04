@@ -1,0 +1,149 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>roll-behind-box · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0147</span></nav><article><h1>roll-behind-box · 生成方法</h1><h2>输入与像素方法</h2>
+<p>仅使用本目录 <code>first_frame.png</code> 与 <code>prompt.txt</code> 的场景信息。已先实际打开首帧/放大图，写 <code>OBSERVATION.md</code>，再独立写 <code>generate.py</code>。未读取其他 case、其他视角、参考续写、旧生成器、视频、分数、记忆；未联网、调用 AI/训练权重、物理引擎或三维渲染。</p>
+<p>00 保留首图每一像素。之后每帧从静止摄影背景出发，直接求值当前球轮廓、灰色明暗、滚动相位驱动的柔和斜纹/低幅毛毡变化、接触暗部和右上软影。4倍子像素计算后面积采样回 256×144。球轮廓有柔和虚焦边缘，保持约17像素直径，球底和接触影连续贴合桌面。灰度场是经验性的二维函数，没有法线、球面几何、相机投影或物理引擎。</p>
+<p>没有裁取/移动/缩放/镜像原球 RGB。原球及其影所覆盖的静止桌面区域，使用本首帧相邻空木面拟合二维低频延续并补充微弱沿木纹的像素变化。其余摄影背景保留。白灯罩用首帧观察得到的二维外轮廓作为前景遮挡，并把该区域原像素完整放回，顶口厚度、表面纹理和静态灯罩阴影没有重新生成。黑管保持静止。</p>
+<h2>物理假设与20帧事件</h2>
+<p>球从已离开黑管的位置沿桌面匀速向右，中心 y=47.2；每帧中心 x 增加11.3像素，半径近似8.5像素。滚动相位随行程增加。灯罩在球路径前方，球从后面经过，不碰撞或推动灯罩。无弹跳、液体、额外物体或无理由形变。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>中心x</th>
+  <th>最终事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>50.7</td>
+  <td>完全保留首图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>62.0</td>
+  <td>向右滚动，首续写灰球轮廓与灰色材料延续</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>73.3</td>
+  <td>灯罩左边遮住灰球右部</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>84.6</td>
+  <td>进入灯罩后方，球不可见</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>95.9</td>
+  <td>球在灯罩后继续滚动</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>107.2</td>
+  <td>完全遮挡，静态背景不动</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>118.5</td>
+  <td>完全遮挡</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>129.8</td>
+  <td>仍被灯罩遮挡；随球的软影可出现在右侧桌面</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>141.1</td>
+  <td>从灯罩右侧部分露出</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>152.4</td>
+  <td>基本完整出现，底部接触与软影相接</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>163.7</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>175.0</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>186.3</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>197.6</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>208.9</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>220.2</td>
+  <td>继续滚动</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>231.5</td>
+  <td>接近画面右侧</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>242.8</td>
+  <td>仍完整可见</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>254.1</td>
+  <td>被右画面边界裁切</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>265.4</td>
+  <td>球离开画面，只余极弱边界软影/轮廓尾部</td>
+</tr>
+</tbody>
+</table>
+<p>20张图以4fps播放，总时长5秒；帧中心采样为0至4.75秒。</p>
+<h2>实际查看、发现与修正</h2>
+<ol>
+<li>实际查看 <code>first_frame.png</code>、<code>first_frame_zoom.png</code> 与 <code>ball_detail.png</code>；确认球直径、灰色色调、柔和亮斜纹、灯罩轮廓/厚度、桌面接触点和软影方向。</li>
+<li>第一次生成后实际打开 <code>inspection.png</code>，检查00/02/05/08/11/14/17/19八时点，并打开 <code>transition_check.png</code> 检查00/01/02四倍对比和03/07/08/09/17/18关键时点。发现原球清除区的不自然暗块以及新球表面较均匀。</li>
+<li>清除区改用邻近空桌面的二维拟合，去掉导致暗块的扩散修补。补充随滚动相位变化的柔和斜纹，重新生成和保存全部输出。</li>
+<li>又一次实际打开 <code>transition_check.png</code> 与 <code>inspection.png</code>，确认暗块已消除、没有原球重复残影、球和灯罩尺度不跳变、管口/灯罩静止。</li>
+<li>最终再次实际打开两张检查表及 <code>contact_detail.png</code>。后者放大01/02/08/09，确认左边进入遮挡、右边重新出现的前后关系，以及球底和软影相接。17/18验证正常画面裁切；05/19验证没有在旧位置残留重复球。</li>
+</ol>
+<h2>仍可见的不足</h2>
+<ul>
+<li>清除原球处的木纹是二维推断，比周围原摄影木纹平滑；4倍放大可察觉局部纹理差别，未声称恢复真实遮挡背景。</li>
+<li>首帧原球柔和斜纹细节无法由单帧确认滚动后的真实形态。新灰球保持灰色、厚度、轮廓尺度和低对比毛毡感，但纹理较原拍摄简化，00→01的细纹并非摄影级完全连续。</li>
+<li>灯罩遮挡边缘为256像素图中的离散轮廓，放大可见约1像素的阶梯；未生成不可见内部场景。</li>
+<li>匀速与路径为文本及首帧约束下的假设；长遮挡期间看不到球旋转，4fps下滚动纹理变化也很细微。</li>
+<li>光照按原图的大方向以二维经验亮度/软影延续，没有计算真实空间的灯罩光遮挡。</li>
+</ul>
+<h2>保存与校验</h2>
+<p><code>artifact_io.save</code> 保存 <code>pixels.npz</code>、<code>frames/00.png</code>–<code>19.png</code>、<code>inspection.png</code>、独立播放页 <code>index.html</code>。另外保存 <code>transition_check.png</code> 与 <code>contact_detail.png</code>。</p>
+<p>运行 <code>python generate.py</code> 后逐一验证：20帧均为256×144 RGB；00与原图逐像素相等；每张PNG的RGB均与打包张量逐像素相等；<code>pixels.npz</code> 中 <code>pixels</code> 为 uint32 <code>(144,256,20)</code>、值为 <code>0xRRGGBB</code>。这些校验用于格式一致性；视觉质量判断来自上述实际图像查看。</p>
+<h2>材质复审修订（generated）</h2>
+<p>根审指出01后的灰球过于光滑。本次保留所有轨迹、半径、接触点、接触/投影阴影与灯罩遮挡，仅修改 <code>new_ball</code> 的二维RGB求值。</p>
+<ul>
+<li>增加连续滚动相位驱动、幅度约数个灰度级的低频非均匀毛毡色区与细微毛毡扰动，没有新增彩色/装饰图案。</li>
+<li>重绘一条连续的轻微弯曲斜缝：亮的绒面边和邻近暗槽共同形成可辨明暗纹。倾角、位置和曲率都是同一个累积滚动相位的连续函数。缝线使用独立像素公式，未搬移源球裁片。</li>
+<li>轮廓添加不足约0.2像素的绒边扰动；轮廓保持原有柔和摄影虚焦。把表面纹理模糊和轮廓模糊分开，避免原先0.85像素模糊把表面缝纹抹去。</li>
+<li>第一次修订后实际打开 <code>transition_check.png</code>、<code>inspection.png</code>、<code>contact_detail.png</code>、新增 <code>material_detail.png</code>。发现缝线偏规整，进一步加轻微连续弯曲并减弱亮暗振幅，全量重存。</li>
+<li>最终实际再次打开四张图：首三帧放大对比；00/02/05/08/11/14/17/19八时点；01/02进入、08/09重新出现的遮挡/接触近景；00/01/02/08/09/11/14/17的原尺度及6倍近景毛毡/缝线。确认原尺度可见斜纹和淡灰非均匀材料变化，缝线随滚动改变朝向而没有额外花纹；灯罩边缘与桌面接触沿用原结果。</li>
+</ul>
+<p>修订后的真实局限：新缝线仍比原图细纹更规则且略易辨认，毛毡只表达低频色差与软绒边，没有恢复真实微观纤维；00→01不能保证原拍摄每个细纹完全对应。修补木面的平滑程度、约1像素遮挡阶梯、单帧无法确认真实速度的局限继续存在。修订没有借助其他case/视角/参考、模型/API或三维方法。</p>
+<p>全量保存后再次逐像素通过20张PNG与uint32 <code>(144,256,20)</code> <code>0xRRGGBB</code> 张量一致，以及00与首图完全一致的校验。</p>
+</article></main></body></html>

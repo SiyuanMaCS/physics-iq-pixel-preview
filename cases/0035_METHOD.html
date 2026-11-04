@@ -1,0 +1,131 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block-domino · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0035</span></nav><article><h1>block-domino · 生成方法</h1><h2>方法</h2>
+<p>输入仅为本例 first_frame.png 与 prompt.txt。先实际打开首帧和 4 倍放大图，再写 OBSERVATION.md，随后独立编写 generate.py。未读取其他例、其他视角、参考视频、旧生成器、记忆；未联网、调用模型、学习权重、物理引擎或三维渲染器。</p>
+<p>00 帧直接使用输入 RGB，逐像素不变。灰墙、桌面、黑台是固定摄影背景；未受撞击的木块保持原处的首帧像素。各木块开始倾倒后，按首帧测得的正面、顶面、窄侧面边界，在二维屏幕坐标中围绕底端接触支点改变轮廓，并逐帧计算新的 RGB。每个面的颜色使用从本例首帧测得的漆色；细纵纹、多频微小纹理、面内渐变与随倾角连续变化的亮度由公式重新求值，未裁取或搬运任何木块贴图。采用 4 倍二维抗锯齿，再下采样到 256×144。</p>
+<p>杆以固定点(202,52)为中心，在屏幕中顺时针旋转。杆的细长轮廓、黑根部、木质亮边和纵纹每帧重新生成，旧位置从静态背景修补层清除。木块依紫→蓝→绿→粉→橙红→黄的顺序开始倒下；二维凸轮廓的分离轴接触检验限制后块角度，使其接触并叠压在前块上，避免可见穿透。这是确定的二维事件安排和接触约束，并非物理引擎。</p>
+<p>旧轮廓以非学习图像修补恢复；黑台附近的桌面区用本例可见静态桌面的颜色趋势和新算的斜木纹恢复，并按固定黑台二维边界限制修补，减少黑色涂抹越过台缘。重新计算落块的软接触阴影。落桌后黄块有约 1.8 度回弹，随后衰减，其他块的接触角随之微调。刚性木块没有无理由形变。</p>
+<h2>逐帧事件</h2>
+<p>以下时间为 t=帧号/4。20 帧以 4 fps 播放共 5 秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时间</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00s</td>
+  <td>原图；六块直立，杆向左下。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25s</td>
+  <td>杆轻转至144°；六块保持原图几何与漆色。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50s</td>
+  <td>杆转至153°接触紫块右侧；木块尚未发生明显倾斜。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75s</td>
+  <td>紫块倾约4.6°；其余直立。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00s</td>
+  <td>紫约10.3°，蓝约3.3°；杆继续转离。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25s</td>
+  <td>绿开始倾；紫、蓝分别约19.8°、13.8°。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50s</td>
+  <td>粉开始受力；绿约13°；前三块逐级下降。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75s</td>
+  <td>橙红开始倾；粉约14.7°，绿约25.5°。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00s</td>
+  <td>黄开始微倾；全链依次接触，右侧约42°。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25s</td>
+  <td>黄约13.4°；链持续倾倒。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50s</td>
+  <td>黄约45°；橙红48°，粉50.4°，绿53.2°，蓝55.3°，紫46.4°。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75s</td>
+  <td>黄落桌90°；其他块接触并叠压，未整排扁平穿透。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00s</td>
+  <td>黄回弹至88.2°；相邻接触角小幅调整。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25s</td>
+  <td>黄89.2°，回弹衰减；杆继续减速。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50s</td>
+  <td>黄89.8°；叠压链趋稳。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75s</td>
+  <td>黄回到90°；杆到335°停止。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00s</td>
+  <td>保持稳定桌面接触与叠压。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25s</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50s</td>
+  <td>稳定。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75s</td>
+  <td>稳定最终状态。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录</h2>
+<ul>
+<li>首先实际打开 first_frame.png 和 first_frame_zoom.png，核对物体尺度、面色、厚度、底端接触和原杆位置。</li>
+<li>实际打开 contact_check.png，查看 00、01、02、03、04、06、08、10、11、12、15、19，共 12 时点；查看 inspection.png 的 00、02、05、08、11、14、17、19。</li>
+<li>实际打开 transition_check.png，检查 00/01/02 的 2 倍放大对照，并检查 03、04、06、08、11、12 的接触区域放大。</li>
+<li>初次检查发现旧杆细斜残影与少量蓝、紫块顶边色点；扩大旧杆清理带与各块原轮廓修补范围后重存。随后发现黑台附近修补把黑色扩散到桌面；利用首帧平台边界限制、恢复边界外木纹后重存。还去掉过硬的人工黑台条带，保留静态台面的柔和摄影明暗。</li>
+<li>最终检查确认：00/01/02 木块尺寸与材质保持；旧杆位置没有独立杆影；原直立顶边没有可辨的蓝/紫色残点；木块由右向左逐块倒伏，底端接触桌面；最终黄色平放，后块形成接触链；墙与未遮挡桌面保持固定。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>新画的漆面纹理比首帧摄影纹理均匀，倾倒中轮廓也较规整；局部背景修补，特别黑台左侧原本被紫块遮住的位置，仍比原照片柔和。二维接触轮廓和屏幕内杆旋转只能给出单视角的合理续写，杆真实运动平面、转轴和摩擦参数无法从首帧确认。最后黄色木块的左端部分超出左侧画框，符合其高度和底端位置所给的倒伏范围。4 fps 下最后黄块从半倒到落桌发生在相邻两帧，快速落体过程不具备更高帧率的细节。</p>
+<h2>保存与格式</h2>
+<p>通过 shared/artifact_io.py 的 save 保存 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html。另存 contact_check.png、transition_check.png、OBSERVATION.md 与 validation.json。validation.json 记录 20 张 RGB PNG 与 uint32 <code>(144,256,20)</code> 的 <code>0xRRGGBB</code> 张量逐像素一致，以及 00 和首帧逐像素一致。</p>
+</article></main></body></html>

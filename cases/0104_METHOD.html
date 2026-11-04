@@ -1,0 +1,155 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>marble-run-x · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0104</span></nav><article><h1>marble-run-x · 生成方法</h1><h2>逐帧生成</h2>
+<p>已先实际打开 first_frame.png 及放大图、写 OBSERVATION.md，再独立编写 generate.py。仅用本 case 首帧和 prompt，未读取其他 case、参考视频、掩码、旧结果或记忆，未联网、调用 AI、学习权重、物理引擎或三维渲染。</p>
+<p>静态白板、反光、黑色支架和所有磁性轨道沿用摄影背景。初始弹珠只占约 5 像素；仅修补它原位置 110–122/10–15 的微小区域，使用同一行的白板/绿色槽缘邻像素插值。动态弹珠没有裁块、平移、缩放或镜像首帧贴图：每帧在 RGB 数组直接求二维圆形覆盖，计算亚像素软边、黄色玻璃吸收色、左上高光、随滚动角度变化的内部条纹，再计算小而柔和的阴影。玻璃刚体保留固定约 4.9 像素直径，边缘大小变化仅来自覆盖和遮挡。轨道二维前沿遮挡其下缘。00 保留输入全部像素。</p>
+<p>动作采用 4 fps 采样的显式二维中心序列；采用下坡方向、分段滚动、离轨下落与再次接触的事件安排。没有估计实际重力或完整机械轨道动力学。上方绿色槽、U 槽看不到的内部导向是明确假设。长紫和蓝轨道只经过左端附近，避免弹珠逆可见斜坡爬高。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">秒</th>
+  <th>中心 x,y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>115.3,13.2</td>
+  <td>首图原样，位于顶槽</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>118.0,13.3</td>
+  <td>开始向右滚</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>123.8,13.4</td>
+  <td>顶槽右部，前沿遮挡下缘</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>134.0,17.3</td>
+  <td>脱离绿色右端</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>135.0,25.6</td>
+  <td>下落至长紫左段上方</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>131.5,33.7</td>
+  <td>接触长紫左段，向左</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>124.2,36.4</td>
+  <td>离开长紫左端</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>119.3,47.0</td>
+  <td>进入 U 槽上方</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>116.4,55.2</td>
+  <td>接触 U 槽底边</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>125.7,58.8</td>
+  <td>右行，球大部分在右侧挡边后</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>134.6,63.1</td>
+  <td>从假设的隐蔽出口落下</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>135.9,70.1</td>
+  <td>接触蓝色轨道左部</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>127.4,76.0</td>
+  <td>向左离开蓝轨</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>127.8,87.9</td>
+  <td>接触下层绿色轨道</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>137.5,89.0</td>
+  <td>沿下层绿色轨道向右</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>144.2,93.5</td>
+  <td>离开绿色右端</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>149.2,106.3</td>
+  <td>下落至黄色轨道</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>151.0,120.2</td>
+  <td>接触黄色右部</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>136.5,120.5</td>
+  <td>沿黄色轨道向左滚</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>116.5,121.0</td>
+  <td>继续左滚；本片尚未离开底轨</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查记录</h2>
+<ul>
+<li>打开原图 256×144、first_frame_zoom.png 4 倍图、top_detail.png，判断弹珠尺寸、颜色、前缘与轨道斜向。</li>
+<li>第一轮实际查看 inspection.png 的 00/02/05/08/11/14/17/19 八时点；查看 detailed_inspection.png 的 00–15，检查沿轨方向和跨层下落。</li>
+<li>实际打开 transition_check.png，逐项比较 00/01/02 的放大顶槽；额外查看 03 绿色出口、05 长紫接触、08 U 槽底部、09 U 槽挡边遮挡、11 蓝轨、13 绿轨、17/19 底黄轨的放大图。</li>
+<li>第一轮发现重绘球的软边比原球稍窄，以及遮挡边界允许微量黄色透到不透明挡边上。修改半径 2.23→2.43 像素、模糊宽度 0.63→0.73，并将前沿改为完全不透明遮挡；改宽 00/01/02 比较窗以免裁掉右行球体。</li>
+<li>重存后再次实际打开 transition_check.png 和 inspection.png 八时点。球保持小黄色软焦玻璃外观，轨道纹理没有漂移；顶槽原球位置未见独立残留球，出入口没有复制物体。接触帧下缘落在相应前沿，U 槽一帧大部分隐藏，随后在出口外出现。下层绿和黄色底轨接触没有明显悬空。静态反光没有移动。</li>
+</ul>
+<h2>仍可见局限</h2>
+<ul>
+<li>原图低清且弹珠只占数个像素，重绘黄斑比原图玻璃内部光学结构简化；00→01 的细微轮廓/软焦变化在放大比较中仍可辨认。</li>
+<li>旧球区域修补是小范围插值，顶槽背面的摄影颗粒无法真实恢复；放大可辨局部更平滑。</li>
+<li>顶槽后部向右出轨以及 U 槽内部出口无法由首图确认，采用了最小通路假设。U 槽 09 的大部分遮挡导致一个采样时点球不明显。</li>
+<li>这是二维事件序列，不是经过机械参数校准的轨道求解；跨层接触在 4 fps 下较离散。结尾弹珠仍在黄色底轨向左移动，没有伪造已完成离场。</li>
+</ul>
+<h2>文件与校验</h2>
+<p>artifact_io.save 保存 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html。另保存 transition_check.png、detailed_inspection.png、OBSERVATION.md、METHOD.md、VALIDATION.txt 及观察用两张放大图。校验 20 张 PNG 全部为 256×144 RGB uint8，逐像素等于 pixels.npz 中 uint32 (144,256,20) 0xRRGGBB 张量；00 等于输入，输入文件 SHA256 未变。</p>
+</article></main></body></html>

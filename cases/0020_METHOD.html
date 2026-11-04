@@ -1,0 +1,153 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-ramp · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0020</span></nav><article><h1>ball-ramp · 生成方法</h1><p>输入仅为本例 first_frame.png、prompt.txt；读取了本例 case_config.json 与 shared 输出辅助文件。没有读取其他 case、参考续写、参考视频、评分、掩码、旧脚本或记忆；没有联网、AI API、训练权重、物理引擎或三维渲染。所有改动均在本例目录。</p>
+<p>00 帧完全保留输入 RGB。01–19 帧在新的数组里逐帧求值：静态桌面、黑管、纸板和蓝支撑块来自静态摄影背景；首帧球和阴影区域用本图相邻木桌行颜色插值修补。球的轮廓使用当帧二维圆形软掩码重新构造，颜色由二维径向明暗、细小 felt 纹理和随滚动位移变化的微弱曲线缝线计算，最后经过图像空间柔焦。没有裁取、移动、缩放或镜像首图的球贴图。阴影由当帧接触位置重新计算，在坡上以纸板二维轮廓限制，接触处有额外小范围暗化。4 倍子像素求值后面积采样到 256×144。</p>
+<p>物理假设：已有一个从黑管释放的球向右滚动；斜面低端是约 (149,56) 的中部接触位置；球上坡速度降低，在坡中段反向，沿坡回落再进入桌面。圆球不需要明显碰撞形变，纸板有支撑且刚性不明显弯曲，蓝块一直与桌面接触。下述 x/y 是球中心图像坐标，构成手写的二维运动安排，不是物理引擎结果。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻 s</th>
+  <th>球中心 x,y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>86.4,51.8</td>
+  <td>输入，球已出管</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>98.4,51.8</td>
+  <td>桌上向右滚</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>110.4,51.8</td>
+  <td>桌上向右滚</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>122.4,51.8</td>
+  <td>桌上向右滚</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>134.4,51.8</td>
+  <td>接近低坡</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>146.0,49.3</td>
+  <td>进入薄纸板低端</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>157.5,45.1</td>
+  <td>上坡减速</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>167.0,41.8</td>
+  <td>上坡减速</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>175.0,39.0</td>
+  <td>上坡减速</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>180.0,37.3</td>
+  <td>接近最高位置</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>182.0,36.6</td>
+  <td>近乎停顿</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>182.5,36.4</td>
+  <td>反向前极小位移</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>180.0,37.3</td>
+  <td>开始向左下滚</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>174.0,39.4</td>
+  <td>下坡加速</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>164.0,42.8</td>
+  <td>下坡加速</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>151.0,47.3</td>
+  <td>到达低端</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>137.0,51.8</td>
+  <td>回到桌面</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>123.0,51.8</td>
+  <td>桌上向左滚</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>110.0,51.8</td>
+  <td>桌上略减速</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>97.0,51.8</td>
+  <td>继续向左，仍在画面</td>
+</tr>
+</tbody>
+</table>
+<p>20 个采样帧各播放 0.25 秒，共 5 秒。</p>
+<h2>实际查看记录</h2>
+<ul>
+<li>实际打开 first_frame.png 与 first_frame_zoom.png，记录球的边界、黄绿色调、柔焦、纸板厚度与块的支撑接触。</li>
+<li>生成后实际打开 inspection.png，查看 00、02、05、08、11、14、17、19 共 8 时点的全图；球始终只有一个，沿同一坡线进出，纸板、蓝块、黑管保持原位。</li>
+<li>实际打开 transition_check.png 查看 00/01/02 的相同区域 4 倍像素放大，检查尺寸、颜色、轮廓和旧位置；原球没有留下重复对象。初版新阴影较窄，已增加桌面柔阴影的宽度与浓度并重存。</li>
+<li>transition_check.png 下行实际查看了 05 入坡、10 停顿和 16 回桌的近景。检查球与斜面入口边的重叠、坡面阴影，以及回桌后接触位置。</li>
+<li>实际打开 contact_check.png 查看 00、02、04、05、07、10、15、19。修正了这张检查图初版非等比缩放导致的椭圆视觉假象，最终检查图保持原图宽高比例。最终所有帧和检查图已重存。</li>
+<li>最后对重存后的检查图再次实际查看，并以 PNG 解包逐像素比较 uint32 张量。数值校验只用于保存一致性，不替代上述视觉检查。</li>
+</ul>
+<h2>仍可见局限</h2>
+<ul>
+<li>首图球面无清晰缝线，续写用很弱的程序纹理；放大后球轮廓和色层比首图更规则，随机 felt 细节不足。</li>
+<li>首图球两侧阴影较复杂，续写阴影更对称、柔滑；修补后的原球区域木纹细节略弱，但没有球形残影。</li>
+<li>单幅图不能确定坡度、起始速度和滚动阻力。反向时机是合理的二维假设；只有 4 fps，坡端过渡缺少更细的时间采样。</li>
+<li>坡面接触依据图像平面中线推断，未恢复真实三维相机和坡面深度，接触阴影是近似二维形状。</li>
+</ul>
+</article></main></body></html>

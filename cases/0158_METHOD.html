@@ -1,0 +1,129 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>silk-cover · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0158</span></nav><article><h1>silk-cover · 生成方法</h1><p>仅使用本例 first_frame.png、prompt.txt、case_config.json 与共享输出 helper。未读取他例、参考续写、参考掩码/分数、记忆；未联网、调用模型、权重、物理引擎或三维渲染。所有动态布像素按当前时刻二维轮廓和颜色场重新求值。20帧256×144 RGB，4fps、5秒；采样时刻0.00–4.75秒，最后一帧显示至5秒。</p>
+<h2>最终方法</h2>
+<p>茶壶和桌面使用原图的固定位置摄影像素，只有布前缘经过时才遮挡。00逐像素保留。下降布片不再跨满画面：中央盖顶(x139,y35)、左把手拱(x91,y47)、右壶嘴端(x207,y51)确定三个不等高支撑突出点；顶边在它们之间形成浅的鞍形下垂，左右外边及尾片长度不同。中央前片先下垂，把手侧有较小迟滞，嘴侧有更大迟滞；最后中央前边贴桌，两侧布尾依次落稳。</p>
+<p>颜色全部是二维直接计算：中央圆鼓壶腹的宽亮暗区、盖顶窄亮沿与沿下阴影、左把手上拱与洞口处张力暗区、沿右壶嘴的斜向细亮沿，分别保留三个局部体积。盖至柄、盖至嘴之间有不同斜率和深浅的短张力褶；从各支撑/凹处向下的长褶采用独立弯曲路径和局部包络，取消周期性波带。壶腹底部的浅弧及窄底座处收束显示下面器皿体积。桌面前片最后出现三条短小非周期软褶、下缘亮沿与接触暗影。稳定的摄影后布和木纹保留，前布不能用原纹理搬运。没有生成三维表面、法线、相机或几何投影。</p>
+<h2>20帧安排（最终可见事件）</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">秒</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>原首帧</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>前缘极少下降，壶轮廓和彩绘连续</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>中央布边轻触盖顶</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>盖上半覆住，侧支撑尚未大面积接触</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>盖肩遮挡，中央小片比两侧先垂下</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>盖完全遮住，中央到上腹，把手/嘴仍大部分可见</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>中央前片到上腹；左柄顶开始接触，右嘴端较晚接触</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>中央继续下落，三个支撑的布褶开始连接</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>前片弯曲边缘到腹中部，左右支撑凸起明显</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>中央遮腹偏下，右嘴侧的布尾仍略高</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>中央下缘接近腹底，两侧边缘比中央高</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>中央蓝腹几乎覆住，左右下端仍可见</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>壶腹完全覆盖，底座尚露</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>中央布片包到底座上半，侧尾继续垂下</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>底座几乎覆住，前片接近桌面</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>接触布褶出现，底座下沿还有极少暗色可见</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>完全盖住茶壶，中央前缘与桌面接触</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>布尾落稳，浅短褶收敛</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>支撑与接触保持，变化很小</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>完全覆盖的稳定状态</td>
+</tr>
+</tbody>
+</table>
+<h2>本轮实际自审记录</h2>
+<ul>
+<li>重新打开 first_frame.png 及旧15帧；确认旧结果是宽平帘布，缺少侧支撑。仅用本例信息重做局部布轮廓和像素颜色。</li>
+<li>重生成后实际打开 inspection.png，逐格查看00、02、05、08、11、14、17、19八个时点，检查：盖首先覆盖；中央下降比两侧快；柄/嘴支撑形成不同凸起；覆盖后蓝腹/红柄嘴不残留；两边摄影布和木桌不位移。</li>
+<li>实际打开 transition_check.png：00/01/02原尺寸及2倍最近邻局部对比。01陶瓷轮廓/花纹不突变，02只有中央盖顶部微接触；布材质没有首续帧突然整片更换。</li>
+<li>在同图查看06/10/15遮挡局部；发现中段前缘偏直后，已改为中央领先、左柄较小迟滞、右嘴较大迟滞的弯曲前缘。修改后再次打开00/01/02、八时点表和关键局部。</li>
+<li>最后实际打开 contact_check.png（04/06/10/15/16/19六时点）及frames/19.png。确认三支撑不是等高重复凸起；中段布边中央低、侧边高；16/19完全盖壶，前缘在桌上，末段短褶没有原彩绘残影。</li>
+<li>生成器保存全部输出后，逐帧读取20张PNG并与pixels.npz比较：PNG为256×144 RGB，张量uint32形状(144,256,20)，每个元素等于0xRRGGBB。00与输入逐像素相同。</li>
+</ul>
+<h2>真实可见局限</h2>
+<p>新布是二维解析布面，细纹和小尺度丝绸反射仍比原摄影布更平滑；局部轮廓和张力褶是依据单帧的手工近似。盖/柄/嘴的凸起及壶腹体积比旧宽平布明确，但贴合程度仍偏规整，中央前片的下落缺少真实布的复杂翻折。背景原布与局部前片的连接靠颜色渐变解释，不能由单帧完全确定实际布宽和画外悬挂方式。15帧底座暗边仍露极少像素，16帧后完全遮挡；这属于顺序覆盖，最终没有外露重复陶瓷。</p>
+<p>输出：generate.py、OBSERVATION.md、METHOD.md、pixels.npz、frames/00.png–19.png、inspection.png、transition_check.png、contact_check.png、index.html。</p>
+</article></main></body></html>

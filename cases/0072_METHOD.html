@@ -1,0 +1,170 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>juice-in-water · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0072</span></nav><article><h1>juice-in-water · 生成方法</h1><p>生成仅使用本例 <code>first_frame.png</code> 和 <code>prompt.txt</code>；读取了本例配置及公共输出 helper。先实际打开首帧及4倍放大图并写 <code>OBSERVATION.md</code>，再独立编写 <code>generate.py</code>。没有读取其他场景、旧生成器、视频、掩码或分数；未联网、调用模型、学习权重、物理引擎或三维渲染。</p>
+<p>每帧在二维坐标数组上重新计算液体主体、自由液面、窄液流的中心线/宽度、微气泡、低幅波纹和混合纹理。4倍二维采样后平均到256×144像素。杯、喷嘴、编织支撑、摄影背景及玻璃固定高光保留在原像素位置。新液带按与原图相符的粉橙色、横向柔和明暗和细微纹理写入，原液面的浅线随着液位上升被覆盖。主体已有区域逐渐增加程序纹理，避免首续帧整体材质切换。喷嘴流线从固定末端延伸到每帧液面，在杯前唇处被原有静态玻璃高光遮挡。罐中只重绘缓慢降低液面释放出的窄条，保留固定竖肋。</p>
+<p>旧液流仅在原位用其左右固定背景邻点做约3像素宽的非学习修补，再逐帧画新的液流；没有裁取/移动/缩放/镜像任何物体贴图，也没有移动背景。液体新区域由颜色和二维函数直接求值，不是将原液体上移。</p>
+<p>物理假设：首帧已经处于流入阶段，杯中的水已被先流入的果汁染成粉橙色。之后维持温和连续流量，杯中液面中心由y=97.5升至y=80.0；罐内下降约2.1像素。流动仅造成小幅表面扰动，没有人为抬杯、手部操作、溢出或无缘由运动。精确容积、折射和水/果汁浓度单凭首帧无法恢复。20帧以4fps播放共5秒，采样时刻0.00至4.75秒。</p>
+<h2>20帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">秒</th>
+  <th style="text-align:right">杯液面中心y</th>
+  <th style="text-align:right">罐液面下降像素</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">97.50</td>
+  <td style="text-align:right">0.00</td>
+  <td>首帧原样，已有流入</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">96.58</td>
+  <td style="text-align:right">0.11</td>
+  <td>窄流连续，轻微混合</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">95.66</td>
+  <td style="text-align:right">0.22</td>
+  <td>撞击点细波环</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">94.74</td>
+  <td style="text-align:right">0.33</td>
+  <td>温和下层混合</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">93.82</td>
+  <td style="text-align:right">0.44</td>
+  <td>杯口反光静止</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">92.89</td>
+  <td style="text-align:right">0.55</td>
+  <td>低幅表面扰动</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">91.97</td>
+  <td style="text-align:right">0.66</td>
+  <td>新增粉橙液带</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">91.05</td>
+  <td style="text-align:right">0.77</td>
+  <td>撞击附近微气泡</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">90.13</td>
+  <td style="text-align:right">0.88</td>
+  <td>罐液面缓慢下降</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">89.21</td>
+  <td style="text-align:right">0.99</td>
+  <td>液流可见长度缩短</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">88.29</td>
+  <td style="text-align:right">1.11</td>
+  <td>旧液面已被覆盖</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">87.37</td>
+  <td style="text-align:right">1.22</td>
+  <td>混合颜色微加深</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">86.45</td>
+  <td style="text-align:right">1.33</td>
+  <td>喷嘴端点固定</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">85.53</td>
+  <td style="text-align:right">1.44</td>
+  <td>流内亮线更新</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">84.61</td>
+  <td style="text-align:right">1.55</td>
+  <td>微气泡短暂消退</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">83.68</td>
+  <td style="text-align:right">1.66</td>
+  <td>杯体和支撑静止</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">82.76</td>
+  <td style="text-align:right">1.77</td>
+  <td>前缘弧形连续</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">81.84</td>
+  <td style="text-align:right">1.88</td>
+  <td>新增液体保持杯内</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">80.92</td>
+  <td style="text-align:right">1.99</td>
+  <td>桌面干燥，无溢出</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">80.00</td>
+  <td style="text-align:right">2.10</td>
+  <td>仍持续流入，保留杯口余量</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<ol>
+<li>实际打开 <code>first_frame.png</code> 与 <code>initial_detail.png</code>，确认喷嘴位于杯口上方、首图已有细液流和橙色内容物、杯底接触桌面。</li>
+<li>初次生成后实际打开 <code>inspection.png</code>，检查00、02、05、08、11、14、17、19，共8时点。观察到液位持续升高，喷嘴/杯轮廓/支撑均未漂移，桌面保持干燥。</li>
+<li>实际打开 <code>transition_check.png</code>，逐项比较00/01/02全图和5倍液流/杯区域。原图00完全保留；01/02没有整体换杯体、换颜色或移位，旧液面逐步被新液带覆盖。</li>
+<li>实际打开 <code>contact_check.png</code> 的00、02、05、08、14、19放大区，核对流线起于喷嘴并终止在当前自由液面、杯唇在流线前方、底部和左右玻璃边缘静止。</li>
+<li>初次后段自由液面边界略深硬；增大液体主体和椭圆表面的微小覆盖重叠，强化薄而断续的前缘反光，加入低幅不规则表面色纹。修正后重新生成并保存全部产物，再实际打开上述3张检查图。前缘深暗接缝减弱，没有出现双液面、重复喷嘴、流线残影或杯底浮空。</li>
+</ol>
+<h2>验证与可见局限</h2>
+<p><code>artifact_io.save</code> 保存 <code>pixels.npz</code>、<code>frames/00.png</code>至<code>19.png</code>、<code>inspection.png</code>及独立播放页 <code>index.html</code>。代码逐帧读回所有20张RGB PNG，验证其0xRRGGBB打包值与uint32 <code>(144,256,20)</code> 张量完全一致，并验证00与输入逐像素一致。检查图另外包含 <code>transition_check.png</code> 和 <code>contact_check.png</code>。</p>
+<p>仍可见的不足：新液面与新增液带比首图的摄影纹理平滑，放大后程序椭圆边缘和细流亮线可辨；杯的复杂折射及焦散沿用了静态摄影信息，没有随水位完整变化；罐液面下降是二维小条带近似，不能精确验证体积守恒；气泡和扰动在256×144、4fps下较细小。首图已橙色的内容物使清水到果汁的明确颜色过渡无法从00开始呈现，因此遵循首帧持续混合状态。</p>
+</article></main></body></html>

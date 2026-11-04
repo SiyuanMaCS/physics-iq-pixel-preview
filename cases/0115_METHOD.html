@@ -1,0 +1,177 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mirror-ball-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0115</span></nav><article><h1>mirror-ball-fall · 生成方法</h1><h2>方法</h2>
+<p>先打开原始首图与 4 倍放大图并写 OBSERVATION.md，再写独立 generate.py。球、绳、挂扣、短链和磁体使用二维距离掩码、线段、颜色场、局部坐标周期细纹和弯曲接缝重绘；每帧直接求值新的 RGB，未裁切、平移、缩放或镜像任何原球贴图。球主体为连续橙色二维明暗场，右上亮、左下暗。金属条绘制银亮边缘和黑色面，挂扣绘制窄亮边和黑色轮廓。</p>
+<p>固定背景从首图保留，原有悬挂物区域用局部非学习 inpaint、横向插值与镜面边缘修复清理。镜面几何、桌纹、墙及暗门保持静止；变化局限于原动态轮廓、新轮廓及球下方极弱软影。00 独立保留原始图像，逐像素一致。其余帧由直接绘制得到，不使用参考续写、其他案例、学习权重、AI API、物理引擎或三维场景。</p>
+<h2>运动与物理假设</h2>
+<p>画外匀缓放绳；绳上端固定，黑扣和短链长度固定，磁体与球顶持续接触。球总下降 9 像素，镜中球总下降 6.21 像素，采用首图尺度比 0.69。球不滚动、不弹跳、不凭空改变尺度。桌面接触高度无法仅凭首帧唯一确定，5 秒内保持磁体悬挂，未增加落桌动作。固定接缝体现没有可见转动。下降使用单调平滑时间函数。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">时刻 s</th>
+  <th style="text-align:right">真实下降 px</th>
+  <th style="text-align:right">镜中下降 px</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">0.000</td>
+  <td style="text-align:right">0.000</td>
+  <td>原始首图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">0.161</td>
+  <td style="text-align:right">0.111</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">0.425</td>
+  <td style="text-align:right">0.294</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">0.782</td>
+  <td style="text-align:right">0.540</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">1.219</td>
+  <td style="text-align:right">0.841</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">1.724</td>
+  <td style="text-align:right">1.189</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">2.283</td>
+  <td style="text-align:right">1.575</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">2.886</td>
+  <td style="text-align:right">1.991</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">3.519</td>
+  <td style="text-align:right">2.428</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">4.171</td>
+  <td style="text-align:right">2.878</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">4.829</td>
+  <td style="text-align:right">3.332</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">5.481</td>
+  <td style="text-align:right">3.782</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">6.114</td>
+  <td style="text-align:right">4.219</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">6.717</td>
+  <td style="text-align:right">4.635</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">7.276</td>
+  <td style="text-align:right">5.021</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">7.781</td>
+  <td style="text-align:right">5.369</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">8.218</td>
+  <td style="text-align:right">5.670</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">8.575</td>
+  <td style="text-align:right">5.916</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">8.839</td>
+  <td style="text-align:right">6.099</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">9.000</td>
+  <td style="text-align:right">6.210</td>
+  <td>绳增长；扣、链、磁体、球共同慢降；反射同步</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查</h2>
+<ul>
+<li>实际打开 first_frame.png 和 input_enlarged.png，逐项观察球边缘、橙绳、黑扣、短链、金属磁体与镜面边界。</li>
+<li>第一版实际打开 inspection.png（00、02、05、08、11、14、17、19 共八时点）及 transition_check.png（00/01/02 的三倍放大，以及八时点连接/镜像视图）。发现接缝向下斜弯过大、球面略光滑。修正接缝为较窄且近竖直的弧线，减小球宽约半像素，加入较细颗粒并加强底缘暗部。</li>
+<li>修正后再次实际打开上述两张检查图和 frames/19.png。00/01/02 对比：橙绳连续；球轮廓和尺度接近源图；磁体始终覆盖球顶；接缝保留近竖直浅黄色。摄影原图到程序重绘仍有小纹理与挂扣细节差别，未声称像素级连续重建。</li>
+<li>逐一检查 00、02、05、08、11、14、17、19：真实和反射球随绳缓慢下降；没有原位置第二球、拉长球影、重复磁体或残留橙色裁块。挂扣和磁体间连接一直存在；磁体/球顶无悬空间隙。镜面左边、底边与木桌纹理静止。</li>
+<li>接触/遮挡重点查看 00/01/02、11、17、19：球由磁体支承；球和磁体局部覆盖镜面左边；镜中球留在镜内；末帧依旧悬挂，没有穿入桌面或新增落桌动作。桌面弱软影没有变成大片纯色覆盖。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<ul>
+<li>01 起使用解析二维重绘，球毛绒微纹理仍比真实首帧均匀、稍平滑；首帧与首个续写帧的橙色细纹、高光小斑块没有完全逐像素对齐。</li>
+<li>黑色挂扣及镜中连接环的细节有所简化，放大三倍可见与原照的小轮廓差别；磁体银色边缘也略规则。</li>
+<li>原物体后方背景的局部非学习修补只在窄区域进行，靠近镜面左边和原球底处有轻微平滑；没有办法从单张遮挡图精确恢复被球遮住的墙/桌纹。</li>
+<li>镜像采用固定 0.69 位移比例和固定水平位置，仅符合首图可见关系；相机与镜面精确空间关系无法由这一帧唯一确定。</li>
+<li>球下方极弱软影是二维近似，真实影子位置和落桌高度无法精确判定。未引入不被文本要求的落桌、旋转或摆动。</li>
+</ul>
+<h2>文件一致性</h2>
+<p>生成器保存 pixels.npz 的 pixels:uint32 (144,256,20)，0xRRGGBB；保存 RGB PNG 00–19、inspection.png、index.html 和 transition_check.png。已逐一解包 tensor 并与全部 20 张 PNG 比较，全部相等；每张为 RGB 256×144。00 与 first_frame.png 逐像素相等。最终重新保存后再完成同样验证。20 帧按 4 fps 播放，总时长 5 秒。</p>
+</article></main></body></html>

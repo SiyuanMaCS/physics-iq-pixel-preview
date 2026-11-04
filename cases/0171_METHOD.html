@@ -1,0 +1,158 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>solid-ball-peakaboo · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0171</span></nav><article><h1>solid-ball-peakaboo · 生成方法</h1><h2>输入和实现</h2>
+<p>生成只读取本目录 first_frame.png、prompt.txt；无其他场景、续写、参考掩码、评测分数、学习模型、联网或物理引擎。先查看了首图和四倍放大图，再写 OBSERVATION.md，最后独立实现 generate.py。shared/artifact_io.py 仅保存数组和页面。</p>
+<p>动态篮面采用每帧重新求值的二维曲线边界，原尺寸约 69×69 px，横向移动不到 1 px。顶面用椭圆边界和同心编织纹，侧面通过弧形横向藤条、竖向藤条及交替交织亮暗构成；纤维细纹、局部颜色、不完全规则的凹槽均按当前物体坐标重新计算 RGB。底缘有薄暗边，原始光照的左亮右暗保持。没有裁取篮、磁铁、球或连接件贴图平移、缩放或镜像；不建立三维对象、网格、法线或投影。</p>
+<p>绳、扣环与银色磁铁通过独立二维线条与扁椭圆重画，并随篮共同提升。球为固定二维圆形轮廓、橙色毛毡纹理、奶黄色曲缝与平滑明暗；接触影固定在球底部。每帧先画静态背景、淡化的篮影与静止球，再以篮轮廓遮挡球，最后画连接件。篮起吊不使球移动。四倍像素计算后以 Lanczos 下采样，00 原样保留首图。</p>
+<p>被篮和连接件挡住的墙面采用首图相邻墙色的横向插值；桌面采用二维亮度拟合、仅从本首图未遮挡桌面取出的静态木纹高频细节和窄边界混合。静态桌面补绘允许使用摄影纹理，这些像素一经计算在所有后续帧固定。没有动态物体源纹理取样。</p>
+<h2>20 帧事件</h2>
+<p>帧时间按 k/4 秒；播放含每帧 0.25 秒，总 5 秒。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">秒</th>
+  <th style="text-align:right">篮上提像素</th>
+  <th>可见事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td style="text-align:right">0</td>
+  <td>完整原图，篮盖住球。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td style="text-align:right">0</td>
+  <td>起吊前短停；保持外轮廓、厚度和织物颜色。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td style="text-align:right">1</td>
+  <td>缓慢离桌，球仍遮住。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td style="text-align:right">3</td>
+  <td>底暗边抬升，球下缘尚不明显。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td style="text-align:right">7</td>
+  <td>球底部露出，篮口遮挡球上部。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td style="text-align:right">12</td>
+  <td>球约下半部可见，接触影固定。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td style="text-align:right">18</td>
+  <td>球大半可见，篮与桌面分离。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td style="text-align:right">25</td>
+  <td>球几乎完整，篮口略遮顶缘。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td style="text-align:right">33</td>
+  <td>球完全露出、静止，篮影减弱。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td style="text-align:right">41</td>
+  <td>吊环接近画面顶端。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td style="text-align:right">49</td>
+  <td>连接件开始出框。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td style="text-align:right">57</td>
+  <td>顶磁铁接近/部分进入上沿。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td style="text-align:right">65</td>
+  <td>篮顶出框，桌面完整露出。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td style="text-align:right">72</td>
+  <td>继续提升，球不动。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td style="text-align:right">78</td>
+  <td>上升减速。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td style="text-align:right">83</td>
+  <td>篮下缘接近上部。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td style="text-align:right">87</td>
+  <td>进一步减速，摆动收敛。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td style="text-align:right">89</td>
+  <td>到达高处，仍有小量上移。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td style="text-align:right">90</td>
+  <td>悬在顶部，球及桌面不动。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td style="text-align:right">90</td>
+  <td>保持。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查和修正</h2>
+<ul>
+<li>实际打开首图及 first_frame_enlarged.png，记录真实尺度、底缘与接触区域。</li>
+<li>实际查看 inspection.png 的 00、02、05、08、11、14、17、19 共八时点，确认篮上提、连接件一致运动、球的遮挡露出、最终顶部悬吊以及球接触不移动。</li>
+<li>实际查看 transition_check.png 中 00/01/02 的约四倍放大并排：首轮重绘颜色过亮、细织纹对比不足；随后重校黄褐色均值与藤条交织对比、补竖向藤条，再适度柔化细纹。最终外轮廓、尺寸和织物类别一致，但原摄影细节与解析重绘细节有可见差别。</li>
+<li>实际查看同表 03、05、07、12 的篮下缘/球放大图：球被前篮面遮住后逐步露出，球底与接触影保持，无遮罩透穿或重复球；篮口暗边随篮提升。</li>
+<li>实际查看后期 19 的四倍放大图，发现原圆环两侧细残影及木纹补绘偏平。扩大连接件清除范围、加入本首图静态木纹，重生成；八时点和过渡表再次实际打开。残环已清除。之后局部墙色仍有矩形接缝，再以相邻墙色插值修正并重存，最终八时点和过渡表再次实际打开。</li>
+</ul>
+<h2>真实局限</h2>
+<ul>
+<li>球的大小、确切摆放和缝线在首图中完全不可见，是受篮罩尺度约束的合理假设；无法声称恢复真实隐蔽物体。</li>
+<li>解析编织比摄影首图更规则；00→01 藤条的具体位置发生重绘差异，顶面同心纹与磁铁也更整齐。材料颜色、篮宽高和基本轮廓已对齐，仍达不到照片级纹理连续性。</li>
+<li>新球的表面偏干净，毛毡质感有限；软篮影为二维近似。篮未模拟大幅形变，因为文字没有碰撞或挤压事件。</li>
+<li>原篮遮挡区域的桌面木纹是静态补绘，无法还原真实隐藏木纹；桌面边界在 4 倍放大时仍有轻微阶梯和补绘接缝。</li>
+<li>篮在结尾保留约 32 px 高的下缘悬于画面顶部；这是“lifted to the top of the frame”的解释，并非完全离开画面。</li>
+</ul>
+<h2>保存与数值验证</h2>
+<p>artifact_io.save 保存 uint8 (20,144,256,3) 帧数组为 pixels.npz、frames/00.png–19.png、inspection.png 和 index.html；另保存 transition_check.png。逐一读取最终 PNG 校验其像素等于 uint32 (144,256,20) 的 0xRRGGBB 张量，并确认 00 与首图逐像素相同，全部通过。验证结果另存 validation.txt。视觉结论来自实际打开检查图，不由帧差数量推断。</p>
+</article></main></body></html>

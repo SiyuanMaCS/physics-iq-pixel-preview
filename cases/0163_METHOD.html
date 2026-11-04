@@ -1,0 +1,126 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>siphon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0163</span></nav><article><h1>siphon · 生成方法</h1><h2>输入与生成方法</h2>
+<p>只读取本目录首帧和 prompt，以及 shared/artifact_io.py 保存器与当前 case_config.json。先查看 first_frame.png 和 first_frame_enlarged.png，先写 OBSERVATION.md，再独立编写 generate.py。没有读取其他案例、参考视频、掩码、评测结果、旧脚本、记忆，也没有联网、AI API、学习权重、物理引擎或三维场景。</p>
+<p>每一帧在二维 RGB 数组上直接求值。玻璃的细暗边、弱亮边、侧壁条纹、下口椭圆前后缘由当前下降量和画面坐标计算；动态特征采用“当前解析色场减去初始解析色场”的方式加入静态摄影底图，从而在首帧低清晰度材质上保持连续。透明罩中看到的墙面、桌面、静止支撑留在原坐标，不提取罩的贴图，也没有平移、缩放或镜像源像素。</p>
+<p>火焰用弯曲二维中心线、变宽软掩码、橙光与黄色芯逐帧重绘。原火焰光区用左右邻域推断的静态底色修补，初始低频光差仅在原坐标随燃烧强度衰减。熄灭后的浅烟由另一条软曲线计算。液面以椭圆口沿、衰减波纹和红液透射衰减直接计算，罩内上涨时仍能看到固定支撑。所有对象尺寸来自本首图的观测，未用其他例坐标。</p>
+<p>罩口修补在固定坐标进行：从同一行左右静止液面颜色计算被原口沿遮挡的低频背景，逐渐清除旧口沿，固定支撑保留，再叠加新口沿。它不是从原图截取一个动态物体并搬到另一个位置。第 00 帧单独使用首帧原始 RGB。</p>
+<h2>20 帧事件（0-based）</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">罩下降量</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0 px</td>
+  <td>原图逐像素保持</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.4 px</td>
+  <td>轻微下降，火焰向右微摆</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">1.0 px</td>
+  <td>连续下降，罩口红色反光下移</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">1.8 px</td>
+  <td>火焰继续燃烧，边缘连续</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">2.9 px</td>
+  <td>罩口接近液面</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">4.1 px</td>
+  <td>缓慢下降，固定支撑不动</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">5.3 px</td>
+  <td>罩口进入液面近接触区域</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">6.4 px</td>
+  <td>接触区域透明薄边继续下移</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">7.3 px</td>
+  <td>微小封口波纹</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>罩停止下降，火焰开始减弱</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>火焰变短变暗</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>黄色芯明显收缩</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>只余淡小火苗</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>火焰熄灭，有非常淡的烟</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>罩内红液上涨 0.6 px</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>上涨 1.2 px，烟渐淡</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>上涨 1.9 px</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>上涨 2.6 px，烟几乎不可见</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>上涨 3.2 px，波纹衰减</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">8.0 px</td>
+  <td>上涨 3.7 px，最终静稳</td>
+</tr>
+</tbody>
+</table>
+<p>相机、碗、木桌、中央支撑和火柴杆始终固定。玻璃罩上端在画外，未凭空补出手。封口后的燃烧消耗和冷却只作为小幅液面升高的定性假设，不声称精确求解气体压力或化学反应。</p>
+<h2>实际查看与修正记录</h2>
+<p>实际打开首图、4 倍放大首图。生成后实际打开 inspection.png 的 00、02、05、08、11、14、17、19 八个时间点，检查碗的固定接触、中央支撑、罩口下移和熄灭；实际打开 transition_check.png，其中 00/01/02 有全图 2 倍、火焰 4 倍、口沿/液面 4 倍比较，关键 07/09/12/13/16/19 的玻璃/接触/熄灭区域也放大显示。</p>
+<p>第一轮发现下降后的下半部边缘太黑、旧红口沿与新口沿重复；第二轮减弱下部侧壁的解析暗边，仍见旧口沿残迹；第三轮以固定坐标的同排液面修补进一步清除旧口沿，并重新运行保存。最终 inspection.png 和 transition_check.png 均实际重新打开，检查了八个时点和全部上述关键放大区。最初三帧的红色支撑、蓝带、玻璃透明材质、碗和曝光保持连续，没有移动贴图的矩形残块或重复玻璃罩。</p>
+<h2>真实局限</h2>
+<p>透明罩的低频摄影底纹留在原坐标，反射和折射只是二维色场近似；放大看，罩口附近修补比原摄影液面更平滑。由于源图失焦且罩顶在画外，8 px 的下降主要通过下口位置体现，整体运动不显著。后半程约 3.7 px 的液面上涨在 256×144 原尺寸中很细微。烟很淡，火焰末期由软曲线近似，不能提供细致的湍流或燃烧纹理。固定支撑底端与液面的光学接触只能按原图歧义做近似，未生成真实折射像。这些不足没有用额外运动掩盖。</p>
+<h2>保存与编码校验</h2>
+<p>artifact_io.save 保存 20 帧 256×144 RGB PNG、pixels.npz、inspection.png、独立 index.html；另外保存 transition_check.png。已逐帧校验 PNG 解码后的 RGB 与 uint32 (144,256,20) 的 0xRRGGBB 张量完全相等，并校验 00.png 与首图逐像素相等。4fps，共 20 帧，播放时长 5 秒。</p>
+</article></main></body></html>

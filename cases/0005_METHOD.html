@@ -1,0 +1,102 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0005</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>先实际查看本例 first_frame.png 和其 4 倍放大图，写 OBSERVATION.md 后独立实现 generate.py。未读取其他 case、旧脚本、参考视频、掩码、分数、记忆或其他线程；未联网，未调用学习模型、AI API、物理引擎或三维渲染。所有文件只写入本例目录。</p>
+<p>输出为20帧、256×144 RGB、4fps、5秒。00直接保留首图，每个后续帧从固定背景数组开始直接求值新像素。纸板是每帧重新生成的二维四边形，边界按连续事件逐渐转窄、经过侧边、背面展开；颜色由首帧纸板区域拟合的低阶二维色彩场重新求值，以保留浅灰、左下略暗的纸质明暗，并添加轻微新生成细纹。没有裁取纸板贴图进行平移、缩放或镜像。球用二维圆形轮廓、非均匀色彩场、弯曲浅色接缝、细纹重新求值；抓取时缝线微转，落地后冻结。工具的银色细杆、黑套管、斜向连接段、蓝黑夹爪都是直接绘制的新轮廓。球先于纸板绘制，因此遮挡由当前纸板边界产生。夹爪释放后上移。</p>
+<p>固定墙、桌、转台、线缆使用首图摄影背景；初始纸板/杆遮住的背景用非学习二维平滑墙面色彩拟合和细木纹色彩场补全。原始可见转台及线缆黑色像素保留，转台固定。接触阴影在球接近桌面时逐渐收紧；纸板下缘接触区有窄阴影。球落地只在第08帧有约0.275像素轻压，随后恢复并固定。首帧没有可见球，因此解释为球已经在纸板后被抓住，不凭空在第一续帧添加另一颗球。</p>
+<h2>20帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>首图逐像素原样，球在纸板后不可见。</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>小角度转动与小幅下放，纸面宽度和颜色接近首图。</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>纸板略窄，球仍遮挡。</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>连续下放及向后右移动。</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>工具继续降低，球仍在纸板后。</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>球右缘接近纸板边缘，几乎仍全遮挡。</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>球右侧及夹爪首次明显露出。</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>球接近桌面，阴影变窄。</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>球底到达y=127，位于x=166的转台右后桌面，轻微受压。</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>球稳定，夹爪仍接触。</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>夹爪张开，球已固定。</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>夹具开始上提，球静止。</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>夹具脱离球，纸板更窄。</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>球完整露出；工具继续上提。</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>纸板接近最窄侧边，球与转台保持固定。</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>纸板背面开始展开，工具上提接近终点。</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>背面继续展开，工具到达高处。</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>球固定，纸板背面继续加宽。</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>背面转动减缓。</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>背面斜向停止，球仍稳置桌面。</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看记录及修正</h2>
+<p>已实际打开原图、first_frame_zoom.png、inspection.png的00/02/05/08/11/14/17/19共8个时点。实际打开 transition_check.png：完整00/01/02的1.5倍图，以及纸板/转台区域的3.6倍放大，确认01未突然换成纯白、厚板或另一形状，纸板下缘连续。该图还包含05/08/10/12/14/19接触/遮挡局部。</p>
+<p>又实际打开contact_check.png，检查00/02/05/06/08/10/11/12/14/15/17/19的完整球和转台接触区：06露出过程、08触地、10夹爪开启、11到12分离、14侧边经过、19停止时均已查看。球未重复、接触后未继续漂移，夹爪和套管之间有连续连接段。最终检查不是用帧差或颜色数量代替。</p>
+<p>第一轮查看发现旧纸板/夹具位置的浅色轮廓；扩大原边界并改用连续二维墙面拟合，去掉该轮廓。第二轮发现桌后缘93行漏填形成白线，补齐该行后重存。球的落点由偏靠转台上表面改到右后桌面x=166，避免将“放在桌上”误画成在转台正面。补绘工具连接段，避免夹爪悬空。最后重存全部输出并实际重新打开transition_check.png与contact_check.png。</p>
+<h2>可见局限</h2>
+<p>球在首帧完全不可见，因此11像素半径、橙色毛毡和夹爪握法属于依据文字选择的假设。球与工具仍有清晰的程序绘制感：球的毛毡细纹与光照不及摄影素材丰富，夹爪形状偏简化。纸板转动使用二维轮廓序列，对顺时针转动方向及遮挡的表达合理但深度细节有限，背面纸面没有不可见的真实纹理。被原纸板遮住的木纹来自二维补全，比原始可见木纹平滑；极细的纹理接缝在放大接触图中仍可见。原纸板投到墙上的宽软影不能从一张图唯一恢复，因此背景补全稍减弱了局部摄影阴影。这些不足已保留说明，没有使用参考续写填补。</p>
+<p>输出由shared/artifact_io.save保存。验证逐一读取20个PNG并按0xRRGGBB打包，与pixels.npz的uint32 (144,256,20)逐元素比较；00与首帧逐像素比较。结果记录于validation.json。</p>
+</article></main></body></html>

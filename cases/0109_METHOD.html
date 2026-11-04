@@ -1,0 +1,124 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>match · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0109</span></nav><article><h1>match · 生成方法</h1><p>仅以本目录的 first_frame.png 和 prompt.txt 作为场景输入。首帧实际打开并四倍放大后，先写 OBSERVATION.md，再写独立的 generate.py；未读取其他 case、参考视频、记忆、旧方案或评估结果。没有模型、AI API、学习权重、物理引擎或三维场景。</p>
+<h2>逐帧生成</h2>
+<p>00 直接保留首图全部 RGB。后续帧保留静止的摄影背景，仅以 OpenCV 非学习二维修补去除原来 2–3 像素宽的木杆、黑头和小火焰区域，补回局部杯口亮边。采用 4 倍子像素采样，在每个时间点重新求值木杆纵向与横向坐标、细小宽度起伏、纤维、暖色中心及暗色边缘，重新求值短而不规则的炭黑头。木杆的方向逐渐变陡，上边缘入画点由 x≈28 移向 x≈93，燃烧头缓慢进入杯口。</p>
+<p>火焰由二维窄小轮廓和黄色亮心重绘，05 帧开始明显收缩，06 帧入水后消失。水下段颜色、透明度及液面处 0.6 像素横向偏移单独求值。已有杯口白色反射保持在木杆前方。06–14 帧在局限于原水面椭圆的范围内重绘很小、逐渐衰减的亮暗波纹。所有动态轮廓、朝向和材质纹理为当帧独立计算，不裁取、平移、缩放或镜像原物体贴图。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">头部末端约 y</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">59</td>
+  <td>原始燃烧状态，逐像素首图</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">59.5</td>
+  <td>木杆微降，小火焰</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">60.2</td>
+  <td>缓慢变陡，小火焰</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">61.2</td>
+  <td>靠近水面，小火焰</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">62.4</td>
+  <td>接触前，火焰亮度下降</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">63.5</td>
+  <td>水面接触，火焰快速收缩</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">65.2</td>
+  <td>浸水熄灭，小波纹开始</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">67.2</td>
+  <td>湿黑头进入水下，波纹传播</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">69.3</td>
+  <td>水下低对比，继续下降</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">71.3</td>
+  <td>继续下降，波纹减弱</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">73.3</td>
+  <td>木杆与黑头浸没更深</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">75.3</td>
+  <td>水下偏移和暗化保持</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">77.3</td>
+  <td>下降，细小余波</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">79.2</td>
+  <td>下降，余波趋于消失</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">81</td>
+  <td>开始减速，最后微弱波纹</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">82.3</td>
+  <td>减速，无火焰</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">83.3</td>
+  <td>减速，水面稳定</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">84.1</td>
+  <td>接近停止</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">84.7</td>
+  <td>微小下降</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">85</td>
+  <td>稳定浸没，无重新点燃</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正记录</h2>
+<p>实际打开原首帧、input_zoom.png 和 contact_input_zoom.png 确認木杆粗细、黑头长宽、火焰小尺寸及杯口亮边。首轮查看 inspection.png 的 00、02、05、08、11、14、17、19 共八个时间点，也查看 contact_check.png 的 00、01、02、05、06、07、11、19 接触区域。</p>
+<p>首轮 transition_check.png 的 00/01/02 三倍放大和 05/06/10 对比暴露了原木杆位置的细弱点状残影；扩大原位置清除宽度并重存，第二次实际打开 transition_check.png 与 inspection.png，残影消失，杯子、桌面、墙面均稳定。00/01/02 还显示首次火焰过窄偏高，修改黄色轮廓宽度和高度后重新生成并查看。最后实际打开重存的 contact_check.png，核对 05→06 熄灭、06/07 液面接触和 11 杆与杯口亮边遮挡，并打开 final_immersion_check.png，确认 19 帧黑头在水体内部，没有撞杯底或穿杯壁。保存了全部检查图。</p>
+<h2>可见局限</h2>
+<p>此图分辨率低，首帧黑头与水面反射重合，无法确定真实三维浸水瞬间；06 帧熄灭是按二维接触解释选定的。后续木杆颜色和宽度已匹配首图，但放大后其轮廓及黑头纹理仍比摄影素材规整，00→01 的细小纹理差异可见。旧木杆位置的背景补全是局部二维修补，附近木纹和杯口细节稍柔和。水面微波纹在原尺寸较难看见，水下透明度与折射为简化的二维近似；没有完整再现玻璃内部随木杆运动的所有细反射和焦散。首图未显示手，故操作者保持画外。</p>
+<h2>输出校验</h2>
+<p>20 张 RGB PNG 全部为 256×144。逐张将 RGB 按 0xRRGGBB 打包，与 pixels.npz 的 uint32 (144,256,20) 张量逐元素相等；00 与 first_frame.png 逐像素相等。4 fps × 20 帧 = 5 秒，artifact_io.save 保存独立播放页、标准检查图、张量和 PNG。机器校验结果保存在 validation.json。</p>
+</article></main></body></html>

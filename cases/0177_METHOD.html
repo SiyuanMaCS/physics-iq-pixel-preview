@@ -1,0 +1,125 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>teapot-rotates · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0177</span></nav><article><h1>teapot-rotates · 生成方法</h1><h2>像素生成</h2>
+<p>只读取本例 <code>first_frame.png</code> 与 <code>prompt.txt</code> 作为场景输入。使用 NumPy、Pillow 与 SciPy 的非学习二维函数，在 4 倍采样网格上重新计算壶身、盖、花形盖钮、底足、环形把手和前景红壶嘴的 RGB；之后抗锯齿降采样至 256×144。固定摄影背景、黑平台和电线从首图保留，原先被壶遮住的小片墙面用相邻墙色插值补出。</p>
+<p>壶身轮廓用二维贝塞尔曲线，钴蓝底釉颜色用首图中蓝色像素拟合平滑二维颜色场；花瓣与叶片从首图的颜色边界测量二维轮廓坐标，每帧用新掩码及重新求值的颜料色场填充；静止光源下的高光重新计算。壶嘴二维轮廓由首图红釉边界测量并以随高度变化的位移重建，口沿及口内颜色依时间重绘，并遮挡后方花纹；盖面小标记和足缘黑白装饰随壶旋转。没有从首图裁取或移动物体纹理，没有三维几何、法线、物理引擎或 AI 调用。首图仅提供静态背景、颜色拟合和一个不移动、按时间衰减的局部釉色校正；校正限定在新旧相同材料的内部交叠区，避免将原壶嘴轮廓留成双边。</p>
+<p>第 00 帧直接逐像素保持输入。其余 19 帧的新轮廓、颜色、纹理和遮挡从时间参数直接求值，不逐帧复制上一帧。</p>
+<h2>物理假设与 20 帧安排</h2>
+<p>从上方看顺时针旋转，总约 48 度，匀速 2.53 度/帧；壶轴、平台与摄像机固定。壶体近似轴对称，因此壶身外轮廓基本稳定；前右壶嘴依次向正前偏左移动。把手处于壶嘴相反一侧，初始左后的一小段逐渐被壶体挡住，后段才从右后小量露出。足底始终接触平台，无液体、跳动或额外物体。</p>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th style="text-align:right">角度</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0</td>
+  <td>首图原样</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">2.5</td>
+  <td>轻微向左转，保留釉色连续性</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">5.1</td>
+  <td>壶嘴与花纹继续缓慢左移</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">7.6</td>
+  <td>右侧表面开始显露</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">10.1</td>
+  <td>把手开始被壶身隐藏</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">12.6</td>
+  <td>壶嘴遮挡中央右侧花纹</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">15.2</td>
+  <td>壶嘴继续向中央靠近</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">17.7</td>
+  <td>左后把手可见面积下降</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">20.2</td>
+  <td>前部花纹左移</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">22.7</td>
+  <td>壶嘴接近正前</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">25.3</td>
+  <td>足缘花格一起转动</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">27.8</td>
+  <td>保持固定支撑</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">30.3</td>
+  <td>右侧出现先前隐藏的花纹</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">32.8</td>
+  <td>壶嘴向正前稍偏左</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">35.4</td>
+  <td>右后把手开始露出</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">37.9</td>
+  <td>壶嘴继续遮住中央纹样</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">40.4</td>
+  <td>右后把手小量显露</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">42.9</td>
+  <td>左后把手已隐藏</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">45.5</td>
+  <td>维持足底接触</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">48.0</td>
+  <td>达到本段最后朝向</td>
+</tr>
+</tbody>
+</table>
+<h2>实际视觉检查</h2>
+<p>实际打开原图及 4 倍放大图；生成后打开 <code>inspection.png</code>，查看 00、02、05、08、11、14、17、19 共 8 个时点。实际打开 <code>transition_check.png</code>，其中包含 00/01/02 的 4 倍壶体与首续写比较、00/05/10/14/19 的足底平台接触、02/08/14/19 的壶嘴遮挡。也单独查看了 <code>procedural_zero.png</code>，与真实首图比较建模误差。</p>
+<p>首轮检查发现首三帧壶嘴出现蓝色边带、左后把手显露太多。已限制颜色校正不得跨越红釉/蓝釉材料边界，重绘并清理原轮廓邻域；修正把手隐藏顺序，调整小花位置、花瓣颜色与叶片宽度。第二轮检查进一步发现首帧花叶形状改变偏明显、末帧新露出的右后把手被输出范围截断；随后改为测量首图花叶与壶嘴的二维轮廓，逐帧重新填色，并扩展有效输出掩码包含新露出的右后把手，然后重新保存全部输出。第三轮检查发现壶嘴下方的红花被颜色连通区域误并入壶嘴轮廓，已修正最后三行的收拢轮廓并平滑边界，消除底端突出。最终再次实际打开 transition_check.png 与 inspection.png，复核首三帧、8 个时点、足底接触和壶嘴/把手遮挡：壶嘴无前轮蓝色边带，底端收拢，把手隐藏/显露连续，足底始终在平台顶面。后续首三帧的花纹和釉面仍比首图更简化，这一差异保留为可见局限。</p>
+<h2>仍可见的局限</h2>
+<p>这是由单张首帧得到的二维手工续写。不可见背面的把手与花纹形状是假设；釉面高光、花瓣和黑白足缘在后续帧偏规则、较首图略显平滑，纹样转动是二维近似，未能恢复真实壶体表面的完整装饰。首三帧的细小花叶纹理仍存在逐渐进入重绘形态的变化。没有声称恢复不可见的真实几何或实际电动平台转速。</p>
+<h2>最终数组核验</h2>
+<p>20 张 PNG 均为 256×144 RGB，逐像素等于 <code>pixels.npz</code> 的 uint32 <code>(144,256,20)</code>、<code>0xRRGGBB</code> 张量；00 与输入首图逐像素一致。<code>validation.json</code> 保存核验结果。播放页及两张检查表均已保存。</p>
+</article></main></body></html>

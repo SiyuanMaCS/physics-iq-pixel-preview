@@ -1,0 +1,131 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>two-balls-pass · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../index.html">← 返回视频总览</a><span class="tag">Case 0178</span></nav><article><h1>two-balls-pass · 生成方法</h1><p>仅使用本目录的 first_frame.png 和 prompt.txt 理解场景；读取 case_config.json 及公共输出 helper 确认格式。先实际打开首帧并写 OBSERVATION.md，随后独立编写 generate.py。没有读取其他 case、参考视频、生成器、结果、记忆或线程；没有联网、API、学习权重、物理引擎或三维几何/法线渲染。</p>
+<p>00 直接保留输入的每个 RGB 像素。01–19 在静态木桌上直接计算新 RGB。两球采用二维柔边轮廓、颜色渐变、解析细粒毛毡纹理、随行程变化的曲线接缝，以及贴着底缘的接触暗部和向右偏移的软阴影。每个球在新的位置重新求值这些字段，短曝光只混合本帧新计算的字段。没有把首帧球体裁块平移、缩放或镜像。摄影背景和黑管保持静止。</p>
+<p>原球和两侧暗色拖影遮挡的木纹，用首帧中远离球体的干净木桌部分沿现有板纹方向重建，并以清楚边界的颜色平面消除缓慢照明差异。最初的修补存在三角暗色残迹和过平滑的小区域，已扩大遮挡区域并重新修补，最终输出重新保存。借用的仅为静态木纹，不含原球纹理。</p>
+<p>物理假设：两球已经滚出两管，灰球向右下、棕球向左上直线滚动。两条轨迹有纵向偏移，因此没有碰撞或遮挡彼此。保持原有大小，随桌面纵向行进仅有少量尺度变化；滚动阻力产生很小减速。没有让球弹跳、浮空、重复发球或让管道运动。高速运动约一秒离框后，固定机位继续观看静态桌面。</p>
+<h2>20 帧事件</h2>
+<table>
+<thead>
+<tr>
+  <th>帧</th>
+  <th>时刻</th>
+  <th>事件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00s</td>
+  <td>输入原图，灰球 (89.3,84.5)、棕球 (142.4,31.0)</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25s</td>
+  <td>灰球约 (133.8,89.5)，棕球约 (104.4,28.8)，接缝转动、阴影随行</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50s</td>
+  <td>灰球约 (178.1,94.4)，棕球约 (66.6,26.6)，保持桌面接触</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75s</td>
+  <td>灰球约 (222.2,99.4)，棕球约 (29.0,24.4)，接近两侧画边</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00s</td>
+  <td>灰球约 (266.1,104.3)、棕球约 (-8.4,22.3)，轮廓离框，仅可能有最边缘的亚像素虚化</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25s</td>
+  <td>两球已离框；木桌和管道静止</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50s</td>
+  <td>静态桌面与管道</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75s</td>
+  <td>最后一帧持续至 5.00s，桌面与管道静止</td>
+</tr>
+</tbody>
+</table>
+<h2>实际查看与修正</h2>
+<ul>
+<li>打开 first_frame.png、整体放大和灰/棕球局部放大，记录尺寸、白色接缝、软边和接触阴影。</li>
+<li>查看 motion_contact_sheet.png 的 00、01、02、03、04、05、08、12、16、19 共十个时点；没有球体复制、停在旧位置的残影、重复发球或管道运动。</li>
+<li>查看 transition_check.png：00/01/02 整体放大和各自新位置的两球局部放大。修正灰球底色、蓝灰亮部和接缝反差；轮廓尺寸保持相近，未发生明显几何替换。</li>
+<li>查看 contact_01_zoom.png、contact_03_zoom.png、contact_04_zoom.png，复查滚动接触、接近边界、离框裁切。03 两球仍分处错开轨迹，阴影跟随球底；04 离框后没有遗留圆形碎片。</li>
+<li>查看并修正 background_check.png，清除原球两侧较远的暗色拖影，重新保存所有标准产物。</li>
+<li>最终再次打开 motion_contact_sheet.png、transition_check.png、inspection.png 和 03/04 放大图。标准 inspection 的时间标签采用公共 helper 的帧末标法；本记录和 motion_contact_sheet 采用帧起时刻。</li>
+</ul>
+<h2>仍可见的局限</h2>
+<p>球的毛毡、浅色接缝和明暗是二维近似，比原图微弱的不规则摄影纹理更平顺；尤其接缝没有真实毛纤维层次。新球的光照分布不能完全复原首帧上不对称的局部亮斑，放大后可分辨其近似性。原球遮挡的木纹没有唯一解，修补处仍存在细小纹理连续性差异。高速轨迹与转速由单帧和文字估计，4 fps 下只有前几个时间点显示球，后半段静止是离框后的结果；没有画面证据支持离框后的动作。</p>
+<h2>输出与格式验证</h2>
+<p>artifact_io.save 保存 pixels.npz、frames/00.png 至 19.png、inspection.png、index.html。额外保存 OBSERVATION.md、generate.py、METHOD.md、transition_check.png、motion_contact_sheet.png 和局部查看图。</p>
+<p>实际读取所有 20 个 PNG，逐像素打包为 0xRRGGBB 并与 pixels.npz 切片比较：全部相等。张量 dtype 为 uint32，shape 为 (144,256,20)；PNG 均为 256×144 RGB。00 与输入逐像素相同。验证记录保存为 validation.txt。上述验证仅用于格式核验，视觉检查以实际打开的图表为准。</p>
+</article></main></body></html>
