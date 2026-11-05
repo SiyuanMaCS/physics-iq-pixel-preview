@@ -1,0 +1,796 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ball-train · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · text · Case 0028</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>ball-train</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>12</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>11</strong><span>generate.py 执行</span></div><div class="stat"><strong>141</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>65</strong><span>文件变更事件</span></div><div class="stat"><strong>152.0m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A light-colored coffee table with two tennis balls, one orange and one brown, placed near the center, back to back. A black pipe sits on the table on the left side and points towards the two tennis balls. The grey tennis ball rolls straight out of a black pipe from the left and hits the brown tennis ball.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>141 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>12 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-62b1d8cd0249.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T11:12:43.241383+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +289/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 62b1d8cd024949df · code 3f135b5d3ba9f78b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,289 @@
++&quot;&quot;&quot;PixelWorld-Text case_0028: grey tennis ball rolls out of a black pipe
++and strikes the brown tennis ball; the orange ball, touching back-to-back
++behind it, rolls away. All pixels are produced by local analytic drawing and
++per-pixel compositing on top of the given first frame. No external assets.&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import artifact_io
++
++ROOT = Path(__file__).parent
++rng = np.random.default_rng(2801)
++
++# ---------------------------------------------------------------- geometry
++F0 = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float64)
++H, W = 144, 256
++
++PIPE = dict(cx=170.3, cy=40.9, rx_out=7.0, ry_out=7.25, rx_in=5.45, ry_in=5.75)
++BROWN0 = dict(cx=182.3, cy=40.05, r=6.6)
++ORANGE0 = dict(cx=185.7, cy=39.85, r=6.1)
++GREY_R = 6.6
++LIGHT = np.array([0.55, -0.08, 0.83])      # sphere-space light (from the right)
++LIGHT /= np.linalg.norm(LIGHT)
++
++# colours (lit / deep-ambient)
++C_ORANGE = np.array([216.0, 142.0, 94.0]), np.array([117.0, 101.0, 86.0])
++C_BROWN  = np.array([204.0, 127.0, 77.0]), np.array([58.0, 41.0, 30.0])
++C_GREY   = np.array([158.0, 159.0, 155.0]), np.array([64.0, 66.0, 66.0])
++
++# ------------------------------------------------------------ table model
++def fit_table():
++    &quot;&quot;&quot;Quadratic per-channel surface fitted to clean table samples.&quot;&quot;&quot;
++    samples = []
++    boxes = [(195, 246, 27, 60), (55, 150, 55, 68), (85, 150, 27, 35),
++             (195, 245, 60, 72), (30, 95, 60, 72)]
++    for x0, x1, y0, y1 in boxes:
++        for y in range(y0, y1):
++            for x in range(x0, x1):
++                samples.append((x, y, *F0[y, x]))
++    S = np.array(samples, dtype=float)
++    xs, ys = S[:, 0] / W, S[:, 1] / H
++    A = np.stack([np.ones_like(xs), xs, ys, xs * ys, xs ** 2, ys ** 2], 1)
++    coef, *_ = np.linalg.lstsq(A, S[:, 2:], rcond=None)
++    xx, yy = np.meshgrid(np.arange(W) / W, np.arange(H) / H)
++    G = np.stack([np.ones_like(xx), xx, yy, xx * yy, xx ** 2, yy ** 2], -1)
++    model = G @ coef
++    return np.clip(model, 0, 255)
++
++TABLE = fit_table()
++
++# static correlated grain, fixed for every frame so revealed pixels don&#x27;t flicker
++white = rng.normal(0, 4.2, (H + 6, W + 6, 1))
++grain = np.array(Image.fromarray(((white[..., 0] - white.min()) /
++                                  (white.max() - white.min()) * 255).astype(np.uint8))
++                 .filter(ImageFilter.GaussianBlur(1.4))).astype(float)
++grain = (grain - grain.mean()) * (3.4 / grain.std())
++GRAIN = np.repeat(grain[:H, :W, None], 3, 2)
++
++def build_background():
++    &quot;&quot;&quot;Inpaint only pixels occupied in frame 0 by the two balls / their crevice;
++    the pipe and its static shadow stay untouched.&quot;&quot;&quot;
++    bg = F0.copy()
++    diff = np.linalg.norm(F0 - TABLE, axis=2)
++    box = np.zeros((H, W), bool)
++    box[31:55, 175:197] = True
++    warm = (F0[..., 0] - F0[..., 1] &gt; 16)
++    dark = (F0.mean(2) &lt; 118)
++    m = box &amp; (warm | dark) &amp; (diff &gt; 7)
++    # keep the pipe mouth proper
++    yy, xx = np.mgrid[0:H, 0:W]
++    eo = ((xx - PIPE[&#x27;cx&#x27;]) / PIPE[&#x27;rx_out&#x27;]) ** 2 + ((yy - PIPE[&#x27;cy&#x27;]) / PIPE[&#x27;ry_out&#x27;]) ** 2
++    m &amp;= ~(eo &lt; 0.9)
++    # dilate a little
++    mi = Image.fromarray(m.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(5))
++    mf = np.array(mi).astype(float) / 255
++    mf = np.array(Image.fromarray((mf * 255).astype(np.uint8))
++                  .filter(ImageFilter.GaussianBlur(2.2))) / 255.0
++    fill = np.clip(TABLE + GRAIN, 0, 255)
++    bg = F0 * (1 - mf[..., None]) + fill * mf[..., None]
++    return bg, (eo &lt; 1.0), (eo &lt; 0.62), mf
++
++BG, MOUTH_OUT, MOUTH_IN, _ = build_background()
++
++# ------------------------------------------------------------- sprites
++def shade_field(cx, cy, r, lit, amb, sub=4):
++    &quot;&quot;&quot;Supersampled RGBA sphere patch with Lambert+wrap shading.&quot;&quot;&quot;
++    R = int(np.ceil(r)) + 2
++    n = 2 * R + 1
+… diff truncated; 202 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-49c2ded728a5.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T11:16:47.724126+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−5</span></div><p class="hashes">pixels 49c2ded728a5cd61 · code 2639b1be02c20631</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -76,7 +76,8 @@
+                   .filter(ImageFilter.GaussianBlur(2.2))) / 255.0
+     fill = np.clip(TABLE + GRAIN, 0, 255)
+     bg = F0 * (1 - mf[..., None]) + fill * mf[..., None]
+-    return bg, (eo &lt; 1.0), (eo &lt; 0.62), mf
++    ei = ((xx - PIPE[&#x27;cx&#x27;]) / PIPE[&#x27;rx_in&#x27;]) ** 2 + ((yy - PIPE[&#x27;cy&#x27;]) / PIPE[&#x27;ry_in&#x27;]) ** 2
++    return bg, (eo &lt; 1.0), (ei &lt; 0.62), mf
+ 
+ BG, MOUTH_OUT, MOUTH_IN, _ = build_background()
+ 
+@@ -103,9 +104,9 @@
+     col = np.clip(col, 0, 255)
+     # coverage with anti-aliased limb
+     cov = np.clip((1.0 - np.sqrt(q2)) * r / 1.05 + 0.5, 0, 1)
+-    canvas[..., :3] = col
+-    canvas[..., 3] = cov
+-    img = Image.fromarray((np.clip(canvas, 0, 255)).astype(np.uint8), &#x27;RGBA&#x27;)
++    canvas[..., :3] = col          # coloured RGB everywhere, incl. A=0 rim
++    canvas[..., 3] = cov * 255     # smooth alpha (no binary 0/1 band)
++    img = Image.fromarray(np.clip(canvas, 0, 255).astype(np.uint8))
+     img = img.resize((n, n), Image.LANCZOS)
+     return np.array(img).astype(float), R
+ 
+@@ -121,7 +122,7 @@
+     if scale != 1.0:
+         n = arr.shape[0]
+         nn = max(3, int(round(n * scale)))
+-        a = Image.fromarray(arr.astype(np.uint8), &#x27;RGBA&#x27;).resize((nn, nn), Image.LANCZOS)
++        a = Image.fromarray(arr.astype(np.uint8)).resize((nn, nn), Image.LANCZOS)
+         arr = np.array(a).astype(float)
+         R = (nn - 1) // 2
+     x0, y0 = int(round(cx)) - R, int(round(cy)) - R</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-49c2ded728a5.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T11:16:49.681920+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 49c2ded728a5cd61 · code 2639b1be02c20631</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-8dc8d05e7112.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T11:21:47.991153+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +19/−20</span></div><p class="hashes">pixels 8dc8d05e7112393c · code d5f740dd07f95a37</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -82,38 +82,37 @@
+ BG, MOUTH_OUT, MOUTH_IN, _ = build_background()
+ 
+ # ------------------------------------------------------------- sprites
+-def shade_field(cx, cy, r, lit, amb, sub=4):
+-    &quot;&quot;&quot;Supersampled RGBA sphere patch with Lambert+wrap shading.&quot;&quot;&quot;
+-    R = int(np.ceil(r)) + 2
++def shade_field(cx, cy, rx, ry, lit, amb, sub=6):
++    &quot;&quot;&quot;Supersampled RGBA sphere patch. Slightly elliptical projected disc
++    with a wrapped-Lambert field fitted directly to frame-0 ball pixels:
++    t = .68 nx - .08 ny + .74 nz + .29 (light arrives mainly from the right).&quot;&quot;&quot;
++    R = int(np.ceil(max(rx, ry))) + 2
+     n = 2 * R + 1
+     canvas = np.zeros((n * sub, n * sub, 4))
+     u = (np.arange(n * sub) + 0.5) / sub - (R + 0.5)
+     vx, vy = np.meshgrid(u, u)
+-    q2 = (vx ** 2 + vy ** 2) / r ** 2
+-    inside = q2 &lt;= 1.0
++    nx, ny = vx / rx, vy / ry
++    q2 = nx ** 2 + ny ** 2
+     nz = np.sqrt(np.clip(1 - q2, 0, 1))
+-    nx, ny = vx / r, vy / r
+-    s = nx * LIGHT[0] + ny * LIGHT[1] + nz * LIGHT[2]
+-    t = np.clip((s + 0.18) / 1.08, 0, 1)
+-    t = t ** 0.9
++    t = np.clip(.68 * nx - .08 * ny + .74 * nz + .29, 0, 1) ** 0.95
+     col = amb[None, None, :] + (lit - amb)[None, None, :] * t[..., None]
+-    # soft upper-right specular sheen
+-    sh = np.exp(-(((nx - 0.35) / 0.55) ** 2 + ((ny + 0.28) / 0.55) ** 2))
+-    col += (np.array([26, 24, 20]) if lit is not C_GREY[0]
+-            else np.array([20, 20, 20])) * sh[..., None]
++    # very soft upper-right sheen
++    sh = np.exp(-(((nx - 0.30) / 0.6) ** 2 + ((ny + 0.30) / 0.6) ** 2))
++    col += (np.array([9, 8, 6]) if lit is not C_GREY[0]
++            else np.array([7, 7, 7])) * sh[..., None]
+     col = np.clip(col, 0, 255)
+-    # coverage with anti-aliased limb
+-    cov = np.clip((1.0 - np.sqrt(q2)) * r / 1.05 + 0.5, 0, 1)
+-    canvas[..., :3] = col          # coloured RGB everywhere, incl. A=0 rim
+-    canvas[..., 3] = cov * 255     # smooth alpha (no binary 0/1 band)
++    q = np.sqrt(q2)
++    cov = np.clip((1.055 - q) / 0.30, 0, 1)   # measured limb AA profile
++    canvas[..., :3] = col                     # coloured RGB everywhere, incl. A=0 rim
++    canvas[..., 3] = cov * 255
+     img = Image.fromarray(np.clip(canvas, 0, 255).astype(np.uint8))
+     img = img.resize((n, n), Image.LANCZOS)
+     return np.array(img).astype(float), R
+ 
+ SPR = {
+-    &#x27;orange&#x27;: shade_field(0, 0, ORANGE0[&#x27;r&#x27;], *C_ORANGE),
+-    &#x27;brown&#x27;: shade_field(0, 0, BROWN0[&#x27;r&#x27;], *C_BROWN),
+-    &#x27;grey&#x27;: shade_field(0, 0, GREY_R, *C_GREY),
++    &#x27;orange&#x27;: shade_field(0, 0, 6.1, 6.6, *C_ORANGE),
++    &#x27;brown&#x27;: shade_field(0, 0, 6.6, 7.0, *C_BROWN),
++    &#x27;grey&#x27;: shade_field(0, 0, 6.6, 7.0, *C_GREY),
+ }
+ 
+ def paste(canvas, spr, cx, cy, scale=1.0, color_scale=1.0, alpha_mul=1.0,</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-8dc8d05e7112.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T11:21:49.976103+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 8dc8d05e7112393c · code d5f740dd07f95a37</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-3cfac498742f.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T11:33:53.189458+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +25/−26</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 3cfac498742f956e · code 4dab524cd91c8bda</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -22,9 +22,9 @@
+ LIGHT /= np.linalg.norm(LIGHT)
+ 
+ # colours (lit / deep-ambient)
+-C_ORANGE = np.array([216.0, 142.0, 94.0]), np.array([117.0, 101.0, 86.0])
+-C_BROWN  = np.array([204.0, 127.0, 77.0]), np.array([58.0, 41.0, 30.0])
+-C_GREY   = np.array([158.0, 159.0, 155.0]), np.array([64.0, 66.0, 66.0])
++C_ORANGE = np.array([208.0, 134.0, 89.0]), np.array([72.0, 58.0, 50.0])
++C_BROWN  = np.array([198.0, 114.0, 65.0]), np.array([48.0, 30.0, 26.0])
++C_GREY   = np.array([158.0, 159.0, 155.0]), np.array([58.0, 60.0, 61.0])
+ 
+ # ------------------------------------------------------------ table model
+ def fit_table():
+@@ -94,12 +94,15 @@
+     nx, ny = vx / rx, vy / ry
+     q2 = nx ** 2 + ny ** 2
+     nz = np.sqrt(np.clip(1 - q2, 0, 1))
+-    t = np.clip(.68 * nx - .08 * ny + .74 * nz + .29, 0, 1) ** 0.95
++    # empirical wrapped-light field (fitted against frame-0 ball pixels):
++    # bright right/bottom plateau, steep terminator on the left, dark limb
++    w = np.clip(2.1 * nx + 0.55 * ny + 0.95, 0, 1)
++    t = 0.40 + 0.60 * w * (0.72 + 0.28 * np.sqrt(np.clip(nz, 0, 1)))
+     col = amb[None, None, :] + (lit - amb)[None, None, :] * t[..., None]
+-    # very soft upper-right sheen
+-    sh = np.exp(-(((nx - 0.30) / 0.6) ** 2 + ((ny + 0.30) / 0.6) ** 2))
+-    col += (np.array([9, 8, 6]) if lit is not C_GREY[0]
+-            else np.array([7, 7, 7])) * sh[..., None]
++    # warm table bounce light on the lower-left shadow side
++    bounce = np.clip(-0.45 - ny, 0, 1) ** 2 * 0.5
++    col += (np.array([26, 12, 4]) if lit is not C_GREY[0]
++            else np.array([5, 5, 6])) * bounce[..., None]
+     col = np.clip(col, 0, 255)
+     q = np.sqrt(q2)
+     cov = np.clip((1.055 - q) / 0.30, 0, 1)   # measured limb AA profile
+@@ -159,40 +162,36 @@
+     base[:] *= (1 - aa[..., None])
+ 
+ def contact_shadow(canvas, x1, y1, r1, x2, y2, r2, strength):
+-    &quot;&quot;&quot;Dark blob in the lens between two nearly touching discs.&quot;&quot;&quot;
++    &quot;&quot;&quot;Thin soft crease in the lens between nearly touching discs.&quot;&quot;&quot;
+     dx, dy = x2 - x1, y2 - y1
+     d = (dx * dx + dy * dy) ** 0.5
+-    if d &lt;= 1e-6:
+-        return
+-    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
++    if d &lt;= 1e-6 or strength &lt;= 0.01:
++        return
+     overlap = max(0.0, (r1 + r2 - d))
+     if overlap &lt;= 0:
+         return
+-    st = strength * min(1.0, overlap / 3.0)
++    st = strength * min(1.0, overlap / 2.0)
+     if st &lt;= 0.01:
+         return
+-    nx, ny = dx / d, dy / d
+-    px, py = -ny, nx
+-    rx = max(2.0, overlap * 0.9 + 1.5)
+-    ry = min(r1, r2) * 0.95
+-    # sample ellipse along/across the contact line
++    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
++    rx_across = min(r1, r2) * 1.25      # wide perpendicular to contact
++    thin = 2.4                          # thin along the contact line
+     pad = 12
+-    n = 2 * (int(max(rx, ry)) + pad)
++    n = 2 * (int(max(rx_across, thin)) + pad)
+     layer = Image.new(&#x27;L&#x27;, (n, n), 0)
+     dd = ImageDraw.Draw(layer)
+     cc = n // 2
+-    dd.ellipse((cc - rx, cc - ry, cc + rx, cc + ry), fill=255)
+-    layer = layer.filter(ImageFilter.GaussianBlur(2.0))
++    dd.ellipse((cc - rx_across, cc - thin, cc + rx_across, cc + thin), fill=255)
++    layer = layer.filter(ImageFilter.GaussianBlur(2.4))
+     a = np.array(layer).astype(float) / 255 * st
+-    # rotate + place
+-    ang = np.arctan2(ny, nx)
+-    layer = Image.fromarray((a * 255).astype(np.uint8))
+-    layer = layer.rotate(np.degrees(ang), resample=Image.BICUBIC)
++    layer = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8))
++    # wide axis drawn along x; rotate so it lies across the contact line
++    layer = layer.rotate(np.degrees(np.arctan2(dy, dx)) + 90, resample=Image.BICUBIC)
+     a = np.array(layer).astype(float) / 255
+     x0, y0 = int(round(mx)) - n // 2, int(round(my)) - n // 2
+     xa, xb = max(0, -x0), min(n, W - x0)
+     ya, yb = max(0, -y0), min(n, H - y0)
+-    aa = a[ya:yb, xa:xb]
++    aa = np.clip(a[ya:yb, xa:xb], 0, 0.85)
+     base = canvas[y0 + ya:y0 + yb, x0 + xa:x0 + xb]
+     base[:] *= (1 - aa[..., None])
+… diff truncated; 1 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-33bfff19aa8d.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T11:37:28.668678+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−5</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 33bfff19aa8deb21 · code 54cc7ae3053bcc55</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -96,7 +96,7 @@
+     nz = np.sqrt(np.clip(1 - q2, 0, 1))
+     # empirical wrapped-light field (fitted against frame-0 ball pixels):
+     # bright right/bottom plateau, steep terminator on the left, dark limb
+-    w = np.clip(2.1 * nx + 0.55 * ny + 0.95, 0, 1)
++    w = np.clip(2.1 * nx + 0.95, 0, 1)
+     t = 0.40 + 0.60 * w * (0.72 + 0.28 * np.sqrt(np.clip(nz, 0, 1)))
+     col = amb[None, None, :] + (lit - amb)[None, None, :] * t[..., None]
+     # warm table bounce light on the lower-left shadow side
+@@ -173,16 +173,16 @@
+     st = strength * min(1.0, overlap / 2.0)
+     if st &lt;= 0.01:
+         return
+-    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+-    rx_across = min(r1, r2) * 1.25      # wide perpendicular to contact
+-    thin = 2.4                          # thin along the contact line
++    mx, my = (x1 + x2) / 2 + 0.12 * dx / d, (y1 + y2) / 2 + 0.12 * dy / d
++    rx_across = min(r1, r2) * 1.15      # wide perpendicular to contact
++    thin = 1.3                          # thin along the contact line
+     pad = 12
+     n = 2 * (int(max(rx_across, thin)) + pad)
+     layer = Image.new(&#x27;L&#x27;, (n, n), 0)
+     dd = ImageDraw.Draw(layer)
+     cc = n // 2
+     dd.ellipse((cc - rx_across, cc - thin, cc + rx_across, cc + thin), fill=255)
+-    layer = layer.filter(ImageFilter.GaussianBlur(2.4))
++    layer = layer.filter(ImageFilter.GaussianBlur(1.5))
+     a = np.array(layer).astype(float) / 255 * st
+     layer = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8))
+     # wide axis drawn along x; rotate so it lies across the contact line</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-bcbbbc18cb60.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T11:39:59.090140+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +9/−11</span></div><p class="hashes">pixels bcbbbc18cb6074d5 · code 3b7274d25a24889b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -173,25 +173,23 @@
+     st = strength * min(1.0, overlap / 2.0)
+     if st &lt;= 0.01:
+         return
+-    mx, my = (x1 + x2) / 2 + 0.12 * dx / d, (y1 + y2) / 2 + 0.12 * dy / d
+-    rx_across = min(r1, r2) * 1.15      # wide perpendicular to contact
+-    thin = 1.3                          # thin along the contact line
+-    pad = 12
+-    n = 2 * (int(max(rx_across, thin)) + pad)
++    mx, my = (x1 + x2) / 2 + 0.15 * dx / d, (y1 + y2) / 2 + 0.15 * dy / d
++    half_len = min(r1, r2) * 0.95        # chord of the contact
++    pad = 10
++    n = 2 * (int(half_len) + pad)
+     layer = Image.new(&#x27;L&#x27;, (n, n), 0)
+     dd = ImageDraw.Draw(layer)
+     cc = n // 2
+-    dd.ellipse((cc - rx_across, cc - thin, cc + rx_across, cc + thin), fill=255)
+-    layer = layer.filter(ImageFilter.GaussianBlur(1.5))
++    px, py = -dy / d, dx / d             # across the contact line
++    dd.line((cc - px * half_len, cc - py * half_len,
++             cc + px * half_len, cc + py * half_len), fill=255, width=3)
++    layer = layer.filter(ImageFilter.GaussianBlur(1.1))
+     a = np.array(layer).astype(float) / 255 * st
+     layer = Image.fromarray(np.clip(a * 255, 0, 255).astype(np.uint8))
+-    # wide axis drawn along x; rotate so it lies across the contact line
+-    layer = layer.rotate(np.degrees(np.arctan2(dy, dx)) + 90, resample=Image.BICUBIC)
+-    a = np.array(layer).astype(float) / 255
+     x0, y0 = int(round(mx)) - n // 2, int(round(my)) - n // 2
+     xa, xb = max(0, -x0), min(n, W - x0)
+     ya, yb = max(0, -y0), min(n, H - y0)
+-    aa = np.clip(a[ya:yb, xa:xb], 0, 0.85)
++    aa = np.clip(a[ya:yb, xa:xb], 0, 0.6)
+     base = canvas[y0 + ya:y0 + yb, x0 + xa:x0 + xb]
+     base[:] *= (1 - aa[..., None])
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-bcbbbc18cb60.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T11:40:02.619416+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels bcbbbc18cb6074d5 · code 3b7274d25a24889b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-52671b9f9514.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-05T13:04:58.976459+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +305/−184</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 52671b9f9514332c · code f513c57bc79ad2d4</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,148 +1,281 @@
+-&quot;&quot;&quot;PixelWorld-Text case_0028: grey tennis ball rolls out of a black pipe
+-and strikes the brown tennis ball; the orange ball, touching back-to-back
+-behind it, rolls away. All pixels are produced by local analytic drawing and
+-per-pixel compositing on top of the given first frame. No external assets.&quot;&quot;&quot;
++&quot;&quot;&quot;PixelWorld-Text case_0028: a grey tennis ball rolls straight out of the
++black pipe on the left, strikes the brown tennis ball and sends the orange
++ball (touching it back-to-back) rolling away to the right.
++
++All pixels are produced locally.  The two resting balls and the table are
++measured directly from first_frame.png by numeric RGB inspection:
++
++  * the table background is inpainted by normalized-convolution blur fill
++    over the balls&#x27; alpha union;
++  * each ball&#x27;s smooth shade field is a robustly-fitted polynomial basis
++    evaluated in ball-normalised coordinates (orange: a quadratic fitted on
++    its visible crescent, blending to a measured dark ambient on the hidden
++    hemisphere);
++  * per-pixel F0 residuals (felt texture) are carried on the rolling brown
++    ball through a nearest-measured-sample map (screen-space contact seam
++    pixels excluded - they are re-drawn as a separate seam overlay);
++  * spheres are alpha-composited with 4x supersampled coverage and exact
++    sub-pixel centres;
++  * the pipe mouth/rim pixels from F0 are overlaid so balls pass behind the
++    rim, and the grey ball is dimmed while inside the mouth.
++
++Frame 00 is returned byte-identical to first_frame.png.  No external assets,
++engines, network access or subagents are used.&quot;&quot;&quot;
+ from pathlib import Path
+ import numpy as np
+ from PIL import Image, ImageDraw, ImageFilter
++from scipy.ndimage import gaussian_filter
++from scipy.spatial import cKDTree
+ import artifact_io
+ 
+ ROOT = Path(__file__).parent
+ rng = np.random.default_rng(2801)
+ 
+-# ---------------------------------------------------------------- geometry
++# ------------------------------------------------------------- geometry
+ F0 = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float64)
+-H, W = 144, 256
++H, W = F0.shape[:2]
+ 
+ PIPE = dict(cx=170.3, cy=40.9, rx_out=7.0, ry_out=7.25, rx_in=5.45, ry_in=5.75)
+-BROWN0 = dict(cx=182.3, cy=40.05, r=6.6)
+-ORANGE0 = dict(cx=185.7, cy=39.85, r=6.1)
+-GREY_R = 6.6
+-LIGHT = np.array([0.55, -0.08, 0.83])      # sphere-space light (from the right)
+-LIGHT /= np.linalg.norm(LIGHT)
+-
+-# colours (lit / deep-ambient)
+-C_ORANGE = np.array([208.0, 134.0, 89.0]), np.array([72.0, 58.0, 50.0])
+-C_BROWN  = np.array([198.0, 114.0, 65.0]), np.array([48.0, 30.0, 26.0])
+-C_GREY   = np.array([158.0, 159.0, 155.0]), np.array([58.0, 60.0, 61.0])
+-
+-# ------------------------------------------------------------ table model
+-def fit_table():
+-    &quot;&quot;&quot;Quadratic per-channel surface fitted to clean table samples.&quot;&quot;&quot;
+-    samples = []
+-    boxes = [(195, 246, 27, 60), (55, 150, 55, 68), (85, 150, 27, 35),
+-             (195, 245, 60, 72), (30, 95, 60, 72)]
+-    for x0, x1, y0, y1 in boxes:
+-        for y in range(y0, y1):
+-            for x in range(x0, x1):
+-                samples.append((x, y, *F0[y, x]))
+-    S = np.array(samples, dtype=float)
+-    xs, ys = S[:, 0] / W, S[:, 1] / H
+-    A = np.stack([np.ones_like(xs), xs, ys, xs * ys, xs ** 2, ys ** 2], 1)
+-    coef, *_ = np.linalg.lstsq(A, S[:, 2:], rcond=None)
+-    xx, yy = np.meshgrid(np.arange(W) / W, np.arange(H) / H)
+-    G = np.stack([np.ones_like(xx), xx, yy, xx * yy, xx ** 2, yy ** 2], -1)
+-    model = G @ coef
+-    return np.clip(model, 0, 255)
+-
+-TABLE = fit_table()
+-
+-# static correlated grain, fixed for every frame so revealed pixels don&#x27;t flicker
+-white = rng.normal(0, 4.2, (H + 6, W + 6, 1))
+-grain = np.array(Image.fromarray(((white[..., 0] - white.min()) /
+-                                  (white.max() - white.min()) * 255).astype(np.uint8))
+-                 .filter(ImageFilter.GaussianBlur(1.4))).astype(float)
+-grain = (grain - grain.mean()) * (3.4 / grain.std())
+-GRAIN = np.repeat(grain[:H, :W, None], 3, 2)
+-
+-def build_background():
+-    &quot;&quot;&quot;Inpaint only pixels occupied in frame 0 by the two balls / their crevice;
+-    the pipe and its static shadow stay untouched.&quot;&quot;&quot;
+… diff truncated; 481 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-993c33c9061a.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-05T13:10:20.359531+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−4</span></div><p class="hashes">pixels 993c33c9061aef8a · code e6fb5584719a0515</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -96,7 +96,7 @@
+         w = ok.astype(float)
+     return coef, ok
+ 
+-_sb = (QB &lt; 0.86) &amp; (UB &gt; -0.72)
++_sb = (QB &lt; 0.92) &amp; (UB &gt; -0.95)
+ coefB, _ = robust_lstsq(basis(UB[_sb], VB[_sb]), F0[_sb])
+ fieldB = basis(UB, VB) @ coefB
+ _litB = (basis(np.array([0.62]), np.array([-0.05])) @ coefB)[0]
+@@ -106,11 +106,11 @@
+ 
+ _so = (QO &lt; 0.82) &amp; (QB &gt; 1.02)
+ coefCO, _ = robust_lstsq(basis2(UO[_so], VO[_so]), F0[_so], iters=3, out=22.0)
+-DARKO = np.array([64., 42., 32.])
++DARKO = np.array([96., 60., 44.])
+ 
+ def _ofield_draft(u, v):
+     p = basis2(u, v) @ coefCO
+-    s = np.clip((u + 0.10) / 0.45, 0, 1)[..., None]
++    s = np.clip((u + 0.22) / 0.55, 0, 1)[..., None]
+     col = DARKO * (1 - s) + p * s
+     nz = np.sqrt(np.clip(1 - u ** 2 - v ** 2, 0, 1))
+     return np.clip(col * (0.90 + 0.10 * nz)[..., None], 0, 255)
+@@ -119,7 +119,7 @@
+ 
+ def ofield_raw(u, v):
+     p = basis2(u, v) @ coefCO
+-    s = np.clip((u + 0.10) / 0.45, 0, 1)[..., None]
++    s = np.clip((u + 0.22) / 0.55, 0, 1)[..., None]
+     col = DARKO * (1 - s) + p * s
+     nz = np.sqrt(np.clip(1 - u ** 2 - v ** 2, 0, 1))
+     return np.clip(col * (0.90 + 0.10 * nz)[..., None] + OCORR, 0, 255)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/candidate-993c33c9061a.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-05T13:10:22.227007+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 993c33c9061aef8a · code e6fb5584719a0515</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0028/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0028_attempt_01</h1>
+<p>All measurements are from numeric inspection of <code>first_frame.png</code> only (numpy/PIL; no image viewing tools). Image 256×144 RGB.</p>
+<h2>Scene geometry (pixel coordinates, origin top-left)</h2>
+<ul>
+<li><strong>Coffee table</strong>: trapezoid light tabletop. Far edge runs from ~(20,20) to ~(220,8); left/right edges run off frame; near edge is the diagonal band ~(115,114)→(65,142). Camera sits front-left looking toward the back-right. Background beyond table edges is near-black (dark room), with an unrelated dark band at y7–12, x106–206 (background object, never touched).</li>
+<li><strong>Table surface</strong> at object depth (y28–52): smooth gradient, roughly RGB(103,107,112) at y32 → RGB(116,121,127) at y44 → ~RGB(113,115,113) at y52; mild x-gradient (B −5 over 40 px toward the right). Grain σ≈3–5.</li>
+<li><strong>Black pipe</strong>: near-circular black mouth (tube seen nearly end-on) at center <strong>(170.3, 40.9)</strong>, outer ellipse semi-axes <strong>rx≈7.0, ry≈7.2</strong>, deep interior L&lt;45 within inner ellipse rx≈5.6/ry≈5.8; a dark-grey crescent rim (L 45–100) at the lower-left inner wall and around the anti-aliased edge. Only the short mouth is visible; its axis points horizontally right (screen y≈40) at the balls. Soft bluish contact shadow falls left/down of it (x110–165, y38–51, B up to ~140 — sky fill in shadow); this shadow is static with the pipe.</li>
+<li><strong>Two tennis balls</strong> are projected as one heavily overlapping warm blob (strong-color mask x178–191, y33–47). They touch <strong>back-to-back along the pipe line</strong>, which is almost the camera viewing axis, so one is mostly behind the other:<ul>
+<li><strong>Brown ball (front, adjacent to pipe)</strong>: disc center <strong>(182.3, 40.05)</strong>, r≈6.6. Darker rust/brown, lit-centre color ≈ RGB(196,122,79); left terminator (x176–179) is a deep crevice against the pipe mouth (values 40–80 with blue fill).</li>
+<li><strong>Orange ball (behind-right)</strong>: disc center <strong>(185.7, 39.85)</strong>, r≈6.55; only its right crescent (x≈185–192) is visible; brighter yellow-orange, peak ≈ RGB(214,141,90).</li>
+<li>A thin shaded crease between them runs diagonally around x≈184–185 (y40) to x≈182 (y44).</li>
+<li>Sphere shading: highlight slightly upper-right of centre; smooth radial limb darkening; edges anti-aliased over ~1 px.</li>
+</ul>
+</li>
+<li><strong>Grey tennis ball</strong>: not visible in frame 0 — it is inside the black pipe. It is a tennis ball of the same size; it appears in the mouth and rolls out along y≈40.</li>
+<li>Ball/object line (pipe → brown → orange) projects almost horizontally (+0.99 x, −0.09 y) with strong perspective foreshortening (screen gap 3.4 px corresponds to one 3D diameter ≈ 13.2 px).</li>
+</ul>
+<h2>Event plan (20 frames, 4 fps, dt=0.25 s)</h2>
+<p>Grey ball centre x (Bn=brown, O=orange; y≈40, scales adjust slightly with depth). Frame 00 is the untouched input.</p>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t(s)</th>
+  <th>grey x</th>
+  <th>brown x</th>
+  <th>orange x</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>(156, hidden in pipe)</td>
+  <td>182.30</td>
+  <td>185.70</td>
+  <td>static initial frame</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>163.5</td>
+  <td>182.30</td>
+  <td>185.70</td>
+  <td>grey disc appears dimly inside the mouth opening</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>169.3</td>
+  <td>182.60</td>
+  <td>185.90</td>
+  <td>grey reaches lip, contacts brown (impact)</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>172.6</td>
+  <td>185.20</td>
+  <td>188.90</td>
+  <td>grey rolls out fully lit; chain compresses</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>175.3</td>
+  <td>187.80</td>
+  <td>193.30</td>
+  <td>momentum transfer, balls begin separating</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>177.4</td>
+  <td>190.90</td>
+  <td>197.90</td>
+  <td>orange rolls away fastest</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>179.0</td>
+  <td>193.60</td>
+  <td>202.50</td>
+  <td></td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>180.1</td>
+  <td>196.00</td>
+  <td>207.00</td>
+  <td></td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>180.7</td>
+  <td>198.00</td>
+  <td>211.30</td>
+  <td>grey nearly stopped just outside pipe</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>181.0</td>
+  <td>199.60</td>
+  <td>215.20</td>
+  <td></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>181.1</td>
+  <td>200.90</td>
+  <td>218.70</td>
+  <td></td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>181.2</td>
+  <td>201.90</td>
+  <td>221.60</td>
+  <td></td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>181.2</td>
+  <td>202.70</td>
+  <td>224.00</td>
+  <td>brown nearly stopped</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>181.2</td>
+  <td>203.30</td>
+  <td>225.90</td>
+  <td></td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>181.2</td>
+  <td>203.70</td>
+  <td>227.30</td>
+  <td></td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>181.2</td>
+  <td>204.00</td>
+  <td>228.30</td>
+  <td></td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>181.2</td>
+  <td>204.10</td>
+  <td>228.90</td>
+  <td></td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>181.2</td>
+  <td>204.20</td>
+  <td>229.30</td>
+  <td></td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>181.2</td>
+  <td>204.20</td>
+  <td>229.50</td>
+  <td></td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>181.2</td>
+  <td>204.20</td>
+  <td>229.60</td>
+  <td>all balls at rest; all still on tabletop (right table edge at y≈39 is x≈249)</td>
+</tr>
+</tbody>
+</table>
+<p>Post-impact velocities (px/s): grey 5, brown 8, orange 12 with light rolling deceleration (1.2/0.9/0.55 px/s² — friction plus perspective foreshortening with distance). Brown drifts up 0.6 px and shrinks to scale 0.96; orange drifts up 1.0 px and shrinks to 0.91. Subtle seam rotation indicates rolling spin; soft elliptical contact shadows travel with each ball. The pipe and its static shadow never move.</p>
+<h2>Method outline (as implemented; see METHOD.md for detail)</h2>
+<ol>
+<li><strong>Table background</strong>: normalized-convolution (gaussian blur) fill over the two balls' alpha union; warm ball pixels define the hole, dark desaturated crevice/rim pixels are kept; a fixed correlated grain layer is added. Pipe and its static shadow are untouched.</li>
+<li><strong>Shade fields measured from frame 0</strong> (ball-normalised ellipse coords): brown = 21-term polynomial basis fitted with iteratively-reweighted least squares over q&lt;0.92 (fit RMS ≈ [6,5,7] on 120 samples); orange = quadratic on its 14 visible-crescent pixels, blended on the hidden hemisphere to a dark warm ambient; radial limb clamp stops extrapolation overshoot. Grey ball = brown shading shape remapped through measured grey lit/ambient colours.</li>
+<li><strong>Surface detail</strong>: brown carries its measured per-pixel F0 residual field (nearest-sample map in ball coordinates) which rotates with rolling; the blue contact seam is excluded from ball texture and instead drawn as a screen-space additive stripe on the two balls' intersection chord while they overlap.</li>
+<li><strong>Rendering</strong>: 4x supersampled OVER compositing with exact float sub-pixel centres and an empirically measured limb coverage profile; back-to-front order orange -&gt; brown -&gt; grey. Grey is dimmed to 0.40 inside the mouth mask and restored to full outside the pipe ellipse; original F0 rim pixels overlay the mouth so balls pass behind the rim. Soft multiply shadows travel under each ball.</li>
+<li>Frame 01 keeps the raw input and only adds the dim grey sliver inside the mouth; frame 00 is a byte-exact copy of <code>first_frame.png</code>. All PNGs are verified against the packed 0xRRGGBB uint32 tensor in <code>pixels.npz</code>.</li>
+</ol>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0028</h1>
+<p>Fully local, deterministic pixel synthesis. Inputs used: <code>first_frame.png</code>
+(256×144 RGB) and <code>prompt.txt</code> only. All scene measurements came from numeric
+RGB inspection with numpy/PIL (no image viewing tool was used at any stage, so
+no visual-review claim is made); scipy is used for gaussian filtering and a
+KD-tree. The pipeline is in <code>generate.py</code>; intermediate calibration experiments
+lived in <code>.tmp/</code>.</p>
+<h2>1. Geometry measured from frame 0 (pixel units)</h2>
+<ul>
+<li>Black pipe mouth: centre (170.3, 40.9), outer ellipse 7.0×7.25, inner
+ellipse 5.45×5.75.</li>
+<li>Brown ball (front): centre (182.3, 40.05), radii 6.6×7.0.</li>
+<li>Orange ball (behind-right): centre (185.7, 39.85), radii 6.1×6.6.</li>
+<li>The balls overlap on screen (centres 3.4 px apart) and are seen almost along
+their contact axis, so only a thin crescent of the orange ball is visible in
+frame 0.</li>
+<li>Empirical limb alpha (deconvolved against the inpainted background along the
+exposed rims): alpha ≈ 1 for normalised radius q &lt; 0.83, ≈ 0.7 at q = 0.88,
+≈ 0.03 at q = 0.93, 0 at q ≥ 1.03. Model:
+<code>a = clip((0.895 − q)/0.075 + 0.5, 0, 1)</code>.</li>
+</ul>
+<h2>2. Table background (normalized-convolution fill)</h2>
+<p>The mask of pixels occupied by the resting balls is the alpha union of the two
+discs. Only warm ball pixels are filled (<code>R−G ≥ 11</code>); dark desaturated pixels
+of the pipe rim/crevice (<code>mean &lt; 115 and R−G &lt; 13</code>) are kept as static scene.
+The mask is softly feathered (gaussian σ 0.5). Each channel is filled by
+normalized convolution with a gaussian kernel σ 3.2
+(<code>blur(frame·K)/blur(K)</code>), and one fixed correlated noise field (white noise
+blurred σ 0.9, σ 2.6) is added so revealed table pixels match the frame-0
+grain and never flicker. Outside the feathered hole the background is the
+frame-0 pixels themselves, so the pipe and its static shadow are untouched.</p>
+<h2>3. Ball shade fields (fitted to frame 0)</h2>
+<p>Coordinates are ball-normalised: u = (x−cx)/rx, v = (y−cy)/ry, q = √(u²+v²).</p>
+<ul>
+<li><strong>Brown</strong>: a 21-term basis in (u, v) — constants, linear, quadratic and
+cubic monomials, the view normal nz = √(1−u²−v²), n·u / n·v terms, and three
+clipped &quot;terminator&quot; ramps (left dark terminator, saturated right arc, lower
+arc) — is fitted to frame-0 ball pixels with iteratively reweighted least
+squares (3 iterations, outlier threshold 24/channel). Sample region
+q &lt; 0.92, u &gt; −0.95 (the robust step rejects pipe-rim outliers on the
+occluded left edge). 120 of 127 samples kept, fit RMS ≈ (6.2, 4.7, 6.8).</li>
+<li><strong>Orange</strong>: its visible crescent (q_orange &lt; 0.82 and q_brown &gt; 1.02,
+14 pixels) is fit by a robust quadratic (1, u, v, u², v², uv),
+RMS ≈ (2.9, 3.9, 8.1). The hidden hemisphere is a smooth blend
+(s = clip((u+0.22)/0.55)) toward a dark warm ambient (96, 60, 44); a small
+additive recentering (mean crescent residual ≈ (5.7, 3.9, 2.8)) is applied.
+The hemisphere choice is unverifiable from frame 0 and is a physical
+plausibility choice (warm bounce in room light).</li>
+<li>Both fields are <strong>radially clamped</strong> at the limb: for q ≥ 0.80 the value is
+blended (smoothstep, full by q = 0.93–0.95) toward the field sampled along
+the same ray at q = 0.80, which prevents polynomial extrapolation blow-ups.
+The orange limb additionally receives a measured tint
+(×(1.06, 1.00, 0.90)) to match its deconvolved rim colour (~203, 141, 97).</li>
+<li><strong>Grey</strong> ball reuses the fitted brown shading <em>shape</em> (remapped through
+measured grey lit/ambient colours (168,169,165)/(56,58,60)); its felt
+texture is procedural (a curved seam stripe plus a deterministic fine hash
+grain), since it is hidden inside the pipe in frame 0.</li>
+</ul>
+<h2>4. Surface detail and the contact seam</h2>
+<ul>
+<li>The per-pixel residual between frame 0 and the smooth brown fit is stored in
+ball coordinates. At render time each sub-pixel takes the residual of its
+nearest measured sample (KD-tree, radius 0.10 in normalised units ≈ 0.66 px);
+because lookup is in ball coordinates, the felt pattern rotates with the
+rolling ball. Residuals fade toward the limb.</li>
+<li>Pixels of the blue-ish contact seam between the two balls
+(residual B−R &gt; 22, 11 pixels) are excluded from ball texture — the seam is
+a screen-space occlusion/AA feature, not felt. It is redrawn each frame as a
+soft additive stripe of peak (−14, +22, +44) along the circles'
+intersection chord, gaussian-enveloped along the chord (σ 1.6 px) and
+masked to the ball union. Its strength is the geometric overlap
+<code>clip((r_b+r_o−d)/3.4, 0, 1)</code>, so it appears while the balls overlap and
+vanishes as they separate.</li>
+</ul>
+<h2>5. Renderer and compositing</h2>
+<ul>
+<li>Every ball is painted directly onto the frame with <strong>4×4 supersampling</strong> at
+its exact float centre (no cached sprite, so scaled/rotated balls are exact
+at any pose): 16 sub-pixels are evaluated per output pixel, colours are
+clipped before premultiplication, coverage is area-averaged, and the result
+is an OVER composite.</li>
+<li>Rolling spin is θ = travelled distance / radius applied to the texture
+coordinates only (shading stays fixed to room light).</li>
+<li>Per-frame order (f ≥ 2): background; three soft multiply contact shadows
+(travelling under the balls); orange; brown; contact-seam overlay;
+grey-brown contact crease while they touch (f 2–4); the grey ball
+(dimmed ×0.40 inside the inner-mouth mask, full outside the outer-pipe
+ellipse, two clipped paints); finally the original frame-0 pipe-rim pixels
+are overlaid, with the lower rim gate opening once the grey centre passes
+x = 168.5 so the ball crosses in front of that rim.</li>
+<li>Frame 1 is the raw frame-0 image plus only the dim grey sliver inside the
+mouth (the other balls have not moved yet). Frame 0 is returned as the raw
+input and verified byte-identical to <code>first_frame.png</code>.</li>
+</ul>
+<h2>6. Motion</h2>
+<p>Centres (x) follow the table in <code>generate.py</code>: the grey ball exits the pipe
+(156 → 181.2, at rest by f 11), strikes the brown ball around frame 2, which
+moves 182.3 → 204.2 (slight upward drift −0.65 px, scale 1.00 → 0.96 with
+distance); the orange ball rolls away fastest, 185.7 → 229.6 (drift −1.05 px,
+scale 1.00 → 0.91). Timing is 20 frames at 4 fps.</p>
+<h2>7. Verification performed</h2>
+<ul>
+<li>Frame-0 reconstruction self-test of the full sprite model against the
+measured frame: mean abs RGB error 10.3 (median 2.9) over the 191 warm
+ball pixels in the y32–49/x176–194 zone (prototype metric; frame 0 itself
+is copied verbatim, not reconstructed).</li>
+<li><code>frames/00.png</code> is byte-identical to <code>first_frame.png</code> (<code>cmp</code>).</li>
+<li>All 20 PNGs decode to exactly the packed 0xRRGGBB uint32 tensor stored in
+<code>pixels.npz</code> (shape (144,256,20)); tensor frame 0 equals frame 0.</li>
+<li>Per-frame change masks stay inside the ball/shadow corridor (x 152–240,
+y 30–58); no stray dark pixels are introduced; deltas rise with the impact
+and decay smoothly as balls come to rest.</li>
+<li>Connected warm components match the expected two separating balls plus the
+emerging grey ball.</li>
+</ul>
+<p>Known approximations: the orange ball's unlit hemisphere colour and the grey
+ball's felt texture are not observable in frame 0 and are modelled
+plausibly; the seam is a parametric reconstruction of the measured crevice;
+the table inpaint is a smooth statistical fill, not the true hidden grain.</p>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-text/0028-8d63d0939c40.png';</script></body></html>
