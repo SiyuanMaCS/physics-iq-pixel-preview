@@ -1,4 +1,944 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0002</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><p>How <code>generate.py</code> turns <code>first_frame.png</code> into the 20-frame sequence. Everything
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ball-and-block-fall · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · vision-agent · Case 0002</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>ball-and-block-fall</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>28</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>20</strong><span>generate.py 执行</span></div><div class="stat"><strong>139</strong><span>工具命令完成</span></div><div class="stat"><strong>44</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>39</strong><span>文件变更事件</span></div><div class="stat"><strong>100.1m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two pillows are on a table and two grabber tools are positioned above them. The grabber tools release the brown tennis ball and the orange block.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>可自主调用</strong><span>输出视觉工具</span></div><div class="event"><strong>139 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>28 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">events.jsonl 可验证该 Agent 成功读取了 44 张 PNG；上面的 round 图不等同于读取次数，而是 Harness 独立冻结的候选。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-b6317c6741ca.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-04T19:19:03.831101+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +216/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels b6317c6741caaf97 · code 97eb3aac31e5a3ab</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,216 @@
++&quot;&quot;&quot;PixelWorld case_0002: two grabbers release a brown tennis ball and an orange
++block above two beige pillows. Local pixel operations only; frame 0 is the
++verbatim first frame. See METHOD.md / OBSERVATION.md.&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++from PIL import Image
++from scipy import ndimage
++from scipy.ndimage import median_filter
++import artifact_io
++
++CASE = Path(__file__).parent
++TMP = CASE / &#x27;.tmp&#x27;; TMP.mkdir(exist_ok=True)
++H, W = 144, 256
++G = 60.0            # gravity px/s^2
++DT_FRAME = 0.25
++SHUTTER = 0.12
++NSUB = 8
++
++frame0 = np.array(Image.open(CASE / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float32)
++
++# ---------------------------------------------------------------- background
++# Pillow top profile: first warm (r-b&gt;10) pixel per column in y 80..130.
++r0, b0 = frame0[..., 0], frame0[..., 2]
++warm = (r0 - b0) &gt; 10
++tops = np.full(W, -1.0)
++for x in range(W):
++    col = np.where(warm[80:130, x])[0]
++    if len(col):
++        tops[x] = 80 + col[0]
++xs = np.arange(W)
++valid = tops &gt;= 0
++filled = np.where(valid, tops, np.interp(xs, xs[valid], tops[valid]))
++pillow_top = median_filter(filled, 5).astype(np.float32)
++
++# Wall model: cubic 2-D polynomial per channel fitted on clean wall pixels.
++yy, xx = np.mgrid[0:H, 0:W]
++xn = (xx - 128) / 128.0
++yn = (yy - 72) / 72.0
++terms = [np.ones_like(xn), xn, yn, xn**2, xn*yn, yn**2,
++         xn**3, xn**2*yn, xn*yn**2, yn**3]
++X = np.stack(terms, -1)
++ri, gi, bi = frame0[..., 0], frame0[..., 1], frame0[..., 2]
++wallish = ((yy &gt;= 5) &amp; (yy &lt;= 80) &amp;
++           (ri &gt; 95) &amp; (ri &lt; 205) &amp; (np.abs(ri-gi) &lt; 20) &amp;
++           (np.abs(ri-bi) &lt; 22) &amp; (ri &gt;= bi - 2))
++for (x0, x1, ya, yb) in [(45, 96, 5, 26),       # blue claw + stem
++                         (180, 226, 0, 22),      # orange claw
++                         (56, 90, 15, 46),       # ball
++                         (197, 216, 25, 63),     # block + trail
++                         (100, 132, 0, 5)]:      # yellow tab
++    wallish[ya:yb, x0:x1] = False
++sel = wallish
++coef = np.linalg.lstsq(X[sel], frame0[sel], rcond=None)[0]
++wall = (X @ coef).reshape(H, W, 3)
++dev = np.abs(frame0 - wall).sum(-1)
++
++# ------------------------------------------------------------- sprite cutting
++def cut_sprite(bx0, bx1, by0, by1, envelope, dev_thresh=(8.0, 20.0)):
++    &quot;&quot;&quot;Cut an RGBA patch. Coverage = colour deviation vs wall model restricted
++    to a geometric envelope (keeps the nearby grabber jaws out of the sprite).&quot;&quot;&quot;
++    ph, pw = by1 - by0, bx1 - bx0
++    rgb = frame0[by0:by1, bx0:bx1].copy()
++    wm = wall[by0:by1, bx0:bx1]
++    d = np.abs(rgb - wm).sum(-1)
++    a = np.clip((d - dev_thresh[0]) / (dev_thresh[1] - dev_thresh[0]), 0, 1)
++    a *= envelope
++    a = ndimage.gaussian_filter(a, 0.5)
++    return np.clip(rgb, 0, 255), np.clip(a, 0, 1)
++
++# ball: circle r~10.3 at (72,30.5) + downward blur fringe
++pbx0, pbx1, pby0, pby1 = 56, 89, 16, 46
++sy, sx = np.mgrid[pby0:pby1, pbx0:pbx1]
++dc = np.sqrt((sx-72.0)**2 + (sy-30.5)**2)
++env = np.clip(11.2 - dc, 0, 1)
++fringe = ((sy &gt; 33) &amp; (sy &lt;= 42) &amp;
++          (np.abs(sx-72.0) &lt; (12.0 - 0.75*(sy-33))))
++env = np.maximum(env, np.where(fringe, 0.45*np.clip(1-(sy-33)/10, 0, 1), 0))
++ball_rgb, ball_a = cut_sprite(pbx0, pbx1, pby0, pby1, env)
++ball_cx, ball_cy0 = 72.0 - pbx0, 30.5 - pby0
++
++# block: rounded rect x 201..211, y 28..56 + short fringe
++qbx0, qbx1, qby0, qby1 = 197, 216, 25, 63
++sy, sx = np.mgrid[qby0:qby1, qbx0:qbx1]
++rad = 2.5
++qx = np.maximum.reduce([np.abs(sx-206.0)-4.5, rad-np.abs(sx-206.0), np.zeros_like(sx, float)])
++qy = np.maximum.reduce([np.abs(sy-42.0)-13.5, rad-np.abs(sy-42.0), np.zeros_like(sy, float)])
++drect = np.sqrt(qx**2+qy**2)-rad
+… diff truncated; 129 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-c7efeab721f6.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-04T19:19:35.532207+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−2</span></div><p class="hashes">pixels c7efeab721f6b369 · code 0242429a56b9d46e</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -113,8 +113,8 @@
+                 v = -e_list[bounces]*v; bounces += 1
+             else:
+                 v = 0.0
+-        if bounces &gt; len(e_list):
+-            y += (rest+sink-y)*min(1.0, dt*10)
++        if bounces &gt;= len(e_list):
++            y += (rest+sink-y)*min(1.0, dt*8)
+         out.append((t, y))
+     tt = np.array([o[0] for o in out]); yy = np.array([o[1] for o in out])
+     return tt, yy</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-c7efeab721f6.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-04T19:19:37.331353+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels c7efeab721f6b369 · code 0242429a56b9d46e</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-db61e44e7c76.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-04T19:20:24.180539+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−6</span><span class="change">inspection 更新</span></div><p class="hashes">pixels db61e44e7c76b757 · code 74836c313bce5e76</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -106,15 +106,13 @@
+     out = [(0.0, y)]
+     bounces = 0
+     while t &lt; T - 1e-9:
++        if bounces &gt;= len(e_list):       # settled: ease into soft sink
++            y += (rest+sink-y)*min(1.0, dt*8); v = 0.0; t += dt
++            out.append((t, y)); continue
+         y += v*dt; v += G*dt; t += dt
+         if y &gt;= rest and v &gt; 0:
+             y = rest
+-            if bounces &lt; len(e_list):
+-                v = -e_list[bounces]*v; bounces += 1
+-            else:
+-                v = 0.0
+-        if bounces &gt;= len(e_list):
+-            y += (rest+sink-y)*min(1.0, dt*8)
++            v = -e_list[bounces]*v; bounces += 1
+         out.append((t, y))
+     tt = np.array([o[0] for o in out]); yy = np.array([o[1] for o in out])
+     return tt, yy</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-e8ba45ded20e.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-04T19:24:46.341275+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span><span class="change">inspection 更新</span></div><p class="hashes">pixels e8ba45ded20ec695 · code 8ab92658161fbe88</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -97,7 +97,7 @@
+     ph, pw = a.shape
+     region = base[y0:y0+ph, x0:x0+pw]
+     wm = wall[y0:y0+ph, x0:x0+pw]
+-    region[:] = a[..., None]*region + (1-a[..., None])*wm
++    region[:] = (1-a[..., None])*region + a[..., None]*wm
+ 
+ # --------------------------------------------------------------- physics sim
+ def simulate(y0, rest, e_list, sink, dt=0.002, T=5.0):</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-dabda267abc2.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-04T19:29:48.079235+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +51/−33</span><span class="change">inspection 更新</span></div><p class="hashes">pixels dabda267abc2a39e · code c114049efc8b3d7f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -55,27 +55,31 @@
+ dev = np.abs(frame0 - wall).sum(-1)
+ 
+ # ------------------------------------------------------------- sprite cutting
+-def cut_sprite(bx0, bx1, by0, by1, envelope, dev_thresh=(8.0, 20.0)):
+-    &quot;&quot;&quot;Cut an RGBA patch. Coverage = colour deviation vs wall model restricted
+-    to a geometric envelope (keeps the nearby grabber jaws out of the sprite).&quot;&quot;&quot;
+-    ph, pw = by1 - by0, bx1 - bx0
++def dev_alpha(patch, wm, thresh=(8.0, 20.0)):
++    d = np.abs(patch - wm).sum(-1)
++    return np.clip((d - thresh[0]) / (thresh[1] - thresh[0]), 0, 1)
++
++def cut_sprite(bx0, bx1, by0, by1, core_env, fringe_env, thresh=(8.0, 20.0)):
++    &quot;&quot;&quot;RGB patch plus separate core / shutter-fringe coverage, both gated by
++    colour deviation vs the wall model (so near-wall pixels stay transparent
++    and the sprite carries no bright box when composited over the pillows).&quot;&quot;&quot;
+     rgb = frame0[by0:by1, bx0:bx1].copy()
+     wm = wall[by0:by1, bx0:bx1]
+-    d = np.abs(rgb - wm).sum(-1)
+-    a = np.clip((d - dev_thresh[0]) / (dev_thresh[1] - dev_thresh[0]), 0, 1)
+-    a *= envelope
+-    a = ndimage.gaussian_filter(a, 0.5)
+-    return np.clip(rgb, 0, 255), np.clip(a, 0, 1)
++    da = dev_alpha(rgb, wm, thresh)
++    a_core = ndimage.gaussian_filter(np.clip(da*core_env, 0, 1), 0.5)
++    a_fringe = ndimage.gaussian_filter(np.clip(da*fringe_env, 0, 1), 0.5)
++    return np.clip(rgb, 0, 255), np.clip(a_core, 0, 1), np.clip(a_fringe, 0, 1)
+ 
+ # ball: circle r~10.3 at (72,30.5) + downward blur fringe
+ pbx0, pbx1, pby0, pby1 = 56, 89, 16, 46
+ sy, sx = np.mgrid[pby0:pby1, pbx0:pbx1]
+ dc = np.sqrt((sx-72.0)**2 + (sy-30.5)**2)
+-env = np.clip(11.2 - dc, 0, 1)
+-fringe = ((sy &gt; 33) &amp; (sy &lt;= 42) &amp;
++ball_env = np.clip(11.2 - dc, 0, 1)
++bfmask = ((sy &gt; 33) &amp; (sy &lt;= 42) &amp;
+           (np.abs(sx-72.0) &lt; (12.0 - 0.75*(sy-33))))
+-env = np.maximum(env, np.where(fringe, 0.45*np.clip(1-(sy-33)/10, 0, 1), 0))
+-ball_rgb, ball_a = cut_sprite(pbx0, pbx1, pby0, pby1, env)
++ball_fenv = np.where(bfmask, np.clip(1-(sy-33)/10, 0, 1), 0)
++ball_rgb, ball_ac, ball_af = cut_sprite(pbx0, pbx1, pby0, pby1,
++                                        ball_env, ball_fenv)
+ ball_cx, ball_cy0 = 72.0 - pbx0, 30.5 - pby0
+ 
+ # block: rounded rect x 201..211, y 28..56 + short fringe
+@@ -85,19 +89,23 @@
+ qx = np.maximum.reduce([np.abs(sx-206.0)-4.5, rad-np.abs(sx-206.0), np.zeros_like(sx, float)])
+ qy = np.maximum.reduce([np.abs(sy-42.0)-13.5, rad-np.abs(sy-42.0), np.zeros_like(sy, float)])
+ drect = np.sqrt(qx**2+qy**2)-rad
+-envb = np.clip(1.2-drect, 0, 1)
+-bfringe = ((sy &gt; 55) &amp; (sy &lt;= 60) &amp; (np.abs(sx-206.0) &lt; 5.2-0.35*(sy-55)))
+-envb = np.maximum(envb, np.where(bfringe, 0.5*np.clip(1-(sy-55)/5.5, 0, 1), 0))
+-blk_rgb, blk_a = cut_sprite(qbx0, qbx1, qby0, qby1, envb, dev_thresh=(8.0, 18.0))
++blk_env = np.clip(1.2-drect, 0, 1)
++qfmask = ((sy &gt; 55) &amp; (sy &lt;= 60) &amp; (np.abs(sx-206.0) &lt; 5.2-0.35*(sy-55)))
++blk_fenv = np.where(qfmask, np.clip(1-(sy-55)/5.5, 0, 1), 0)
++blk_rgb, blk_ac, blk_af = cut_sprite(qbx0, qbx1, qby0, qby1,
++                                     blk_env, blk_fenv, thresh=(8.0, 18.0))
+ blk_cx, blk_cy0 = 206.0 - qbx0, 43.0 - qby0
+ 
+-# static base: frame0 with the two initial sprites inpainted to modelled wall
++# static base: frame0 with the two initial sprites fully inpainted to the wall
+ base = frame0.copy()
+-for (rgb, a, x0, y0) in [(ball_rgb, ball_a, pbx0, pby0), (blk_rgb, blk_a, qbx0, qby0)]:
+-    ph, pw = a.shape
+-    region = base[y0:y0+ph, x0:x0+pw]
+-    wm = wall[y0:y0+ph, x0:x0+pw]
+-    region[:] = (1-a[..., None])*region + a[..., None]*wm
++for (env, fenv, x0, y0) in [(ball_env, ball_fenv, pbx0, pby0),
++                            (blk_env, blk_fenv, qbx0, qby0)]:
++    geom = np.clip(env + fenv, 0, 1)
++    remove = ndimage.gaussian_filter(geom, 1.0)       # dilated geometric mask
++    remove = np.clip((remove - 0.30) / 0.40, 0, 1)   # covers AA fringe fully
++    region = base[y0:y0+geom.shape[0], x0:x0+geom.shape[1]]
++    wm = wall[y0:y0+geom.shape[0], x0:x0+geom.shape[1]]
++    region[:] = (1-remove[..., None])*region + remove[..., None]*wm
+ 
+ # --------------------------------------------------------------- physics sim
+ def simulate(y0, rest, e_list, sink, dt=0.002, T=5.0):
+@@ -141,21 +149,31 @@
+         return out
+     return ndimage.map_coordinates(layer, coords, order=1, mode=&#x27;constant&#x27;, cval=0.0)
+ 
+-def render_object(canvas, rgb, alpha, x0, y0, cy_local, traj, t):
+-    &quot;&quot;&quot;Motion-blurred composite of one sprite along the shutter interval.&quot;&quot;&quot;
++def render_object(canvas, rgb, a_core, a_fringe, x0, y0, cy_local, traj, t):
++    &quot;&quot;&quot;Motion-blurred composite of one sprite along the shutter interval.
++    The shutter fringe is scaled by instantaneous speed, and antialiased
+… diff truncated; 42 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-d335909b70b3.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-04T19:34:15.208761+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +10/−9</span></div><p class="hashes">pixels d335909b70b31077 · code de30f11038559e54</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -156,8 +156,7 @@
+     with the actual background behind them.&quot;&quot;&quot;
+     tt, yy = traj
+     taus = np.linspace(max(0.0, t-SHUTTER), t, NSUB)
+-    num = np.zeros((H, W, 3)); one_minus = np.ones((H, W))
+-    B = base
++    sum_sw = np.zeros((H, W, 3)); sum_a = np.zeros((H, W))
+     for tau in taus:
+         c = cy_at(tt, yy, tau)
+         vc = cy_at(tt, yy, min(tau+0.01, 5.0))
+@@ -168,13 +167,15 @@
+         af = sample_layer(a_fringe, x0, y0, cy_local, c)
+         a = np.clip(ac + fs*af*(1-ac), 0, 1)
+         s = sample_layer(rgb, x0, y0, cy_local, c)
+-        prem = a[..., None]*s + (a*(1-a))[..., None]*(B - wall)
+-        num += prem
+-        one_minus *= (1-a)
+-    a_u = 1-one_minus
+-    col = np.divide(num, a_u[..., None], out=np.zeros_like(num),
+-                    where=a_u[..., None] &gt; 1e-6)
+-    canvas[:] = a_u[..., None]*col + (1-a_u[..., None])*canvas
++        support = np.clip((ac+af)*5.0, 0, 1)   # mask RGB leakage outside sprite
++        sum_sw += support[..., None]*(s - wall)
++        sum_a += a
++    mean_sw = sum_sw / NSUB
++    a_m = sum_a / NSUB
++    # physically correct shutter blend against the actual background (canvas):
++    # result = C + mean(s-wall) + mean(a)*(wall-C)
++    canvas += mean_sw + a_m[..., None]*(wall - canvas)
++    np.clip(canvas, 0, 255, out=canvas)
+ 
+ def contact_shadow(canvas, xc, surf_y, ax, ay, strength):
+     &quot;&quot;&quot;Soft dark ellipse on the pillow under a resting/nearby object.&quot;&quot;&quot;</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-d335909b70b3.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-04T19:34:17.059189+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels d335909b70b31077 · code de30f11038559e54</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-fd28effbfb45.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-04T19:38:34.910486+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +33/−20</span></div><p class="hashes">pixels fd28effbfb452618 · code 798e4451d515021d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -96,16 +96,28 @@
+                                      blk_env, blk_fenv, thresh=(8.0, 18.0))
+ blk_cx, blk_cy0 = 206.0 - qbx0, 43.0 - qby0
+ 
+-# static base: frame0 with the two initial sprites fully inpainted to the wall
++# static base: frame0 with the two initial sprites removed and the holes
++# filled by Laplacian diffusion from surrounding real wall pixels (preserves
++# the real vignette/noise better than the polynomial model).
+ base = frame0.copy()
++hole = np.zeros((H, W), bool)
+ for (env, fenv, x0, y0) in [(ball_env, ball_fenv, pbx0, pby0),
+                             (blk_env, blk_fenv, qbx0, qby0)]:
+     geom = np.clip(env + fenv, 0, 1)
+-    remove = ndimage.gaussian_filter(geom, 1.0)       # dilated geometric mask
+-    remove = np.clip((remove - 0.30) / 0.40, 0, 1)   # covers AA fringe fully
+-    region = base[y0:y0+geom.shape[0], x0:x0+geom.shape[1]]
+-    wm = wall[y0:y0+geom.shape[0], x0:x0+geom.shape[1]]
+-    region[:] = (1-remove[..., None])*region + remove[..., None]*wm
++    dil = ndimage.gaussian_filter(geom, 1.2)
++    m = np.zeros((H, W), bool)
++    m[y0:y0+geom.shape[0], x0:x0+geom.shape[1]] = dil &gt; 0.22
++    hole |= m
++fill = base.copy()
++for _ in range(1500):
++    p = np.pad(fill, ((1, 1), (1, 1), (0, 0)), mode=&#x27;edge&#x27;)
++    nbr = (p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]) / 4.0
++    fill[hole] = nbr[hole]
++base[hole] = fill[hole]
++
++# original-location wall patches matching each sprite (exact de-bleed refs)
++ball_bg = base[pby0:pby1, pbx0:pbx1].copy()
++blk_bg = base[qby0:qby1, qbx0:qbx1].copy()
+ 
+ # --------------------------------------------------------------- physics sim
+ def simulate(y0, rest, e_list, sink, dt=0.002, T=5.0):
+@@ -149,14 +161,17 @@
+         return out
+     return ndimage.map_coordinates(layer, coords, order=1, mode=&#x27;constant&#x27;, cval=0.0)
+ 
+-def render_object(canvas, rgb, a_core, a_fringe, x0, y0, cy_local, traj, t):
++def render_object(canvas, rgb, bg_patch, a_core, a_fringe, x0, y0,
++                  cy_local, traj, t):
+     &quot;&quot;&quot;Motion-blurred composite of one sprite along the shutter interval.
+-    The shutter fringe is scaled by instantaneous speed, and antialiased
+-    sprite edges (which were blended with the wall in frame 0) are re-blended
+-    with the actual background behind them.&quot;&quot;&quot;
++    The shutter fringe is scaled by instantaneous speed. Sprite RGB was
++    alpha-blended with the original wall behind it in frame 0; that exact
++    per-pixel wall reference (`bg_patch`, sampled with the same transform)
++    is removed and the sprite is re-blended against the actual canvas
++    (wall or pillow) at the destination.&quot;&quot;&quot;
+     tt, yy = traj
+     taus = np.linspace(max(0.0, t-SHUTTER), t, NSUB)
+-    sum_sw = np.zeros((H, W, 3)); sum_a = np.zeros((H, W))
++    sum_s = np.zeros((H, W, 3)); sum_omw = np.zeros((H, W, 3))
+     for tau in taus:
+         c = cy_at(tt, yy, tau)
+         vc = cy_at(tt, yy, min(tau+0.01, 5.0))
+@@ -167,14 +182,12 @@
+         af = sample_layer(a_fringe, x0, y0, cy_local, c)
+         a = np.clip(ac + fs*af*(1-ac), 0, 1)
+         s = sample_layer(rgb, x0, y0, cy_local, c)
++        w = sample_layer(bg_patch, x0, y0, cy_local, c)
+         support = np.clip((ac+af)*5.0, 0, 1)   # mask RGB leakage outside sprite
+-        sum_sw += support[..., None]*(s - wall)
+-        sum_a += a
+-    mean_sw = sum_sw / NSUB
+-    a_m = sum_a / NSUB
+-    # physically correct shutter blend against the actual background (canvas):
+-    # result = C + mean(s-wall) + mean(a)*(wall-C)
+-    canvas += mean_sw + a_m[..., None]*(wall - canvas)
++        sum_s += support[..., None]*s
++        sum_omw += support[..., None]*(1-a)[..., None]*w
++    # mean of per-subframe composites s + (1-a)*(C-w)
++    canvas[:] = (sum_s + NSUB*canvas - sum_omw) / NSUB
+     np.clip(canvas, 0, 255, out=canvas)
+ 
+ def contact_shadow(canvas, xc, surf_y, ax, ay, strength):
+@@ -202,8 +215,8 @@
+         p_blk = np.clip((BLK_REST+7-blk_cy)/15, 0, 1)
+         contact_shadow(canvas, 72, float(pillow_top[72])+1, 11, 3.0, 0.30*p_ball)
+         contact_shadow(canvas, 206, float(pillow_top[206])+1, 7, 2.4, 0.32*p_blk)
+-        render_object(canvas, blk_rgb, blk_ac, blk_af, qbx0, qby0, blk_cy0, (qt, qy), t)
+-        render_object(canvas, ball_rgb, ball_ac, ball_af, pbx0, pby0, ball_cy0, (bt, by), t)
++        render_object(canvas, blk_rgb, blk_bg, blk_ac, blk_af, qbx0, qby0, blk_cy0, (qt, qy), t)
++        render_object(canvas, ball_rgb, ball_bg, ball_ac, ball_af, pbx0, pby0, ball_cy0, (bt, by), t)
+         out = np.clip(canvas, 0, 255).astype(np.uint8)
+     else:
+… diff truncated; 1 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-fd28effbfb45.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-04T19:38:36.988048+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels fd28effbfb452618 · code 798e4451d515021d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-6a9e026a6a4f.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-04T19:42:28.870661+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−2</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 6a9e026a6a4f1f73 · code 2bc43a1cc05d72eb</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -172,6 +172,7 @@
+     tt, yy = traj
+     taus = np.linspace(max(0.0, t-SHUTTER), t, NSUB)
+     sum_s = np.zeros((H, W, 3)); sum_omw = np.zeros((H, W, 3))
++    sum_oma = np.zeros((H, W))
+     for tau in taus:
+         c = cy_at(tt, yy, tau)
+         vc = cy_at(tt, yy, min(tau+0.01, 5.0))
+@@ -184,10 +185,12 @@
+         s = sample_layer(rgb, x0, y0, cy_local, c)
+         w = sample_layer(bg_patch, x0, y0, cy_local, c)
+         support = np.clip((ac+af)*5.0, 0, 1)   # mask RGB leakage outside sprite
++        oma = support*(1-a)
+         sum_s += support[..., None]*s
+-        sum_omw += support[..., None]*(1-a)[..., None]*w
++        sum_omw += oma[..., None]*w
++        sum_oma += oma
+     # mean of per-subframe composites s + (1-a)*(C-w)
+-    canvas[:] = (sum_s + NSUB*canvas - sum_omw) / NSUB
++    canvas[:] = (sum_s + sum_oma[..., None]*canvas - sum_omw) / NSUB
+     np.clip(canvas, 0, 255, out=canvas)
+ 
+ def contact_shadow(canvas, xc, surf_y, ax, ay, strength):</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-8c9dd19aeadd.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-04T19:43:51.542693+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−6</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 8c9dd19aeadde291 · code 6ae3b77bfc1acebc</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -172,7 +172,7 @@
+     tt, yy = traj
+     taus = np.linspace(max(0.0, t-SHUTTER), t, NSUB)
+     sum_s = np.zeros((H, W, 3)); sum_omw = np.zeros((H, W, 3))
+-    sum_oma = np.zeros((H, W))
++    sum_sa = np.zeros((H, W))
+     for tau in taus:
+         c = cy_at(tt, yy, tau)
+         vc = cy_at(tt, yy, min(tau+0.01, 5.0))
+@@ -185,12 +185,11 @@
+         s = sample_layer(rgb, x0, y0, cy_local, c)
+         w = sample_layer(bg_patch, x0, y0, cy_local, c)
+         support = np.clip((ac+af)*5.0, 0, 1)   # mask RGB leakage outside sprite
+-        oma = support*(1-a)
+         sum_s += support[..., None]*s
+-        sum_omw += oma[..., None]*w
+-        sum_oma += oma
+-    # mean of per-subframe composites s + (1-a)*(C-w)
+-    canvas[:] = (sum_s + sum_oma[..., None]*canvas - sum_omw) / NSUB
++        sum_sa += support*a
++        sum_omw += (support*(1-a))[..., None]*w
++    # mean of per-subframe composites s + (1-a)*(C-w), written relative to C
++    canvas += (sum_s - sum_sa[..., None]*canvas - sum_omw) / NSUB
+     np.clip(canvas, 0, 255, out=canvas)
+ 
+ def contact_shadow(canvas, xc, surf_y, ax, ay, strength):</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-8c9dd19aeadd.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-04T19:46:23.609122+00:00</span></div><div class="changes"><span class="change code">代码 +13/−8</span></div><p class="hashes">pixels 8c9dd19aeadde291 · code 6aa183f1c43b1fa4</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -101,19 +101,24 @@
+ # the real vignette/noise better than the polynomial model).
+ base = frame0.copy()
+ hole = np.zeros((H, W), bool)
+-for (env, fenv, x0, y0) in [(ball_env, ball_fenv, pbx0, pby0),
+-                            (blk_env, blk_fenv, qbx0, qby0)]:
+-    geom = np.clip(env + fenv, 0, 1)
+-    dil = ndimage.gaussian_filter(geom, 1.2)
+-    m = np.zeros((H, W), bool)
+-    m[y0:y0+geom.shape[0], x0:x0+geom.shape[1]] = dil &gt; 0.22
+-    hole |= m
++# removal by colour deviation inside bounded ROIs: catches the full AA /
++# shutter-fringe footprint of each object without touching the claws.
++rois = [(57, 89, 23, 47, 14.0),    # ball (below the blue jaw tips)
++        (195, 218, 24, 64, 14.0)]  # block (below the orange claw)
++for (rx0, rx1, ry0, ry1, thr) in rois:
++    roi_dev = np.abs(frame0[ry0:ry1, rx0:rx1] - wall[ry0:ry1, rx0:rx1]).sum(-1)
++    m0 = roi_dev &gt; thr
++    md = ndimage.gaussian_filter(m0.astype(float), 1.0) &gt; 0.25
++    hole[ry0:ry1, rx0:rx1] |= md
+ fill = base.copy()
+ for _ in range(1500):
+     p = np.pad(fill, ((1, 1), (1, 1), (0, 0)), mode=&#x27;edge&#x27;)
+     nbr = (p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]) / 4.0
+     fill[hole] = nbr[hole]
+-base[hole] = fill[hole]
++# feather the patch edge a couple of pixels to avoid a seam
++soft = ndimage.gaussian_filter(hole.astype(float), 1.0)
++soft = np.clip((soft - 0.15) / 0.5, 0, 1)
++base = base*(1-soft[..., None]) + fill*soft[..., None]
+ 
+ # original-location wall patches matching each sprite (exact de-bleed refs)
+ ball_bg = base[pby0:pby1, pbx0:pbx1].copy()</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-3259a5ba4b86.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-04T19:46:50.999769+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span></div><p class="hashes">pixels 3259a5ba4b864ef7 · code 6aa183f1c43b1fa4</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-3259a5ba4b86.webp" alt="Round 14 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 14</h3><span class="clock">2026-11-04T19:46:53.045094+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 3259a5ba4b864ef7 · code 6aa183f1c43b1fa4</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-4900c2f9aef1.webp" alt="Round 15 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 15</h3><span class="clock">2026-11-04T19:50:34.067490+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−9</span></div><p class="hashes">pixels 4900c2f9aef1dbda · code cb7f0dd38dc3b0c9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -110,15 +110,11 @@
+     m0 = roi_dev &gt; thr
+     md = ndimage.gaussian_filter(m0.astype(float), 1.0) &gt; 0.25
+     hole[ry0:ry1, rx0:rx1] |= md
+-fill = base.copy()
+-for _ in range(1500):
+-    p = np.pad(fill, ((1, 1), (1, 1), (0, 0)), mode=&#x27;edge&#x27;)
+-    nbr = (p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]) / 4.0
+-    fill[hole] = nbr[hole]
+-# feather the patch edge a couple of pixels to avoid a seam
+-soft = ndimage.gaussian_filter(hole.astype(float), 1.0)
+-soft = np.clip((soft - 0.15) / 0.5, 0, 1)
+-base = base*(1-soft[..., None]) + fill*soft[..., None]
++# fill holes with the smooth wall model (diffusion was biased dark by the
++# claws bordering the top of each hole); feather one pixel at the edge
++soft = ndimage.gaussian_filter(hole.astype(float), 0.8)
++soft = np.clip((soft - 0.30) / 0.5, 0, 1)
++base = frame0*(1-soft[..., None]) + wall*soft[..., None]
+ 
+ # original-location wall patches matching each sprite (exact de-bleed refs)
+ ball_bg = base[pby0:pby1, pbx0:pbx1].copy()</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-4900c2f9aef1.webp" alt="Round 16 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 16</h3><span class="clock">2026-11-04T19:50:36.161521+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4900c2f9aef1dbda · code cb7f0dd38dc3b0c9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-d72f3aa23803.webp" alt="Round 17 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 17</h3><span class="clock">2026-11-04T19:53:35.948638+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +29/−15</span></div><p class="hashes">pixels d72f3aa23803954f · code 6ff6d08ddaefd848</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -96,25 +96,39 @@
+                                      blk_env, blk_fenv, thresh=(8.0, 18.0))
+ blk_cx, blk_cy0 = 206.0 - qbx0, 43.0 - qby0
+ 
+-# static base: frame0 with the two initial sprites removed and the holes
+-# filled by Laplacian diffusion from surrounding real wall pixels (preserves
+-# the real vignette/noise better than the polynomial model).
++# static base: frame0 with the two initial sprites removed.
+ base = frame0.copy()
+ hole = np.zeros((H, W), bool)
+-# removal by colour deviation inside bounded ROIs: catches the full AA /
+-# shutter-fringe footprint of each object without touching the claws.
+-rois = [(57, 89, 23, 47, 14.0),    # ball (below the blue jaw tips)
+-        (195, 218, 24, 64, 14.0)]  # block (below the orange claw)
+-for (rx0, rx1, ry0, ry1, thr) in rois:
+-    roi_dev = np.abs(frame0[ry0:ry1, rx0:rx1] - wall[ry0:ry1, rx0:rx1]).sum(-1)
+-    m0 = roi_dev &gt; thr
+-    md = ndimage.gaussian_filter(m0.astype(float), 1.0) &gt; 0.25
+-    hole[ry0:ry1, rx0:rx1] |= md
+-# fill holes with the smooth wall model (diffusion was biased dark by the
+-# claws bordering the top of each hole); feather one pixel at the edge
++# ---- block hole: colour deviation inside its ROI (clear of the claw)
++rx0, rx1, ry0, ry1, thr = 195, 218, 24, 64, 14.0
++roi_dev = np.abs(frame0[ry0:ry1, rx0:rx1] - wall[ry0:ry1, rx0:rx1]).sum(-1)
++hole[ry0:ry1, rx0:rx1] |= ndimage.gaussian_filter((roi_dev &gt; thr).astype(float), 1.0) &gt; 0.25
++# ---- ball hole: deviation below the jaw line (y&gt;=23); above that only the
++# ball core circle, with blue jaw pixels protected
++rx0, rx1, ry0, ry1, thr = 57, 89, 18, 47, 14.0
++roi_dev = np.abs(frame0[ry0:ry1, rx0:rx1] - wall[ry0:ry1, rx0:rx1]).sum(-1)
++rsy, rsx = np.mgrid[ry0:ry1, rx0:rx1]
++blue_jaw = (frame0[ry0:ry1, rx0:rx1, 2] - frame0[ry0:ry1, rx0:rx1, 0]) &gt; 18
++core_circle = (rsy &gt;= 23) | (np.hypot(rsx-72.0, rsy-30.5) &lt; 10.5)
++m0 = (roi_dev &gt; thr) &amp; ~blue_jaw &amp; core_circle
++hole[ry0:ry1, rx0:rx1] |= ndimage.gaussian_filter(m0.astype(float), 1.0) &gt; 0.25
++
++# Fill: polynomial wall corrected by the smoothed real-vs-model residual,
++# solved by diffusion. Claw/object pixels are treated as unknown so dark
++# colours cannot bleed into the filled holes.
++walllike = (np.abs(frame0 - wall).sum(-1) &lt; 22) &amp; (yy &gt;= 5) &amp; (yy &lt;= 80)
++known = walllike &amp; ~hole
++res = np.zeros((H, W, 3))
++res[known] = frame0[known] - wall[known]
++unk = ~known
++for _ in range(900):
++    p = np.pad(res, ((1, 1), (1, 1), (0, 0)), mode=&#x27;edge&#x27;)
++    nbr = (p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]) / 4.0
++    res[unk] = nbr[unk]
++fill_wall = wall + res
+ soft = ndimage.gaussian_filter(hole.astype(float), 0.8)
+ soft = np.clip((soft - 0.30) / 0.5, 0, 1)
+-base = frame0*(1-soft[..., None]) + wall*soft[..., None]
++base = frame0*(1-soft[..., None]) + fill_wall*soft[..., None]
+ 
+ # original-location wall patches matching each sprite (exact de-bleed refs)
+ ball_bg = base[pby0:pby1, pbx0:pbx1].copy()</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-d72f3aa23803.webp" alt="Round 18 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 18</h3><span class="clock">2026-11-04T19:53:38.161767+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels d72f3aa23803954f · code 6ff6d08ddaefd848</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-ad0e0e1b7cc9.webp" alt="Round 19 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 19</h3><span class="clock">2026-11-04T19:56:17.685962+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−4</span></div><p class="hashes">pixels ad0e0e1b7cc9b50f · code 944e1111a110d752</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -197,12 +197,12 @@
+         ac = sample_layer(a_core, x0, y0, cy_local, c)
+         af = sample_layer(a_fringe, x0, y0, cy_local, c)
+         a = np.clip(ac + fs*af*(1-ac), 0, 1)
++        m = (a &gt; 1e-4).astype(np.float32)   # fringe at zero speed contributes nothing
+         s = sample_layer(rgb, x0, y0, cy_local, c)
+         w = sample_layer(bg_patch, x0, y0, cy_local, c)
+-        support = np.clip((ac+af)*5.0, 0, 1)   # mask RGB leakage outside sprite
+-        sum_s += support[..., None]*s
+-        sum_sa += support*a
+-        sum_omw += (support*(1-a))[..., None]*w
++        sum_s += m[..., None]*s
++        sum_sa += m*a
++        sum_omw += (m*(1-a))[..., None]*w
+     # mean of per-subframe composites s + (1-a)*(C-w), written relative to C
+     canvas += (sum_s - sum_sa[..., None]*canvas - sum_omw) / NSUB
+     np.clip(canvas, 0, 255, out=canvas)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-ad0e0e1b7cc9.webp" alt="Round 20 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 20</h3><span class="clock">2026-11-04T19:56:19.545893+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels ad0e0e1b7cc9b50f · code 944e1111a110d752</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-fe69e6eb0362.webp" alt="Round 21 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 21</h3><span class="clock">2026-11-04T19:58:39.152323+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−7</span><span class="change">inspection 更新</span></div><p class="hashes">pixels fe69e6eb0362506c · code 4a3071eb3b921c65</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -82,16 +82,16 @@
+                                         ball_env, ball_fenv)
+ ball_cx, ball_cy0 = 72.0 - pbx0, 30.5 - pby0
+ 
+-# block: rounded rect x 201..211, y 28..56 + short fringe
++# block: rounded rect x 202..210 (half 4), solid y 30..54 (half 12) + fringe
+ qbx0, qbx1, qby0, qby1 = 197, 216, 25, 63
+ sy, sx = np.mgrid[qby0:qby1, qbx0:qbx1]
+-rad = 2.5
+-qx = np.maximum.reduce([np.abs(sx-206.0)-4.5, rad-np.abs(sx-206.0), np.zeros_like(sx, float)])
+-qy = np.maximum.reduce([np.abs(sy-42.0)-13.5, rad-np.abs(sy-42.0), np.zeros_like(sy, float)])
++rad = 2.2
++qx = np.maximum.reduce([np.abs(sx-206.0)-4.0, rad-np.abs(sx-206.0), np.zeros_like(sx, float)])
++qy = np.maximum.reduce([np.abs(sy-42.0)-12.0, rad-np.abs(sy-42.0), np.zeros_like(sy, float)])
+ drect = np.sqrt(qx**2+qy**2)-rad
+ blk_env = np.clip(1.2-drect, 0, 1)
+-qfmask = ((sy &gt; 55) &amp; (sy &lt;= 60) &amp; (np.abs(sx-206.0) &lt; 5.2-0.35*(sy-55)))
+-blk_fenv = np.where(qfmask, np.clip(1-(sy-55)/5.5, 0, 1), 0)
++qfmask = ((sy &gt; 54) &amp; (sy &lt;= 60) &amp; (np.abs(sx-206.0) &lt; 5.0-0.40*(sy-54)))
++blk_fenv = np.where(qfmask, np.clip(1-(sy-54)/6.0, 0, 1), 0)
+ blk_rgb, blk_ac, blk_af = cut_sprite(qbx0, qbx1, qby0, qby1,
+                                      blk_env, blk_fenv, thresh=(8.0, 18.0))
+ blk_cx, blk_cy0 = 206.0 - qbx0, 43.0 - qby0
+@@ -153,7 +153,7 @@
+     return tt, yy
+ 
+ BALL_REST = pillow_top[72] - 10.0      # 81
+-BLK_REST = pillow_top[206] - 14.0      # 73
++BLK_REST = pillow_top[206] - 12.0      # 75
+ bt, by = simulate(30.5, BALL_REST, [0.35, 0.25], 1.5)
+ qt, qy = simulate(43.0, BLK_REST, [0.28, 0.15], 1.0)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-003dc412b879.webp" alt="Round 22 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 22</h3><span class="clock">2026-11-04T20:14:49.771759+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +124/−94</span></div><p class="hashes">pixels 003dc412b87919ce · code c3577a00e05a0934</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,6 +1,16 @@
+-&quot;&quot;&quot;PixelWorld case_0002: two grabbers release a brown tennis ball and an orange
+-block above two beige pillows. Local pixel operations only; frame 0 is the
+-verbatim first frame. See METHOD.md / OBSERVATION.md.&quot;&quot;&quot;
++&quot;&quot;&quot;PixelWorld case_0002: two fixed grabbers release a brown tennis ball (left,
++blue claw) and an orange-red block (right, orange claw) onto two beige
++pillows. Locked-off camera; only the two objects move.
++
++Pipeline (see METHOD.md for details):
++  1. pillow top profile (warm-key per column);
++  2. smooth wall model (cubic 2-D polynomial per channel);
++  3. sprites cut with true coverage alpha recovered by inverting the
++     foreground-over-wall colour blend against a local wall plane;
++  4. static base: original sprites removed (holes from the coverage masks)
++     and filled with the wall model corrected by a diffused residual;
++  5. 1-D gravity / bounce physics, composited with 0.12 s shutter averaging.
++Frame 0 is written verbatim from first_frame.png. Local pixel ops only.&quot;&quot;&quot;
+ from pathlib import Path
+ import numpy as np
+ from PIL import Image
+@@ -45,77 +55,101 @@
+            (np.abs(ri-bi) &lt; 22) &amp; (ri &gt;= bi - 2))
+ for (x0, x1, ya, yb) in [(45, 96, 5, 26),       # blue claw + stem
+                          (180, 226, 0, 22),      # orange claw
+-                         (56, 90, 15, 46),       # ball
+-                         (197, 216, 25, 63),     # block + trail
++                         (56, 90, 15, 47),       # ball
++                         (194, 217, 24, 63),     # block
+                          (100, 132, 0, 5)]:      # yellow tab
+     wallish[ya:yb, x0:x1] = False
+-sel = wallish
+-coef = np.linalg.lstsq(X[sel], frame0[sel], rcond=None)[0]
++coef = np.linalg.lstsq(X[wallish], frame0[wallish], rcond=None)[0]
+ wall = (X @ coef).reshape(H, W, 3)
+-dev = np.abs(frame0 - wall).sum(-1)
+ 
+ # ------------------------------------------------------------- sprite cutting
+-def dev_alpha(patch, wm, thresh=(8.0, 20.0)):
+-    d = np.abs(patch - wm).sum(-1)
+-    return np.clip((d - thresh[0]) / (thresh[1] - thresh[0]), 0, 1)
+-
+-def cut_sprite(bx0, bx1, by0, by1, core_env, fringe_env, thresh=(8.0, 20.0)):
+-    &quot;&quot;&quot;RGB patch plus separate core / shutter-fringe coverage, both gated by
+-    colour deviation vs the wall model (so near-wall pixels stay transparent
+-    and the sprite carries no bright box when composited over the pillows).&quot;&quot;&quot;
+-    rgb = frame0[by0:by1, bx0:bx1].copy()
+-    wm = wall[by0:by1, bx0:bx1]
+-    da = dev_alpha(rgb, wm, thresh)
+-    a_core = ndimage.gaussian_filter(np.clip(da*core_env, 0, 1), 0.5)
+-    a_fringe = ndimage.gaussian_filter(np.clip(da*fringe_env, 0, 1), 0.5)
+-    return np.clip(rgb, 0, 255), np.clip(a_core, 0, 1), np.clip(a_fringe, 0, 1)
+-
+-# ball: circle r~10.3 at (72,30.5) + downward blur fringe
+-pbx0, pbx1, pby0, pby1 = 56, 89, 16, 46
+-sy, sx = np.mgrid[pby0:pby1, pbx0:pbx1]
+-dc = np.sqrt((sx-72.0)**2 + (sy-30.5)**2)
+-ball_env = np.clip(11.2 - dc, 0, 1)
+-bfmask = ((sy &gt; 33) &amp; (sy &lt;= 42) &amp;
+-          (np.abs(sx-72.0) &lt; (12.0 - 0.75*(sy-33))))
+-ball_fenv = np.where(bfmask, np.clip(1-(sy-33)/10, 0, 1), 0)
+-ball_rgb, ball_ac, ball_af = cut_sprite(pbx0, pbx1, pby0, pby1,
+-                                        ball_env, ball_fenv)
+-ball_cx, ball_cy0 = 72.0 - pbx0, 30.5 - pby0
+-
+-# block: rounded rect x 202..210 (half 4), solid y 30..54 (half 12) + fringe
+-qbx0, qbx1, qby0, qby1 = 197, 216, 25, 63
+-sy, sx = np.mgrid[qby0:qby1, qbx0:qbx1]
+-rad = 2.2
+-qx = np.maximum.reduce([np.abs(sx-206.0)-4.0, rad-np.abs(sx-206.0), np.zeros_like(sx, float)])
+-qy = np.maximum.reduce([np.abs(sy-42.0)-12.0, rad-np.abs(sy-42.0), np.zeros_like(sy, float)])
+-drect = np.sqrt(qx**2+qy**2)-rad
+-blk_env = np.clip(1.2-drect, 0, 1)
+-qfmask = ((sy &gt; 54) &amp; (sy &lt;= 60) &amp; (np.abs(sx-206.0) &lt; 5.0-0.40*(sy-54)))
+-blk_fenv = np.where(qfmask, np.clip(1-(sy-54)/6.0, 0, 1), 0)
+-blk_rgb, blk_ac, blk_af = cut_sprite(qbx0, qbx1, qby0, qby1,
+-                                     blk_env, blk_fenv, thresh=(8.0, 18.0))
+-blk_cx, blk_cy0 = 206.0 - qbx0, 43.0 - qby0
+-
+-# static base: frame0 with the two initial sprites removed.
++def rrect_sdf(sy, sx, cy, cx, hh, hw, rad):
++    &quot;&quot;&quot;Signed distance to a rounded rect (negative inside).&quot;&quot;&quot;
++    qx = np.maximum(np.abs(sx-cx) - (hw-rad), 0.0)
++    qy = np.maximum(np.abs(sy-cy) - (hh-rad), 0.0)
++    return np.hypot(qx, qy) - rad
++
++def local_wall_plane(x0, x1, y0, y1, gate):
++    &quot;&quot;&quot;Per-channel affine wall colour fit on clean frame0 pixels inside the
++    patch. The global cubic leaves small residuals; this local plane is the
+… diff truncated; 201 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-003dc412b879.webp" alt="Round 23 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 23</h3><span class="clock">2026-11-04T20:14:51.531222+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 003dc412b87919ce · code c3577a00e05a0934</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-4418cb7a9872.webp" alt="Round 24 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 24</h3><span class="clock">2026-11-04T20:18:17.219178+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +27/−18</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 4418cb7a987244b4 · code 07e272411b33d36c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -82,20 +82,26 @@
+     c = np.linalg.lstsq(A[clean], patch[clean], rcond=None)[0]
+     return (A @ c).reshape(y1-y0, x1-x0, 3)
+ 
+-def coverage(rgb, wref, obj, gate_core, gate_all):
+-    &quot;&quot;&quot;Recover coverage alpha from s = a*o + (1-a)*w. Per-channel inversion
+-    (only strong-contrast channels), median across channels, geometrically
+-    gated; interior forced opaque so texture (e.g. ball seam) cannot hole.&quot;&quot;&quot;
++def color_alpha(rgb, wref, obj, gate_all):
++    &quot;&quot;&quot;Coverage alpha by inverting s = a*o + (1-a)*w per strong-contrast
++    channel (median). Accurate on silhouette edges (it captures the source&#x27;s
++    slight tilt/splay) but unreliable on lighter interior texture, so it is
++    only one of the two alpha sources (combined via max).&quot;&quot;&quot;
+     acc = []
+     for c in range(3):
+         den = float(np.median(wref[..., c]) - obj[c])
+         if abs(den) &gt; 40:
+             acc.append(np.clip((wref[..., c]-rgb[..., c])/den, 0, 1))
+     a = np.median(np.stack(acc, -1), -1)
+-    a = ndimage.gaussian_filter(a*gate_all, 0.45)
+-    a = np.where(gate_core &gt; 0, 1.0, a)
+-    a *= gate_all
+-    return np.clip(a, 0, 1).astype(np.float32)
++    return np.clip(a*gate_all, 0, 1)
++
++def combine_alpha(a_col, a_geom, gate_all):
++    &quot;&quot;&quot;Geometric profile guarantees the interior (texture such as the ball
++    seam stays opaque); colour alpha extends the soft edge where the real
++    silhouette falls outside the symmetric ideal (tilted/splayed edges).&quot;&quot;&quot;
++    a = np.maximum(a_col, a_geom) * gate_all
++    a = ndimage.gaussian_filter(a, 0.4)
++    return np.clip(a*gate_all, 0, 1).astype(np.float32)
+ 
+ # ---- ball: measured centre (70.6, 29.5), mid-edge radius 10.3, ~3.5 px soft
+ # defocus edge; patch around it (plus a margin for the local wall fit).
+@@ -103,12 +109,14 @@
+ pbx0, pbx1, pby0, pby1 = 55, 89, 15, 47
+ sx, sy = np.meshgrid(np.arange(pbx0, pbx1), np.arange(pby0, pby1))
+ db = np.hypot(sx-bcx, sy-bcy)
+-ball_gate_core = (db &lt;= 8.7).astype(float)
+-ball_gate_all = (db &lt;= 12.0).astype(float)
++ball_gate_all = (db &lt;= 12.4).astype(float)
+ ball_wref = local_wall_plane(pbx0, pbx1, pby0, pby1, ball_gate_all &gt; 0)
+ ball_rgb = frame0[pby0:pby1, pbx0:pbx1].copy()
+-ball_a = coverage(ball_rgb, ball_wref, (20.0, 8.0, 3.0),
+-                  ball_gate_core, ball_gate_all)
++ball_ac = color_alpha(ball_rgb, ball_wref, (20.0, 8.0, 3.0), ball_gate_all)
++# geometric edge profile measured from frame0 midlines (r -&gt; coverage)
++ball_ag = np.interp(db, [0, 9.3, 10.0, 10.6, 11.4, 12.3],
++                    [1, 1, 0.68, 0.42, 0.15, 0])
++ball_a = combine_alpha(ball_ac, ball_ag, ball_gate_all)
+ # Above the jaw line only the true disc is visible, and blue jaw pixels never
+ # belong to the sprite.
+ blue = (ball_rgb[..., 2] - ball_rgb[..., 0]) &gt; 18
+@@ -121,14 +129,15 @@
+ kcx, kcy = 204.8, 43.4
+ qbx0, qbx1, qby0, qby1 = 194, 217, 26, 62
+ sx, sy = np.meshgrid(np.arange(qbx0, qbx1), np.arange(qby0, qby1))
+-dcore = rrect_sdf(sy, sx, kcy, kcx, 10.3, 3.4, 2.2)
+-dall = rrect_sdf(sy, sx, 43.6, kcx, 16.4, 5.3, 4.2)
+-blk_gate_core = (dcore &lt;= 0.2).astype(float)
+-blk_gate_all = (dall &lt;= 1.6).astype(float)
++dcore = rrect_sdf(sy, sx, kcy, kcx, 10.3, 3.45, 2.2)
++dall = rrect_sdf(sy, sx, 43.6, kcx, 16.8, 5.6, 4.4)
++blk_gate_all = (dall &lt;= 1.7).astype(float)
+ blk_wref = local_wall_plane(qbx0, qbx1, qby0, qby1, blk_gate_all &gt; 0)
+ blk_rgb = frame0[qby0:qby1, qbx0:qbx1].copy()
+-blk_a = coverage(blk_rgb, blk_wref, (135.0, 25.0, 5.0),
+-                 blk_gate_core, blk_gate_all)
++blk_ac = color_alpha(blk_rgb, blk_wref, (135.0, 25.0, 5.0), blk_gate_all)
++blk_ag = np.interp(dcore, [-0.5, 0.0, 0.9, 1.8, 2.7],
++                   [1.0, 0.5, 0.22, 0.08, 0.0])
++blk_a = combine_alpha(blk_ac, blk_ag, blk_gate_all)
+ blk_cx, blk_cy0 = kcx-qbx0, kcy-qby0
+ 
+ # ------------------------------------------------- static base (sprites out)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-cf13d9b210bd.webp" alt="Round 25 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 25</h3><span class="clock">2026-11-04T20:24:55.429315+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +10/−7</span><span class="change">inspection 更新</span></div><p class="hashes">pixels cf13d9b210bdc897 · code 918fddbda2513b1f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -109,12 +109,12 @@
+ pbx0, pbx1, pby0, pby1 = 55, 89, 15, 47
+ sx, sy = np.meshgrid(np.arange(pbx0, pbx1), np.arange(pby0, pby1))
+ db = np.hypot(sx-bcx, sy-bcy)
+-ball_gate_all = (db &lt;= 12.4).astype(float)
++ball_gate_all = (db &lt;= 13.0).astype(float)
+ ball_wref = local_wall_plane(pbx0, pbx1, pby0, pby1, ball_gate_all &gt; 0)
+ ball_rgb = frame0[pby0:pby1, pbx0:pbx1].copy()
+ ball_ac = color_alpha(ball_rgb, ball_wref, (20.0, 8.0, 3.0), ball_gate_all)
+ # geometric edge profile measured from frame0 midlines (r -&gt; coverage)
+-ball_ag = np.interp(db, [0, 9.3, 10.0, 10.6, 11.4, 12.3],
++ball_ag = np.interp(db, [0, 9.3, 10.0, 10.6, 11.4, 12.8],
+                     [1, 1, 0.68, 0.42, 0.15, 0])
+ ball_a = combine_alpha(ball_ac, ball_ag, ball_gate_all)
+ # Above the jaw line only the true disc is visible, and blue jaw pixels never
+@@ -143,12 +143,15 @@
+ # ------------------------------------------------- static base (sprites out)
+ base = frame0.copy()
+ hole = np.zeros((H, W), bool)
+-# block hole: its full coverage silhouette.
+-hb = ndimage.gaussian_filter(blk_a, 1.0) &gt; 0.22
++# Holes are the coverage silhouettes dilated past their faint outer fringe
++# (a&lt;~0.12 pixels are still darkened object colour and would otherwise stay
++# &quot;known&quot; to the diffusion and leave a ghost ring at the release position).
++# block hole: full silhouette (it hangs clear of the claw).
++hb = ndimage.gaussian_filter(blk_a, 1.2) &gt; 0.08
+ hole[qby0:qby1, qbx0:qbx1] |= hb
+-# ball hole: coverage, but blue jaw and anything above y23 outside the disc
+-# are protected so the claw stays intact.
+-hm = ndimage.gaussian_filter(ball_a, 1.0) &gt; 0.22
++# ball hole: same dilation, but blue jaw pixels and anything above y23
++# outside the disc are restored afterwards so the claw stays intact.
++hm = ndimage.gaussian_filter(ball_a, 1.2) &gt; 0.08
+ sx, sy = np.meshgrid(np.arange(pbx0, pbx1), np.arange(pby0, pby1))
+ blue_f = (frame0[pby0:pby1, pbx0:pbx1, 2]
+           - frame0[pby0:pby1, pbx0:pbx1, 0]) &gt; 18</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-3b613c81bc18.webp" alt="Round 26 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 26</h3><span class="clock">2026-11-04T20:28:00.655411+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−5</span></div><p class="hashes">pixels 3b613c81bc182306 · code d8ca769a3a4bc68d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -149,14 +149,16 @@
+ # block hole: full silhouette (it hangs clear of the claw).
+ hb = ndimage.gaussian_filter(blk_a, 1.2) &gt; 0.08
+ hole[qby0:qby1, qbx0:qbx1] |= hb
+-# ball hole: same dilation, but blue jaw pixels and anything above y23
+-# outside the disc are restored afterwards so the claw stays intact.
+-hm = ndimage.gaussian_filter(ball_a, 1.2) &gt; 0.08
++# ball hole: geometric disc (slightly past the faint outer edge), dilated;
++# but the claw is protected -- blue pixels and the dark jaw tips/edges.
+ sx, sy = np.meshgrid(np.arange(pbx0, pbx1), np.arange(pby0, pby1))
++dbp = np.hypot(sx-bcx, sy-bcy)
++disc_h = np.where(sy &gt;= 23, ball_gate_all, (dbp &lt;= 11.6).astype(float))
++hm = ndimage.gaussian_filter(disc_h, 1.2) &gt; 0.12
+ blue_f = (frame0[pby0:pby1, pbx0:pbx1, 2]
+           - frame0[pby0:pby1, pbx0:pbx1, 0]) &gt; 18
+-hm &amp;= ~blue_f
+-hm &amp;= ~((sy &lt; 23) &amp; (np.hypot(sx-bcx, sy-bcy) &gt;= 10.2))
++claw_edge = ((sx &gt;= 81) &amp; (sy &lt; 27)) | ((sx &lt;= 62) &amp; (sy &lt; 23))
++hm &amp;= ~(blue_f | claw_edge)
+ hole[pby0:pby1, pbx0:pbx1] |= hm
+ 
+ # Fill: polynomial wall corrected by the smoothed real-vs-model residual,</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/candidate-3b613c81bc18.webp" alt="Round 27 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 27</h3><span class="clock">2026-11-04T20:28:02.404735+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 3b613c81bc182306 · code d8ca769a3a4bc68d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0002/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION</h1>
+<h2>Scene measurements (from <code>first_frame.png</code>, 256×144)</h2>
+<p>Static locked-off frame, constant framerate, realistic lab demo. From top to bottom:</p>
+<ul>
+<li><strong>Rail / mount bar</strong>: y 0–4, near-black (#0a0a0a), small yellow tab around x108–127.</li>
+<li><strong>Left grabber (blue claw)</strong>: U-arc x≈50–88, y≈8–24, black housing/rail above; blue body (~20,45,110), black jaw edge on its right side (x≈82–88, to y≈24).</li>
+<li><strong>Right grabber (orange claw)</strong>: arc x≈186–224, y≈3–22, black housing on its left (x≈186–194).</li>
+<li><strong>Wall</strong>: matte warm light grey with a smooth vignette (r≈147 at mid-height under the objects, ≈118–125 near the left claw and bottom-left), no texture except faint static shading; brighter patch (r≈148 vs 135 model) at x≈69–78, y≈43–46.</li>
+<li><strong>Brown tennis ball</strong>: soft-edged disc. Half-coverage crossings measured on several rows/columns give centre <strong>(70.6, 29.5), mid-edge radius 10.3</strong>; the edge is a <em>symmetric</em> ~3.5 px soft/defocus ramp (coverage 0 at r≈12.3), not directional motion blur. Core very dark brown (~19–38, 7–16, 1–7; top darker, lower half slightly lighter) with two lighter brown seam arcs (r≈70–88) around x≈64–66 and x≈79–81.</li>
+<li><strong>Orange-red block</strong>: vertical rounded rectangle, measured centre <strong>(204.8, 43.4)</strong> with mid-edge half-width 3.45, half-height 10.3, corner radius ≈2.2; symmetric ~2–3 px soft edge. Body colour ≈ (138, 27, 5) (red channel almost equals the wall's, so the block is distinguished mainly by g/b); the bottom edge is slightly tilted/splayed, its soft fringe reaching x≈199–210 and y≈60. The lighter &quot;cap&quot; at y≈29–33 is just partial coverage of the body colour at the rounded top, not a different material.</li>
+<li><strong>Two beige pillows</strong> fill the bottom, separated by a dark vertical seam at x≈141. Pillow top profile (first warm <code>r−b&gt;10</code> pixel per column in y 80–130, interpolated, median-5 filtered in <code>generate.py</code>):<ul>
+<li>left pillow rises to a plateau <strong>y≈90–91 for x≈64–130</strong> (landing surface at ball column x71 → <strong>y=91</strong>);</li>
+<li>right pillow plateau <strong>y≈87 for x≈164–212</strong> (landing surface at block column x205 → <strong>y=87</strong>);</li>
+<li>crest shading beige-grey (~118,109,104), lighter down the cushion face.</li>
+</ul>
+</li>
+</ul>
+<h2>Method (summary; see METHOD.md)</h2>
+<p>Local Python pixel operations only. A cubic 2-D polynomial per channel models the smooth wall (fit on clean wall samples). Coverage alphas of both sprites are recovered by inverting the foreground-over-wall blend <code>s = a·o + (1−a)·w</code>, using a local affine wall-colour fit per patch (accurate at edges), combined with a measured geometric edge profile via max (keeps interior texture opaque, captures the block's slight edge tilt/splay). The static base is frame 0 with both coverage silhouettes (dilated past the faint fringe, claw pixels protected) filled by the wall model corrected with a diffused real-vs-model residual. Each frame the sprite's original over-wall blend is undone against the exact per-pixel cleaned background and re-blended over the canvas (wall or pillow); 8 sub-samples over a 0.12 s shutter give exposure-averaged motion blur. Physics is vertical-only: g = 60 px/s², two low-restitution bounces (ball e 0.35/0.25; block e 0.28/0.15), then a small sink into the soft pillow (1.5 px ball, 1.0 px block), dt = 0.002 s. A soft contact ellipse darkens the pillow as an object nears/rests on it. Claws, rail, wall and pillows never move; frame 00 is byte-identical to <code>first_frame.png</code>.</p>
+<h2>20-frame event plan / actual trajectory (4 fps, dt = 0.25 s)</h2>
+<p>Ball rest centre = 91 − 10.3 = <strong>80.7</strong>, sink → 82.2. Block rest centre = 87 − 12.35 = <strong>74.65</strong>, sink → 75.7.</p>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t (s)</th>
+  <th>ball cy</th>
+  <th>event</th>
+  <th>block cy</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>29.5</td>
+  <td>verbatim first frame (release)</td>
+  <td>43.4</td>
+  <td>release</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>31.4</td>
+  <td>just clear of jaw, slight trail</td>
+  <td>45.3</td>
+  <td>clear of claw</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>37.0</td>
+  <td>accelerating</td>
+  <td>50.9</td>
+  <td>accelerating</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>46.3</td>
+  <td>fast, ~8 px blur</td>
+  <td>60.2</td>
+  <td>fast, ~8 px blur</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>59.4</td>
+  <td>about to land</td>
+  <td>73.3</td>
+  <td>first contact ~t=1.02</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>76.3</td>
+  <td>first contact t≈1.31, contact shadow</td>
+  <td>72.3</td>
+  <td>bounce apex</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>76.5</td>
+  <td>rebound rising</td>
+  <td>73.3</td>
+  <td>falling back</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>74.4</td>
+  <td>bounce apex</td>
+  <td>75.4</td>
+  <td>second contact</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>76.0</td>
+  <td>falling back</td>
+  <td>75.7</td>
+  <td>settled</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>81.0</td>
+  <td>second contact</td>
+  <td>75.7</td>
+  <td>at rest</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>82.0</td>
+  <td>settling sink</td>
+  <td>75.7</td>
+  <td>at rest</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>82.2</td>
+  <td>settled</td>
+  <td>75.7</td>
+  <td>at rest</td>
+</tr>
+<tr>
+  <td>12–19</td>
+  <td>3.00–4.75</td>
+  <td>82.2</td>
+  <td>resting with soft contact shadow</td>
+  <td>75.7</td>
+  <td>resting with contact shadow</td>
+</tr>
+</tbody>
+</table>
+<p>No cuts, no camera motion, no other objects or actions.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD</h1>
+<p>How <code>generate.py</code> turns <code>first_frame.png</code> into the 20-frame sequence. Everything
 is local Python pixel math (NumPy / SciPy / Pillow); no external models, no
 network, no other cases. Frame 00 is written byte-identical to
 <code>first_frame.png</code>.</p>
@@ -117,4 +1057,5 @@ contact shadow; there is no mesh deformation.</li>
 measurable from the input); gravity and restitution are tuned to look
 physically plausible at 4 fps rather than measured from real footage.</li>
 </ul>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-vision-agent/0002-a61e669e6cba.png';</script></body></html>

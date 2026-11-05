@@ -1,4 +1,842 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-ramp · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0019</span></nav><article><h1>ball-ramp · 生成方法</h1><h2>Approach</h2>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ball-ramp · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0019</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>ball-ramp</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>12</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>7</strong><span>generate.py 执行</span></div><div class="stat"><strong>36</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>11</strong><span>文件变更事件</span></div><div class="stat"><strong>25.4m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A simple ramp made of cardboard, propped up by a blue block on a light-colored wooden table. There&#x27;s a black pipe to the left of the frame that directly points towards it. The yellow tennis ball rolls straight out of the black pipe onto the ramp.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>36 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>12 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-d4c3fc7f37b9.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T01:15:56.913538+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +270/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels d4c3fc7f37b9abc2 · code 80546ea65f1663ae</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,270 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;generate.py – Generate 20-frame animation of tennis ball rolling out of pipe onto ramp.
++
++Frame 00 is exactly first_frame.png.
++Frames 01–19 show the ball extracted as a sprite, moved rightward along the
++ramp surface with physically-plausible motion, and its previous position
++inpainted from surrounding pixels.
++&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++import sys
++
++sys.path.insert(0, str(Path(__file__).parent))
++from artifact_io import save
++
++# ── Constants ──────────────────────────────────────────────────────────────
++H, W = 144, 256
++FRAMES = 20
++FPS = 4
++CASE_DIR = Path(__file__).parent
++
++# ── Load first frame ───────────────────────────────────────────────────────
++frame0 = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;))
++assert frame0.shape == (H, W, 3) and frame0.dtype == np.uint8
++
++# ── Identify ball pixels (tight mask) ──────────────────────────────────────
++# Tennis ball is bright yellow-green: G dominates, R moderate-high, B low
++ball_mask = np.zeros((H, W), dtype=bool)
++for y in range(H):
++    for x in range(W):
++        r, g, b = int(frame0[y, x, 0]), int(frame0[y, x, 1]), int(frame0[y, x, 2])
++        if g &gt; r + 25 and g &gt; 150 and r &gt; 110 and b &lt; 110:
++            ball_mask[y, x] = True
++
++# Cluster to keep only the main ball (largest connected component)
++from scipy.ndimage import label
++labeled, n_features = label(ball_mask)
++if n_features &gt; 0:
++    sizes = [(labeled == i).sum() for i in range(1, n_features + 1)]
++    main_label = np.argmax(sizes) + 1
++    ball_mask = labeled == main_label
++
++ball_ys, ball_xs = np.where(ball_mask)
++ball_ymin, ball_ymax = ball_ys.min(), ball_ys.max()
++ball_xmin, ball_xmax = ball_xs.min(), ball_xs.max()
++ball_center_y = ball_ys.mean()
++ball_center_x = ball_xs.mean()
++ball_sprite = frame0[ball_ymin:ball_ymax+1, ball_xmin:ball_xmax+1].copy()
++sprite_h, sprite_w = ball_sprite.shape[:2]
++ball_radius = (ball_ymax - ball_ymin) / 2.0  # ~8 px
++
++print(f&quot;Ball: center=({ball_center_x:.1f},{ball_center_y:.1f}), &quot;
++      f&quot;bounds=[{ball_ymin}:{ball_ymax},{ball_xmin}:{ball_xmax}], &quot;
++      f&quot;pixels={ball_mask.sum()}, sprite={sprite_w}x{sprite_h}&quot;)
++
++# ── Estimate background behind ball ────────────────────────────────────────
++# For each ball pixel, interpolate horizontally from nearest non-ball pixels
++bg_ball = frame0.copy()
++for y in range(ball_ymin, ball_ymax + 1):
++    row = frame0[y, :, :].astype(np.float64)
++    is_ball = ball_mask[y, :]
++    if not is_ball.any():
++        continue
++    # Find left and right non-ball pixels for each x
++    left_colors = np.zeros((W, 3), dtype=np.float64)
++    right_colors = np.zeros((W, 3), dtype=np.float64)
++
++    # Fill left: propagate rightward from first non-ball
++    last_left = None
++    for x in range(W):
++        if not ball_mask[y, x]:
++            last_left = row[x].copy()
++        if last_left is not None:
++            left_colors[x] = last_left
++        else:
++            left_colors[x] = row[x]
++
++    # Fill right: propagate leftward from first non-ball
++    last_right = None
++    for x in range(W - 1, -1, -1):
++        if not ball_mask[y, x]:
++            last_right = row[x].copy()
++        if last_right is not None:
++            right_colors[x] = last_right
++        else:
+… diff truncated; 183 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-e74c3865d6aa.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T01:17:15.335389+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +148/−160</span></div><p class="hashes">pixels e74c3865d6aa27af · code 664175d475206d17</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -5,6 +5,18 @@
+ Frames 01–19 show the ball extracted as a sprite, moved rightward along the
+ ramp surface with physically-plausible motion, and its previous position
+ inpainted from surrounding pixels.
++
++Method:
++  - The ball is identified by its distinctive yellow-green color and clustered
++    to isolate the main ball blob.
++  - Background behind the ball is estimated by horizontal interpolation from
++    the nearest non-ball pixels in each row.
++  - The ramp/table surface is detected per-column by scanning from the top
++    for the first non-empty (non-pipe, non-sky) pixel.
++  - Ball trajectory follows physics: acceleration on the ramp, then constant
++    velocity with slight friction on the table.
++  - Ball sprite is composited at new positions using the original ball pixels
++    (with soft blending at edges).
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -18,7 +30,6 @@
+ # ── Constants ──────────────────────────────────────────────────────────────
+ H, W = 144, 256
+ FRAMES = 20
+-FPS = 4
+ CASE_DIR = Path(__file__).parent
+ 
+ # ── Load first frame ───────────────────────────────────────────────────────
+@@ -26,7 +37,6 @@
+ assert frame0.shape == (H, W, 3) and frame0.dtype == np.uint8
+ 
+ # ── Identify ball pixels (tight mask) ──────────────────────────────────────
+-# Tennis ball is bright yellow-green: G dominates, R moderate-high, B low
+ ball_mask = np.zeros((H, W), dtype=bool)
+ for y in range(H):
+     for x in range(W):
+@@ -34,7 +44,6 @@
+         if g &gt; r + 25 and g &gt; 150 and r &gt; 110 and b &lt; 110:
+             ball_mask[y, x] = True
+ 
+-# Cluster to keep only the main ball (largest connected component)
+ from scipy.ndimage import label
+ labeled, n_features = label(ball_mask)
+ if n_features &gt; 0:
+@@ -45,226 +54,205 @@
+ ball_ys, ball_xs = np.where(ball_mask)
+ ball_ymin, ball_ymax = ball_ys.min(), ball_ys.max()
+ ball_xmin, ball_xmax = ball_xs.min(), ball_xs.max()
+-ball_center_y = ball_ys.mean()
+-ball_center_x = ball_xs.mean()
+-ball_sprite = frame0[ball_ymin:ball_ymax+1, ball_xmin:ball_xmax+1].copy()
++ball_center_y0 = (ball_ymin + ball_ymax) / 2.
++ball_center_x0 = (ball_xmin + ball_xmax) / 2.
++ball_sprite = frame0[ball_ymin:ball_ymax + 1, ball_xmin:ball_xmax + 1].copy()
+ sprite_h, sprite_w = ball_sprite.shape[:2]
+-ball_radius = (ball_ymax - ball_ymin) / 2.0  # ~8 px
+-
+-print(f&quot;Ball: center=({ball_center_x:.1f},{ball_center_y:.1f}), &quot;
++ball_radius = sprite_h / 2.0
++
++print(f&quot;Ball: center=({ball_center_x0:.1f},{ball_center_y0:.1f}), &quot;
+       f&quot;bounds=[{ball_ymin}:{ball_ymax},{ball_xmin}:{ball_xmax}], &quot;
+       f&quot;pixels={ball_mask.sum()}, sprite={sprite_w}x{sprite_h}&quot;)
+ 
+ # ── Estimate background behind ball ────────────────────────────────────────
+-# For each ball pixel, interpolate horizontally from nearest non-ball pixels
++# For each row, interpolate ball pixels from nearest non-ball L/R neighbors
+ bg_ball = frame0.copy()
+ for y in range(ball_ymin, ball_ymax + 1):
+     row = frame0[y, :, :].astype(np.float64)
+-    is_ball = ball_mask[y, :]
+-    if not is_ball.any():
+-        continue
+-    # Find left and right non-ball pixels for each x
+-    left_colors = np.zeros((W, 3), dtype=np.float64)
+-    right_colors = np.zeros((W, 3), dtype=np.float64)
+-
+-    # Fill left: propagate rightward from first non-ball
+-    last_left = None
++    left_c = np.zeros((W, 3), dtype=np.float64)
++    right_c = np.zeros((W, 3), dtype=np.float64)
++
++    last = row[0].copy()
+     for x in range(W):
+         if not ball_mask[y, x]:
+-            last_left = row[x].copy()
+-        if last_left is not None:
+-            left_colors[x] = last_left
+-        else:
+… diff truncated; 318 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-e74c3865d6aa.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T01:17:17.257208+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels e74c3865d6aa27af · code 664175d475206d17</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-940e009b7579.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T01:19:31.708886+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +148/−202</span></div><p class="hashes">pixels 940e009b75793fd9 · code 54477b31ab468bda</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,22 +1,13 @@
+ #!/usr/bin/env python3
+ &quot;&quot;&quot;generate.py – Generate 20-frame animation of tennis ball rolling out of pipe onto ramp.
+ 
+-Frame 00 is exactly first_frame.png.
+-Frames 01–19 show the ball extracted as a sprite, moved rightward along the
+-ramp surface with physically-plausible motion, and its previous position
+-inpainted from surrounding pixels.
+-
+ Method:
+-  - The ball is identified by its distinctive yellow-green color and clustered
+-    to isolate the main ball blob.
+-  - Background behind the ball is estimated by horizontal interpolation from
+-    the nearest non-ball pixels in each row.
+-  - The ramp/table surface is detected per-column by scanning from the top
+-    for the first non-empty (non-pipe, non-sky) pixel.
+-  - Ball trajectory follows physics: acceleration on the ramp, then constant
+-    velocity with slight friction on the table.
+-  - Ball sprite is composited at new positions using the original ball pixels
+-    (with soft blending at edges).
++  1. Identify the ball sprite from frame00 using color clustering (yellow-green).
++  2. Estimate the background behind the ball via horizontal row interpolation.
++  3. Define a simple 1D surface-line from which the ball&#x27;s bottom hangs.
++  4. Move the ball sprite with physically-plausible x-acceleration; derive y so
++     the ball bottom stays on the surface.
++  5. Composite each frame and save all required artifacts.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -27,16 +18,15 @@
+ sys.path.insert(0, str(Path(__file__).parent))
+ from artifact_io import save
+ 
+-# ── Constants ──────────────────────────────────────────────────────────────
+ H, W = 144, 256
+ FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-# ── Load first frame ───────────────────────────────────────────────────────
++# ── 1. Load first frame ────────────────────────────────────────────────────
+ frame0 = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;))
+ assert frame0.shape == (H, W, 3) and frame0.dtype == np.uint8
+ 
+-# ── Identify ball pixels (tight mask) ──────────────────────────────────────
++# ── 2. Ball detection ─────────────────────────────────────────────────────
+ ball_mask = np.zeros((H, W), dtype=bool)
+ for y in range(H):
+     for x in range(W):
+@@ -44,215 +34,171 @@
+         if g &gt; r + 25 and g &gt; 150 and r &gt; 110 and b &lt; 110:
+             ball_mask[y, x] = True
+ 
+-from scipy.ndimage import label
+-labeled, n_features = label(ball_mask)
+-if n_features &gt; 0:
+-    sizes = [(labeled == i).sum() for i in range(1, n_features + 1)]
+-    main_label = np.argmax(sizes) + 1
+-    ball_mask = labeled == main_label
+-
+-ball_ys, ball_xs = np.where(ball_mask)
+-ball_ymin, ball_ymax = ball_ys.min(), ball_ys.max()
+-ball_xmin, ball_xmax = ball_xs.min(), ball_xs.max()
+-ball_center_y0 = (ball_ymin + ball_ymax) / 2.
+-ball_center_x0 = (ball_xmin + ball_xmax) / 2.
+-ball_sprite = frame0[ball_ymin:ball_ymax + 1, ball_xmin:ball_xmax + 1].copy()
+-sprite_h, sprite_w = ball_sprite.shape[:2]
+-ball_radius = sprite_h / 2.0
+-
+-print(f&quot;Ball: center=({ball_center_x0:.1f},{ball_center_y0:.1f}), &quot;
+-      f&quot;bounds=[{ball_ymin}:{ball_ymax},{ball_xmin}:{ball_xmax}], &quot;
+-      f&quot;pixels={ball_mask.sum()}, sprite={sprite_w}x{sprite_h}&quot;)
+-
+-# ── Estimate background behind ball ────────────────────────────────────────
+-# For each row, interpolate ball pixels from nearest non-ball L/R neighbors
+-bg_ball = frame0.copy()
+-for y in range(ball_ymin, ball_ymax + 1):
++from scipy.ndimage import label as nd_label
++labeled, n = nd_label(ball_mask)
++if n &gt; 0:
++    sizes = [(labeled == i).sum() for i in range(1, n + 1)]
++    ball_mask = labeled == (np.argmax(sizes) + 1)
++
++ys, xs = np.where(ball_mask)
++ymin, ymax = ys.min(), ys.max()
++xmin, xmax = xs.min(), xs.max()
++ball_cx0 = (xmin + xmax) / 2.0   # ≈ 103
++ball_cy0 = (ymin + ymax) / 2.0   # ≈ 72.5
++sprite = frame0[ymin:ymax + 1, xmin:xmax + 1].copy()
+… diff truncated; 316 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-940e009b7579.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T01:19:33.454927+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 940e009b75793fd9 · code 54477b31ab468bda</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-61c4661a4833.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T01:20:39.833775+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +100/−94</span></div><p class="hashes">pixels 61c4661a4833e5b9 · code 71db5f33c5b913ba</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,13 +1,18 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;generate.py – Generate 20-frame animation of tennis ball rolling out of pipe onto ramp.
++&quot;&quot;&quot;generate.py – 20-frame animation: tennis ball rolls out of pipe onto ramp.
++
++Frame 00 == first_frame.png exactly.
++Frames 01–19: ball extracted as sprite, background inpainted, ball redrawn
++at physically-plausible positions along the ramp/table surface.
+ 
+ Method:
+-  1. Identify the ball sprite from frame00 using color clustering (yellow-green).
+-  2. Estimate the background behind the ball via horizontal row interpolation.
+-  3. Define a simple 1D surface-line from which the ball&#x27;s bottom hangs.
+-  4. Move the ball sprite with physically-plausible x-acceleration; derive y so
+-     the ball bottom stays on the surface.
+-  5. Composite each frame and save all required artifacts.
++  • Ball sprite: colour-clustered yellow-green pixels, largest connected blob.
++  • Background fill: per-row horizontal interpolation from nearest non-ball pixels.
++  • Surface: the ball&#x27;s bottom in frame00 sits at y≈80 on a cardboard/table
++    mixture.  We treat this as a locally-horizontal ground plane (the ramp is
++    nearly level where the ball exits the pipe, transitioning to flat table).
++  • Trajectory: x follows physics (ramp gravity-acceleration then table
++    deceleration); y tracks the ground plane with a small downward ramp dip.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -18,15 +23,20 @@
+ sys.path.insert(0, str(Path(__file__).parent))
+ from artifact_io import save
+ 
++# ═══════════════════════════════════════════════════════════════════════════
++# Constants
++# ═══════════════════════════════════════════════════════════════════════════
+ H, W = 144, 256
+ FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-# ── 1. Load first frame ────────────────────────────────────────────────────
++# ═══════════════════════════════════════════════════════════════════════════
++# 1. Load &amp; identify ball
++# ═══════════════════════════════════════════════════════════════════════════
+ frame0 = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;))
+ assert frame0.shape == (H, W, 3) and frame0.dtype == np.uint8
+ 
+-# ── 2. Ball detection ─────────────────────────────────────────────────────
++# Tennis-ball colour: bright yellow-green (G dominates, R moderate, B low)
+ ball_mask = np.zeros((H, W), dtype=bool)
+ for y in range(H):
+     for x in range(W):
+@@ -35,133 +45,127 @@
+             ball_mask[y, x] = True
+ 
+ from scipy.ndimage import label as nd_label
+-labeled, n = nd_label(ball_mask)
+-if n &gt; 0:
+-    sizes = [(labeled == i).sum() for i in range(1, n + 1)]
++labeled, n_comp = nd_label(ball_mask)
++if n_comp &gt; 0:
++    sizes = [(labeled == i).sum() for i in range(1, n_comp + 1)]
+     ball_mask = labeled == (np.argmax(sizes) + 1)
+ 
+ ys, xs = np.where(ball_mask)
+ ymin, ymax = ys.min(), ys.max()
+ xmin, xmax = xs.min(), xs.max()
+-ball_cx0 = (xmin + xmax) / 2.0   # ≈ 103
+-ball_cy0 = (ymin + ymax) / 2.0   # ≈ 72.5
++ball_cx0 = float(xmin + xmax) / 2.
++ball_cy0 = float(ymin + ymax) / 2.
+ sprite = frame0[ymin:ymax + 1, xmin:xmax + 1].copy()
+ sh, sw = sprite.shape[:2]
+-radius = sh / 2.0   # ≈ 8
+-
+-print(f&quot;Ball: center=({ball_cx0:.1f},{ball_cy0:.1f}), &quot;
+-      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}], pixels={ball_mask.sum()}&quot;)
+-
+-# ── 3. Background inpainting behind ball ───────────────────────────────────
++radius = sh / 2.0  # ball half-height
++
++print(f&quot;Ball: centre=({ball_cx0:.1f},{ball_cy0:.1f}) &quot;
++      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}] {ball_mask.sum()}px&quot;)
++
++# ═══════════════════════════════════════════════════════════════════════════
++# 2. Background inpainting behind ball
++# ═══════════════════════════════════════════════════════════════════════════
+ bg = frame0.copy()
+ for y in range(ymin, ymax + 1):
+     row = frame0[y, :, :].astype(np.float64)
+-    left_c = np.zeros((W, 3), dtype=np.float64)
+… diff truncated; 195 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-61c4661a4833.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T01:20:41.560659+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 61c4661a4833e5b9 · code 71db5f33c5b913ba</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-4e2096cbbf13.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T01:22:08.788223+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +94/−84</span></div><p class="hashes">pixels 4e2096cbbf135625 · code 6f26fe3f29a41397</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -2,17 +2,15 @@
+ &quot;&quot;&quot;generate.py – 20-frame animation: tennis ball rolls out of pipe onto ramp.
+ 
+ Frame 00 == first_frame.png exactly.
+-Frames 01–19: ball extracted as sprite, background inpainted, ball redrawn
+-at physically-plausible positions along the ramp/table surface.
++Frames 01–19: ball extracted as sprite, background inpainted via horizontal
++interpolation, ball composited at physically-plausible positions.
+ 
+ Method:
+-  • Ball sprite: colour-clustered yellow-green pixels, largest connected blob.
+-  • Background fill: per-row horizontal interpolation from nearest non-ball pixels.
+-  • Surface: the ball&#x27;s bottom in frame00 sits at y≈80 on a cardboard/table
+-    mixture.  We treat this as a locally-horizontal ground plane (the ramp is
+-    nearly level where the ball exits the pipe, transitioning to flat table).
+-  • Trajectory: x follows physics (ramp gravity-acceleration then table
+-    deceleration); y tracks the ground plane with a small downward ramp dip.
++  • Ball: largest cluster of yellow-green pixels (g&gt;r+25, g&gt;150, r&gt;110, b&lt;110).
++  • Background: per-row L/R non-ball interpolation.
++  • Ground plane: anchored at ball bottom (y≈80), very gentle slope.
++  • Trajectory: x physics (ramp accel → table decel); y follows ground.
++  • Compositing: binary alpha on mask pixels, 1-px soft edge.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -23,9 +21,6 @@
+ sys.path.insert(0, str(Path(__file__).parent))
+ from artifact_io import save
+ 
+-# ═══════════════════════════════════════════════════════════════════════════
+-# Constants
+-# ═══════════════════════════════════════════════════════════════════════════
+ H, W = 144, 256
+ FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+@@ -36,7 +31,6 @@
+ frame0 = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;))
+ assert frame0.shape == (H, W, 3) and frame0.dtype == np.uint8
+ 
+-# Tennis-ball colour: bright yellow-green (G dominates, R moderate, B low)
+ ball_mask = np.zeros((H, W), dtype=bool)
+ for y in range(H):
+     for x in range(W):
+@@ -45,25 +39,32 @@
+             ball_mask[y, x] = True
+ 
+ from scipy.ndimage import label as nd_label
+-labeled, n_comp = nd_label(ball_mask)
+-if n_comp &gt; 0:
+-    sizes = [(labeled == i).sum() for i in range(1, n_comp + 1)]
++labeled, n = nd_label(ball_mask)
++if n &gt; 0:
++    sizes = [(labeled == i).sum() for i in range(1, n + 1)]
+     ball_mask = labeled == (np.argmax(sizes) + 1)
+ 
+ ys, xs = np.where(ball_mask)
+ ymin, ymax = ys.min(), ys.max()
+ xmin, xmax = xs.min(), xs.max()
+-ball_cx0 = float(xmin + xmax) / 2.
+-ball_cy0 = float(ymin + ymax) / 2.
++ball_cx0 = (xmin + xmax) / 2.0
++ball_cy0 = (ymin + ymax) / 2.0
+ sprite = frame0[ymin:ymax + 1, xmin:xmax + 1].copy()
+ sh, sw = sprite.shape[:2]
+-radius = sh / 2.0  # ball half-height
+-
+-print(f&quot;Ball: centre=({ball_cx0:.1f},{ball_cy0:.1f}) &quot;
+-      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}] {ball_mask.sum()}px&quot;)
+-
+-# ═══════════════════════════════════════════════════════════════════════════
+-# 2. Background inpainting behind ball
++radius = sh / 2.0
++
++# Build sprite mask in sprite-local coordinates
++sprite_mask = np.zeros((sh, sw), dtype=bool)
++for by in range(sh):
++    for bx in range(sw):
++        sprite_mask[by, bx] = ball_mask[ymin + by, xmin + bx]
++
++ball_px = int(sprite_mask.sum())
++print(f&quot;Ball: centre=({ball_cx0:.1f},{ball_cy0:.1f}), &quot;
++      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}], {ball_px}px, sprite {sw}×{sh}&quot;)
++
++# ═══════════════════════════════════════════════════════════════════════════
++# 2. Background inpainting
+ # ═══════════════════════════════════════════════════════════════════════════
+ bg = frame0.copy()
+ for y in range(ymin, ymax + 1):
+… diff truncated; 185 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-4e2096cbbf13.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T01:22:10.522171+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4e2096cbbf135625 · code 6f26fe3f29a41397</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-eebf06ff4ba2.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-05T01:23:29.843246+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +8/−53</span><span class="change">inspection 更新</span></div><p class="hashes">pixels eebf06ff4ba2decc · code 9092048b4e4c0d6f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -10,7 +10,7 @@
+   • Background: per-row L/R non-ball interpolation.
+   • Ground plane: anchored at ball bottom (y≈80), very gentle slope.
+   • Trajectory: x physics (ramp accel → table decel); y follows ground.
+-  • Compositing: binary alpha on mask pixels, 1-px soft edge.
++  • Compositing: full opacity for ball mask pixels, no softening.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -53,7 +53,7 @@
+ sh, sw = sprite.shape[:2]
+ radius = sh / 2.0
+ 
+-# Build sprite mask in sprite-local coordinates
++# Sprite mask (local coords)
+ sprite_mask = np.zeros((sh, sw), dtype=bool)
+ for by in range(sh):
+     for bx in range(sw):
+@@ -88,10 +88,6 @@
+ # ═══════════════════════════════════════════════════════════════════════════
+ # 3. Ground surface
+ # ═══════════════════════════════════════════════════════════════════════════
+-# Ball bottom in frame00 at ymax≈80; this is the ground where it sits.
+-# We model a subtle ramp: slightly higher behind the pipe (left), dipping
+-# to table level near the ball, then flat.
+-
+ ground = np.full(W, float(ymax), dtype=float)
+ for x in range(W):
+     if x &lt; 60:
+@@ -103,12 +99,8 @@
+ ground = uniform_filter1d(ground, size=11)
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+-# 4. Trajectory — target ball exit at right edge by frame 19
++# 4. Trajectory
+ # ═══════════════════════════════════════════════════════════════════════════
+-# Desired: ball exits right side (~x=W+radius ≈ 264) by frame 19.
+-# From x=103, Δx≈161 over 19 frames ≈ 8.5 px/frame avg.
+-# Physics: ramp acceleration early, then table deceleration.
+-
+ ramp_end = 5
+ v0 = 3.0
+ a_ramp = 0.90
+@@ -137,42 +129,10 @@
+ 
+ print(&quot;\nTrajectory:&quot;)
+ for t in range(FRAMES):
+-    bx = int(np.clip(np.round(traj_x[t]), 0, W - 1))
+-    print(f&quot;  t={t:2d}  x={traj_x[t]:6.1f}  y={traj_y[t]:5.1f}  gnd[{bx}]={ground[bx]:.1f}&quot;)
++    print(f&quot;  t={t:2d}  x={traj_x[t]:6.1f}  y={traj_y[t]:5.1f}&quot;)
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+-# 5. Build sprite alpha (binary core + 1px soft edge)
+-# ═══════════════════════════════════════════════════════════════════════════
+-alpha = np.zeros((sh, sw), dtype=np.float64)
+-for by in range(sh):
+-    for bx in range(sw):
+-        if sprite_mask[by, bx]:
+-            # Check if this is an edge pixel
+-            is_edge = False
+-            for dy in [-1, 0, 1]:
+-                for dx in [-1, 0, 1]:
+-                    ny, nx = by + dy, bx + dx
+-                    if 0 &lt;= ny &lt; sh and 0 &lt;= nx &lt; sw:
+-                        if not sprite_mask[ny, nx]:
+-                            is_edge = True
+-            alpha[by, bx] = 0.65 if is_edge else 1.0
+-        else:
+-            alpha[by, bx] = 0.0
+-
+-# Also include near-edge non-mask pixels with low alpha for smoother borders
+-for by in range(sh):
+-    for bx in range(sw):
+-        if not sprite_mask[by, bx]:
+-            # Check if adjacent to mask
+-            for dy in [-1, 0, 1]:
+-                for dx in [-1, 0, 1]:
+-                    ny, nx = by + dy, bx + dx
+-                    if 0 &lt;= ny &lt; sh and 0 &lt;= nx &lt; sw and sprite_mask[ny, nx]:
+-                        alpha[by, bx] = max(alpha[by, bx], 0.35)
+-                        break
+-
+-# ═══════════════════════════════════════════════════════════════════════════
+-# 6. Composite frames
++# 5. Composite frames (FULL opacity for ball mask pixels)
+ # ═══════════════════════════════════════════════════════════════════════════
+ frames = np.zeros((FRAMES, H, W, 3), dtype=np.uint8)
+ 
+… diff truncated; 28 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-089806c24500.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-05T01:24:48.766325+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +48/−26</span></div><p class="hashes">pixels 089806c24500d1aa · code 75022ac30159d526</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -7,10 +7,12 @@
+ 
+ Method:
+   • Ball: largest cluster of yellow-green pixels (g&gt;r+25, g&gt;150, r&gt;110, b&lt;110).
+-  • Background: per-row L/R non-ball interpolation.
+-  • Ground plane: anchored at ball bottom (y≈80), very gentle slope.
+-  • Trajectory: x physics (ramp accel → table decel); y follows ground.
+-  • Compositing: full opacity for ball mask pixels, no softening.
++  • Background: per-row L/R non-ball horizontal interpolation.
++  • Ground plane: anchored at ball bottom (y≈80), slopes gently from pipe
++    exit down toward the table.
++  • Trajectory: x follows ramp acceleration → table friction; y follows the
++    ground surface with an initial pipe-exit drop.
++  • Compositing: full opacity for ball mask pixels.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -47,21 +49,20 @@
+ ys, xs = np.where(ball_mask)
+ ymin, ymax = ys.min(), ys.max()
+ xmin, xmax = xs.min(), xs.max()
+-ball_cx0 = (xmin + xmax) / 2.0
+-ball_cy0 = (ymin + ymax) / 2.0
++ball_cx0 = (xmin + xmax) / 2.0      # ≈ 103
++ball_cy0 = (ymin + ymax) / 2.0      # ≈ 72.5
++ball_bottom0 = float(ymax)           # ≈ 80
+ sprite = frame0[ymin:ymax + 1, xmin:xmax + 1].copy()
+ sh, sw = sprite.shape[:2]
+-radius = sh / 2.0
++radius = sh / 2.0                    # ≈ 8
+ 
+-# Sprite mask (local coords)
+ sprite_mask = np.zeros((sh, sw), dtype=bool)
+ for by in range(sh):
+     for bx in range(sw):
+         sprite_mask[by, bx] = ball_mask[ymin + by, xmin + bx]
+ 
+-ball_px = int(sprite_mask.sum())
+ print(f&quot;Ball: centre=({ball_cx0:.1f},{ball_cy0:.1f}), &quot;
+-      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}], {ball_px}px, sprite {sw}×{sh}&quot;)
++      f&quot;bounds=[{ymin}:{ymax},{xmin}:{xmax}], {sprite_mask.sum()}px, {sw}×{sh}&quot;)
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+ # 2. Background inpainting
+@@ -86,53 +87,74 @@
+             bg[y, x] = np.clip((left[x] + right[x]) / 2, 0, 255).astype(np.uint8)
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+-# 3. Ground surface
++# 3. Ground surface (ball-bottom line)
+ # ═══════════════════════════════════════════════════════════════════════════
++# The ball bottom sits at y≈80 in frame00.  The ramp dips slightly toward
++# the table then levels out.  Model a ramp that starts 2px higher at left
++# and slopes down to table level (ymax) over ~40px, then stays flat.
++
++ramp_start_x = xmin          # ≈ 95 — start of ramp slope
++ramp_slope = 2.0 / 40.0      # drops 2px over 40px
++ramp_end_x = ramp_start_x + 40  # ≈ 135
++
+ ground = np.full(W, float(ymax), dtype=float)
+ for x in range(W):
+-    if x &lt; 60:
+-        ground[x] = ymax - 5.0 * (60 - x) / 60.0
++    if x &lt; ramp_start_x:
++        ground[x] = ymax - 2.0   # ramp slightly higher before ball
++    elif x &lt; ramp_end_x:
++        ground[x] = ymax - 2.0 + ramp_slope * (x - ramp_start_x)
+     else:
+-        ground[x] = ymax
++        ground[x] = ymax         # flat table
+ 
++# Smooth
+ from scipy.ndimage import uniform_filter1d
+ ground = uniform_filter1d(ground, size=11)
++
++print(f&quot;Ground at ball x={int(ball_cx0)}: {ground[int(ball_cx0)]:.2f}&quot;)
++print(f&quot;Ground at x=130: {ground[130]:.2f}&quot;)
++print(f&quot;Ground at x=200: {ground[200]:.2f}&quot;)
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+ # 4. Trajectory
+ # ═══════════════════════════════════════════════════════════════════════════
+-ramp_end = 5
+-v0 = 3.0
+-a_ramp = 0.90
+-a_table = -0.06
++ramp_t = 7          # ramp-phase end frame (0-indexed)
++v0 = 2.5            # initial vx px/frame
+… diff truncated; 47 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/candidate-089806c24500.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-05T01:24:50.989768+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 089806c24500d1aa · code 75022ac30159d526</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0019/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene Observation</h1>
+<h2>Scene Description</h2>
+<p>Static locked-off single-shot. A simple cardboard ramp propped up by a blue block on a light-colored wooden table. A black pipe on the left side points toward the ramp. A yellow tennis ball rolls out of the pipe onto the ramp.</p>
+<h2>Element Measurements (from <code>first_frame.png</code>, 256×144)</h2>
+<h3>Black Pipe</h3>
+<ul>
+<li>Located on the left side of the frame (x≈0–50, y≈0–56 top section)</li>
+<li>Dark pixels (R&lt;40, G&lt;30, B&lt;20) form the pipe body</li>
+<li>The pipe narrows toward the right (x≈0→148, y≈44→0 top edge)</li>
+<li>Pipe exit opens rightward and slightly upward</li>
+<li>Additional pipe shadow/body extends lower (x=0, y=101–143)</li>
+</ul>
+<h3>Blue Block</h3>
+<ul>
+<li>Position: right edge of frame (x≈240–255, y≈3–40)</li>
+<li>Dark blue pixels: R≈6–10, G≈55–60, B≈104–116</li>
+<li>Props up the right side of the cardboard ramp</li>
+<li>Concentration: ~232 blue pixels in upper-right region</li>
+</ul>
+<h3>Cardboard Ramp</h3>
+<ul>
+<li>Brown tones: R≈60–120, G≈45–95, B≈25–85 with R&gt;B+10 characteristic</li>
+<li>Left section: x≈0–40, visible from y≈57 (top) to y≈100 (bottom)</li>
+<li>Right section: x≈148–240, visible from y≈42 (top) to y≈64 (bottom)</li>
+<li>The ramp is higher on the right (propped by blue block) and lower on the left</li>
+<li>Near the ball: cardboard visible at x≈94–100, y≈79–81 directly under/near the ball</li>
+<li>The ball sits at the transition: cardboard left/below, table right/further below</li>
+</ul>
+<h3>Tennis Ball</h3>
+<ul>
+<li>Yellow-green sphere at center (x≈103, y≈73), bounds x=[95,111], y=[65,80]</li>
+<li>Diameter: ~16 pixels, roughly circular</li>
+<li>Distinctive color: G&gt;R+25, G&gt;150, R&gt;110, B&lt;110</li>
+<li>224 ball pixels identified (after clustering)</li>
+<li>The ball is at the ramp edge: cardboard (C) to the left, table (T) to the right</li>
+</ul>
+<h3>Wooden Table</h3>
+<ul>
+<li>Fills the bottom and right portions of the frame</li>
+<li>Light gray-tan tones: R≈95–155, G≈95–140, B≈80–140, near-neutral (|R-G|&lt;15, |R-B|&lt;20)</li>
+<li>Visible below y≈40 across most of the frame width</li>
+<li>All pixels to the right of the ball (x&gt;111) at y=64–81 are table</li>
+</ul>
+<h2>Scene Geometry Summary</h2>
+<pre><code>  0,0                          256,0
+  ┌──────────────────────────────┐
+  │  PIPE (dark)      cardboard  │  ← top
+  │     \              ramp      │
+  │      \          ┌──────────┐ │
+  │       \         │ BLUE     │ │
+  │ card- \  BALL  │  BLOCK   │ │  ← middle
+  │ board  \  ⚾    │          │ │
+  │  ramp   \      └──────────┘ │
+  │          \                  │
+  ├────────────────────────────┤
+  │     WOODEN TABLE           │  ← bottom
+  └──────────────────────────────┘
+  0,144                        256,144
+</code></pre>
+<p>The pipe is on the left, opening toward the right. The ball has emerged from the pipe and sits on the cardboard ramp. The ramp extends from the left side (lower) to the right side (higher, propped by blue block). The table fills the bottom.</p>
+<h2>20-Frame Event Plan</h2>
+<p><strong>Total: 20 frames at 4 fps = 5 seconds</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Ball cx</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>103.0</td>
+  <td>Ball at initial position, just emerged from pipe onto ramp edge</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>105.9</td>
+  <td>Ball begins rolling right, settles onto ramp surface</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>109.5</td>
+  <td>Ball rolling right on ramp, slight descent</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>113.9</td>
+  <td>Ball picks up speed, ramp descent continues</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>119.0</td>
+  <td>Ball reaches lowest point of ramp transition</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>124.9</td>
+  <td>Ball transitioning to table level</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>131.5</td>
+  <td>Ball reaches flat table surface</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>138.9</td>
+  <td>Ball on table, approaching peak velocity</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>146.6</td>
+  <td>Ball rolling across table (constant speed phase begins)</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>154.2</td>
+  <td>Ball mid-table, slight friction deceleration</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>161.8</td>
+  <td>Ball continues across table</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>169.3</td>
+  <td>Ball approaching right side</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>176.8</td>
+  <td>Ball near right half of frame</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>184.1</td>
+  <td>Ball continues rolling</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>191.4</td>
+  <td>Ball past frame midpoint</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>198.6</td>
+  <td>Ball approaching right edge</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>205.8</td>
+  <td>Ball near right edge of frame</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>212.9</td>
+  <td>Ball close to right boundary</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>219.9</td>
+  <td>Ball partially at frame edge</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>5.00</td>
+  <td>226.8</td>
+  <td>Ball near right edge, centre beyond original visible table area</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Trajectory Method:</strong> The ball sprite is extracted from frame 00, erased from its original position (background filled by horizontal inpainting from nearest non-ball L/R neighbours per row), and redrawn at progressively right-shifted positions. The y-position follows a gently-sloped ground surface: ~2 px higher behind the pipe, sloping down to flat table at y≈80 over ~40 px. Horizontal motion uses physics-based acceleration: <code>v₀=2.5 px/f</code>, <code>a_ramp=+0.75 px/f²</code> (frames 0–7, ramp phase), then <code>a_table=−0.07 px/f²</code> (frames 8–19, table friction).</p>
+<p><strong>Background fill method:</strong> For each ball pixel removed, the background colour is estimated by horizontal interpolation from the nearest non-ball pixels to the left and right in the same row (average of L/R neighbours). Full details in METHOD.md.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md</h1>
+<h2>Approach</h2>
 <p>This animation uses <strong>sprite extraction and compositing</strong> — the yellow tennis ball is
 identified as a connected component in frame 00, extracted as a sprite, and redrawn at
 new positions across frames 01–19 against an inpainted background.</p>
@@ -112,4 +950,5 @@ surface-following position.</p>
 </tr>
 </tbody>
 </table>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0019-f7a440dd18f8.png';</script></body></html>

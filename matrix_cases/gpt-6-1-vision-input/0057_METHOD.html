@@ -1,4 +1,363 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-and-dominos · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0057</span></nav><article><h1>duck-and-dominos · 生成方法</h1><p><code>generate.py</code> uses local Python, NumPy, Pillow, SciPy, and OpenCV pixel operations. Its only scene inputs are <code>first_frame.png</code> and <code>prompt.txt</code>. It uses no network, external assets, learned models, external simulation/rendering engines, or subagents. The supplied <code>artifact_io.py</code> packages the generated pixels into PNGs, a packed tensor, a contact sheet, and the standalone HTML player.</p>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>duck-and-dominos · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组视频</a><span class="tag">GPT-6.1-Sol · vision-input · Case 0057</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>duck-and-dominos</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>3</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>4</strong><span>generate.py 执行</span></div><div class="stat"><strong>15</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>7</strong><span>文件变更事件</span></div><div class="stat"><strong>9.7m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A yellow rubber duck has been positioned in the middle of a line of black and white dominoes on a wooden table. The wooden stick attached to the black platform rotates clockwise and knocks the first domino block.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>15 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>3 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0057/candidate-eea033195434.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T01:56:35.844776+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +398/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels eea03319543461d1 · code 6f6a91c4df2e0a1d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,398 @@
++&quot;&quot;&quot;Pixel-only, source-textured tabletop dynamics. No external assets or engines.&quot;&quot;&quot;
++from pathlib import Path
++import json
++import math
++import numpy as np
++import cv2
++from scipy.ndimage import binary_fill_holes, gaussian_filter
++from PIL import Image, ImageDraw
++from artifact_io import save
++
++ROOT = Path(__file__).resolve().parent
++SRC = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++H, W = SRC.shape[:2]
++S = 4
++Y, X = np.mgrid[:H, :W]
++
++
++def polygon_mask(points, scale=1):
++    m = np.zeros((H * scale, W * scale), np.uint8)
++    cv2.fillPoly(m, [np.round(np.asarray(points) * scale).astype(np.int32)], 255)
++    if scale != 1:
++        m = cv2.resize(m, (W, H), interpolation=cv2.INTER_AREA)
++    return m.astype(np.float32) / 255
++
++
++def soften(mask, sigma=.42):
++    return gaussian_filter(mask.astype(np.float32), sigma)
++
++
++# Ordered from the duck outward; measured source face coordinates.
++BLOCKS = [
++    dict(name=&#x27;pale beside duck&#x27;, b=[143.7, 90.0], w=[5.2, -2.7], d=[3.2, 1.2], z=[-.7, -19.9], u=0.0,
++         outline=[[142.6,70.3],[148.8,66.6],[152.7,67.8],[152.2,88.8],[146.2,92.0],[142.8,89.7]], pale=True),
++    dict(name=&#x27;inner dark&#x27;, b=[151.6, 93.7], w=[6.8, -3.3], d=[3., 1.2], z=[-1., -20.0], u=9.2,
++         outline=[[149.8,74.2],[157.9,70.0],[161.4,71.3],[161.8,92.7],[154.,96.1],[150.2,93.4]], pale=False),
++    dict(name=&#x27;outer pale&#x27;, b=[163., 98.0], w=[6.8, -3.3], d=[2.8, 1.], z=[-.7, -20.8], u=19.8,
++         outline=[[161.9,77.1],[168.8,73.5],[172.8,74.0],[173.2,97.0],[166.0,100.2],[162.4,98.0]], pale=True),
++    dict(name=&#x27;struck dark&#x27;, b=[171.8,103.], w=[8.2,-3.4], d=[3.8,1.5], z=[-1.2,-22.6], u=30.0,
++         outline=[[169.1,81.2],[178.6,76.7],[182.9,77.4],[184.4,99.9],[178.,105.],[173.3,102.5]], pale=False),
++]
++FACES = [(0,3,7,4), (3,2,6,7), (4,7,6,5)]
++
++
++def cube_vertices(block, angle):
++    b=np.array(block[&#x27;b&#x27;],float)
++    w=np.array(block[&#x27;w&#x27;],float)
++    d=np.array(block[&#x27;d&#x27;],float)
++    z=np.array(block[&#x27;z&#x27;],float)
++    ratio=np.linalg.norm(d)/24.0
++    # Rotation about the bottom edge, toward the duck, in the tabletop plane.
++    dd=d*np.cos(angle)+z*ratio*np.sin(angle)
++    zz=z*np.cos(angle)-d/ratio*np.sin(angle)
++    return np.array([b,b+w,b+w+dd,b+dd,b+zz,b+w+zz,b+w+dd+zz,b+dd+zz])
++
++
++for b in BLOCKS:
++    b[&#x27;mask&#x27;]=soften(polygon_mask(b[&#x27;outline&#x27;],S),.28)
++    b[&#x27;erase&#x27;]=cv2.dilate((b[&#x27;mask&#x27;]&gt;.035).astype(np.uint8),np.ones((3,3),np.uint8)).astype(float)
++    b[&#x27;v0&#x27;]=cube_vertices(b,0)
++
++# The duck mask preserves its actual photographic detail, including eye and bill.
++a=SRC.astype(float)
++duck_seed=(a[:,:,0]&gt;120)&amp;(a[:,:,1]&gt;105)&amp;(a[:,:,1]&gt;1.65*a[:,:,2])&amp;(X&gt;=103)&amp;(X&lt;153)&amp;(Y&gt;=44)&amp;(Y&lt;93)
++n,lab,stats,_=cv2.connectedComponentsWithStats(duck_seed.astype(np.uint8),8)
++duck_mask=binary_fill_holes(lab==(1+np.argmax(stats[1:,cv2.CC_STAT_AREA]))).astype(float)
++duck_mask=np.maximum(duck_mask,polygon_mask([[104.1,65.2],[109.,63.2],[115.,66.],[112.,70.],[105.,68.8]],S))
++duck_alpha=soften(duck_mask,.40)
++
++# Precisely remove the old thin arm. The hub and surrounding disk stay photographed.
++PIVOT=np.array([245.5,70.7])
++TIP0=np.array([178.5,81.8])
++ANCHOR0=np.array([219.8,74.1])
++arm_erase=np.zeros((H,W),np.uint8)
++cv2.line(arm_erase,(178,82),(221,74),255,4,cv2.LINE_AA)
++cv2.line(arm_erase,(221,74),(249,70),255,3,cv2.LINE_AA)
++arm_erase=arm_erase.astype(float)/255
++
++# Local reconstruction. Fit slow illumination from clean wood pixels; borrow only
++# high-frequency wood grain from an unoccupied patch of the same source table.
++all_obj=np.maximum.reduce([b[&#x27;erase&#x27;] for b in BLOCKS])
++shadow_erase=np.zeros((H,W),float)
++for b in BLOCKS:
++    bv=b[&#x27;v0&#x27;][:4]
++    pts=np.vstack([bv+[-3,-2],bv+[9,7]])
++    hull=cv2.convexHull(pts.astype(np.float32)).reshape(-1,2)
++    sh=soften(polygon_mask(hull,S),1.2)
++    b[&#x27;shadow_erase&#x27;]=sh
+… diff truncated; 311 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0057/candidate-c126f39bef7d.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T01:57:53.801961+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−1</span></div><p class="hashes">pixels c126f39bef7d647c · code e14e6bf6ef79e323</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -98,7 +98,9 @@
+ light=A@coef
+ # Avoid polynomial extrapolation on disk: its old rod is inpainted separately.
+ noise=a-gaussian_filter(a,(1.5,1.5,0))
+-grain=np.roll(noise,-29,axis=0)
++# Sample exclusively from the unobstructed lower tabletop, avoiding the original
++# domino bottoms and their high-contrast edges in the borrowed grain.
++grain=noise[114+(Y%28),X]
+ model=np.clip(light+grain*.85,0,255)
+ # A narrow boundary solve softens seams, excluding foreground duck pixels.
+ inpaint_mask=((remove&gt;.015)&amp;(X&lt;208)).astype(np.uint8)*255
+@@ -106,6 +108,10 @@
+ dist=cv2.distanceTransform((inpaint_mask&gt;0).astype(np.uint8),cv2.DIST_L2,5)
+ inside=np.clip(dist/4.5,0,1)[:,:,None]
+ clean_table=ip*(1-inside)+model*inside
++# Inpaint colors adjacent to yellow rubber or pale plastic can pick up that
++# foreground color. Substitute the local wood model at those contaminated sites.
++contaminated=(clean_table[:,:,2]&lt;clean_table[:,:,1]*.44)|(clean_table[:,:,2]&gt;clean_table[:,:,0]*.79)
++clean_table[contaminated]=model[contaminated]
+ clean=SRC.astype(float).copy()
+ clean=clean*(1-remove[:,:,None])+clean_table*remove[:,:,None]
+ disk_mask=((arm_erase&gt;.01)&amp;(X&gt;=207)).astype(np.uint8)*255</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0057/candidate-c126f39bef7d.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T01:57:55.470088+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels c126f39bef7d647c · code e14e6bf6ef79e323</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0057/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0057/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Initial scene and measurements</h1>
+<p>The provided RGB image is 256 × 144 pixels. The camera is fixed, looking down obliquely at a wooden tabletop. A gray wall occupies the upper background. A yellow rubber duck sits near (124, 71); its silhouette is approximately x=104–145, y=46–89. Its head faces left, with a small orange bill and dark eye. The duck rests on the table and is substantially wider than the domino gaps.</p>
+<p>The domino line runs diagonally from the rear left near (88, 60), past the duck, to the front right near (173, 94). Three upright dominoes are visible to the left of the duck, and four are visible on its right. Their approximate bases, in order from the rotating arm toward the left, are (174, 102), (163, 98), (153, 94), (147, 89), then (101, 70), (94, 68), and (86, 64). The dominoes alternate dark and pale faces; their heights are approximately 20–24 pixels. The duck interrupts the line and provides a broad, compliant obstruction.</p>
+<p>A black circular platform is partially cropped at the right edge, approximately x=209–255, y=57–109. Its upper surface is elliptical in perspective. A thin wooden arm runs from the platform toward (177, 82), at approximately the upper third of the nearest domino. The visible arm crosses roughly (219, 74). The inferred rotation pivot is near (240, 71); the exact visible geometry will be refined using local pixel measurements. The arm will rotate clockwise in the tabletop plane. Its contact initiates a sequential fall toward the duck. The last right-hand domino meets the duck; the duck gives a small elastic nudge and stays upright. The chain stops there, leaving the far-side dominoes standing.</p>
+<h1>Twenty-frame event plan</h1>
+<p>All frames use the same camera, scene, exposure, and 0.25-second sampling interval. Frame 00 is an exact byte-for-byte RGB copy of the input. The arm moves continuously at a modest angular rate. Domino motion is a gravity-driven rotation about each lower edge, with staggered starts determined by predecessor contact. Their shadows follow their heights and resting positions.</p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th style="text-align:right">Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>Exact input; all dominoes upright.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>Arm advances clockwise toward the nearest dark domino.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>Arm touches the nearest domino; it begins tipping toward its neighbor.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>First domino falls farther; next pale domino starts tipping.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>First settles into the second; third domino starts.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>First pair lie low; third transfers motion to the fourth.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>Fourth domino tips against the duck's right side.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>Duck compresses/rocks slightly left under the impact.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>Duck begins elastic recovery; the four near-side dominoes settle.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>Small rebound; arm continues clockwise.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>Duck returns close to its original pose.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>Residual duck motion decays.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>Dominoes and duck at rest; arm continues.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>Arm continues smoothly over the platform/table.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>Stable interrupted chain reaction.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>Arm continues its slow clockwise arc.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>Duck upright and far-side dominoes still upright.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>Static settled objects, rotating arm.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>Continued arm rotation.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>Final settled chain and upright duck.</td>
+</tr>
+</tbody>
+</table>
+<h1>Planned pixel method and review</h1>
+<p>Use local Python operations only: preserve the photographed background; remove the old arm and right-hand domino silhouettes by masked, local table-texture reconstruction; render their moving positions using perspective-projected cuboid faces, source-matched colors, and soft shadows. Preserve the original duck pixels except for a small damped deformation at impact. Generate 20 RGB frames and the prescribed packed uint32 tensor, PNGs, sheets, and HTML player. Inspect subsequent results through local arrays, masks, geometric traces, and numeric integrity/transition checks only. No generated image will be opened with an image viewing tool.</p>
+<h1>Numeric refinements and final event sampling</h1>
+<p>Source RGB analysis refined the saturated duck silhouette to x=105–144, y=46–88. There are three clear dominoes on the left plus a fourth dark domino partly occluded by the duck. All remain standing. The four moving domino bottom pivots, ordered from the duck outward, are (143.7, 90.0), (151.6, 93.7), (163.0, 98.0), and (171.8, 103.0). Their vertical projection lengths are 19.9, 20.0, 20.8, and 22.6 pixels. The visible wooden segment ends near (219.8, 74.1); the inferred central disk pivot is (245.5, 70.7), with an initial arm tip at (178.5, 81.8), partly occluded by the nearest dark domino. The tabletop foreshortening used for the circular arm path is 0.39.</p>
+<p>The initial event plan above was refined by the integrated contact model. The final sampled sequence is:</p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th style="text-align:right">Time (s)</th>
+  <th>Final event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00</td>
+  <td>Exact input.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25</td>
+  <td>Clockwise arm motion; all dominoes still upright.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50</td>
+  <td>Nearest dark domino tips approximately 5 degrees.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75</td>
+  <td>Four successive domino angles, near to far from the duck: 3.6, 19.2, 37.0, 49.9 degrees.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td style="text-align:right">1.00</td>
+  <td>Duck gives a small elastic response; supported stack reaches 27.0, 40.1, 52.9, 60.8 degrees.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td style="text-align:right">1.25</td>
+  <td>Small duck rebound; stack remains supported.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td style="text-align:right">1.50</td>
+  <td>Duck motion decays; arm continues.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td style="text-align:right">1.75</td>
+  <td>Very small residual rubber motion.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td style="text-align:right">2.00</td>
+  <td>Duck close to original pose.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td style="text-align:right">2.25</td>
+  <td>Rubber motion effectively settled.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td style="text-align:right">2.50</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td style="text-align:right">2.75</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td style="text-align:right">3.00</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td style="text-align:right">3.25</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td style="text-align:right">3.50</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td style="text-align:right">3.75</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td style="text-align:right">4.00</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td style="text-align:right">4.25</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td style="text-align:right">4.50</td>
+  <td>Stable stack, continuing clockwise arm.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td style="text-align:right">4.75</td>
+  <td>Final supported stack; duck and left-side dominoes upright.</td>
+</tr>
+</tbody>
+</table>
+<p>The continuous impact times are 0.430, 0.584, 0.678, 0.738, and 0.829 seconds. The fast propagation is consistent with a tabletop domino demonstration sampled at 4 fps. This is an estimated physical continuation; the single photograph does not specify exact object dimensions, friction, or mass.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Actual generation method</h1>
+<p><code>generate.py</code> uses local Python, NumPy, Pillow, SciPy, and OpenCV pixel operations. Its only scene inputs are <code>first_frame.png</code> and <code>prompt.txt</code>. It uses no network, external assets, learned models, external simulation/rendering engines, or subagents. The supplied <code>artifact_io.py</code> packages the generated pixels into PNGs, a packed tensor, a contact sheet, and the standalone HTML player.</p>
 <p>The photograph supplies the fixed camera, wood texture, wall, black platform, duck appearance, and domino face textures. Source-derived polygon masks isolate the four dominoes on the right and the rotating arm. A polynomial fit to nearby clean wood estimates illumination inside the vacated silhouettes. High-frequency grain comes only from the unoccupied lower tabletop. Local inpainting softens boundaries; color checks replace contamination from adjacent yellow rubber or pale plastic with the wood estimate. A separate small inpaint removes the original arm segment on the disk.</p>
 <p>The arm follows a circular path in a foreshortened tabletop plane, with a fixed inferred center at (245.5, 70.7). Its azimuth increases at 0.25 radians per second, clockwise as seen from above. It is drawn as a narrow wooden strip with a dark inner attachment and a soft projected shadow. The black hub and platform retain their photographed appearance. The arm rotates about 68 degrees over the sampled continuation.</p>
 <p>Each moving domino is a projected cuboid hinged on its bottom edge. The simulation uses a 1 ms integration step, gravity-like angular acceleration proportional to the sine of the tipping angle, damping, neighbor impact activation, and nonpenetration constraints between 2D cuboid cross sections. The duck acts as a broad, compliant stop at the last domino. Contact limits determine the supported final stack angles of approximately 27.0, 40.1, 52.9, and 60.8 degrees, ordered from the duck toward the platform. These are estimated local dynamics and geometry, rather than measured masses or a full rigid-body solver.</p>
@@ -19,4 +378,5 @@
 <p>The 20 sampled timestamps run from 0.00 through 4.75 seconds in 0.25-second increments; holding each frame for 0.25 seconds produces the required 5-second playback. <code>inspection.png</code> and <code>transition_check.png</code> are saved for user inspection. Generated images were assessed only by local code and numeric checks, and were not opened with image Read/View tools. The initial attached image was the sole visual reference.</p>
 <h1>Revision</h1>
 <p>One reconstruction revision excludes original domino edges from the borrowed wood grain and guards against foreground colors bleeding into the vacated tabletop. The entire output set was regenerated after this change and the final artifact checks repeated.</p>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/gpt-6-1-vision-input/0057-40ceaed9202c.png';</script></body></html>

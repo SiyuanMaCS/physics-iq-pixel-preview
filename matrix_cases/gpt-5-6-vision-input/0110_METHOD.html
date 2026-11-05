@@ -1,4 +1,195 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>match · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0110</span></nav><article><h1>match · 生成方法</h1><h2>Actual construction</h2>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>match · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组视频</a><span class="tag">GPT-5.6-Sol · vision-input · Case 0110</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>match</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>8</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>4</strong><span>generate.py 执行</span></div><div class="stat"><strong>15</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>6</strong><span>文件变更事件</span></div><div class="stat"><strong>4.9m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The lit match is being lowered into the glass of water.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>15 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>8 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-bc1d308cffb3.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T02:58:20.148738+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +258/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels bc1d308cffb3f613 · code 9f4647094d581d27</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,258 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;Generate a 20-frame, pixel-authored match-extinguishing animation.
++
++Only the supplied first_frame.png is used.  Frame zero is passed through
++unchanged; subsequent frames use a locally inpainted clean plate and analytic
++antialiased shapes for the moving match, flame, water ripple, and bubbles.
++&quot;&quot;&quot;
++
++from pathlib import Path
++import math
++
++import cv2
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++
++from artifact_io import save
++
++
++ROOT = Path(__file__).resolve().parent
++W, H = 256, 144
++S = 4  # supersampling factor for all newly drawn detail
++
++
++def clean_plate(src: np.ndarray) -&gt; np.ndarray:
++    &quot;&quot;&quot;Remove the original match using a tightly restricted inpaint mask.&quot;&quot;&quot;
++    mask = np.zeros((H, W), np.uint8)
++    # Original wooden shaft. The mask is deliberately narrow so the plate&#x27;s
++    # lighting and the glass geometry remain source pixels.
++    cv2.line(mask, (42, -7), (142, 62), 5, 255, cv2.LINE_AA)
++    # Burning head and its compact source flame.
++    cv2.ellipse(mask, (145, 64), (10, 6), 34, 0, 360, 255, -1, cv2.LINE_AA)
++    cv2.ellipse(mask, (140, 58), (7, 7), 20, 0, 360, 255, -1, cv2.LINE_AA)
++    # Close pinholes, but do not let the edit spread around the rim.
++    kernel = np.ones((3, 3), np.uint8)
++    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
++    plate = cv2.inpaint(src, mask, 4, cv2.INPAINT_TELEA)
++
++    # Feather only the inpaint boundary back into the untouched source.
++    alpha = cv2.GaussianBlur(mask, (0, 0), 0.75).astype(np.float32) / 255.0
++    alpha = alpha[..., None]
++    return np.clip(src * (1.0 - alpha) + plate * alpha, 0, 255).astype(np.uint8)
++
++
++def rgba_layer() -&gt; Image.Image:
++    return Image.new(&quot;RGBA&quot;, (W * S, H * S), (0, 0, 0, 0))
++
++
++def P(point):
++    return tuple(int(round(v * S)) for v in point)
++
++
++def polygon(draw, points, **kwargs):
++    draw.polygon([P(p) for p in points], **kwargs)
++
++
++def composite(base: np.ndarray, layer: Image.Image) -&gt; np.ndarray:
++    small = layer.resize((W, H), Image.Resampling.LANCZOS)
++    return np.asarray(Image.alpha_composite(Image.fromarray(base).convert(&quot;RGBA&quot;), small).convert(&quot;RGB&quot;))
++
++
++def capsule(draw: ImageDraw.ImageDraw, a, b, radius, fill):
++    &quot;&quot;&quot;Draw an oriented filled capsule at supersampled resolution.&quot;&quot;&quot;
++    ax, ay = a
++    bx, by = b
++    dx, dy = bx - ax, by - ay
++    length = max(math.hypot(dx, dy), 1e-6)
++    nx, ny = -dy / length * radius, dx / length * radius
++    polygon(draw, [(ax + nx, ay + ny), (bx + nx, by + ny),
++                   (bx - nx, by - ny), (ax - nx, ay - ny)], fill=fill)
++    r = radius * S
++    for x, y in (a, b):
++        cx, cy = x * S, y * S
++        draw.ellipse((int(cx-r), int(cy-r), int(cx+r), int(cy+r)), fill=fill)
++
++
++def motion_offset(t: int):
++    &quot;&quot;&quot;Ease the match down by 27 px and very slightly toward glass center.&quot;&quot;&quot;
++    if t &lt;= 0:
++        return 0.0, 0.0
++    u = min(t / 12.0, 1.0)
++    eased = u * u * (3.0 - 2.0 * u)
++    dy = 27.0 * eased
++    return -0.075 * dy, dy
++
++
++def draw_ripple(frame: np.ndarray, t: int) -&gt; np.ndarray:
++    if not (4 &lt;= t &lt;= 14):
+… diff truncated; 171 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-68a02a8fb20b.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T02:58:52.470727+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−12</span></div><p class="hashes">pixels 68a02a8fb20bd903 · code 184815ac1ad279e7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -38,7 +38,7 @@
+     # Feather only the inpaint boundary back into the untouched source.
+     alpha = cv2.GaussianBlur(mask, (0, 0), 0.75).astype(np.float32) / 255.0
+     alpha = alpha[..., None]
+-    return np.clip(src * (1.0 - alpha) + plate * alpha, 0, 255).astype(np.uint8)
++    return np.rint(np.clip(src * (1.0 - alpha) + plate * alpha, 0, 255)).astype(np.uint8)
+ 
+ 
+ def rgba_layer() -&gt; Image.Image:
+@@ -135,17 +135,7 @@
+         capsule(d, head_a, (head_a[0]+ux*2.3, head_a[1]+uy*2.3), 1.22,
+                 (173, 73, 29, int(190*ember)))
+ 
+-    frame = composite(frame, layer)
+-
+-    # Cool, low-opacity wash over the immersed section. This is localized to
+-    # the glass interior and keeps the head visible through the water.
+-    if head_center[1] &gt; 64:
+-        wash = rgba_layer()
+-        wd = ImageDraw.Draw(wash)
+-        y0 = 64 * S
+-        wd.rectangle((106*S, y0, 165*S, 124*S), fill=(100, 116, 119, 17))
+-        frame = composite(frame, wash)
+-    return frame
++    return composite(frame, layer)
+ 
+ 
+ def draw_flame(frame: np.ndarray, t: int) -&gt; np.ndarray:</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-68a02a8fb20b.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T02:58:54.296277+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 68a02a8fb20bd903 · code 184815ac1ad279e7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-68a02a8fb20b.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T02:59:25.055294+00:00</span></div><div class="changes"><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels 68a02a8fb20bd903 · code 8139940b49089acb</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -26,7 +26,7 @@
+     mask = np.zeros((H, W), np.uint8)
+     # Original wooden shaft. The mask is deliberately narrow so the plate&#x27;s
+     # lighting and the glass geometry remain source pixels.
+-    cv2.line(mask, (42, -7), (142, 62), 5, 255, cv2.LINE_AA)
++    cv2.line(mask, (42, -7), (142, 62), 255, 5, cv2.LINE_AA)
+     # Burning head and its compact source flame.
+     cv2.ellipse(mask, (145, 64), (10, 6), 34, 0, 360, 255, -1, cv2.LINE_AA)
+     cv2.ellipse(mask, (140, 58), (7, 7), 20, 0, 360, 255, -1, cv2.LINE_AA)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-16a866993672.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T02:59:32.543138+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span></div><p class="hashes">pixels 16a866993672f9b2 · code 8139940b49089acb</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-16a866993672.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T02:59:34.446621+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 16a866993672f9b2 · code 8139940b49089acb</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-919826470156.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T03:00:30.688974+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−5</span></div><p class="hashes">pixels 9198264701560591 · code c6f567d520f9caf1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -180,9 +180,6 @@
+ def draw_bubbles(frame: np.ndarray, t: int) -&gt; np.ndarray:
+     if not (7 &lt;= t &lt;= 16):
+         return frame
+-    dx, dy = motion_offset(t)
+-    _, final_dy = motion_offset(12)
+-    hc = (145.3 - .075 * final_dy, 64.4 + final_dy)
+     layer = rgba_layer()
+     d = ImageDraw.Draw(layer)
+     # Each tuple is (birth frame, horizontal offset, radius, rise speed).
+@@ -191,8 +188,10 @@
+         age = t - birth
+         if age &lt; 0:
+             continue
+-        y = hc[1] - 2.0 - age * speed
+-        x = hc[0] + ox + math.sin(age * 1.4 + ox) * .7
++        birth_dx, birth_dy = motion_offset(birth)
++        origin = (145.3 + birth_dx, 64.4 + birth_dy)
++        y = origin[1] - 2.0 - age * speed
++        x = origin[0] + ox + math.sin(age * 1.4 + ox) * .7
+         if y &lt;= 64.4:
+             continue
+         fade = int(175 * min(1.0, age + .35))</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/candidate-919826470156.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T03:00:32.412659+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 9198264701560591 · code c6f567d520f9caf1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-input/0110/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Observation and event plan</h1>
+<h2>Source-frame measurements</h2>
+<ul>
+<li>Input is an RGB PNG, 256 x 144. The camera is locked and the whole 5-second result must preserve this framing.</li>
+<li>A clear cylindrical drinking glass occupies approximately x=105..166, y=35..140. Its top ellipse is centered near (136, 54), about 58 px wide and 35 px high. The lower body narrows slightly and ends near y=137.</li>
+<li>Water fills most of the glass. The optically strongest water/rim boundary lies near y=62..69; the liquid body continues to the thick base around y=123..135.</li>
+<li>The tabletop begins near y=36 and has warm brown wood tones. The upper background is a cool gray wall. Broad illumination and glass caustics are already present and should remain static.</li>
+<li>A thin tan wooden match runs diagonally from beyond the upper-left edge toward the glass. Its visible shaft is approximately a 2 px strip from (48, 0) to (140, 62), with a dark burned head spanning roughly x=140..151, y=61..68.</li>
+<li>The match axis angle is about 34 degrees downward to the right. Its head is already just inside the projected rim. It is lowered along that same axis, so both shaft and head translate down-right while keeping orientation.</li>
+<li>Source luminance checks place the darkest 27 source pixels (mean RGB under 50) in the head box x=140..150, y=62..67. Background samples are cool gray at the top and warm brown below the wall/table boundary.</li>
+</ul>
+<h2>20-frame event plan (4 fps)</h2>
+<ul>
+<li>Frame 00 (0.00 s): exact byte-equivalent RGB pixel copy of <code>first_frame.png</code>.</li>
+<li>Frames 01-03 (0.25-0.75 s): the hand-held match descends gently 2-6 px along its axis. A small warm flame remains attached to the head and flickers subtly above it.</li>
+<li>Frames 04-06 (1.00-1.50 s): the head reaches and crosses the water surface. The flame rapidly contracts, cools, and vanishes; a tiny bright surface disturbance forms at contact.</li>
+<li>Frames 07-10 (1.75-2.50 s): the blackened head moves farther below the surface. Refraction slightly dims/softens the submerged portion. Two or three tiny bubbles detach and rise while a narrow surface ripple expands.</li>
+<li>Frames 11-14 (2.75-3.50 s): downward motion eases to a stop with the head immersed. Bubbles continue upward and shrink/pop at the surface; the ripple fades.</li>
+<li>Frames 15-19 (3.75-4.75 s): the extinguished match is held still in the water. The last micro-bubble disappears and the water returns nearly to its original calm appearance.</li>
+</ul>
+<h2>Construction constraints</h2>
+<ul>
+<li>Preserve the source everywhere except a narrow union mask around the original/moving match, flame, bubbles, and localized water ripple.</li>
+<li>Reconstruct the old match region from nearby source pixels using row/column-aware interpolation, then composite an antialiased procedural match with source-derived colors and lighting.</li>
+<li>Keep the glass, tabletop, camera, exposure, and shadows fixed. No crop, zoom, camera shake, cut, text, hands, or new objects.</li>
+</ul>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Method</h1>
+<h2>Actual construction</h2>
 <p>The sequence is generated locally by <code>generate.py</code> from <code>first_frame.png</code>; no external images, masks, models, engines, or network resources are used.</p>
 <ol>
 <li>Frame 00 is a direct RGB array copy of <code>first_frame.png</code>.</li>
@@ -24,4 +215,5 @@
 <li>per-frame changed-pixel counts, bounding boxes, transition mean/max deltas, and event-region color/position measurements;</li>
 <li>presence and basic structure of the inspection sheet, transition sheet, and standalone HTML player.</li>
 </ul>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/gpt-5-6-vision-input/0110-34ef672641fd.png';</script></body></html>

@@ -1,4 +1,332 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mug-breaks · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0125</span></nav><article><h1>mug-breaks · 生成方法</h1><p>The animation is generated locally and deterministically from <code>first_frame.png</code> with NumPy, Pillow, and OpenCV pixel operations. No external images, models, engines, masks, or references are used.</p>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mug-breaks · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组视频</a><span class="tag">GPT-5.6-Sol · vision-agent · Case 0125</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>mug-breaks</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>5</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>3</strong><span>generate.py 执行</span></div><div class="stat"><strong>14</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>6</strong><span>文件变更事件</span></div><div class="stat"><strong>5.7m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The blue-black grabber tool was holding the yellow ceramic mug. The blue-black grabber tool is suspended over the ceramic block in front of a white projection screen. The blue-black grabber releases the yellow ceramic mug over the concrete brick.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>可自主调用</strong><span>输出视觉工具</span></div><div class="event"><strong>14 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>5 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="warn">视觉工具可用，但 events.jsonl 没有记录到成功的输出 PNG 读取；存在 self-refine 候选，不等于存在可验证的视觉 self-refine。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/candidate-72aaa35fe355.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T05:24:56.498023+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +272/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 72aaa35fe3555068 · code 297ee60d57632404</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,272 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;Generate a deterministic 20-frame ceramic mug drop from first_frame.png.&quot;&quot;&quot;
++
++from pathlib import Path
++import math
++
++import cv2
++import numpy as np
++from PIL import Image, ImageDraw, ImageFont
++
++from artifact_io import save
++
++
++ROOT = Path(__file__).resolve().parent
++W, H = 256, 144
++N = 20
++
++
++def shadow_ellipse(rgb, box, strength, blur=2.2):
++    &quot;&quot;&quot;Darken pixels under a soft analytic ellipse.&quot;&quot;&quot;
++    matte = np.zeros((H, W), np.uint8)
++    x0, y0, x1, y1 = [int(round(v)) for v in box]
++    cv2.ellipse(
++        matte,
++        ((x0 + x1) // 2, (y0 + y1) // 2),
++        (max(1, (x1 - x0) // 2), max(1, (y1 - y0) // 2)),
++        0,
++        0,
++        360,
++        255,
++        -1,
++    )
++    matte = cv2.GaussianBlur(matte, (0, 0), blur)
++    amount = (matte.astype(np.float32) / 255.0 * strength)[..., None]
++    return np.clip(rgb.astype(np.float32) * (1.0 - amount), 0, 255).astype(np.uint8)
++
++
++def paste_rgba(dst, layer, xy):
++    &quot;&quot;&quot;Alpha composite a small RGBA ndarray, safely clipped to the canvas.&quot;&quot;&quot;
++    x, y = [int(round(v)) for v in xy]
++    lh, lw = layer.shape[:2]
++    x0, y0 = max(0, x), max(0, y)
++    x1, y1 = min(W, x + lw), min(H, y + lh)
++    if x0 &gt;= x1 or y0 &gt;= y1:
++        return
++    src = layer[y0 - y : y1 - y, x0 - x : x1 - x]
++    alpha = src[:, :, 3:4].astype(np.float32) / 255.0
++    area = dst[y0:y1, x0:x1].astype(np.float32)
++    dst[y0:y1, x0:x1] = np.clip(src[:, :, :3] * alpha + area * (1.0 - alpha), 0, 255).astype(np.uint8)
++
++
++def rotate_rgba(layer, angle):
++    im = Image.fromarray(layer, &quot;RGBA&quot;)
++    return np.asarray(im.rotate(angle, resample=Image.Resampling.BICUBIC, expand=True))
++
++
++def make_clean_background(source):
++    &quot;&quot;&quot;Remove only the suspended mug and its soft local shadow by inpainting.&quot;&quot;&quot;
++    mask = np.zeros((H, W), np.uint8)
++    # Broad enough to include the blurred boundary and underside shadow.
++    cv2.rectangle(mask, (105, 42), (132, 79), 255, -1)
++    return cv2.cvtColor(
++        cv2.inpaint(cv2.cvtColor(source, cv2.COLOR_RGB2BGR), mask, 5, cv2.INPAINT_TELEA),
++        cv2.COLOR_BGR2RGB,
++    )
++
++
++def extract_mug(source, clean):
++    &quot;&quot;&quot;Recover an antialiased RGBA layer from the warm mug pixels.&quot;&quot;&quot;
++    x0, y0, x1, y1 = 102, 40, 136, 80
++    src = source[y0:y1, x0:x1].copy()
++    bg = clean[y0:y1, x0:x1]
++    diff = np.max(np.abs(src.astype(np.int16) - bg.astype(np.int16)), axis=2)
++    r, g, b = [src[:, :, i].astype(np.int16) for i in range(3)]
++    yy, xx = np.mgrid[0 : y1 - y0, 0 : x1 - x0]
++    warm = (r &gt; b + 4) &amp; (g &gt; b - 2) &amp; (diff &gt; 5)
++    locality = (xx &gt;= 4) &amp; (xx &lt;= 29) &amp; (yy &gt;= 3) &amp; (yy &lt;= 36)
++    core = (warm &amp; locality).astype(np.uint8) * 255
++    # Close tiny holes in the ceramic while preserving the open mouth.
++    core = cv2.morphologyEx(core, cv2.MORPH_CLOSE, np.ones((2, 2), np.uint8))
++    fringe = cv2.GaussianBlur(core, (0, 0), 0.72)
++    alpha = np.maximum(core, (fringe.astype(np.float32) * 0.76).astype(np.uint8))
++    alpha[(diff &lt; 3) &amp; (core == 0)] = 0
++    return np.dstack([src, alpha]), (x0, y0)
++
++
++def cut_fragments(mug):
+… diff truncated; 185 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/candidate-5216c7d0e974.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T05:26:20.742034+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +45/−12</span></div><p class="hashes">pixels 5216c7d0e9740570 · code 710ed0808fe646cf</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -50,19 +50,52 @@
+ 
+ 
+ def rotate_rgba(layer, angle):
+-    im = Image.fromarray(layer, &quot;RGBA&quot;)
++    im = Image.fromarray(layer)
+     return np.asarray(im.rotate(angle, resample=Image.Resampling.BICUBIC, expand=True))
+ 
+ 
+ def make_clean_background(source):
+-    &quot;&quot;&quot;Remove only the suspended mug and its soft local shadow by inpainting.&quot;&quot;&quot;
+-    mask = np.zeros((H, W), np.uint8)
+-    # Broad enough to include the blurred boundary and underside shadow.
+-    cv2.rectangle(mask, (105, 42), (132, 79), 255, -1)
+-    return cv2.cvtColor(
+-        cv2.inpaint(cv2.cvtColor(source, cv2.COLOR_RGB2BGR), mask, 5, cv2.INPAINT_TELEA),
+-        cv2.COLOR_BGR2RGB,
+-    )
++    &quot;&quot;&quot;Remove the mug and diffuse shadow from the smooth projection screen.&quot;&quot;&quot;
++    # Row-wise interpolation avoids pulling the black screen rail upward (a
++    # failure mode of diffusion inpainting this close to the rail). It also
++    # retains the measured left/right screen colors on every scanline.
++    x0, x1 = 82, 154
++    pred = source.astype(np.float32).copy()
++    left = source[:, x0 - 5 : x0].mean(axis=1).astype(np.float32)
++    right = source[:, x1 + 1 : x1 + 6].mean(axis=1).astype(np.float32)
++    for x in range(x0, x1 + 1):
++        f = (x - x0) / (x1 - x0)
++        pred[:, x] = left * (1.0 - f) + right * f
++    matte = np.zeros((H, W), np.uint8)
++    cv2.ellipse(matte, (118, 73), (36, 43), 0, 0, 360, 255, -1)
++    matte[:24] = 0
++    matte[107:] = 0
++    matte = cv2.GaussianBlur(matte, (0, 0), 6).astype(np.float32) / 255.0
++    matte[:18] = 0
++    matte[112:] = 0
++    out = source.astype(np.float32) * (1.0 - matte[..., None]) + pred * matte[..., None]
++    return np.clip(out, 0, 255).astype(np.uint8)
++
++
++def recover_screen_shadow(source, clean):
++    &quot;&quot;&quot;Estimate the original broad shadow as a multiplicative opacity map.&quot;&quot;&quot;
++    src_luma = source.astype(np.float32).mean(axis=2)
++    clean_luma = clean.astype(np.float32).mean(axis=2)
++    opacity = np.clip((clean_luma - src_luma) / np.maximum(clean_luma, 1.0), 0.0, 0.28)
++    # Exclude ceramic/object contrast, then smoothly bridge across that hole.
++    opacity[40:81, 102:136] = 0.0
++    locality = np.zeros((H, W), np.float32)
++    cv2.ellipse(locality, (118, 76), (43, 42), 0, 0, 360, 1.0, -1)
++    locality[107:] = 0.0
++    opacity = cv2.GaussianBlur(opacity * locality, (0, 0), 2.3)
++    return np.clip(opacity, 0.0, 0.20)
++
++
++def apply_moving_screen_shadow(frame, opacity, dy):
++    matrix = np.float32([[1, 0, 0], [0, 1, float(dy)]])
++    moved = cv2.warpAffine(opacity, matrix, (W, H), flags=cv2.INTER_LINEAR, borderValue=0)
++    moved[107:] = 0.0
++    return np.clip(frame.astype(np.float32) * (1.0 - moved[..., None]), 0, 255).astype(np.uint8)
+ 
+ 
+ def extract_mug(source, clean):
+@@ -160,8 +193,6 @@
+ 
+ 
+ def draw_chips(frame, d):
+-    draw = ImageDraw.Draw(Image.fromarray(frame))
+-    # Drawing on a PIL view requires copying back after completion.
+     canvas = Image.fromarray(frame)
+     draw = ImageDraw.Draw(canvas)
+     for idx, (vx, vy, size, color) in enumerate(CHIPS):
+@@ -199,6 +230,7 @@
+     source = np.asarray(Image.open(ROOT / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;))
+     assert source.shape == (H, W, 3)
+     clean = make_clean_background(source)
++    screen_shadow = recover_screen_shadow(source, clean)
+     mug, mug_origin = extract_mug(source, clean)
+     pieces = cut_fragments(mug)
+     assert len(pieces) == 5
+@@ -209,6 +241,7 @@
+         frame = clean.copy()
+         if t &lt;= 5:
+             dy = fall[t]
++            frame = apply_moving_screen_shadow(frame, screen_shadow, dy)
+             if t &gt;= 3:
+                 # The projected contact shadow tightens and strengthens as the
+                 # mug approaches the concrete top.
+@@ -219,7 +252,7 @@
+… diff truncated; 8 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/candidate-5216c7d0e974.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T05:26:22.536723+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 5216c7d0e9740570 · code 710ed0808fe646cf</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/candidate-4bc1bcd800b7.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T05:27:08.722022+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−5</span></div><p class="hashes">pixels 4bc1bcd800b7c908 · code b2bdaede472cbf19</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -236,7 +236,7 @@
+     assert len(pieces) == 5
+ 
+     frames = [source.copy()]
+-    fall = [0, 1, 6, 13, 23, 35]
++    fall = [0, 1, 6, 13, 23, 36]
+     for t in range(1, N):
+         frame = clean.copy()
+         if t &lt;= 5:
+@@ -259,9 +259,9 @@
+                 canvas = Image.fromarray(frame)
+                 draw = ImageDraw.Draw(canvas)
+                 crack = (83, 57, 24)
+-                draw.line([(118, 94), (116, 99), (119, 104)], fill=crack, width=1)
+-                draw.line([(117, 98), (113, 101)], fill=crack, width=1)
+-                draw.line([(118, 95), (122, 99), (121, 103)], fill=crack, width=1)
++                draw.line([(118, 95), (116, 100), (119, 105)], fill=crack, width=1)
++                draw.line([(117, 99), (113, 102)], fill=crack, width=1)
++                draw.line([(118, 96), (122, 100), (121, 104)], fill=crack, width=1)
+                 frame = np.asarray(canvas).copy()
+         else:
+             d = t - 5
+@@ -275,7 +275,7 @@
+             for piece in pieces:
+                 offset, angle = fragment_pose(piece[&quot;label&quot;], d)
+                 rotated = rotate_rgba(piece[&quot;rgba&quot;], angle)
+-                impact_center = np.array(mug_origin, dtype=float) + piece[&quot;center&quot;] + np.array([0.0, 35.0])
++                impact_center = np.array(mug_origin, dtype=float) + piece[&quot;center&quot;] + np.array([0.0, 36.0])
+                 center = impact_center + offset
+                 xy = center - np.array([rotated.shape[1] / 2.0, rotated.shape[0] / 2.0])
+                 paste_rgba(frame, rotated, xy)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/candidate-4bc1bcd800b7.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T05:27:10.630598+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4bc1bcd800b7c908 · code b2bdaede472cbf19</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0125/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene observation and event plan</h1>
+<h2>Measured scene</h2>
+<ul>
+<li>Canvas: 256 x 144 pixels, fixed landscape camera.</li>
+<li>Background: slightly blue-gray/white projection screen fills the upper field. Its lower black metal rail spans approximately y=107..115. The wooden tabletop/floor fills y=116..143, with diagonal plank seams.</li>
+<li>Concrete target: irregular light-gray brick centered at x=96..141, with a top edge around y=108 and a base around y=128. Its visible front face is textured and trapezoidal.</li>
+<li>Yellow ceramic mug: centered above the brick at approximately x=108..127, y=44..73. The body occupies about x=109..125, y=51..71; its rim/top and handle/highlight details must move with it.</li>
+<li>Grabber: a narrow dark blue/black vertical tip enters from the top around x=108..115 and ends near y=10. It remains fixed after releasing the mug.</li>
+<li>Lighting is soft and frontal/overhead. The mug has a dark ochre bottom edge and right-side shading, and will cast an increasingly tight shadow as it approaches the brick.</li>
+<li>The starting frame shows open air between the grabber and mug, consistent with the instant immediately after release. Frame 00 will be copied byte-for-byte from the input.</li>
+</ul>
+<h2>20-frame plan (4 fps, 5 seconds)</h2>
+<table>
+<thead>
+<tr>
+  <th style="text-align:right">Frame</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:right">00</td>
+  <td>Exact source frame; mug newly released and nearly stationary.</td>
+</tr>
+<tr>
+  <td style="text-align:right">01</td>
+  <td>Mug begins falling, very small downward displacement.</td>
+</tr>
+<tr>
+  <td style="text-align:right">02</td>
+  <td>Fall accelerates; mug remains upright.</td>
+</tr>
+<tr>
+  <td style="text-align:right">03</td>
+  <td>Faster descent; faint shadow begins on the brick top.</td>
+</tr>
+<tr>
+  <td style="text-align:right">04</td>
+  <td>Mug is close to the brick, with a tighter contact shadow.</td>
+</tr>
+<tr>
+  <td style="text-align:right">05</td>
+  <td>First hard contact at the brick top; body compresses visually by one pixel and begins to crack.</td>
+</tr>
+<tr>
+  <td style="text-align:right">06</td>
+  <td>Ceramic body breaks into several yellow/ochre shards; rim, handle, and body pieces separate radially.</td>
+</tr>
+<tr>
+  <td style="text-align:right">07</td>
+  <td>Fragments rebound upward and outward; tiny chips spray laterally.</td>
+</tr>
+<tr>
+  <td style="text-align:right">08</td>
+  <td>Left/right shards continue outward while gravity slows the upward rebound.</td>
+</tr>
+<tr>
+  <td style="text-align:right">09</td>
+  <td>Shards turn downward; a central fragment remains on the brick.</td>
+</tr>
+<tr>
+  <td style="text-align:right">10</td>
+  <td>Main fragments land on brick edges/table, with small bounce and rotation.</td>
+</tr>
+<tr>
+  <td style="text-align:right">11</td>
+  <td>Secondary low bounce; small chips spread and begin to settle.</td>
+</tr>
+<tr>
+  <td style="text-align:right">12</td>
+  <td>Fragments drop back toward their final positions.</td>
+</tr>
+<tr>
+  <td style="text-align:right">13</td>
+  <td>Final contacts and short slides along the tabletop/brick.</td>
+</tr>
+<tr>
+  <td style="text-align:right">14</td>
+  <td>Minor sliding and rotation decay.</td>
+</tr>
+<tr>
+  <td style="text-align:right">15</td>
+  <td>Only subtle settling motion remains.</td>
+</tr>
+<tr>
+  <td style="text-align:right">16</td>
+  <td>Debris is essentially still.</td>
+</tr>
+<tr>
+  <td style="text-align:right">17</td>
+  <td>Static broken mug fragments around/on the block.</td>
+</tr>
+<tr>
+  <td style="text-align:right">18</td>
+  <td>Static aftermath.</td>
+</tr>
+<tr>
+  <td style="text-align:right">19</td>
+  <td>Static aftermath; grabber, screen, block, and camera remain unchanged.</td>
+</tr>
+</tbody>
+</table>
+<h2>Construction intent</h2>
+<p>The original background will be retained. The original mug will be removed by reconstructing the local projection-screen gradient from nearby rows/columns. During free fall, the original mug crop (including antialiased edge pixels) will be translated with a small physical acceleration and a progressively stronger analytic contact shadow. At impact, the crop will be divided by irregular masks into independently translated/rotated shards, supplemented with tiny sampled ceramic chips and contact shadows. All compositing will remain local and deterministic.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Method</h1>
+<p>The animation is generated locally and deterministically from <code>first_frame.png</code> with NumPy, Pillow, and OpenCV pixel operations. No external images, models, engines, masks, or references are used.</p>
 <ol>
 <li>Frame 00 is the untouched RGB source array.</li>
 <li>For later frames, the original mug and its broad diffuse screen shadow are removed by feathered row-wise interpolation between measured screen colors on either side. This approach avoids drawing the nearby black screen rail into the reconstruction. All pixels outside that local screen patch—including the grabber, screen rail, wood, and concrete block—originate from the source frame.</li>
@@ -7,4 +335,5 @@
 <li>The source-pixel mug layer is partitioned into five non-overlapping irregular masks. Each shard receives its own ballistic translation and rotation, then a small damped bounce/slide after collision. Cut boundaries receive a restrained warm-ivory ceramic edge. Eight tiny sampled-color chips follow separate parabolic paths.</li>
 <li><code>artifact_io.save</code> writes the packed uint32 <code>0xRRGGBB</code> tensor, PNG sequence, inspection sheet, and standalone HTML player. The generator additionally writes a labeled 20-frame transition sheet and verifies every decoded PNG against the generated RGB array and every packed tensor value against <code>pixels.npz</code>.</li>
 </ol>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/gpt-5-6-vision-agent/0125-f7b961432e11.png';</script></body></html>

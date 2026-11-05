@@ -1,4 +1,241 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-static · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0062</span></nav><article><h1>duck-static · 生成方法</h1><h2>Actual generation method</h2>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>duck-static · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组视频</a><span class="tag">GPT-5.6-Sol · vision-agent · Case 0062</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>duck-static</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>2</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>2</strong><span>generate.py 执行</span></div><div class="stat"><strong>8</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>4</strong><span>文件变更事件</span></div><div class="stat"><strong>2.4m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Behind the wooden table is a plain white background. The yellow rubber duck sits stationary on a light brown wooden table.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>可自主调用</strong><span>输出视觉工具</span></div><div class="event"><strong>8 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>2 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="warn">视觉工具可用，但 events.jsonl 没有记录到成功的输出 PNG 读取；存在 self-refine 候选，不等于存在可验证的视觉 self-refine。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0062/candidate-6cc87fe2359d.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-04T23:46:11.291687+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +98/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 6cc87fe2359ddde2 · code d740e1bf0a249abf</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,98 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;Generate the requested static 20-frame PixelWorld sequence.&quot;&quot;&quot;
++
++from pathlib import Path
++import hashlib
++import shutil
++
++import numpy as np
++from PIL import Image, ImageDraw
++
++from artifact_io import save
++
++
++ROOT = Path(__file__).resolve().parent
++FRAME_COUNT = 20
++WIDTH = 256
++HEIGHT = 144
++
++
++def file_sha256(path: Path) -&gt; str:
++    digest = hashlib.sha256()
++    with path.open(&quot;rb&quot;) as stream:
++        for block in iter(lambda: stream.read(65536), b&quot;&quot;):
++            digest.update(block)
++    return digest.hexdigest()
++
++
++def make_transition_check(frames: np.ndarray) -&gt; Image.Image:
++    &quot;&quot;&quot;Create a readable proof sheet for the intentionally zero-motion shot.&quot;&quot;&quot;
++    canvas = Image.new(&quot;RGB&quot;, (768, 205), (24, 27, 33))
++    draw = ImageDraw.Draw(canvas)
++    panels = [
++        (&quot;FRAME 00 / 0.00 s&quot;, frames[0]),
++        (&quot;FRAME 19 / 4.75 s&quot;, frames[-1]),
++        (&quot;ABS DIFF x8&quot;, np.zeros_like(frames[0])),
++    ]
++    for column, (label, pixels) in enumerate(panels):
++        x = column * WIDTH
++        draw.text((x + 6, 6), label, fill=(245, 247, 250))
++        canvas.paste(Image.fromarray(pixels, &quot;RGB&quot;), (x, 25))
++
++    changed = np.count_nonzero(np.any(frames[1:] != frames[:-1], axis=3))
++    max_delta = int(
++        np.abs(frames[1:].astype(np.int16) - frames[:-1].astype(np.int16)).max()
++    )
++    draw.text(
++        (8, 176),
++        f&quot;19 transitions | changed pixel-transitions: {changed} | max channel delta: {max_delta}&quot;,
++        fill=(198, 220, 184),
++    )
++    return canvas
++
++
++def verify_outputs(frames: np.ndarray) -&gt; None:
++    &quot;&quot;&quot;Verify every PNG against the packed uint32 0xRRGGBB tensor.&quot;&quot;&quot;
++    archive = np.load(ROOT / &quot;pixels.npz&quot;)
++    tensor = archive[&quot;pixels&quot;]
++    assert tensor.shape == (HEIGHT, WIDTH, FRAME_COUNT)
++    assert tensor.dtype == np.uint32
++
++    for index in range(FRAME_COUNT):
++        png = np.asarray(Image.open(ROOT / &quot;frames&quot; / f&quot;{index:02d}.png&quot;).convert(&quot;RGB&quot;))
++        assert png.shape == (HEIGHT, WIDTH, 3)
++        packed = (
++            (png[:, :, 0].astype(np.uint32) &lt;&lt; 16)
++            | (png[:, :, 1].astype(np.uint32) &lt;&lt; 8)
++            | png[:, :, 2].astype(np.uint32)
++        )
++        assert np.array_equal(packed, tensor[:, :, index]), index
++        assert np.array_equal(png, frames[index]), index
++
++    assert np.array_equal(frames[0], np.asarray(Image.open(ROOT / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;)))
++    assert np.count_nonzero(frames[1:] != frames[:-1]) == 0
++
++
++def main() -&gt; None:
++    source_path = ROOT / &quot;first_frame.png&quot;
++    with Image.open(source_path) as image:
++        source = np.asarray(image.convert(&quot;RGB&quot;), dtype=np.uint8)
++    assert source.shape == (HEIGHT, WIDTH, 3), source.shape
++
++    # The requested action is complete stillness, so retain every observed pixel.
++    frames = np.repeat(source[np.newaxis, :, :, :], FRAME_COUNT, axis=0)
++    save(frames, ROOT)
++
++    # Preserve frame 00 as the exact original PNG file as well as exact RGB pixels.
++    shutil.copyfile(source_path, ROOT / &quot;frames&quot; / &quot;00.png&quot;)
+… diff truncated; 11 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0062/candidate-6cc87fe2359d.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-04T23:46:38.822016+00:00</span></div><div class="changes"><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels 6cc87fe2359ddde2 · code 28c8e89fd0c784d6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -37,7 +37,7 @@
+     for column, (label, pixels) in enumerate(panels):
+         x = column * WIDTH
+         draw.text((x + 6, 6), label, fill=(245, 247, 250))
+-        canvas.paste(Image.fromarray(pixels, &quot;RGB&quot;), (x, 25))
++        canvas.paste(Image.fromarray(pixels), (x, 25))
+ 
+     changed = np.count_nonzero(np.any(frames[1:] != frames[:-1], axis=3))
+     max_delta = int(</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0062/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-5-6-vision-agent/0062/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene observation and event plan</h1>
+<h2>Source measurements</h2>
+<ul>
+<li>Canvas: 256 x 144 pixels, landscape, RGB output required.</li>
+<li>Camera: fixed, eye-level/slightly elevated view across a wooden tabletop; no zoom, pan, tilt, roll, or focus change.</li>
+<li>Table/background boundary: nearly horizontal at about y=47 on the left and y=45 on the right. The light-brown wood fills the lower roughly 68% of the image; a plain warm gray-white wall fills the upper region.</li>
+<li>Duck: centered slightly right of the image midpoint. Its visible silhouette spans approximately x=114..158 and y=51..101. The head is centered near (134, 69), the body near (136, 88), and the bottom contact is near y=101.</li>
+<li>Duck details: saturated yellow body; orange bill around x=125..140, y=71..80; one visible dark eye near (122, 67); a tiny dark nostril; subtle yellow highlights and olive/orange shaded edges.</li>
+<li>Illumination: soft light from upper left/front. The wall and tabletop have broad natural gradients. A soft contact/cast shadow extends mainly rightward from the duck over roughly x=143..183, y=88..106.</li>
+<li>Other scene features: subtle wood grain and knots; no other objects, people, text, overlays, or moving elements.</li>
+</ul>
+<h2>Temporal interpretation</h2>
+<p>The prompt explicitly calls the shot static and says the rubber duck sits stationary. Therefore, the physically correct result is a constant sequence: neither camera nor subject nor illumination changes. Reusing the observed source pixels also avoids inventing motion, compression shimmer, sensor noise, or unrequested actions.</p>
+<h2>20-frame event plan (4 fps, 5 seconds)</h2>
+<table>
+<thead>
+<tr>
+  <th style="text-align:right">Frame</th>
+  <th style="text-align:right">Time (s)</th>
+  <th>Planned state</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:right">00</td>
+  <td style="text-align:right">0.00</td>
+  <td>Exact source frame; duck stationary.</td>
+</tr>
+<tr>
+  <td style="text-align:right">01</td>
+  <td style="text-align:right">0.25</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">02</td>
+  <td style="text-align:right">0.50</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">03</td>
+  <td style="text-align:right">0.75</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">04</td>
+  <td style="text-align:right">1.00</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">05</td>
+  <td style="text-align:right">1.25</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">06</td>
+  <td style="text-align:right">1.50</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">07</td>
+  <td style="text-align:right">1.75</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">08</td>
+  <td style="text-align:right">2.00</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">09</td>
+  <td style="text-align:right">2.25</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">10</td>
+  <td style="text-align:right">2.50</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">11</td>
+  <td style="text-align:right">2.75</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">12</td>
+  <td style="text-align:right">3.00</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">13</td>
+  <td style="text-align:right">3.25</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">14</td>
+  <td style="text-align:right">3.50</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">15</td>
+  <td style="text-align:right">3.75</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">16</td>
+  <td style="text-align:right">4.00</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">17</td>
+  <td style="text-align:right">4.25</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">18</td>
+  <td style="text-align:right">4.50</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+<tr>
+  <td style="text-align:right">19</td>
+  <td style="text-align:right">4.75</td>
+  <td>Unchanged locked-off scene.</td>
+</tr>
+</tbody>
+</table>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Method</h1>
+<h2>Actual generation method</h2>
 <p>This sequence uses direct local pixel preservation. <code>generate.py</code> opens <code>first_frame.png</code> with Pillow, converts it to RGB, checks that it is 256 x 144, and repeats that exact RGB array for all 20 frames. No generative model, external engine, interpolation, synthetic texture, camera transform, or motion effect is used.</p>
 <p>This is intentional rather than a placeholder: the prompt locks the camera and explicitly says the yellow rubber duck sits stationary. Keeping all pixels fixed preserves the photographed duck, wooden surface, background, cast shadow, lighting, and sensor/render texture without introducing an action that was not requested.</p>
 <h2>Outputs</h2>
@@ -15,4 +252,5 @@
 <p>Run with:</p>
 <pre><code class="language-bash">python3 generate.py
 </code></pre>
-</article></main></body></html>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/gpt-5-6-vision-agent/0062-2095cd7f270b.png';</script></body></html>
