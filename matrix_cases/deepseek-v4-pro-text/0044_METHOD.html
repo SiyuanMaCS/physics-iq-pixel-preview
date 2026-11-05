@@ -1,0 +1,665 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cut-paper · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0044</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>cut-paper</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>10</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>6</strong><span>generate.py 执行</span></div><div class="stat"><strong>29</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>12</strong><span>文件变更事件</span></div><div class="stat"><strong>30.0m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two blue-black grabber tools pull the piece of green paper from opposite corners, causing it to tear.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>29 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>10 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-adfa2883d7c3.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T11:25:41.583146+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +307/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels adfa2883d7c391eb · code 1dc78bf3b34f4a39</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,307 @@
++&quot;&quot;&quot;PixelWorld-Text: Paper Tear Animation
++Two blue-black grabber tools pull a green piece of paper from opposite corners, causing it to tear.
++20 frames @ 256x144, 4 fps, 5 seconds.
++&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++import sys
++
++sys.path.insert(0, str(Path(__file__).parent))
++from artifact_io import save
++
++CASE_DIR = Path(__file__).parent
++FIRST_FRAME_PATH = CASE_DIR / &quot;first_frame.png&quot;
++TMP_DIR = CASE_DIR / &quot;.tmp&quot;
++TMP_DIR.mkdir(exist_ok=True)
++
++# ── 1. Load &amp; analyze first frame ──────────────────────────────────────────
++src = np.array(Image.open(FIRST_FRAME_PATH)).astype(np.uint8)
++H, W = 144, 256
++assert src.shape == (H, W, 3), f&quot;Expected (144,256,3), got {src.shape}&quot;
++
++r = src[:,:,0].astype(np.int32)
++g = src[:,:,1].astype(np.int32)
++b = src[:,:,2].astype(np.int32)
++
++# Paper mask: green-dominant pixels
++paper_mask = (g &gt; r + 12) &amp; (g &gt; b + 8) &amp; (g &gt; 65)
++
++# Blue background mask
++bg_mask = (b &gt; r + 22) &amp; (b &gt; g + 12) &amp; (b &gt; 125)
++
++# Grabber masks: dark tool bodies near paper edges
++# Left grabber: dark pixels on left side overlapping/near paper
++grabber_left_mask = np.zeros((H, W), dtype=bool)
++grabber_left_mask[15:55, 0:75] = True
++grabber_left_mask = grabber_left_mask &amp; ~bg_mask &amp; ~paper_mask
++# Refine: only keep connected component touching paper
++from scipy.ndimage import label as ndlabel
++labeled, nlabels = ndlabel(grabber_left_mask)
++# Find which labels touch the paper
++paper_dilated = np.zeros((H, W), dtype=bool)
++paper_dilated[1:,:] |= paper_mask[:-1,:]
++paper_dilated[:-1,:] |= paper_mask[1:,:]
++paper_dilated[:,1:] |= paper_mask[:,:-1]
++paper_dilated[:,:-1] |= paper_mask[:,1:]
++for lbl in range(1, nlabels+1):
++    region = labeled == lbl
++    if np.any(region &amp; paper_dilated):
++        grabber_left_mask |= region
++
++# Right grabber: dark pixels on right side
++grabber_right_mask = np.zeros((H, W), dtype=bool)
++grabber_right_mask[8:55, 190:256] = True
++grabber_right_mask = grabber_right_mask &amp; ~bg_mask &amp; ~paper_mask
++labeled, nlabels = ndlabel(grabber_right_mask)
++for lbl in range(1, nlabels+1):
++    region = labeled == lbl
++    if np.any(region &amp; paper_dilated):
++        grabber_right_mask |= region
++
++# Clean up: ensure no pixel is in multiple masks
++# Priority: paper &gt; grabbers &gt; bg
++grabber_left_mask = grabber_left_mask &amp; ~paper_mask
++grabber_right_mask = grabber_right_mask &amp; ~paper_mask
++bg_mask = bg_mask &amp; ~paper_mask &amp; ~grabber_left_mask &amp; ~grabber_right_mask
++
++# Everything else that&#x27;s not in any mask: treat as static &quot;other&quot; background
++static_mask = ~paper_mask &amp; ~grabber_left_mask &amp; ~grabber_right_mask &amp; ~bg_mask
++
++print(f&quot;Masks: paper={paper_mask.sum()}, bg={bg_mask.sum()}, &quot;
++      f&quot;grabL={grabber_left_mask.sum()}, grabR={grabber_right_mask.sum()}, &quot;
++      f&quot;static={static_mask.sum()}&quot;)
++
++# ── 2. Build clean background plate (for revealed areas) ────────────────────
++# The tear will reveal what&#x27;s behind the paper. We create a background plate
++# by filling paper areas with nearby background colors.
++
++bg_plate = src.copy()
++
++# For each paper pixel, fill with a representative background color
++# based on vertical position
++paper_rows, paper_cols = np.where(paper_mask)
++
++# Build per-row background color lookup
++row_bg_colors = {}
+… diff truncated; 220 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-6966a1eb6f1d.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T11:28:45.841167+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +199/−218</span></div><p class="hashes">pixels 6966a1eb6f1de11c · code af7767e49508558b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,10 +1,17 @@
+ &quot;&quot;&quot;PixelWorld-Text: Paper Tear Animation
+ Two blue-black grabber tools pull a green piece of paper from opposite corners, causing it to tear.
+ 20 frames @ 256x144, 4 fps, 5 seconds.
++
++Method: Pixel-level compositing with masks.
++1. Segment frame 0 into paper, left grabber, right grabber, background, and static regions.
++2. Create a clean background plate by filling paper/grabber areas with nearby bg colors.
++3. For each frame, composite: static bg -&gt; moved paper pieces -&gt; moved grabbers.
++4. Paper splits along a diagonal tear line; halves displace outward.
++5. Grabber tools move with their respective paper pieces.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+-from PIL import Image
++from PIL import Image, ImageDraw
+ from pathlib import Path
+ import sys
+ 
+@@ -25,283 +32,257 @@
+ g = src[:,:,1].astype(np.int32)
+ b = src[:,:,2].astype(np.int32)
+ 
++# ── 2. Segmentation ────────────────────────────────────────────────────────
++
+ # Paper mask: green-dominant pixels
+ paper_mask = (g &gt; r + 12) &amp; (g &gt; b + 8) &amp; (g &gt; 65)
+ 
+ # Blue background mask
+ bg_mask = (b &gt; r + 22) &amp; (b &gt; g + 12) &amp; (b &gt; 125)
+ 
+-# Grabber masks: dark tool bodies near paper edges
+-# Left grabber: dark pixels on left side overlapping/near paper
++# Table surface (everything below row ~100 that isn&#x27;t blue or green)
++# This is a different color region - brownish/gray table
++table_mask = np.zeros((H, W), dtype=bool)
++table_mask[95:, :] = True
++table_mask = table_mask &amp; ~bg_mask &amp; ~paper_mask
++
++# Grabber tools: We need to identify the tool bodies precisely
++# The grabbers are dark-tinted tools near the paper edges
++# Strategy: find dark regions adjacent to paper that are not background
++
++# Find all non-bg, non-paper regions
++other_mask = ~bg_mask &amp; ~paper_mask
++
++# Left grabber: connected component containing the left grip area
++# The left grabber grips the paper around row 40-50, col 61-70
++from scipy.ndimage import label as ndlabel, binary_dilation, binary_erosion
++
++# Get connected components in the &quot;other&quot; region
++labeled, nlabels = ndlabel(other_mask)
++
++# Find which components touch the paper on the left side
++paper_left_edge = paper_mask.copy()
++paper_left_edge[:, 130:] = False  # Only left half of paper
++
++paper_neighbors = binary_dilation(paper_left_edge, iterations=2)
++
+ grabber_left_mask = np.zeros((H, W), dtype=bool)
+-grabber_left_mask[15:55, 0:75] = True
+-grabber_left_mask = grabber_left_mask &amp; ~bg_mask &amp; ~paper_mask
+-# Refine: only keep connected component touching paper
+-from scipy.ndimage import label as ndlabel
+-labeled, nlabels = ndlabel(grabber_left_mask)
+-# Find which labels touch the paper
+-paper_dilated = np.zeros((H, W), dtype=bool)
+-paper_dilated[1:,:] |= paper_mask[:-1,:]
+-paper_dilated[:-1,:] |= paper_mask[1:,:]
+-paper_dilated[:,1:] |= paper_mask[:,:-1]
+-paper_dilated[:,:-1] |= paper_mask[:,1:]
+-for lbl in range(1, nlabels+1):
++grabber_right_mask = np.zeros((H, W), dtype=bool)
++
++for lbl in range(1, nlabels + 1):
+     region = labeled == lbl
+-    if np.any(region &amp; paper_dilated):
++    if not np.any(region &amp; paper_neighbors):
++        continue
++    
++    # Determine if left or right based on centroid
++    coords = np.argwhere(region)
++    mean_col = coords[:, 1].mean()
++    
++    if mean_col &lt; 130 and coords[:, 0].min() &lt; 55:
+         grabber_left_mask |= region
+-
+-# Right grabber: dark pixels on right side
+… diff truncated; 406 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-6966a1eb6f1d.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T11:28:47.981551+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 6966a1eb6f1de11c · code af7767e49508558b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-53b4dc39a070.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T11:33:57.453746+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +25/−55</span></div><p class="hashes">pixels 53b4dc39a070c7fd · code cd0c3b3f1fe7e7f7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -40,79 +40,49 @@
+ # Blue background mask
+ bg_mask = (b &gt; r + 22) &amp; (b &gt; g + 12) &amp; (b &gt; 125)
+ 
+-# Table surface (everything below row ~100 that isn&#x27;t blue or green)
+-# This is a different color region - brownish/gray table
+-table_mask = np.zeros((H, W), dtype=bool)
+-table_mask[95:, :] = True
+-table_mask = table_mask &amp; ~bg_mask &amp; ~paper_mask
+-
+-# Grabber tools: We need to identify the tool bodies precisely
+-# The grabbers are dark-tinted tools near the paper edges
+-# Strategy: find dark regions adjacent to paper that are not background
+-
+-# Find all non-bg, non-paper regions
+-other_mask = ~bg_mask &amp; ~paper_mask
+-
+-# Left grabber: connected component containing the left grip area
+-# The left grabber grips the paper around row 40-50, col 61-70
+-from scipy.ndimage import label as ndlabel, binary_dilation, binary_erosion
+-
+-# Get connected components in the &quot;other&quot; region
+-labeled, nlabels = ndlabel(other_mask)
+-
+-# Find which components touch the paper on the left side
+-paper_left_edge = paper_mask.copy()
+-paper_left_edge[:, 130:] = False  # Only left half of paper
+-
+-paper_neighbors = binary_dilation(paper_left_edge, iterations=2)
+-
+-grabber_left_mask = np.zeros((H, W), dtype=bool)
+-grabber_right_mask = np.zeros((H, W), dtype=bool)
+-
+-for lbl in range(1, nlabels + 1):
+-    region = labeled == lbl
+-    if not np.any(region &amp; paper_neighbors):
+-        continue
+-    
+-    # Determine if left or right based on centroid
+-    coords = np.argwhere(region)
+-    mean_col = coords[:, 1].mean()
+-    
+-    if mean_col &lt; 130 and coords[:, 0].min() &lt; 55:
+-        grabber_left_mask |= region
+-    elif mean_col &gt;= 130 and coords[:, 0].min() &lt; 55:
+-        grabber_right_mask |= region
+-
+-# Clean up overlaps
++# Grabber tools: define spatial zones and take everything non-paper, non-bg
++# Left grabber zone: where the left tool body is visible
++left_zone = np.zeros((H, W), dtype=bool)
++left_zone[16:55, 0:82] = True
++
++# Right grabber zone: where the right tool body is visible
++right_zone = np.zeros((H, W), dtype=bool)
++right_zone[6:55, 193:256] = True
++
++# Grabber = everything in zone that&#x27;s not paper and not blue background
++grabber_left_mask = left_zone &amp; ~paper_mask &amp; ~bg_mask
++grabber_right_mask = right_zone &amp; ~paper_mask &amp; ~bg_mask
++
++# Dilate slightly to capture edge pixels
++from scipy.ndimage import binary_dilation
++grabber_left_mask = binary_dilation(grabber_left_mask, iterations=1) &amp; left_zone
++grabber_right_mask = binary_dilation(grabber_right_mask, iterations=1) &amp; right_zone
++
++# Ensure grabbers don&#x27;t include paper
+ grabber_left_mask = grabber_left_mask &amp; ~paper_mask
+ grabber_right_mask = grabber_right_mask &amp; ~paper_mask
+ 
+-# Everything else is static (won&#x27;t move)
+-static_mask = ~paper_mask &amp; ~grabber_left_mask &amp; ~grabber_right_mask
+-
+ print(f&quot;Masks: paper={paper_mask.sum()}, bg={bg_mask.sum()}, &quot;
+-      f&quot;grabL={grabber_left_mask.sum()}, grabR={grabber_right_mask.sum()}, &quot;
+-      f&quot;static(other)={static_mask.sum() - bg_mask.sum()}&quot;)
++      f&quot;grabL={grabber_left_mask.sum()}, grabR={grabber_right_mask.sum()}&quot;)
+ 
+ # ── 3. Build clean background plate ─────────────────────────────────────────
+ # Fill paper and grabber areas with nearby background/table colors
+ 
+ bg_plate = src.copy()
+ 
+-# Build per-row background color lookup from bg_mask and table_mask
++# Build per-row background color lookup from bg_mask and non-paper, non-grabber areas
+ row_bg_colors = {}
+ 
+-# Use actual background pixels where available
+… diff truncated; 17 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-53b4dc39a070.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T11:33:59.451619+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 53b4dc39a070c7fd · code cd0c3b3f1fe7e7f7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-89103b9bce84.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T11:39:09.357546+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +51/−25</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 89103b9bce845bce · code 361bcb91f795c321</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -41,26 +41,25 @@
+ bg_mask = (b &gt; r + 22) &amp; (b &gt; g + 12) &amp; (b &gt; 125)
+ 
+ # Grabber tools: define spatial zones and take everything non-paper, non-bg
+-# Left grabber zone: where the left tool body is visible
++# Based on visual analysis:
++# Left grabber: dark tool body rows 16-54, cols 0-65
++# Right grabber: dark tool body rows 6-54, cols 200-256
+ left_zone = np.zeros((H, W), dtype=bool)
+-left_zone[16:55, 0:82] = True
+-
+-# Right grabber zone: where the right tool body is visible
++left_zone[16:55, 0:66] = True
++
+ right_zone = np.zeros((H, W), dtype=bool)
+-right_zone[6:55, 193:256] = True
++right_zone[6:55, 200:256] = True
+ 
+ # Grabber = everything in zone that&#x27;s not paper and not blue background
+ grabber_left_mask = left_zone &amp; ~paper_mask &amp; ~bg_mask
+ grabber_right_mask = right_zone &amp; ~paper_mask &amp; ~bg_mask
+ 
+-# Dilate slightly to capture edge pixels
++# Dilate slightly to capture edge pixels, but stay in zone
+ from scipy.ndimage import binary_dilation
+-grabber_left_mask = binary_dilation(grabber_left_mask, iterations=1) &amp; left_zone
+-grabber_right_mask = binary_dilation(grabber_right_mask, iterations=1) &amp; right_zone
+-
+-# Ensure grabbers don&#x27;t include paper
+-grabber_left_mask = grabber_left_mask &amp; ~paper_mask
+-grabber_right_mask = grabber_right_mask &amp; ~paper_mask
++grabber_left_mask = binary_dilation(grabber_left_mask, iterations=1)
++grabber_left_mask = grabber_left_mask &amp; left_zone &amp; ~paper_mask
++grabber_right_mask = binary_dilation(grabber_right_mask, iterations=1)
++grabber_right_mask = grabber_right_mask &amp; right_zone &amp; ~paper_mask
+ 
+ print(f&quot;Masks: paper={paper_mask.sum()}, bg={bg_mask.sum()}, &quot;
+       f&quot;grabL={grabber_left_mask.sum()}, grabR={grabber_right_mask.sum()}&quot;)
+@@ -109,27 +108,56 @@
+     mask_row = paper_mask[y]
+     if mask_row.sum() == 0:
+         continue
+-    bg_plate[y, mask_row] = get_row_color(y)
++    base_color = get_row_color(y)
++    # Add subtle noise to avoid flat-color look
++    noise = np.random.randint(-5, 6, (mask_row.sum(), 3)).astype(np.int32)
++    colors = np.clip(base_color.astype(np.int32) + noise, 0, 255).astype(np.uint8)
++    bg_plate[y, mask_row] = colors
+ 
+ # Fill grabber areas
+ for mask in [grabber_left_mask, grabber_right_mask]:
+     coords = np.argwhere(mask)
+     for y, x in coords:
+-        bg_plate[y, x] = get_row_color(y)
++        base_color = get_row_color(y).astype(np.int32)
++        noise = np.random.randint(-5, 6, 3)
++        bg_plate[y, x] = np.clip(base_color + noise, 0, 255).astype(np.uint8)
+ 
+ # ── 4. Define tear geometry ─────────────────────────────────────────────────
+ # Tear path: from right grip point diagonally toward bottom-left
++# The tear is not perfectly straight — it has slight jaggedness
+ tear_start = np.array([9.0, 201.0])   # Top-right corner of paper
+ tear_end = np.array([95.0, 70.0])     # Bottom-left area
++
++# Generate a jagged tear path (pre-compute for consistency)
++np.random.seed(42)
+ tear_vec = tear_end - tear_start
+ tear_length = np.linalg.norm(tear_vec)
+ tear_dir = tear_vec / tear_length
+ tear_normal = np.array([-tear_dir[1], tear_dir[0]])  # Perpendicular
+ 
++# Sample the tear centerline with jagged perturbations
++n_tear_samples = 100
++tear_samples = np.linspace(0, 1, n_tear_samples)
++tear_jagged = np.zeros((n_tear_samples, 2))
++for i, s in enumerate(tear_samples):
++    pt = tear_start + s * tear_vec
++    # Add jagged offset perpendicular to tear direction
++    jagged_offset = (np.random.randn() * 2.5)  # pixels of jaggedness
++    # More jaggedness in the middle, less at ends
++    jagged_scale = 1.0 - 4.0 * (s - 0.5) ** 2  # 0 at ends, 1 in middle
++    if jagged_scale &lt; 0:
++        jagged_scale = 0
++    pt = pt + jagged_offset * jagged_scale * tear_normal
++    tear_jagged[i] = pt
++
+ def side_of_tear(y, x):
+     &quot;&quot;&quot;Return +1 for piece A (right/top side), -1 for piece B (left/bottom)&quot;&quot;&quot;
+… diff truncated; 47 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-54922e4f8fa8.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T11:40:27.540295+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−2</span></div><p class="hashes">pixels 54922e4f8fa86a5a · code 47d26eebc6fc45a1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -187,9 +187,14 @@
+     
+     # Determine animation phase
+     if t &lt;= 2:
+-        # Tension: no tear, tiny displacement
++        # Tension: tear begins forming, small displacement
+         tear_progress = 0.0
+-        disp_factor = ease_in_out(t / 2.0) * 0.03
++        if t == 1:
++            tear_progress = 0.02  # Micro-tear starting
++            disp_factor = 0.02
++        else:  # t == 2
++            tear_progress = 0.08  # Tear starting to form
++            disp_factor = 0.06
+     elif t &lt;= 8:
+         # Tear propagation
+         local_p = (t - 2) / 6.0</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-54922e4f8fa8.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T11:40:30.214152+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 54922e4f8fa86a5a · code 47d26eebc6fc45a1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-53c04d73bb6b.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T11:42:20.124002+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−6</span></div><p class="hashes">pixels 53c04d73bb6b5216 · code 34580c07b3643ef5</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -187,14 +187,13 @@
+     
+     # Determine animation phase
+     if t &lt;= 2:
+-        # Tension: tear begins forming, small displacement
+-        tear_progress = 0.0
++        # Tension: paper stretches near grip, small but visible displacement
+         if t == 1:
+-            tear_progress = 0.02  # Micro-tear starting
+-            disp_factor = 0.02
++            tear_progress = 0.0
++            disp_factor = 0.05  # Enough for 1+ px displacement
+         else:  # t == 2
+-            tear_progress = 0.08  # Tear starting to form
+-            disp_factor = 0.06
++            tear_progress = 0.05  # Tear begins
++            disp_factor = 0.10
+     elif t &lt;= 8:
+         # Tear propagation
+         local_p = (t - 2) / 6.0</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/candidate-53c04d73bb6b.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-05T11:42:24.436181+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 53c04d73bb6b5216 · code 34580c07b3643ef5</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0044/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene Observation: Paper Tear by Grabber Tools</h1>
+<h2>Prompt</h2>
+<p>&quot;Two blue-black grabber tools pull the piece of green paper from opposite corners, causing it to tear.&quot;</p>
+<h2>Scene Layout</h2>
+<ul>
+<li><strong>Dimensions</strong>: 256×144 pixels, static locked-off camera</li>
+<li><strong>Background</strong>: Blue tabletop surface, average RGB ~[118, 150, 190], filling most of the frame</li>
+<li><strong>Green Paper</strong>: Irregular quadrilateral/diamond shape covering rows 9–99, columns 61–202 (~5414 px)<ul>
+<li>Centroid: row ~52, col ~119</li>
+<li>Key vertices:<ul>
+<li>Top-right corner: row 9, col 201</li>
+<li>Right edge extends to: row 43, col 200</li>
+<li>Bottom tip: row 99, col 68</li>
+<li>Left protrusion: row 43, col 61</li>
+</ul>
+</li>
+<li>The paper has a distinct right-heavy shape with a top-right point and a broad left protrusion</li>
+</ul>
+</li>
+<li><strong>Left Grabber Tool</strong>: Dark blue-black metallic tool<ul>
+<li>Body: rows ~18–52, columns ~0–70</li>
+<li>Gripping point: approximately row 40–50, col 61–70 (the left protrusion of the paper)</li>
+<li>The grabber jaw overlaps/occludes the paper edge</li>
+</ul>
+</li>
+<li><strong>Right Grabber Tool</strong>: Dark blue-black metallic tool<ul>
+<li>Body: rows ~10–52, columns ~195–255</li>
+<li>Gripping point: approximately row 10–25, col 195–202 (the top-right corner of the paper)</li>
+<li>The grabber jaw overlaps/occludes the paper edge</li>
+</ul>
+</li>
+<li><strong>Below the paper</strong> (rows 100–143): Table surface shows through — darker gray/brown tones, different from blue background</li>
+</ul>
+<h2>Tear Analysis</h2>
+<ul>
+<li><strong>Opposite corners being pulled</strong>:<ol>
+<li>Top-right corner (row ~9, col ~201) — pulled by right grabber</li>
+<li>Left/bottom-left corner (row ~43, col ~61) — pulled by left grabber</li>
+</ol>
+</li>
+<li><strong>Tear direction</strong>: Diagonal, roughly from the top-right grip point toward the lower-left area</li>
+<li><strong>Mechanics</strong>: The grabbers apply tensile force in opposite directions, exceeding the paper's tear strength. The paper first stretches elastically near the grip points, then a tear initiates at the right grip point (top-right corner) and propagates diagonally across the paper toward the left side. The two resulting pieces separate, revealing the blue tabletop beneath.</li>
+</ul>
+<h2>20-Frame Event Plan (5 seconds @ 4 fps)</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td><strong>Initial state</strong> — exact copy of first_frame.png. Paper intact. Grabbers at rest positions gripping corners.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>Tension begins. Paper near right grip point shows subtle stretching/displacement (1–2 px). Grabbers begin slight outward movement.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>Tension increases. Paper edges near both grip points deform slightly. Micro-tears begin at right grip point.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>First visible tear: a small rip appears at the top-right grip point, propagating ~5 px diagonally inward.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>Tear propagates further (~15 px). Paper halves begin to separate at the tear origin. Right half pulls right/up.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>Tear continues across the paper (~30 px). Visible gap between halves at the tear origin. Background blue revealed in gap.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>Tear reaches ~50 px. Left half pulling left/down. Right half pulling right/up. Gap widens near origin.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>Tear at ~70 px, nearing the left side of the paper. Both halves substantially displaced.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>Tear completes across the paper (~90 px). Paper is fully split into two pieces.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>Two pieces continue separating. Left piece moves left-down, right piece moves right-up. Blue background fills the gap.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>Pieces further apart (~10 px separation). Grabbers continue pulling outward.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>Pieces ~15 px apart. Tear edges show slight jaggedness.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>Pieces ~20 px apart. Grabbers near their maximum pull positions.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>Pieces ~25 px apart. Motion begins to decelerate.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>Pieces ~30 px apart. Grabbers reach maximum pull, begin slight rebound.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>Pieces ~28 px apart (slight rebound). Settling begins.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>Pieces ~26 px apart. Final separation state approaching.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>Pieces ~25 px apart. Grabbers settled at final positions.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>Final state stabilizing. Minor drift continues.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td><strong>Final frame</strong> — Two torn paper halves separated ~24 px, grabbers at extended positions. Blue background visible in the torn gap.</td>
+</tr>
+</tbody>
+</table>
+<h2>Implementation Strategy</h2>
+<ol>
+<li><strong>Segmentation</strong>: Create masks for paper, grabbers, and background from frame 00</li>
+<li><strong>Paper deformation</strong>: Apply affine/perspective warps to the paper regions near grip points for frames 1–2</li>
+<li><strong>Tear propagation</strong>: From frame 3 onward, split the paper mask along a diagonal tear path, progressively revealing background</li>
+<li><strong>Piece separation</strong>: Translate the two paper halves in opposite directions with easing</li>
+<li><strong>Grabber movement</strong>: Translate grabber regions outward slightly to match the pulling action</li>
+<li><strong>Background filling</strong>: Use inpainting/blending from nearby background pixels to fill revealed areas</li>
+</ol>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md — Paper Tear Animation</h1>
+<h2>Approach</h2>
+<p><strong>Method</strong>: Pixel-level mask-based compositing with procedural tear propagation.</p>
+<p>All generation is done via local Python pixel operations (NumPy, PIL, SciPy ndimage). No external models, engines, or networks are used.</p>
+<h2>Pipeline</h2>
+<h3>1. Segmentation (from <code>first_frame.png</code>)</h3>
+<p>Three masks are extracted from the first frame:</p>
+<ul>
+<li><strong>Paper mask</strong>: Pixels where green channel exceeds red by &gt;12 and blue by &gt;8, with green &gt;65. Captures the green paper piece (~5499 px).</li>
+<li><strong>Blue background mask</strong>: Pixels where blue dominates (blue &gt; red+22, blue &gt; green+12, blue &gt;125). Captures the light blue tabletop (~3421 px).</li>
+<li><strong>Grabber masks</strong>: Spatially bounded zones around the tool bodies.<ul>
+<li>Left grabber: rows 16–55, cols 0–66, excluding paper and blue background (~2243 px).</li>
+<li>Right grabber: rows 6–55, cols 200–256, excluding paper and blue background (~2277 px).</li>
+</ul>
+</li>
+</ul>
+<h3>2. Background Plate</h3>
+<p>A clean background plate is created by filling paper and grabber areas with per-row average colors sampled from nearby background regions. Subtle noise (±5 per channel) is added to avoid flat-color artifacts. This plate represents what would be visible behind the paper and grabbers.</p>
+<h3>3. Tear Geometry</h3>
+<ul>
+<li><strong>Tear path</strong>: Diagonal from the top-right grip point (row 9, col 201) to the bottom-left (row 95, col 70).</li>
+<li><strong>Tear line</strong>: Computed with slight random jaggedness (σ=2.5 px perpendicular perturbation, tapering at endpoints).</li>
+<li><strong>Piece assignment</strong>: Each paper pixel is assigned to the right piece or left piece based on which side of the tear line it falls on.</li>
+</ul>
+<h3>4. Frame Generation (20 frames, 4 fps)</h3>
+<p>For each frame t:</p>
+<ol>
+<li>Start with a copy of <code>first_frame.png</code>.</li>
+<li>Erase paper and grabber regions (fill with background plate).</li>
+<li>Determine animation phase:<ul>
+<li><strong>Frame 1</strong>: Tension — paper stretches at grip points (displacement factor 0.05).</li>
+<li><strong>Frame 2</strong>: Tear initiates at right grip (displacement factor 0.10).</li>
+<li><strong>Frames 3–8</strong>: Tear propagates across the paper (ease-in-out progression, displacement factor grows to 0.35).</li>
+<li><strong>Frames 9–15</strong>: Pieces separate with slight overshoot (displacement factor peaks at 1.05, settles to 0.97).</li>
+<li><strong>Frames 16–19</strong>: Final settling.</li>
+</ul>
+</li>
+<li>For each paper pixel, determine:<ul>
+<li>Which piece it belongs to (side of tear line).</li>
+<li>Whether the tear front has reached it (distance along tear direction).</li>
+<li>If torn: displace by the piece's motion vector.</li>
+<li>If not yet torn: stays in place.</li>
+</ul>
+</li>
+<li>Move grabber pixels by the same displacement as their respective paper pieces.</li>
+<li>The result: paper tears, pieces separate, grabbers move outward, background is revealed in the gap.</li>
+</ol>
+<h3>5. Output</h3>
+<ul>
+<li><code>frames/00.png</code>–<code>19.png</code>: 20 RGB frames at 256×144.</li>
+<li><code>pixels.npz</code>: Packed uint32 tensor (0xRRGGBB format), shape (144, 256, 20).</li>
+<li><code>inspection.png</code>: 8-frame overview sheet.</li>
+<li><code>transition_check.png</code>: Per-pair difference visualization (10 frame pairs, 5× amplification).</li>
+<li><code>index.html</code>: Standalone player with delta compression.</li>
+</ul>
+<h2>Motion Parameters</h2>
+<table>
+<thead>
+<tr>
+  <th>Parameter</th>
+  <th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Right piece displacement (max)</td>
+  <td>dy = −3 px, dx = +22 px</td>
+</tr>
+<tr>
+  <td>Left piece displacement (max)</td>
+  <td>dy = +5 px, dx = −18 px</td>
+</tr>
+<tr>
+  <td>Tear length</td>
+  <td>~151 px diagonal</td>
+</tr>
+<tr>
+  <td>Tear jaggedness</td>
+  <td>σ = 2.5 px</td>
+</tr>
+</tbody>
+</table>
+<h2>Verification</h2>
+<ul>
+<li>Frame 0 is byte-identical to <code>first_frame.png</code>.</li>
+<li>All 20 frames: shape (144, 256, 3), dtype uint8, range [0, 255].</li>
+<li><code>pixels.npz</code> packed tensor matches PNGs pixel-for-pixel.</li>
+<li>Zero pure-black pixels (all areas properly filled).</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0044-2668950616b9.png';</script></body></html>
