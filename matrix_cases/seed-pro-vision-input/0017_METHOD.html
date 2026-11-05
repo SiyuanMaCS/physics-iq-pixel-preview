@@ -1,0 +1,82 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-sand · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0017</span></nav><article><h1>ball-in-sand · 生成方法</h1><h2>Task</h2>
+<p>Continue <code>first_frame.png</code> (256×144, static locked-off camera) into 20 RGB frames
+at 4 fps (5 s): the blue-black grabber releases the blue ball, which falls under
+gravity and lands in the pile of green kinetic sand on the wooden table, pressing
+a crater with raised side lips and settling. Frame 00 is byte-identical to
+<code>first_frame.png</code>.</p>
+<p>Everything is local analytic Python pixel work (NumPy / Pillow / OpenCV
+<code>remap</code>/<code>warpAffine</code>/<code>inpaint</code>). No external models, images, or engines.</p>
+<h2>1. Scene measurements (see OBSERVATION.md)</h2>
+<p>Wall is a smooth gray gradient; the table is wooden; the sand pile spans roughly
+x∈[93,181], y∈[79,119] with a near-flat top at y≈80 around the impact column
+x=133. The grabber arms occupy x≤119 down to y31 (left) and x≥150 down to y26
+(right). The ball is a teal disk, centre (133,33), opaque radius ≈14.5 with a
+soft edge to ≈17; f0 also contains a downward exposure-motion-blur tail to y≈54.</p>
+<h2>2. Background plate (everything except the ball)</h2>
+<p>A per-row wall colour is fit from clean median strips left (x96–110) and right
+(x158–173) of the foreground over y14–57, smoothed with a [.25,.5,.25] kernel and
+linearly interpolated across x. Ball pixels are identified per-pixel:</p>
+<ul>
+<li>a clean round alpha disk (α=1 to r14.5, linear fall-off to r17) minus the
+exact claw footprint measured in f0 (left arm x≤119/y≤31, right arm
+x≥150/y≤26); those claw pixels stay on the plate untouched;</li>
+<li>fringe colours are un-premultiplied against the fitted wall colour.
+The ball region of the plate is filled with the wall model. Table and sand are
+never altered to make the plate.</li>
+</ul>
+<h2>3. Ball sprite</h2>
+<p>The round sprite carries f0's actual teal shading (darker lower-left, two light
+curved seams). The small top notches hidden behind the claw in f0 are filled with
+Navier–Stokes inpainting so the released ball renders as a whole sphere. The f0
+motion-blur tail is deliberately discarded: exposure blur is regenerated every
+frame from the physical trajectory instead of reusing one fixed tail.</p>
+<h2>4. Physics</h2>
+<ul>
+<li>Free fall from rest: g = 42.0 px/s², so contact at t=1.25 s (frame 05) after a
+32.8 px drop. Before release the ball rests at cy=33.</li>
+<li>Post-contact: critically-damped-style exponential settling,
+cy(t)=69.5−(69.5−65.8)·exp(−(t−1.25)/0.17), reaching rest cy≈69.5 by frame 08.</li>
+<li>Rotation: −75°·min(drop/32.8, 1) (clockwise), frozen after contact.</li>
+<li>Motion blur: each frame composites 3 rotated sprite instances at t−0.12, t,
+t+0.12 s with weights .5/1/.5, accumulating premultiplied alpha — a vertical
+smear whose length grows with impact velocity and is gone once the ball rests.</li>
+</ul>
+<h2>5. Kinetic-sand deformation</h2>
+<p>The sand is an RGBA layer: a per-column filled pile mask (from a saturated-green
+key) so crevice holes travel with the pile. Deformation at strength s(t) is a
+dense displacement warp (cv2.remap) restricted to a surface band:</p>
+<ul>
+<li>vertical displacement uy = s·(6.5·G(133,σ13) − 4.6·[G(116,σ4.2)+G(150,σ4.2)])·
+exp(−depth/11): a central crater pressed down and two lips pushed up;</li>
+<li>horizontal displacement ux pushes surface material outward from the impact and
+inward under the lips, decaying with depth.
+s(t): 0 before contact, 0.15 at f05, 0.78 f06, 0.96 f07, 1.00 f08, relaxing to
+0.97; the residual difference is below pixel rounding, so frames f09–f19 are
+byte-identical. Three 3×3 green grains sampled from the pile are
+ejected at f06 and land back at f07. An elliptic darkening (contact/approach
+shadow) is multiplied onto the sand layer; it grows as the ball nears and sits
+under the settled ball.</li>
+</ul>
+<h2>6. Compositing and static grabber</h2>
+<p>Per frame: plate → warped sand layer (alpha over) → shadow → grains → motion-
+blurred ball (alpha over) → restore f0 pixels in the grabber's geometric
+footprint, so the static tool always occludes the ball as it parts from the claw
+and never changes itself.</p>
+<h2>7. Verification (numeric only; no image-viewing tool used)</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly.</li>
+<li>All 20 PNGs reloaded and packed as uint32 <code>0xRRGGBB</code> match <code>pixels.npz</code>
+(shape 144×256×20) exactly.</li>
+<li>Zero changed pixels inside the verified grabber footprint for f01–f19.</li>
+<li>Ball core centre column: y33 at f00 → y≈54 f04 → contact f05 → settled
+y50–84.5 (cy 69.5) from f08; frames f11–f19 are byte-identical (settled rest).</li>
+<li>Sand layer tops (from layer alpha): centre 79→84 (crater), lips 82/81→79.</li>
+<li>Motion-blur vertical spread grows with velocity during the fall and vanishes
+at rest. <code>transition_check.png</code> shows f04–f08 and amplified adjacent-frame
+differences around the impact.</li>
+</ul>
+<h2>Artifacts</h2>
+<p><code>generate.py</code>, <code>pixels.npz</code>, <code>frames/00.png</code>–<code>19.png</code>, <code>inspection.png</code>,
+<code>transition_check.png</code>, <code>index.html</code> (standalone player from the provided
+template via <code>artifact_io.save</code>), plus <code>OBSERVATION.md</code> and this file.</p>
+</article></main></body></html>
