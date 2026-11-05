@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>cut-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0043</span></nav><article><h1>cut-paper · 生成方法</h1><h2>Generation approach</h2>
+<p>This continuation was generated deterministically from <code>first_frame.png</code> with local Python pixel operations only. No network source, external image, external engine, AI image model, reference case, or subagent was used.</p>
+<ol>
+<li>The source RGB image is classified in HSV/RGB space. The largest saturated-green component forms the paper mask. Separate cool/dark connected components inside fixed left and right regions form the two grabber masks.</li>
+<li>The tabletop hidden under the source objects is reconstructed with OpenCV Telea inpainting. A faint high-frequency residual sampled from visible lower-table pixels is added inside the hidden region so the exposed tear gap retains plausible wood texture rather than a flat fill.</li>
+<li>Frames 1–11 use a mild horizontal affine stretch about the paper's tension ridge. Both grabber masks translate outward on smoothstep timing. A hand-authored irregular polyline from the upper central notch toward the lower paper tip is progressively removed from the warped paper alpha mask to create the advancing tear.</li>
+<li>From frame 12, the paper mask is divided along that same jagged curve. Each source-pixel fragment receives its own affine transform: opposing translation, a small rotation about its held corner, and a damped release wobble. The tools move consistently with their held sides.</li>
+<li>Soft blurred masks add moving contact shadows. One-pixel darkening plus sparse light-green flecks along the new internal boundaries suggests exposed paper thickness/fibers. The source RGB pixels remain the basis of both paper fragments and both tools.</li>
+<li><code>artifact_io.save</code> packs all frames as uint32 <code>0xRRGGBB</code>, writes the 20 RGB PNGs and <code>pixels.npz</code>, creates the inspection sheet, and embeds lossless delta packets in the standalone HTML player. <code>transition_check.png</code> is an automatically drawn numeric chart of adjacent-frame changed-pixel counts and mean RGB deltas.</li>
+</ol>
+<h2>Timing</h2>
+<ul>
+<li>Frames 00–04: initial outward pull and increasing tension.</li>
+<li>Frames 05–11: progressive top-to-bottom jagged tear, retaining a lower bridge through frame 11.</li>
+<li>Frame 12: complete release and outward snap.</li>
+<li>Frames 13–19: opposing fragment separation followed by damped settling.</li>
+</ul>
+<h2>Verification</h2>
+<ul>
+<li>Frame tensor shape/dtype: <code>(20, 144, 256, 3)</code> / <code>uint8</code> before packing.</li>
+<li>Packed tensor shape/dtype: <code>(144, 256, 20)</code> / <code>uint32</code>.</li>
+<li><code>frames/00.png</code> was compared as decoded RGB and is exactly equal to decoded <code>first_frame.png</code> (maximum channel error 0).</li>
+<li>All 20 PNGs are RGB, 256×14, and exactly equal to the corresponding frame reconstructed from the packed uint32 tensor.</li>
+<li>Conservative green segmentation finds one principal paper component through frame 11, then two principal components in frames 12–19.</li>
+<li>Adjacent-frame numeric deltas were checked for all 19 transitions. The intended separation transition (11→12) is the largest; late motion damps to a small residual by frame 19.</li>
+<li>Generated outputs were inspected only through local code and numeric checks, as requested. <code>inspection.png</code> and <code>transition_check.png</code> were generated but not opened with an image viewing tool.</li>
+</ul>
+</article></main></body></html>

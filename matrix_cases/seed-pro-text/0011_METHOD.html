@@ -1,0 +1,90 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-nothing · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0011</span></nav><article><h1>ball-hits-nothing · 生成方法</h1><h2>Task</h2>
+<p>Continue the locked-off shot: the brown/orange tennis ball rolls straight
+out of the black pipe and across the light wooden coffee table toward the
+right side. 20 frames, 256×144, 4 fps (5 s); frame 00 must be identical to
+<code>first_frame.png</code>. All pixel work is local Python/NumPy/PIL; no external
+models, engines, or image-view tools. <code>first_frame.png</code> was inspected only
+through code (histograms, per-pixel hex dumps, colour masks, least-squares
+fits).</p>
+<h2>What the first frame contains (measured, not guessed)</h2>
+<ul>
+<li>Wood tabletop band around the action (y≈42–60) is a grayish warm tan with
+a slow per-row horizontal gradient and fine horizontal grain; a black
+pipe enters from the left with its elliptical mouth near (115.5, 32.5);
+a smaller static red ball sits at ≈(109.5, 36), r≈4.2.</li>
+<li>The moving tennis ball: centre (54.5, 50.6), core radius ≈7.2, fuzzy
+support to ≈7.6 with a loose fuzz wisp to ≈9 on the lower-right. Lit
+from upper-left (peak #E98F53 near (−3,−1)); no seam is resolved.</li>
+<li>No measurable cast shadow outside the ball footprint.
+Full numbers and the 20-frame event plan are in <code>OBSERVATION.md</code>.</li>
+</ul>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Table model.</strong> For each row y=38..63 a quadratic RGB-vs-x trend is
+least-squares fitted to clean table pixels (excluding ball, red ball,
+pipe and table edges). This gives a smooth table colour <code>T(x,y)</code>; the
+residual <code>F0 − T</code> is the fine wood grain.</li>
+<li><strong>Static background.</strong> The initial ball footprint is located from an
+empirical coverage map (step 4, threshold 0.12, 1-px dilate) and
+inpainted as <code>T(x,y) + grain(x+29, y)</code> — same-row grain copied from the
+clean donor strip at x+29 (its statistics match the surrounding
+horizontal grain). A 1-px 50% feather ring hides the boundary.</li>
+<li><strong>Ball shading (fitted, not invented).</strong> Interior frame-0 ball pixels
+(d &lt; r−0.5) are fit per channel by least squares on the basis
+<code>[1, nx, ny, nz, (1−nz)nx², (1−nz)nx, (1−nz)ny, (1−nz)ny²]</code> where
+<code>n=(dx/r, dy/r, √(1−(d/r)²))</code> is the analytic sphere normal
+(r=7.6). The extra rim terms capture the dark warm limb; fit RMSE is
+4.0/1.8/3.9 in R/G/B.</li>
+<li><strong>Fuzzy silhouette.</strong> Per-pixel coverage is unmixed from frame 0,
+<code>α = median_c (obs−table)/(shade−table)</code> over channels with strong
+separation, then separable-smoothed. This empirical alpha keeps the
+real fuzz outline (including the lower-right wisp); bilinear lookup
+allows sub-pixel translation. Alphas &lt;0.02 and samples above the
+template support (screen y&lt;42) are hard-zeroed, so the ball never
+bleeds onto the pipe or off-table edge.</li>
+<li><strong>Rolling felt.</strong> Two-octave trilinear 3-D value noise (deterministic
+integer hashing, frequencies 4.3 and 8.6 over the unit sphere) is
+amplitude-calibrated to the frame-0 interior residual (≈5.4/2.6/5.0
+in R/G/B) and sampled on a point that is rotated by Rodrigues' formula
+about the screen-projected table-depth axis
+<code>a=(0,−cos40°,−sin40°)</code> by <code>φ = −(cx−54.5)/7.6</code> (clockwise roll
+toward +x, no slip). Lighting stays world-fixed while the felt turns.</li>
+<li><strong>Motion blur and compositing.</strong> 50% shutter centred on each timestamp,
+integrated with 7 temporal × 2×4 spatial sub-samples; colours are
+alpha-averaged and composited over the static background.</li>
+<li>Frame 00 is the untouched input file (byte-identical). Frames 1–19 use
+cx = 54.5 + 8.55·t, cy = 50.6: constant speed straight roll; frame 19
+centre 217.0, fuzz ending ≈x225, just inside the dark table edge.</li>
+<li>Outputs go through <code>artifact_io.save</code> (<code>pixels.npz</code> as the
+H×W×20 uint32 <code>0xRRGGBB</code> tensor, 20 PNGs, <code>inspection.png</code>,
+standalone <code>index.html</code>); <code>transition_check.png</code> is written in
+addition (endpoints at 2× plus all 20 ball-centred crops at 3×).</li>
+</ol>
+<h2>Verification performed (numeric, no visual claims)</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly; every one of the 20
+PNGs equals its slice of the uint32 tensor in <code>pixels.npz</code>.</li>
+<li>Warm-ball centroid per frame matches the linear trajectory within
+0.11 px; cy is constant.</li>
+<li>All pixels with y≤40 (wall, pipe, red ball) and y≥63 (front table
+edge/floor) are byte-identical to frame 0 in every later frame; no
+dark off-table edge pixel is ever changed (the ball stays on the
+tabletop); frame-to-frame changes stay inside the y41–62 corridor.</li>
+<li>Re-rendered ball at the frame-0 pose agrees with the real ball to
+mean |Δ| ≈ 3.2 over α&gt;0.5 pixels (dominated by stochastic fuzz);
+inpainted vacated area matches neighbouring table grain statistics
+with zero warm residue.</li>
+<li>Ball internal total variation stays in 11.1–12.4 across all frames
+(frame-0 ball 12.4), i.e. texture/sharpness is stable along the roll.</li>
+</ul>
+<h2>Honest limitations</h2>
+<ul>
+<li>The ball is a shaded sphere + noise felt; it does not reproduce the
+exact frame-0 fuzz fibre pattern after the ball starts moving (it
+rotates a fresh, statistically identical texture), and no seam is
+drawn because none is resolvable in the input.</li>
+<li>Table inpaint is a per-row smooth trend plus translated grain, not a
+generative fill; it is invisible at this scale and is immediately
+covered again as the ball passes.</li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,86 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0015</span></nav><article><h1>ball-in-basket · 生成方法</h1><h2>Task</h2>
+<p>Continue a locked-off shot: an orange inflatable basketball is released over a
+black perforated plastic crate on a wooden table. 20 RGB frames, 256×144, 4 fps,
+5 s. Frame 00 is the verbatim <code>first_frame.png</code>; frames 01–19 are generated with
+local Python pixel operations only (numpy / PIL / scipy; no external data or
+models). <code>generate.py</code> is fully reproducible.</p>
+<h2>Scene measurements (from frame 00, see OBSERVATION.md)</h2>
+<p>Ball center (109, 38), radius 28.5 px; vertical seam stripe at dx ≈ −2; two
+near-white vertical specular strips at (dx,dy) ≈ (−21, +4) and (+7, −1).
+Crate rim at y ≈ 59–61; handle-slot aperture ≈ x 84–110, y 58–82; bright
+diamond lattice holes in three clusters (x 68–88, 100–113, 113–129, y 86–105).
+Frame-0 through-slot samples calibrate interior dimming (≈0.7 just under the
+rim → ≈0.24 deep inside the crate).</p>
+<h2>1. Static background plate</h2>
+<ul>
+<li>Wall: every ball/halo pixel inside radius 40 above the rim (the frame-0 ball
+has a ~4–6 px soft DOF/motion halo plus a faint contact shadow) is replaced by
+per-row horizontal linear interpolation between clean wall strips
+(x ≈ 50–71 left, x ≈ 150–156 right; narrowed near the top beam and lower-right
+rim). The fill is gaussian-smoothed (σ ≈ 1.6) and feathered ~3 px at its edge;
+rim plastic on the lower-right is excluded by geometry.</li>
+<li>Handle slot: orange pixels inside the aperture are repainted with sampled
+near-black interior color (dilation 1 px catches soft edges). White reflection
+spots at the slot bottom are real and kept.</li>
+</ul>
+<h2>2. Ball sprite (63×63)</h2>
+<ul>
+<li>Pixels of the observed cap (rad ≤ 26.5, above rim) are stamped verbatim, but
+only when they are saturated orange (R&gt;140, G&lt;110, B&lt;55), the dark seam, or
+the specular strips. This rejects frame-0 halo pixels, which are wall/orange
+blends.</li>
+<li>The unseen lower hemisphere and silhouette band (to rad 30.8) are completed
+analytically: nearest-neighbor lookup among known pixels strongly biased to
+the same column (KD-tree on (3·dx, dy)), with a mild top-to-bottom shading
+loss and a smooth fresnel-ish edge factor (1.0 → 0.72). This propagates the
+seam downward and keeps the lower hemisphere consistent with the observed
+upper half.</li>
+</ul>
+<h2>3. Physics (1D, image y down; 16 substeps per frame)</h2>
+<p>cy starts at 38.0 with v = 0; g = 110 px/s²; floor at cy = 84.0 (ball bottom on
+the projected crate floor); coefficient of restitution e = 0.58; rest when
+post-impact |v| &lt; 6 px/s. This gives: free fall through f02, first floor impact
+inside the f03 exposure, bounce apex at f05–06 (cap ≈ 18 px), a small second hop
+f08–09, micro-settle f10–11, and frames identical from f13 on. Ball x stays 109
+(vertical release).</p>
+<h2>4. Per-frame compositing (3× supersampled)</h2>
+<p>For each frame, 9 temporal samples across a 0.125 s exposure (180° shutter) are
+accumulated with analytic, ~3 px-soft sphere coverage, yielding motion blur on
+fast frames (up to ~10 px during the fall) and a lens-soft fringe matching
+frame 00. A ball pixel is painted only where it can actually be seen:</p>
+<ul>
+<li>above the piecewise-linear rim silhouette (full color);</li>
+<li>through a fixed opening mask — a hand-shaped eroded handle-slot polygon plus
+frame-0 bright lattice/reflection pixels (luminance &gt; 60 in the face band) —
+multiplied by a depth-below-rim dimming curve (1.0 at rim, ≈0.24 at the
+lattice), calibrated from frame-0 through-slot samples.</li>
+</ul>
+<p>The composited soft-alpha ball layer blends over the static plate; the result
+is box-downsampled to 256×144. Frame 00 is then replaced by the exact
+<code>first_frame.png</code> pixel array.</p>
+<h2>5. Outputs</h2>
+<p><code>frames/00.png–19.png</code>, <code>pixels.npz</code> (H×W×20 packed 0xRRGGBB uint32),
+<code>inspection.png</code> (eight key frames), <code>transition_check.png</code> (all 20 frames plus
+amplified consecutive-frame diff maps), <code>index.html</code> standalone player (via
+<code>artifact_io.save</code>), plus <code>OBSERVATION.md</code> and this file.</p>
+<h2>Verification performed</h2>
+<ul>
+<li><code>frames/00.png</code> is pixel-identical to <code>first_frame.png</code>.</li>
+<li>Every PNG matches the packed uint32 tensor in <code>pixels.npz</code>.</li>
+<li>Frames 13–19 are byte-identical (ball at rest); per-frame changed-pixel
+counts decay monotonically through the two bounces.</li>
+<li>Frames, plate, opening mask and sprite reviewed visually (image Read tool)
+at native and 4× zoom over multiple revisions: halo ghosting removed from the
+plate, wall/orange halo blends removed from the sprite, rim/slot/lattice
+occlusion checked frame by frame.</li>
+</ul>
+<h2>Honest limitations</h2>
+<ul>
+<li>Rest depth and restitution are plausible estimates chosen to match the
+measured geometry, not ground-truth physical parameters.</li>
+<li>Ball scale/perspective is held constant (the release point is assumed aligned
+over the opening center); no contact squash is modeled.</li>
+<li>The completed lower hemisphere is an analytic extrapolation; it is only ever
+glimpsed dimmed through small apertures.</li>
+</ul>
+</article></main></body></html>

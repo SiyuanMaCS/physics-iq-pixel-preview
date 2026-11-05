@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>balls-collide · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-text.html">← 返回本组全量视频</a><span class="tag">Case 0032</span></nav><article><h1>balls-collide · 生成方法</h1><h2>What was generated</h2>
+<p>This is a locked-camera, single-shot 5-second sequence at 4 fps. Two source-derived tennis balls travel toward one another at the same 5-pixel-per-frame speed, make a compressed head-on contact on frame 07, and rebound with equal and opposite velocities. The pipes, crop, lighting, and table remain stationary.</p>
+<h2>Construction</h2>
+<ol>
+<li>I inspected <code>first_frame.png</code> only by local code and numeric RGB measurements. I did not use an image Read/View tool. The measured colored components have centers near (93.0, 56.9) and (177.9, 55.8), with approximately 9-pixel radii.</li>
+<li>A clean plate was made by masking only the two ball bodies and their compact footprint shadows. OpenCV's local Telea inpainting reconstructed those small patches from neighboring tabletop pixels. This preserves the original background everywhere else.</li>
+<li>Each ball was extracted from the source with a feathered circular alpha matte. Edge RGB was decontaminated against the clean plate, while the ball's photographed shading and small-scale surface variation remained source-derived.</li>
+<li>The ball detail was bicubically rotated. Angle is computed from arc length (<code>angle = distance / radius</code>), with opposite signs for opposite motion, so translation and rolling remain coupled rather than sliding.</li>
+<li>Soft analytic contact shadows were multiplied into the clean plate underneath the new positions. The yellow ball, which is about 1.1 pixels farther up-table, is composited before the blue ball.</li>
+<li>On contact frame 07 only, both sprites are horizontally compressed to 88% and vertically expanded to 106%. This provides a brief readable tennis-ball impact without moving the camera or introducing unrelated effects.</li>
+<li>Equal-mass elastic collision behavior is represented by exchanging the translational velocities after contact. Both speed magnitudes remain 5 pixels per frame.</li>
+</ol>
+<h2>Output encoding and checks</h2>
+<ul>
+<li><code>frames/00.png</code> is a byte-for-byte copy of <code>first_frame.png</code>; its decoded RGB is also asserted equal to the source array.</li>
+<li><code>frames/01.png</code> through <code>frames/19.png</code> are RGB PNGs at 256 x 144.</li>
+<li><code>pixels.npz</code> contains <code>pixels</code>, a uint32 tensor with the workspace-standard shape <code>(144, 256, 20)</code> (height, width, time). Each value is packed as <code>0xRRGGBB</code>.</li>
+<li>The generator decodes that tensor back to RGB and compares every pixel against every PNG. It also verifies dtype, dimensions, frame count, and exact frame-00 equality. The latest verification report is stored in <code>.tmp/verification.json</code>.</li>
+<li><code>inspection.png</code> is a labeled 5 x 4 contact sheet of all frames.</li>
+<li><code>transition_check.png</code> contains key frames and 4x-amplified absolute differences for selected adjacent transitions, including both sides of contact.</li>
+<li><code>index.html</code> is the supplied serializer's standalone delta-packed player. It needs no external frame fetch and provides play, replay, loop, and frame-scrub controls at 250 ms per frame.</li>
+</ul>
+<h2>Reproduction</h2>
+<p>Run:</p>
+<pre><code class="language-bash">python3 generate.py
+</code></pre>
+<p>The process is deterministic and uses only local NumPy, Pillow, OpenCV, and the supplied source frame.</p>
+</article></main></body></html>

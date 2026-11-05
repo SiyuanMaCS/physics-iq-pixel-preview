@@ -1,0 +1,41 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>liquid-on-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-text.html">← 返回本组全量视频</a><span class="tag">Case 0086</span></nav><article><h1>liquid-on-duck · 生成方法</h1><p>I used the supplied photograph as a completely fixed plate. Frame 00 is an
+exact copy of <code>first_frame.png</code>; no reconstruction, generative model, external
+engine, network source, or reference image was used.</p>
+<p>The source was inspected only through local numeric RGB/HSV samples,
+thresholded connected components, per-row bounds, and Sobel edge magnitudes.
+That inspection identified the central yellow duck at x=131..176, y=50..97,
+the tray below it, and—most importantly—the already-visible narrow liquid
+stream at x=157..159, y=21..50. No image Read/View tool was used, so no claim of
+interactive visual review is made.</p>
+<p><code>generate.py</code> performs the continuation with deterministic NumPy, Pillow, and
+SciPy pixel operations:</p>
+<ol>
+<li>It isolates the largest central yellow component to obtain a soft duck
+surface mask while keeping the photographed silhouette fixed.</li>
+<li>It reinforces the existing stream with a subpixel sinusoidal centerline,
+a small width pulse, and a descending specular glint. The outlet position
+remains fixed.</li>
+<li>It grows a red crown impact and an antialiased curved rivulet down the
+duck's screen-right contour. Two narrow late branches and moving broken
+highlights make downward flow legible while preserving the eye and beak.</li>
+<li>From frame 09 onward, it grows a shallow perspective ellipse on the tray,
+clipped away from the duck, plus a few small nearby droplets. The pool is
+composited behind the duck-side rivulet.</li>
+<li>Liquid color inherits luminance from the underlying photograph but is
+mapped to saturated red, with a dark wet meniscus and pale pink-red glints.
+This preserves the source lighting and makes the coating read as glossy
+translucent liquid rather than flat paint.</li>
+</ol>
+<p>All vector masks are rasterized at 4x resolution and Lanczos-downsampled for
+photographic antialiasing. Only liquid-related pixels change; camera, wall,
+glass dispenser, woven basket, baking tray, and rubber duck geometry are fixed.</p>
+<p>The script saves all deliverables with <code>artifact_io.save</code>, creates a boosted
+consecutive-difference contact sheet as <code>transition_check.png</code>, then verifies:</p>
+<ul>
+<li>20 RGB uint8 frames at 256x144;</li>
+<li>exact frame-00 equality with the source pixel array;</li>
+<li>exact equality of every PNG with the packed uint32 <code>0xRRGGBB</code> tensor in
+<code>pixels.npz</code>;</li>
+<li>non-empty pixel changes at every transition.</li>
+</ul>
+</article></main></body></html>

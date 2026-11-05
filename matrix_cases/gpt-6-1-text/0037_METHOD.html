@@ -1,0 +1,90 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>blow-balloon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-text.html">← 返回本组全量视频</a><span class="tag">Case 0037</span></nav><article><h1>blow-balloon · 生成方法</h1><h2>Result</h2>
+<p>A deterministic five-second, locked-camera continuation of the source scene:
+the black balloon expands continuously while its hose attachment, the hose,
+wooden table, background and framing remain stationary. There are 20 RGB
+frames at 256 × 144, played at 4 fps. No objects or actions beyond the given
+setup and inflation are introduced.</p>
+<h2>Actual construction</h2>
+<ol>
+<li>Read the original PNG with Pillow and inspect its pixels using NumPy RGB
+samples, luminance tables and text brightness maps. Write OBSERVATION.md,
+including scene coordinates and the full 20-frame plan, before writing the
+generation program. No image Read/View tool is used at any stage.</li>
+<li>Fit a fourth-degree bivariate polynomial independently to the three RGB
+channels of unobstructed wall pixels in x=128–239, y=12–115. Exclude the
+balloon and hose from this fit. The observed-wall fit RMS errors are
+approximately 1.65, 1.68 and 1.69 RGB levels. Use this estimated background
+only inside the original balloon matte; retain original pixels elsewhere.</li>
+<li>Determine the original balloon silhouette from luminance below 80 in a
+tightly bounded source region. Fill enclosed holes caused by the bright
+reflections. Erode by two pixels to obtain an interior color reference.
+Solve an RGB contrast equation at the boundary for antialiased alpha,
+suppress alpha below 0.035, and remove wall contamination from edge RGB.
+Keep the original interior colors and both soft highlights. This matte is
+derived locally from the allowed source image; no external mask is used.</li>
+<li>Set relative volume at frame n to V(n)=1+3.65*n/19. Main body scale is
+s(n)=V(n)^(1/3), approximating constant air-volume inflow. Anchor the
+deformation at (160,95). In the bottom 10 source rows, use the cubic
+smoothstep function to bring both horizontal and vertical enlargement
+gradually to zero at the neck. Invert the monotonic vertical mapping
+numerically and apply the corresponding inverse horizontal scale.</li>
+<li>Bilinearly resample the recovered source RGB texture and alpha with SciPy
+ndimage.map_coordinates. Composite the expanded balloon onto the fixed
+source scene using the recovered background beneath the original balloon.
+Copy all rows y&gt;=95 directly from the source to guarantee a fixed hose and
+table. Save frame 00 directly from the original pixel array.</li>
+<li>Use the provided artifact_io.py output helper to write the PNG sequence,
+uint32 packed tensor, inspection sheet and standalone HTML player. Create
+transition_check.png with four selected consecutive-frame pairs and their
+absolute RGB differences amplified by four.</li>
+</ol>
+<p>The method is a numerical source-texture deformation and alpha composite,
+with a simple volume-based growth law. It does not solve latex stress, air
+pressure, or new three-dimensional lighting. Surface reflections follow the
+expanding source texture. Small wall regions exposed by the constrained neck
+use the local polynomial estimate. No external models, engines, scene assets,
+network access, or subagents are used.</p>
+<h2>Timing and serialization</h2>
+<p>Frame n samples t=n/4 seconds: 0.00 through 4.75 seconds. Every frame is held
+for 0.25 seconds, yielding a five-second sequence. pixels.npz contains the
+array named pixels with shape (144,256,20), dtype uint32 and layout [y,x,t].
+Each value is packed as 0xRRGGBB. index.html embeds all frames, reconstructing
+successive frames from lossless contiguous RGB-pixel delta packets; its
+playback interval is 250 ms and it works without a network connection.</p>
+<h2>Verification and review</h2>
+<p>Run <code>python generate.py</code> from this workspace to regenerate all outputs and
+verification.json. Assertions establish:</p>
+<ul>
+<li>Exactly 20 256 × 144 RGB PNGs and the expected uint32 tensor shape.</li>
+<li>All PNG pixels match the tensor and in-memory generated frames exactly.</li>
+<li>Frame 00 matches the source in both RGB pixels and complete PNG file bytes.</li>
+<li>All 20 embedded player frames match the tensor after decoding every packet.</li>
+<li>All pixels at y&gt;=95 stay equal to the source, and no changes occur at
+x&lt;140 or x&gt;=225.</li>
+<li>Every balloon mask is one connected component, grows in projected area at
+every frame, and remains inside the fixed image boundaries.</li>
+</ul>
+<p>Measured projected alpha area grows from 1534.23 to 4201.90 pixels. Final
+alpha&gt;0.5 bounds are x=146–218, y=21–95. Whole-frame consecutive RGB mean
+absolute changes decrease smoothly from 0.656 to 0.389 levels; there is no
+first-step jump or discrete inflation stage. The recovered source matte
+reconstructs the original with mean absolute RGB error 0.0000502 levels
+(maximum 1.094 at a clipped edge channel); frame 00 is saved exactly regardless.</p>
+<p>Review is numerical: source and final luminance text maps, coordinates,
+connected-component checks, monotonic area, temporal pixel changes, and
+lossless artifact/player decoding. The contact sheets were generated as
+required artifacts but were not opened with an image tool. No visual review
+is claimed.</p>
+<h2>Artifacts</h2>
+<ul>
+<li>OBSERVATION.md: initial measured observations and 20-frame event plan.</li>
+<li>generate.py: complete deterministic generation and verification program.</li>
+<li>pixels.npz: packed uint32 RGB tensor.</li>
+<li>frames/00.png through frames/19.png: required RGB sequence.</li>
+<li>inspection.png: eight selected frames in a contact sheet.</li>
+<li>transition_check.png: four consecutive-frame comparisons and differences.</li>
+<li>index.html: self-contained interactive 4 fps player.</li>
+<li>METHOD.md: this actual-method record.</li>
+<li>verification.json: detailed per-frame numerical validation results.</li>
+</ul>
+</article></main></body></html>

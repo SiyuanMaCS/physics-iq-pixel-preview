@@ -1,0 +1,51 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>liquid-on-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-text.html">← 返回本组全量视频</a><span class="tag">Case 0085</span></nav><article><h1>liquid-on-duck · 生成方法</h1><h2>Actual generation method</h2>
+<p>I used only local Python code and numeric RGB inspection. I did not use an image
+Read/View tool, external model, external engine, mask, reference, network call,
+or another case.</p>
+<p><code>generate.py</code> loads <code>first_frame.png</code> with Pillow and preserves it as the full
+background of every frame. Frame 00 is a direct <code>uint8</code> copy and is asserted to
+be exactly equal to the decoded source RGB array.</p>
+<p>The duck silhouette is found from the source pixels by a saturated-yellow RGB
+threshold, connected-component labeling, and selection of the component in the
+measured duck region. Binary closing, hole filling, and one-pixel dilation make
+a stable coating mask. This mask is derived entirely from <code>first_frame.png</code> and
+is used only to keep procedural runoff on the photographed rubber surface.</p>
+<p>The added bright-red liquid is deterministic vector/raster drawing:</p>
+<ul>
+<li>a forming bead, narrow stream, steady stream, thinning rope, and final drop at
+the measured pour axis;</li>
+<li>clipped crimson/scarlet runoff paths across the duck with narrow specular
+highlights;</li>
+<li>a lower-breast drip and a few tiny ballistic splash beads;</li>
+<li>an irregular, expanding puddle on the dark tray, layered from deep shadow red
+through scarlet reflection, with the original duck masked out so the puddle
+remains behind it.</li>
+</ul>
+<p>All liquid primitives are drawn at 4x resolution, downsampled with Lanczos
+filtering, and alpha-composited over the unmodified photograph. Geometry varies
+with deterministic sine functions and smoothstep growth curves; there is no
+random input. The camera and all photographed setup pixels outside the local
+action rectangle remain fixed.</p>
+<h2>Timing</h2>
+<p>The sequence has 20 frames at 4 fps (5 seconds by the task convention). The
+pour starts as a bead, becomes continuous, coats the duck, drains into an
+expanding tray puddle, thins, stops, and leaves residual wet paths and a settled
+puddle. The exact per-frame plan is recorded in <code>OBSERVATION.md</code>.</p>
+<h2>Output and verification</h2>
+<p><code>artifact_io.save</code> writes <code>pixels.npz</code>, <code>frames/00.png</code> through
+<code>frames/19.png</code>, <code>inspection.png</code>, and the standalone <code>index.html</code> player.
+<code>generate.py</code> also writes <code>transition_check.png</code>, whose top row contains nearest-
+neighbor enlargements of the measured action crop and whose bottom row contains
+3x-amplified numeric RGB differences from frame 00.</p>
+<p>The generator performs these assertions after writing:</p>
+<ol>
+<li>tensor shape is <code>(20, 144, 256, 3)</code> and dtype is <code>uint8</code>;</li>
+<li>frame 00 exactly equals <code>first_frame.png</code> after RGB decoding;</li>
+<li>every consecutive pair changes and all changes are confined to the local
+dispenser/duck/tray action rectangle;</li>
+<li><code>pixels.npz</code> has shape <code>(144, 256, 20)</code>, dtype <code>uint32</code>, and exactly equals
+the frames packed as <code>0xRRGGBB</code> then transposed;</li>
+<li>every saved PNG decodes back to the corresponding generated RGB frame.</li>
+</ol>
+<p>The final verification was numeric only. No claim of visual review is made.</p>
+</article></main></body></html>

@@ -1,0 +1,89 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-nothing · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0011</span></nav><article><h1>ball-hits-nothing · 生成方法</h1><h2>Task</h2>
+<p>Locked-off shot (256×144, 4 fps, 20 frames). Frame 0 (<code>first_frame.png</code>) shows an
+orange tennis ball that has just left a black pipe on the left of a light wood
+coffee table; the prompt says it rolls straight over the whole table toward the
+right side. Only that ball moves; the red ball, brown ball, sofa, pipe and
+table stay static.</p>
+<p>All pixels are produced with local Python/NumPy/PIL operations only — no
+external models, engines, references or network. Frame 00 is stored as the
+untouched input file.</p>
+<h2>Measurements (<code>OBSERVATION.md</code>)</h2>
+<p>Orange ball centroid (54.2, 50.9), opaque radius 6.3 px (fuzz to ~8 px),
+smooth sphere shading, peak RGB ≈ (233,147,85). Soft contact/cast shadow
+around the ball, strongest to the lower right (luminance ≈ 0.66 of the local
+table). Table side edge along the ball's depth: x ≈ 226 + 0.875·(y−44).
+Horizontal illumination is nonlinear (steep dark-to-bright rise on the left)
+and rows brighten slightly toward the camera.</p>
+<h2>Motion</h2>
+<p>Constant-depth straight roll ⇒ purely horizontal translation, fixed y and
+diameter. Constant speed <strong>8.779 px/frame (35.1 px/s, ≈0.19 m/s at tennis-ball
+scale)</strong> so the ball ends at center x = 221.0 on frame 19, i.e. right at the
+table's right side with all orange pixels still inside the sloping edge
+(verified numerically). A uniform fuzzy orange sphere carries no rotation
+cue, and frame-0's sphere shading is fixed by the static light, so the
+rendered ball keeps identical shading (frame 0 itself shows mild motion
+softness consistent with this speed); no friction decay is modeled, keeping
+the appearance constant over the clip.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Background model.</strong> For rows 38–65, a horizontal illumination curve is
+learned from clean rows just above/below the footprint (medians per
+column, lightly denoised), normalised between anchor strips at x ≈ 28/93/165,
+then pinned through each row's own three anchor medians. The result matches
+the observed saturating gradient rather than a straight line.</li>
+<li><strong>Inpainting frame 0's footprint.</strong> Fine grain (<code>frame − model</code>) from a
+same-row clean donor strip near x 92 is copied into the ball+shadow mask,
+feathered over 3 px at run boundaries. Under <em>pure shadow</em> pixels (fuzz
+alpha &lt; 0.25) the hidden table is inferred as <code>frame / shadow_factor</code>,
+blended 60/40 with the model and gamut/brightness-clamped to local wood, so
+the revealed table keeps wood hue without cool overshoots.</li>
+<li><strong>Ball sprite (RGBA patch x42–76, y42–63).</strong> Intrinsic sphere colour C is a
+least-squares fit on opaque core pixels: constant + Lambert <code>n_z</code> + small
+quadratic terms (per-channel RMS residual ≈ 2.4/1.9/3.8). Fuzz alpha is
+solved per pixel against the <strong>shadowed</strong> local table,
+<code>a = ⟨I−Bs, C−Bs⟩ / ‖C−Bs‖²</code>, clipped to [0,1]; the core is forced opaque,
+alpha is zero outside r = 8.3, geometrically tapered beyond r = 6.3, and
+further suppressed over the darkest contact zone. Sprite colour is the
+observed pixel where alpha &gt; 0.8, otherwise the fitted shade ramped toward
+the observation inside r = 6.6.</li>
+<li><strong>Shadow layer (per-channel multiply, 0.58–1.0).</strong> Ratios per channel vs the
+model, binary coverage where luminance ratio &lt; 0.975 inside a contact halo
+(r &lt; 9) ∪ a cast ellipse centered (63.5,53) with radii (11.5,6.5); both
+are Gaussian-blurred (σ 0.7) and recombined via a support mask, with
+contact-strength restored under the rim.</li>
+<li><strong>Compositing frames 1–19.</strong> Both layers are bilinear-splatted (4-tap
+weights) at sub-pixel x offsets, dy = 0: background → per-channel shadow
+multiply → premultiplied alpha ball blend. Destination pixels past the
+measured table edge (<code>x ≥ 226 + 0.875·(y−44) − 0.5</code>) or outside the frame
+receive nothing, so the cast shadow correctly clips at the table edge in
+the last frames while the ball stays fully on wood.</li>
+<li><strong>Saving.</strong> <code>artifact_io.save</code> writes <code>pixels.npz</code> (uint32 0xRRGGBB tensor),
+<code>frames/00.png…19.png</code>, <code>inspection.png</code> and the standalone <code>index.html</code>.
+<code>transition_check.png</code> shows frames 00/04/09/14/19, all 19 amplified
+consecutive-difference maps, and a frame-19 trajectory overlay.</li>
+</ol>
+<h2>Verification (numeric, no image-viewing of outputs used for tuning)</h2>
+<ul>
+<li><code>frames[00]</code> is byte-identical to <code>first_frame.png</code>; all 20 PNGs exactly
+match the repacked uint32 tensor in <code>pixels.npz</code>; shape (20,144,256,3) uint8.</li>
+<li>Re-compositing the extracted layers at the original position reproduces
+frame 0 with RMS ≈ 1.9 levels and only 2 pixels differing by &gt;10/channel
+(mixed fuzz/contact boundary).</li>
+<li>Strict-orange centroid per frame: x advances 8.78 px/step (e.g. 53.83 →
+220.67 for the thresholded blob, expected 54.2 → 221.0), cy ≈ 50.4 constant,
+pixel count 87–92 throughout.</li>
+<li>Outside the y 42–63 corridor the difference vs frame 0 is exactly 0 for
+every frame (pipe, sofa, red/brown balls, front edge untouched); the red /
+brown ball region changes by 0.</li>
+<li>After the ball passes, vacated pixels are static (no trails): differences
+0 between later frames over the start region.</li>
+<li>Last frame: ball pixels fully on the table; only 3 feathered shadow pixels
+sit within ~1 px of the analytic edge line; pixels beyond the edge keep
+their original dark values.</li>
+<li>No 0/0/0 or 255/255/255 artifacts in the motion corridor on any frame.</li>
+</ul>
+<p>Residual imperfections: ~2 px at the fuzz/contact-shadow seam where a single
+linear alpha can't perfectly separate sparse fibres from shadow; a faint (~3–5
+level) tonal step where inferred table meets the smooth model. Both are
+sub-pixel-grain magnitude and static/transient respectively.</p>
+</article></main></body></html>

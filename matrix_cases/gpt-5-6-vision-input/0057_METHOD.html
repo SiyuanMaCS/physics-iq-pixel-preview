@@ -1,0 +1,33 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-and-dominos · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0057</span></nav><article><h1>duck-and-dominos · 生成方法</h1><h2>Actual generation method</h2>
+<p>The continuation is a deterministic local Python pixel animation built from <code>first_frame.png</code>; no external model, engine, reference image, or additional scene input was used.</p>
+<ol>
+<li>The camera image is held at its original 256 x 144 crop. Frame 00 is copied directly from the source array.</li>
+<li>The four right-side domino silhouettes were measured from source pixels and stored as compact polygon masks. Each masked RGB cutout is moved with a 2D affine rotation about its photographed table-contact point. The fall is a cubic smoothstep over four frames, staggered by two frames per domino, ending at a 77-degree lean toward the duck.</li>
+<li>The original movable regions and their contact shadows are removed from a clean plate with OpenCV Telea inpainting. This affects only the arm/domino/duck working region. Vacated pixels therefore reveal a locally reconstructed version of the same photographed wooden tabletop.</li>
+<li>The wooden arm is drawn as a supersampled transparent overlay. Its endpoint follows an 11-degree clockwise arc around the platform pivot. Rendering on a transparent overlay is important: the photograph itself is never resampled, so untouched pixels remain bit-exact.</li>
+<li>New soft contact shadows are analytic blurred polygons aligned with each transformed domino. Their low opacity, down-right offset, and blur match the source's upper-left illumination.</li>
+<li>The duck mask is derived from the dominant saturated-yellow connected component within a tightly bounded region. Its outer contour is filled so the original eye, bill shading, highlights, and texture remain in the cutout. After the last domino reaches it, the duck receives a maximum two-pixel translation and three-degree rock, followed by alternating, rapidly damped recovery offsets. The left-side dominoes are deliberately left upright: the rubber body absorbs the small remaining impulse.</li>
+<li>The final frames are packed as uint32 <code>0xRRGGBB</code>, transposed to <code>(144, 256, 20)</code>, and written through the supplied artifact helper. The PNG sequence is written from the same uint8 RGB tensor.</li>
+</ol>
+<h2>Timing</h2>
+<ul>
+<li>Frames 00–02: exact start, then clockwise arm engagement.</li>
+<li>Frames 03–11: staggered right-to-left domino cascade.</li>
+<li>Frames 11–18: small damped duck response.</li>
+<li>Frame 19: settled arm, fallen right-side dominoes, upright left-side dominoes.</li>
+</ul>
+<h2>Verification and revision</h2>
+<p>The first render exposed whole-frame sub-pixel drift because an early arm-rendering path resampled the photograph. It was revised to use a transparent overlay; the corrected output has zero changed pixels outside the bounded action region.</p>
+<p>Final programmatic checks confirm:</p>
+<ul>
+<li>20 frames, each RGB uint8 at 256 x 144;</li>
+<li><code>frames/00.png</code> exactly equals <code>first_frame.png</code> pixel-for-pixel;</li>
+<li>all saved PNGs exactly equal the in-memory frame tensor;</li>
+<li><code>pixels.npz</code> has uint32 shape <code>(144, 256, 20)</code> and exactly matches every packed PNG pixel;</li>
+<li>motion is local to <code>x=90..238, y=38..109</code>, with no camera or background drift;</li>
+<li>first-to-last global mean RGB drift is below one code value per channel;</li>
+<li><code>inspection.png</code> is the helper-generated frame contact sheet;</li>
+<li><code>transition_check.png</code> is a code-generated set of absolute-difference heatmaps labeled with changed-pixel counts and peak deltas.</li>
+</ul>
+<p>Generated later frames were not visually inspected with an image-viewing tool. Revision and acceptance used source measurements, array statistics, masks, bounding boxes, temporal pixel deltas, and exact serialization comparisons, as requested.</p>
+</article></main></body></html>

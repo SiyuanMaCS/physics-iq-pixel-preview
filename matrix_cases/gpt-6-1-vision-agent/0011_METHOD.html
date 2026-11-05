@@ -1,0 +1,72 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-nothing · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0011</span></nav><article><h1>ball-hits-nothing · 生成方法</h1><h2>Actual generation method</h2>
+<p>This is a deterministic photographic pixel composite made with local Python,
+NumPy, Pillow, and SciPy. It uses only <code>first_frame.png</code> for scene imagery and
+<code>prompt.txt</code> for the requested action. No network, external imagery, AI model,
+external rendering/physics engine, or subagent was used. <code>OBSERVATION.md</code> was
+written before generation code, with the measurements and all twenty events.</p>
+<ol>
+<li>Read the original 256 × 144 RGB photograph. Frame 00 is copied directly,
+including copying the original PNG file bytes to <code>frames/00.png</code>.</li>
+<li>Restore the wood under the initial orange ball and its shadow. For rows
+41–63, interpolate the unobstructed left/right wood colors and borrow a
+small amount of high-frequency grain from an unobstructed region of the
+same photograph, 46 pixels to the right. Two feathered elliptical masks
+limit restoration to the ball/shadow footprint. That restored background
+is fixed for frames 01–19.</li>
+<li>Extract the source-minus-restored-background residual. An error-function
+sphere matte approximates the original soft silhouette (horizontal radius
+7.65 pixels, vertical radius 6.95 pixels). Translate with cubic pixel
+interpolation. Preserve the ball's photographed shading; outside the
+sphere matte, scale the original shadow residual by the destination/source
+wood ratio so it darkens the destination tabletop naturally.</li>
+<li>Advance the center by exactly (11.1, 1.4) pixels per frame, starting at
+(54.7, 51.6). This produces a straight path and constant projected speed,
+approximately 44.4 horizontal pixels per second. The path passes below the
+stationary red ball, traverses the visible table, clips at the right image
+boundary in frame 18, and is outside it in frame 19. The first frame already
+shows the ball clear of the black pipe; the continuation does not restart
+its emergence.</li>
+<li>Add at most 0.28 intensity units of rotating material variation, using
+analytical sphere normals and an angle equal to traveled pixel distance
+divided by a 7.3-pixel rolling radius. This is intentionally subtle because
+the source ball has no clearly visible seam. Illumination stays fixed.</li>
+</ol>
+<p>The motion is prescribed in image coordinates rather than recovered from a
+calibrated 3D camera. The hidden tabletop is an estimate from its surrounding
+pixels. The clip ends when the ball leaves the frame; it does not depict an
+unobserved landing. No camera movement, cuts, new objects, or changes to the
+pipe, red ball, sofa, or table structure are introduced.</p>
+<h2>Timing and output</h2>
+<p>There are twenty RGB frames at 256 × 144, played at 4 fps. Sample times are
+0.00 through 4.75 seconds; holding every frame for 0.25 seconds gives a
+five-second clip. <code>index.html</code> is a standalone player with embedded lossless
+frame deltas, play/pause, replay, scrubbing, and looping. It has no network
+dependencies. <code>artifact_io.py</code> and <code>player_template.html</code> are provided
+output/packaging helpers; they do not generate the scene pixels.</p>
+<ul>
+<li><code>generate.py</code>: reproducible local generator; run <code>python generate.py</code> here.</li>
+<li><code>pixels.npz</code>: key <code>pixels</code>, uint32 shape <code>(144, 256, 20)</code>, values <code>0xRRGGBB</code>.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: twenty RGB images.</li>
+<li><code>inspection.png</code>: all twenty frames in order, with accurate sample labels.</li>
+<li><code>transition_check.png</code>: frames 00, 01, 02, and 19; enlarged initial-footprint
+crops; change maps for early and final transitions.</li>
+<li><code>index.html</code>: self-contained four-frames-per-second playback.</li>
+<li><code>OBSERVATION.md</code>: initial measurements and the pre-coding event plan.</li>
+<li><code>METHOD.md</code>: this record of the implemented method.</li>
+<li><code>verification.json</code>: exact-match and motion checks from the generator.</li>
+</ul>
+<h2>Review and verification</h2>
+<p>The actual image view tool was used to inspect the supplied image, an enlarged
+source-ball crop, the initial generated contact/transition sheets, and the
+revised final <code>inspection.png</code> and <code>transition_check.png</code>. One revision replaced
+the rectangular restoration window with feathered ball/shadow masks to reduce
+unnecessary moving grain residuals. Final visual review confirms the orange
+ball progresses steadily along the tabletop with its soft rightward shadow,
+the red ball stays fixed, and the camera remains locked. Static sheet review
+was performed; a browser playback review was not performed.</p>
+<p>The final generator checks all twenty PNGs against unpacked <code>0xRRGGBB</code> tensor
+values, checks shape/dtype and RGB value range, checks frame 00 against the
+source pixels and PNG bytes, and decodes every HTML frame delta to confirm
+exact equality with the tensor. It also checks constant center increments and
+unchanged photographic pixels above row 40 and below row 93. All checks pass.</p>
+</article></main></body></html>

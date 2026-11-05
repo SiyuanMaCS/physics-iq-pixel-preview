@@ -1,0 +1,106 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0014</span></nav><article><h1>ball-in-basket · 生成方法</h1><p>All pixels were produced with local Python (<code>numpy</code>, <code>PIL</code>, <code>scipy.ndimage</code>
+for connected components). No external models, engines, references, network
+or subagents were used. Frame 00 is the untouched <code>first_frame.png</code>.
+Generated frames were assessed <strong>only through numeric/code checks</strong>
+(per-pixel comparisons, ASCII luminance maps, colour sampling and bbox
+statistics); no image Read/View tool was used on any generated output.</p>
+<h2>1. Measurements (from the input pixels)</h2>
+<ul>
+<li>Ball in frame 00: disc centre (132, 40), radius 24.5 px (limbs x≈107/156,
+top y≈15; lower hemisphere hidden by the crate), with a 2–3 px soft orange
+bloom. Colours ~(171,62,0) centre, ~(183,70,0) upper-right, darker at the
+limb; two converging dark seam arcs and two soft white-pink specular
+blobs near (116,40) and (142.5,38).</li>
+<li>Crate front face x98–171, y56–119: solid band y58–63, handle slot
+y64–68/x122–149, small perforations y71–75, diamond lattice y80–91,
+solid lower band. Openings show grey/warm interior; plastic is near-black
+with isolated 1–2 px specular glints.</li>
+<li>Wall: smooth grey gradient (brighter upper-left, vignette to the right)
+plus a soft contact shadow hugging the left side of the crate, measured
+as the residual of a global wall fit.</li>
+</ul>
+<h2>2. Background plate (ball removed)</h2>
+<ul>
+<li>Wall colour = degree-3 least-squares polynomial in (x, y) fitted to
+neutral wall samples left of x93 and right of x177 (mean abs residual
+≈ 4.8 levels).</li>
+<li>The crate's contact-shadow residual was added back as a piecewise-linear
+vertical amplitude (measured per row) times a gaussian lobe centred on the
+crate's left edge (σ 44 px), so the reconstructed wall matches the shadowed
+bands beside the crate (edge seam ≈ 4–6 levels vs. ~17 before correction).</li>
+<li>Rows 55–57 under the ball are filled with the dark plastic colour sampled
+from the undamaged rim stretches; faint gaussian grain (σ≈1) matches the
+camera noise. The patch is x99–162, y9–54, plus rim rows 55–57.</li>
+</ul>
+<h2>3. Ball layers</h2>
+<ul>
+<li><strong>Above the rim (y ≤ 54): the real frame-00 ball pixels.</strong> An alpha matte
+was derived from red-over-neutral contrast <code>a = clip((R−max(G,B)−4)/70)</code>,
+restricted to the disc + bloom ring, and the RGB+alpha sprite is shifted
+vertically with linear interpolation and composited &quot;over&quot; the plate.
+Reprojection check against the input: mean abs error 1.7 (frame 1) and
+2.7 (frame 2) on deep-orange pixels, i.e. the visible cap stays
+pixel-consistent with frame 00 while it drops.</li>
+<li><strong>Inside the crate (perforations): an analytic sphere</strong> rendered over the
+full disc: degree-2 shaded colour surface least-squares fitted to
+confident real-ball pixels (mean abs fit error ≈ 8.9 levels), limb
+darkening, the two measured seam arcs converging at the top junction, and
+gaussian specular blobs. For interior use the speculars are cut to 25 %
+(diffuse, shadowed interior light).</li>
+</ul>
+<h2>4. Physics (1D vertical, constant 4 fps)</h2>
+<p>Released from rest at cy = 40, gravity g = 140 px/s², floor centre
+cy = 92 (ball bottom on the crate floor, y≈116.5), restitution e = 0.40.
+First impact t ≈ 0.86 s (between frames 3 and 4), rebound apex ≈ 8.3 px,
+further impacts ≈ 1.58 / 1.87 / 1.99 s; settled from t ≈ 2.1 s. No
+horizontal motion (centred release, disc Ø49 vs ~67 px opening) and no spin.
+Computed centres: 40.0, 44.4, 57.5, 79.4, 86.7, 83.8, 89.7, 90.9, then 92.0.</p>
+<h2>5. Compositing the ball inside the crate</h2>
+<ul>
+<li>&quot;See-through&quot; mask: non-plastic pixels (channel sum &gt; 144) inside the
+front face, connected components ≥ 6 px (this rejects the tiny plastic
+glints); 274 opening pixels in 16 components. No erosion, because the
+openings are only a few pixels wide at 256×144.</li>
+<li>The analytic ball (sampled at the frame-specific vertical position) is
+shown <strong>only through that mask</strong>, multiplied by an interior-light factor
+calibrated against the frame-00 handle interior (0.60 at the handle,
+rising to 0.84 at the lattice). A 2.5 px, max-0.22 alpha bloom lets the
+crown faintly graze the handle's bottom edge when at rest (ball top
+y≈67.5), matching the geometry.</li>
+<li>Frame 00 itself is never composited; frames 9–19 are identical (settled),
+as in a real locked-off shot.</li>
+</ul>
+<h2>6. Artifacts and verification</h2>
+<p><code>generate.py</code> writes <code>pixels.npz</code>, <code>frames/00..19.png</code>, <code>inspection.png</code>
+(via <code>artifact_io.save</code>), plus <code>index.html</code>; it also writes
+<code>transition_check.png</code> (consecutive frame pairs around the drop, impacts and
+settling with 4× amplified |diff| rows).</p>
+<p>Numeric checks performed (all pass):</p>
+<ul>
+<li><code>frames/00.png</code> is pixel-identical to <code>first_frame.png</code>; every PNG equals
+the <code>0xRRGGBB</code> uint32 tensor in <code>pixels.npz</code>; the base64 delta stream in
+<code>index.html</code> decodes exactly to all 20 frames.</li>
+<li>Changed-pixel footprint stays inside x99–162, y9–91 (the wall patch and
+crate perforation corridor); step-change sizes decay with the bounces
+(1725 → 1375 → 1243 → 174 → 58 → 99 → 58 → 35 → 0 pixels), frames 9–19
+identical.</li>
+<li>Rest-state orange fragments all lie within the ball disc (max distance
+26 px ≤ 24.5 + 2.5 bloom); visible orange through the lattice is
+~(140,53,2) dimmed by the interior factor.</li>
+<li>No residual specular blow-out inside the crate (max interior luminance
+≈ the original grey openings).</li>
+</ul>
+<h2>Known simplifications</h2>
+<ul>
+<li>The through-hole shading assumes the analytic lower hemisphere, which is
+never visible in frame 00; it is calibrated only to the measured upper
+cap and is seen dimmed through small perforations.</li>
+<li>Dark (misaligned) lattice cells that are back-wall plastic in frame 00
+stay dark even though the threshold also admits some very dark grey
+interior pixels; the effect is a slightly fuller orange lattice during
+the fall.</li>
+<li>Effective gravity is chosen so the ~52 px drop is readable at the fixed
+4 fps cadence (impact between frames 3 and 4) rather than matching a
+specific real-world length scale.</li>
+</ul>
+</article></main></body></html>

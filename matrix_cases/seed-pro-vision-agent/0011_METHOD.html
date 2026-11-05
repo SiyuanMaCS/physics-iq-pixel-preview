@@ -1,0 +1,88 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-nothing · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0011</span></nav><article><h1>ball-hits-nothing · 生成方法</h1><h2>What happens</h2>
+<p>20 frames, 256×144, 4 fps. Locked camera. The orange ball rolls in a straight
+horizontal line out of the black pipe and across the light wood coffee table
+toward the right side, at constant speed, reaching the vicinity of the right
+edge at t ≈ 4.75 s. The pipe, the small red ball, the brown baseball and the
+rest of the scene never move. Frame 00 is the supplied <code>first_frame.png</code>,
+pixel-for-pixel.</p>
+<p>All pixels are derived from <code>first_frame.png</code> using local numpy / PIL / OpenCV
+/ scipy operations only; no external models, engines, references or network
+access are used (script: <code>generate.py</code>).</p>
+<h2>Measurements (from the source frame)</h2>
+<ul>
+<li>Orange ball centre C0 = (54.43, 50.94), sprite footprint radii ≈ 8.9 × 8.0
+px, mean core colour ≈ RGB(199,125,77), diffuse highlight upper-left.</li>
+<li>Contact shadow: soft ellipse right of the ball, centre ≈ (65.5, 52.5),
+axes (10.2, 7.8), peak darkening ≈ 25–30 %, plus a thin dark contact strip.</li>
+<li>Table right edge near the ball row: x ≈ 1.2·y + 167 (used to clip shadow).</li>
+<li>Trajectory: constant y, v = 8.40 px/frame (33.6 px/s); C19 = (214.0, 50.9),
+ball fully on the tabletop, ~6 px from the edge; only the soft shadow tip
+reaches the edge. This keeps the sprite entirely on visible wood while
+satisfying &quot;rolls … over the entire table towards the right side&quot;.</li>
+</ul>
+<h2>Layering</h2>
+<p>From frame 0 three layers are built once:</p>
+<ol>
+<li><strong>Static background plate.</strong> The occluded footprint (orange core ∪ soft
+disk ∪ geometric shadow ellipse, 3×3 dilated) is removed. Because the wood
+grain is horizontal, each affected row is rebuilt as a per-channel linear
+ramp between the medians of clean 14-px wood strips immediately left and
+right of the footprint; a Telea inpaint (<code>cv2.inpaint</code>, radius 4) is
+blended in over the outer 3 px of the footprint (weights from the distance
+transform) so no fill seam is visible. Everything outside the footprint is
+untouched.</li>
+<li><strong>Shadow layer</strong> — per-channel coverage
+<code>a_c = clip((plate_c − frame0_c) / plate_c, 0, 0.6)</code>, Gaussian-smoothed
+(σ = 0.6), zeroed outside the geometric shadow ellipse and under the ball.
+Stored per channel so the shadow's slight colour cast is preserved; it is
+composited multiplicatively (<code>bg·(1−a_c)</code>), i.e. physically a darkening.</li>
+<li><strong>Ball layer.</strong> A smooth intrinsic colour template is seeded at the
+high-confidence orange pixels and propagated over the sprite support by
+iterative 3×3 diffusion plus Gaussian smoothing (σ 1.2, applied
+channel-wise). Coverage alpha is then un-mixed per pixel,
+<code>α = ⟨plate−frame0, plate−F⟩ / |plate−F|²</code>, iterated three times with
+template refresh, feathered σ 0.55, pinned to 1 on the core. True ball
+colour <code>(frame0 − (1−α)·plate)/α</code> is used where α &gt; 0.25 and the template
+at the rim. The layer is split into a fixed diffuse-shading base (masked
+Gaussian σ 1.6 over a dilated support) and a high-frequency albedo
+residual taken from the opaque interior.</li>
+</ol>
+<h2>Per-frame compositing (frames 01–19)</h2>
+<p>For dx = 8.40·t:</p>
+<ol>
+<li>The albedo residual is rotated about the ball centre by θ = −dx/8.0 rad
+(<code>scipy.ndimage.affine_transform</code>) — rolling without slipping, clockwise
+on screen for rightward travel. The diffuse base stays screen-fixed
+(lighting does not rotate with the sphere). On this nearly uniform ball
+the residual is small, so the rotation is physically correct but visually
+subtle; translation carries the motion.</li>
+<li>Ball colour, ball alpha and shadow coverage are shifted horizontally by dx
+with bilinear sampling (sub-pixel accurate), constant y.</li>
+<li>The shifted shadow is multiplied into the plate, then clipped by a
+Gaussian-feathered tabletop mask at the right edge; the ball is alpha-overed
+last.</li>
+</ol>
+<p>Frame 00 is the original array directly, so it is identical to
+<code>first_frame.png</code> regardless of any reconstruction tolerance.</p>
+<h2>Outputs and verification</h2>
+<p><code>artifact_io.save</code> writes <code>pixels.npz</code> (the (144,256,20) uint32 0xRRGGBB
+tensor), <code>frames/00.png…19.png</code>, <code>inspection.png</code> and <code>index.html</code>.
+<code>generate.py</code> also writes <code>transition_check.png</code>, a 4×5 sheet of amplified
+inter-frame differences.</p>
+<p>Verified numerically after writing:</p>
+<ul>
+<li>every <code>frames/NN.png</code> equals the corresponding plane of the packed uint32
+tensor in <code>pixels.npz</code>;</li>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly;</li>
+<li>zero pixels change outside the corridor band y 38–63, x 30–239 across all 20
+frames (background, pipe, red/brown balls fully static);</li>
+<li>segmented orange centroid moves 54.44 → 214.07 with per-step
+8.40 ± 0.1 px and y = 50.9 ± 0.1 (straight, constant-speed roll);</li>
+<li>per-transition change masks form one compact ball+shadow blob that
+translates uniformly (see <code>transition_check.png</code>).</li>
+</ul>
+<p>Visual review was performed with an image viewer on zoomed corridor crops and
+the full-frame inspection sheet (ball colour/shading consistency, clean
+vacated start spot, clearance of the red/brown balls, edge clipping at frame
+19).</p>
+</article></main></body></html>

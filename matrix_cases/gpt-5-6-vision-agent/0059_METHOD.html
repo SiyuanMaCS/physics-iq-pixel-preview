@@ -1,0 +1,24 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-falls-in-box · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0059</span></nav><article><h1>duck-falls-in-box · 生成方法</h1><h2>Actual generation method</h2>
+<p>The animation is a local Python pixel construction based only on <code>first_frame.png</code> and the written prompt.</p>
+<ol>
+<li>The source PNG is loaded as an RGB <code>uint8</code> array. Frame 00 is inserted without any modification and is asserted byte-for-byte equal to the source.</li>
+<li>A narrow rectangle containing the original held duck, its small contact shadow, and the visible grabber ends is reconstructed from the surrounding wall with OpenCV's local Telea inpainting. The rest of the source frame remains untouched.</li>
+<li>The duck is extracted from source pixels at <code>(116,13)</code>–<code>(138,36)</code>. Its alpha comes from the yellow-versus-gray chroma difference, with a very small blur to retain the original antialiased contour.</li>
+<li>The duck is translated along a hand-authored accelerating gravity path. Its total vertical displacements are <code>0, 0, 1, 4, 9, 16, 25, 36, 48, 64, 82</code> pixels for frames 00–10, with only two pixels of rightward drift and at most four degrees of pitch. Rotation is done in premultiplied-alpha space. Fast samples receive a restrained one-pixel-scale exposure trail and a soft, low-opacity projected shadow.</li>
+<li>The grabber is redrawn as two narrow source-color-matched orange/dark fingers. Its anchored arms open over frames 01–03 and remain open and empty thereafter.</li>
+<li>When the duck reaches the box, a polygonal source-derived front-face/lip layer is composited above it. This makes the body disappear behind the fabric wall rather than visually passing in front of the box.</li>
+<li>At impact, a localized analytic remap applies a maximum 1.8-pixel vertical compression and subpixel lateral sway to the box region. Alternating, exponentially smaller values create a short damped fabric rebound; the surrounding locked camera view is feathered and remains fixed.</li>
+<li><code>artifact_io.save</code> packs the final RGB frames into the required <code>uint32</code> <code>0xRRGGBB</code> tensor, emits the 20 PNGs, inspection sheet, and standalone HTML player. A separate transition sheet reports changed-pixel counts at the release, fall, entry, impact, and settled stages.</li>
+</ol>
+<h2>Visual review and revision</h2>
+<p>I visually reviewed <code>first_frame.png</code>, a nearest-neighbor enlargement of the apparatus, <code>inspection.png</code>, and <code>transition_check.png</code> with the provided image-view tool. The final review confirmed:</p>
+<ul>
+<li>the framing and background remain locked;</li>
+<li>the grabber visibly opens before the duck leaves;</li>
+<li>the fall accelerates rather than moving at constant speed;</li>
+<li>frame 08 shows first contact with the opening, frame 09 shows partial lip occlusion, and frame 10 hides the duck inside;</li>
+<li>the impact response is subtle and damped, with no visible box-edge tear;</li>
+<li>the final frames are stationary with the grabber empty.</li>
+</ul>
+<p>No external image, mask, model, engine, or network resource was used.</p>
+</article></main></body></html>

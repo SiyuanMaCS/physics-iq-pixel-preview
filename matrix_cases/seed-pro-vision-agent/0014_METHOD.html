@@ -1,0 +1,105 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0014</span></nav><article><h1>ball-in-basket · 生成方法</h1><p>Orange basketball released over a black plastic milk crate. 20 frames, 256×144,
+4 fps. Everything below is local Python (NumPy + Pillow) pixel/analytic work;
+no external models, assets, or network. <code>generate.py</code> is the single pipeline and
+is deterministic.</p>
+<h2>Physical interpretation</h2>
+<p>Frame 00 shows the ball already resting low in/over the crate opening (its lower
+sliver is visible through the handle slot). The prompt says the ball is <em>released
+over</em> the crate, so frame 00 is the release instant at height h = 48 px above the
+crate inner floor. The ball then free-falls into the crate, bounces on the rigid
+inner floor with restitution, and settles; once inside it is seen only through the
+crate's handle slot and diamond lattice. Camera is locked off, so all pixels not
+touched by the ball are shared from one static background plate.</p>
+<h2>1. Static background plate (<code>build_plate</code>)</h2>
+<ul>
+<li><strong>Wall inpaint.</strong> The ball and its soft wall shadow occupy roughly x 82–180,
+y 6–63 of frame 00. For each wall row y 6–94, clean &quot;neutral&quot; pixels
+(|R−G| &lt; 8, |R−B| &lt; 10, R &gt; 95) in the two side strips x 40–74 and x 186–224
+give endpoint colours (medians) and endpoint tangents (per-channel linear-fit
+slopes). A cubic-Hermite curve spans x 74→186, matching both colour and slope at
+each end; this reproduces the real horizontal lighting fall-off without the
+overshoot a global bivariate polynomial produced in an earlier revision. The
+filled band is Gaussian-smoothed (σ 1.1) vertically to remove row-to-row median
+banding.</li>
+<li><strong>Feathered replacement.</strong> A rectangular mask (x 82–180, y 6–63) is expanded
+(MaxFilter 3) and feathered (Gaussian σ 3.5). The field is deliberately extended
+behind the crate lip so the soft mask edge has margin; alpha is then hard-zeroed
+on the crate (y ≥ 56, x 97–174), so crate pixels are never painted.</li>
+<li><strong>Front-lip repair.</strong> Lip rows y 56–63, x 104–156 (occluded by the ball in
+frame 00) are filled with the per-row median of dark plastic sampled at
+x 105–109, with 8 sparse sampled &quot;AA speck&quot; columns per row to avoid a flat fill.</li>
+<li><strong>Handle-slot interior.</strong> Frame 00 shows dim ball-orange through the slot, so a
+ball-free view is synthesised inside an ellipse (centre (132, 65.6), radii
+10.6 × 4.4): grey back wall (118,112,110) blending via smoothstep to dark
+interior (12,10,9) toward the bottom, plus σ 3.5 luminance noise.</li>
+<li>Wall, table, crate outside those repaired regions, and the dark top bar are
+frame-00 pixels unchanged.</li>
+</ul>
+<h2>2. Ball sprite (<code>build_sprite</code>)</h2>
+<p>An RGBA sprite is unmixed from frame 00 against the plate:</p>
+<ul>
+<li>coverage is a soft geometric disc, α = clip((29 − d)/4.5, 0, 1), zero for
+d &gt; 30 (d from centre (132, 40));</li>
+<li>it is gated by a residual-chroma term from |frame00 − plate| so the soft halo
+does not pick up wall/shadow texture;</li>
+<li>the ball colour is recovered per pixel as
+<code>s = (frame00 − (1−α)·plate)/α</code> and clipped to [0, 255].</li>
+</ul>
+<p>Seams and the two white specular highlights are therefore carried over verbatim
+from the real ball (they later glint through lattice holes, which is physical).</p>
+<h2>3. Physics (<code>make_segments</code>, <code>y_at</code>)</h2>
+<p>Vertical motion only (the ball is centred in the opening and the photo shows no
+horizontal velocity). Analytic constant-acceleration segments at</p>
+<ul>
+<li>g = 1900 px/s² (64 px crate height ≈ 0.33 m),</li>
+<li>floor at centre-y 88 (inner floor y 114 minus radius 26),</li>
+<li>restitution e = 0.68 (inflatable ball on rigid plastic over wood).</li>
+</ul>
+<p>Impacts at t = .225 / .530 / .738 / .880 / .976 s with upward launch speeds
+290 / 198 / 134 / 91 / 62 px/s; when a bounce apex would be under 0.5 px the ball
+is snapped to rest (t ≈ 1.04 s). Frame-centre ball positions are
+40, 81.3, 80.0, 86.6, 87.1, then 88.0.</p>
+<h2>4. Per-frame compositing (<code>frame_at</code>)</h2>
+<ul>
+<li>Frame 00 is returned as a verbatim copy of <code>first_frame.png</code>.</li>
+<li>For k ≥ 1, a centre-weighted virtual shutter of 0.09 s is integrated with 9
+equally weighted samples. Each sample shifts the sprite (fractional-pixel
+bilinear) to the analytic y and premultiplies it onto the plate; averaging the
+premultiplied composites (not the colours) gives motion blur during the fast
+fall/bounce and a sharp ball at rest.</li>
+<li>The front face occludes the ball: per output pixel, ball alpha passes only
+above y 56, or below the lip through an opening mask — pixels with
+max channel &gt; 45 in y 57–92, x 106–159 (the real lattice/slot holes showing
+the back wall) union the handle ellipse.</li>
+<li>Interior light is approximated by a flat ×0.72 darkening on all ball pixels at
+y ≥ 56; the ball above the rim keeps full brightness.</li>
+<li>Output is clipped to uint8.</li>
+</ul>
+<h2>5. Verification</h2>
+<ul>
+<li><code>frames/00.png</code> vs <code>first_frame.png</code>: max abs diff 0 / byte-identical.</li>
+<li><code>pixels.npz</code> tensor (H×W×20, packed uint32 0xRRGGBB) decoded and compared to all
+20 PNGs: exact match for every frame.</li>
+<li>Changed-pixel counts per transition (RGB pixels, f{k−1}→f{k}): 6520, 635,
+814, 366, 270 for k = 1…5, then 0 for every transition f05→f06 through
+f18→f19; frames 05–19 are byte-identical (ball at rest).</li>
+<li>Visual review (image tool) of a 6-frame contact sheet, full-resolution
+<code>inspection.png</code>, <code>transition_check.png</code>, and pixel-zoomed wall/lip/crate crops
+was used to remove a warm inpaint halo (feather margin fix), wall banding
+(vertical σ 1.1 smooth), and earlier unweighted-shutter saturation.</li>
+</ul>
+<h2>Known approximations</h2>
+<ul>
+<li>The unseen back-wall view through the handle slot is synthesised rather than
+observed; its grey-to-dark gradient is an inference from the lattice-hole
+brightness and slot geometry.</li>
+<li>Wall inpaint reconstructs a smooth illumination field; the true centre of the
+wall is permanently occluded in the source, so the exact hotspot shape is
+inferred from the two side strips' colours and slopes.</li>
+<li>Interior ball lighting uses a single 0.72 factor rather than a full transport
+model; per-hole specular glints from the real sprite occasionally show through
+lattice diamonds.</li>
+<li>Physics is 1-D with instantaneous floor contacts; no squash deformation,
+spin, or sound-driven motion is modelled.</li>
+</ul>
+</article></main></body></html>

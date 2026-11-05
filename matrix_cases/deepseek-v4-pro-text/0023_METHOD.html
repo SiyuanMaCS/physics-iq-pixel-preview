@@ -1,0 +1,44 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-rolls-off · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0023</span></nav><article><h1>ball-rolls-off · 生成方法</h1><h2>Approach</h2>
+<p><strong>Pixel compositing with procedural ball rendering.</strong> Every frame is built by copying <code>first_frame.png</code> and compositing the tennis ball at its animated position. Frame 00 is bit-exact the original.</p>
+<h2>Scene Understanding (from numeric RGB inspection only)</h2>
+<ul>
+<li><strong>Wall/background</strong>: y=0–38, grey-green tones</li>
+<li><strong>Table surface</strong>: y=38–144, warm wood tones (red &gt; green &gt; blue, blue channel near 0–30)</li>
+<li><strong>Black pipe</strong>: dark horizontal band at y=76–100, most prominent on left side (x≈0–120)</li>
+<li><strong>Table foreground (ball path)</strong>: y≈105–120, lighter grey-brown surface</li>
+<li><strong>Ball</strong>: not visible in frame 00; emerges from pipe opening and rolls right</li>
+</ul>
+<h2>Ball Rendering Method</h2>
+<ul>
+<li><strong>Shape</strong>: Circular mask with soft anti-aliased edge (1.5 px linear falloff)</li>
+<li><strong>Colour</strong>: Warm grey base (158, 152, 140) — approximates a used tennis ball</li>
+<li><strong>Texture</strong>: Procedural uniform noise (±8 per channel) to simulate fuzzy felt surface</li>
+<li><strong>Shading</strong>:<ul>
+<li>Radial darkening toward edges (spherical shading)</li>
+<li>Top-left highlight (exponential falloff) simulating light from upper-left</li>
+</ul>
+</li>
+<li><strong>Shadow</strong>: Soft elliptical shadow beneath the ball (offset down-right, 35% alpha, darkened multiplicatively)</li>
+</ul>
+<h2>Animation</h2>
+<ul>
+<li><strong>Keyframe interpolation</strong>: 20 keyframes define (y, x) ball centre positions</li>
+<li><strong>Trajectory</strong>:<ul>
+<li>Frame 1: ball emerges from pipe at y=98, x=50</li>
+<li>Frames 2–3: drops from pipe height to table surface (y=102→108)</li>
+<li>Frames 4–16: rolls horizontally across table foreground (y≈114–118, x=100→233)</li>
+<li>Frame 17: ball exits frame right</li>
+<li>Frames 18–19: empty scene (identical to frame 00)</li>
+</ul>
+</li>
+<li><strong>No external models</strong>: All rendering is pure NumPy pixel math</li>
+</ul>
+<h2>Output Verification</h2>
+<ul>
+<li>Frame 00: byte-exact match with <code>first_frame.png</code> (verified by <code>np.array_equal</code>)</li>
+<li>All 20 frames: 256×144 RGB uint8</li>
+<li>Tensor: <code>pixels.npz</code> stores packed uint32 <code>0xRRGGBB</code> values, verified frame-by-frame against PNGs</li>
+<li><code>transition_check.png</code>: 1×20 strip of amplified frame diffs vs frame 00</li>
+<li><code>index.html</code>: standalone player via <code>artifact_io.save()</code></li>
+</ul>
+</article></main></body></html>

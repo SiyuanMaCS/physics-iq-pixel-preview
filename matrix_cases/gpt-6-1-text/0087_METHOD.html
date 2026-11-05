@@ -1,0 +1,86 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>liquid-on-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-text.html">← 返回本组全量视频</a><span class="tag">Case 0087</span></nav><article><h1>liquid-on-duck · 生成方法</h1><p>This is a local procedural pixel continuation of the supplied photograph.
+<code>generate.py</code> uses Python, NumPy, Pillow, and SciPy numerical image operations.
+It does not use a video diffusion model, external AI model, simulation/rendering
+engine, external reference, network, or subagent. The only scene inputs are
+<code>first_frame.png</code> and <code>prompt.txt</code>.</p>
+<h2>Inspection and planning</h2>
+<p>I read the source only through local code and numeric RGB inspection: image
+dimensions, tile RGB medians, connected color component bounds, and individual
+pixel/row values. <code>OBSERVATION.md</code> records those measurements and the complete
+20-frame event plan, written before the generation implementation. No image
+Read/View tool was used. The contact sheets are generated artifacts; I do not
+claim to have visually reviewed them.</p>
+<p>The measurements show that the first frame already contains a narrow red pour
+from the blue outlet at the top of the image to the duck's crown. The animation
+continues this existing action. The camera and setup remain fixed.</p>
+<h2>Pixel construction</h2>
+<ol>
+<li>Preserve the original RGB photograph as the static plate. Reconstruct only
+the narrow basket strip covered by the old stream using nearby horizontal
+row colors. Preserve the cropped reservoir, blue tap, basket, table, tray,
+and duck positions.</li>
+<li>Use the measured source stream colors along its length. An anchored analytic
+centerline runs from approximately (127, 18) to (132, 54). Gravity narrows
+the jet, small sinusoidal perturbations vary its width/curvature, and moving
+highlights suggest liquid traveling downward. The first transition blends
+the existing source jet into these fluctuations.</li>
+<li>Derive duck coverage from the source's largest yellow RGB component, fill
+its internal holes, and include the measured orange beak and shaded base.
+Two analytic curved rivulets travel from the crown down the right shoulder
+and front of the duck. Their leading edges descend at 35 pixels/second;
+elapsed contact time controls wet width and film thickness. A soft thin film
+surrounds the thicker runoff. Optical absorption reduces green/blue under
+the red liquid while preserving the source's shading and rubber detail.
+Narrow moving glints follow the same paths. The existing eye and beak remain
+identifiable through local protection fields.</li>
+<li>Accumulated runoff creates an irregular shallow perspective ellipse on the
+tray starting around 1.25 seconds. Its final horizontal/vertical radii are
+48.0/16.1 pixels, centered near (129.5, 104.1). The duck occludes the pool.
+The surface uses depth-dependent red tint, underlying source reflections,
+a dark meniscus, restrained specular reflections, and expanding local
+drainage ripples. It stays inside the tray.</li>
+<li>Deterministic small droplets follow ballistic trajectories with gravity and
+fixed birth times/lifetimes. Crown impact drops and short base splashes use
+the same trajectories across frames. Three short exposure samples provide
+slight motion blur without random frame-to-frame speckling.</li>
+<li>Rasterize fluid coverage at four times the output dimensions. Downsample
+only the composited RGB difference and add it to the exact original pixels;
+this preserves untouched texture even within the fluid's bounding region.
+A conservative spatial union further ensures fixed background pixels.</li>
+</ol>
+<p>This is an approximate analytic fluid effect, not a solved 3D free-surface fluid
+simulation. It retains the supplied scene and models the requested pour using
+local pixel compositing and mathematical motion.</p>
+<h2>Timing and artifacts</h2>
+<p>Twenty RGB frames at 256 by 144 are sampled at t = 0, 0.25, ..., 4.75 seconds.
+Each is held for 0.25 seconds, producing a 5-second clip at 4 fps. Frame 00 is
+the exact input RGB, and <code>frames/00.png</code> also preserves the input PNG bytes.
+The pour continues at the final frame.</p>
+<ul>
+<li><code>pixels.npz</code>: key <code>pixels</code>, shape <code>(144, 256, 20)</code>, dtype <code>uint32</code>, each value
+packed as <code>0xRRGGBB</code>.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: the 20 RGB output frames.</li>
+<li><code>inspection.png</code>: eight sampled frames in a contact sheet.</li>
+<li><code>transition_check.png</code>: all 19 transitions with the next frame beside its
+four-times-enhanced absolute RGB difference and numerical change statistics.</li>
+<li><code>index.html</code>: a self-contained canvas player with embedded lossless frame
+data, 4-fps playback, frame seeking, replay, and loop controls.</li>
+<li><code>validation.json</code>: machine-readable format, equality, motion, and transition
+checks, plus per-frame procedural state values.</li>
+<li><code>OBSERVATION.md</code>, <code>generate.py</code>, and this file: measurements, reproducible
+implementation, and method documentation.</li>
+</ul>
+<h2>Verification</h2>
+<p>The generator asserts output count, dimensions, RGB dtype, tensor shape and
+packing, exact frame-00 RGB equality, and agreement of every saved PNG with its
+corresponding tensor slice. It records consecutive-frame RGB differences and
+the spatial union of all changed pixels. A separate numerical verification
+also decodes the standalone player's first frame and all delta packets and
+compares its 20 reconstructed frames with <code>pixels.npz</code>.</p>
+<p>These are local numerical checks, not image-tool visual review. The retained
+photographic plate and the local fluid effect provide continuity; realism of
+the newly generated liquid is limited by the analytic compositing method.</p>
+<p>Reproduce all outputs from this workspace with:</p>
+<pre><code class="language-bash">python generate.py
+</code></pre>
+</article></main></body></html>

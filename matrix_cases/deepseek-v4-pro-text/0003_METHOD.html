@@ -1,0 +1,70 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0003</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><h2>Approach</h2>
+<p>Color-based sprite extraction with physics animation. The two objects (brown tennis ball and orange block) are segmented from frame 0 using RGB color thresholds, removed from a &quot;clean plate&quot; via background inpainting, and re-drawn at gravity-driven positions for each frame.</p>
+<h2>Object Segmentation</h2>
+<ul>
+<li><strong>Brown tennis ball</strong>: Threshold R∈(80,120), G∈(40,80), B&lt;20, R-G&gt;15. Located at x=103-117, y=12-13. 29 pixels extracted as raw sprite.</li>
+<li><strong>Orange block</strong>: Threshold R&gt;120, G&lt;50, B&lt;20, R-G&gt;70. Located at x=167-179, y=15-61. 208 pixels extracted as raw sprite.</li>
+</ul>
+<h2>Gap Filling (Orange Block)</h2>
+<p>The orange block is partially occluded by the grabber arm in frame 0 (gap at y≈20-37). The sprite gap is filled by vertical interpolation: for each column, missing pixels between the topmost and bottommost visible orange pixels are filled with linearly interpolated colors. This adds 152 pixels (360 total). The filled sprite is used when the block displacement is non-zero; the raw sprite is used at dy=0 to preserve the original grabber-arm occlusion.</p>
+<h2>Background Inpainting</h2>
+<p>Masked pixels (237 total: 29 ball + 208 orange) are replaced using safe-reference interpolation. For each row, background colors are sampled at fixed positions far from objects (x≈140 for left, x≈210 for right), then linearly interpolated to fill the masked region. This avoids picking up object-adjacent reddish tones.</p>
+<h2>Physics Animation</h2>
+<ul>
+<li><strong>Gravity</strong>: g = 40 px/s² constant acceleration</li>
+<li><strong>Frame rate</strong>: 4 fps, Δt = 0.25s per frame</li>
+<li><strong>Release</strong>: Objects held at frame 0, released at frame 1 (t=0 for kinematics)</li>
+<li><strong>Brown ball</strong>: Initial center y=12.5, free-fall to pillow at y≈97.5, with damped bounce</li>
+<li><strong>Orange block</strong>: Vertical displacement dy from 0 to 44 (bottom lands on pillow at y≈105), with damped bounce</li>
+<li><strong>Kinematics</strong>: y(t) = y₀ + ½gt² for free-fall; damped sinusoidal bounce after impact</li>
+</ul>
+<h2>Frame Generation</h2>
+<ol>
+<li>Frame 0: exact copy of <code>first_frame.png</code></li>
+<li>Frames 1-19: clean_plate + sprites drawn at computed positions</li>
+<li>Orange sprite: raw (208px) at dy=0, filled (360px) at dy&gt;0</li>
+</ol>
+<h2>Output Files</h2>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>generate.py</code></td>
+  <td>Full generation script</td>
+</tr>
+<tr>
+  <td><code>pixels.npz</code></td>
+  <td>20-frame uint32 0xRRGGBB tensor (144×256×20)</td>
+</tr>
+<tr>
+  <td><code>frames/00-19.png</code></td>
+  <td>Individual 256×144 RGB PNGs</td>
+</tr>
+<tr>
+  <td><code>inspection.png</code></td>
+  <td>8-frame contact sheet</td>
+</tr>
+<tr>
+  <td><code>transition_check.png</code></td>
+  <td>Frame pairs with diff maps (frames 1-8)</td>
+</tr>
+<tr>
+  <td><code>index.html</code></td>
+  <td>Standalone web player</td>
+</tr>
+<tr>
+  <td><code>METHOD.md</code></td>
+  <td>This file</td>
+</tr>
+<tr>
+  <td><code>OBSERVATION.md</code></td>
+  <td>Scene analysis and event plan</td>
+</tr>
+</tbody>
+</table>
+</article></main></body></html>

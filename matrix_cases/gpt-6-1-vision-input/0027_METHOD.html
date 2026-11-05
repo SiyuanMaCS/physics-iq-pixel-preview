@@ -1,0 +1,42 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-rolls-on-glass · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0027</span></nav><article><h1>ball-rolls-on-glass · 生成方法</h1><h2>Result</h2>
+<p>A locked-camera continuation in which the blue tennis ball rolls rightward from the wooden table onto the clear glass. The 20 RGB images are 256 × 144 pixels, played at 4 fps for 5 seconds. Sample times are 0.00–4.75 seconds. Frame 00 is copied exactly from the supplied image.</p>
+<h2>Inputs and actual pixel method</h2>
+<p>Only <code>first_frame.png</code> and <code>prompt.txt</code> supply scene information. The input image was available visually in the user message. All generated images were assessed through local Python and numeric measurements. No generated image was opened using an image Read/View tool. No network, external references, AI model, external rendering engine, or subagent was used.</p>
+<p><code>generate.py</code> uses NumPy, Pillow, SciPy, and OpenCV for local pixel operations:</p>
+<ol>
+<li>Preserve the entire camera image as a static background. Repair the original ball and shadow footprint with robust row-wise illumination fits and grain borrowed from nearby clean wood. A soft mask blends this repair into the original tabletop. The repaired patch stays fixed thereafter.</li>
+<li>Alpha-matte the blue sphere from the input using its measured center and soft circular silhouette. Separate its pale seam and texture from a fixed illumination layer using local inpainting and filtering.</li>
+<li>Infer a plane normal and a rolling axis. Inverse-rotate each visible sphere normal to sample the source-derived texture. The hidden hemisphere uses a procedural curved seam and deterministic fine surface variation. The light remains fixed as the material rotates. Fourfold spatial sampling and a short symmetric exposure provide subpixel motion and soft contours.</li>
+<li>Fit an oblique elliptical shadow to exposed wood pixels around the source ball. Translate and scale it with the ball. Reduce the shadow on transparent glass and add a faint compressed blue reflection at the contact. Very weak tails are truncated to preserve the surrounding scene exactly.</li>
+<li>Use continuous projected motion: <code>dx = 34.4*t - 0.88*t*t</code> pixels. The apparent radius is <code>10.5 + 0.0065*dx</code> pixels. The center moves downward by <code>0.143*dx</code> with a smooth 0.6-pixel height adjustment at the support transition. Rotation integrates distance divided by the varying radius. The center passes onto glass by frame 06 and remains supported and inside the image through frame 19.</li>
+</ol>
+<p>The initial center is (81.5, 57.8) pixels. The final center is approximately (225.0, 77.7), with a radius of 11.43 pixels. The background geometry, wall, furniture, table grain outside the repair, and glass outline stay fixed.</p>
+<p>The continuation models a plausible initial velocity, rolling resistance, unseen ball material, and weak glass reflection from the single source frame. These quantities are inferred rather than measured from a video.</p>
+<h2>Numeric inspection and revision</h2>
+<p>The first pass was checked for ball color, trajectory, background repair, and tensor integrity. Its source shadow was refined by robustly fitting the original exposed shadow's position, width, direction, and opacity. The final fit has a mean absolute opacity residual of 0.0292. This revision also truncates negligible shadow tails.</p>
+<p>Final verification:</p>
+<ul>
+<li>Exactly 20 RGB PNGs, each 256 × 144.</li>
+<li>Frame 00 equals the source in every RGB value.</li>
+<li><code>pixels.npz</code> contains <code>pixels</code>, a uint32 tensor of shape (144, 256, 20), packed as <code>0xRRGGBB</code>. Every PNG equals its unpacked tensor slice.</li>
+<li>The standalone player's first frame and all 19 decoded delta packets reproduce the tensor exactly.</li>
+<li>Measured blue-mask centers stay within 0.30 pixels of the prescribed centers and move monotonically rightward. Measured frame-to-frame horizontal displacement ranges from 6.51 to 8.53 pixels.</li>
+<li>The vacated original ball footprint contains zero pixels with blue greater than red at frame 08.</li>
+<li>No pixels change in the static region outside the repaired patch and conservative moving-effect envelopes.</li>
+<li>From frame 06 onward, every modeled contact point remains inside the inferred glass polygon. The minimum clearance is 5.76 pixels. The complete ball silhouette remains inside the image.</li>
+</ul>
+<p>These are numerical checks. Visual review of the generated frames is not claimed. <code>inspection.png</code> and <code>transition_check.png</code> were generated as required, without opening them.</p>
+<h2>Artifacts and reproduction</h2>
+<ul>
+<li><code>OBSERVATION.md</code>: source measurements and the plan written before implementation.</li>
+<li><code>generate.py</code>: deterministic generator.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: final frames.</li>
+<li><code>pixels.npz</code>: packed RGB tensor.</li>
+<li><code>inspection.png</code>: eight sampled frames in a contact sheet.</li>
+<li><code>transition_check.png</code>: adjacent frame pairs and amplified absolute differences.</li>
+<li><code>index.html</code>: self-contained 4 fps player with all frames embedded.</li>
+<li><code>checks.json</code>: numeric results and per-frame trajectory.</li>
+<li><code>verify.py</code>: independent output and player-packet verification.</li>
+</ul>
+<p>Run <code>python generate.py</code> and then <code>python verify.py</code> from this workspace. Temporary work remains within the workspace; no temporary image reference or intermediate render was used.</p>
+</article></main></body></html>

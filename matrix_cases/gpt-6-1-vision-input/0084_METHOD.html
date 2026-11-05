@@ -1,0 +1,47 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-statue · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0084</span></nav><article><h1>light-on-statue · 生成方法</h1><p>All synthesis uses local Python, NumPy, SciPy, and Pillow. The only scene sources are <code>first_frame.png</code> and <code>prompt.txt</code>. <code>OBSERVATION.md</code> was written before the generation implementation, with initial-frame measurements and all twenty planned sample times. No network, other cases, external assets, learned model, external rendering engine, or subagent was used.</p>
+<h2>Geometry and motion</h2>
+<p>The figurine is approximated by a continuous stack of horizontal elliptical cross-sections. The photographed foreground outline supplies each section's horizontal radius and center. The initial enlarged shadow supplies a second view of the upper sections. Its approximate magnification is 4.3, and the spotlight's horizontal viewpoint is 65 degrees to the camera's left. The two views constrain approximate depth radii and off-axis depth centers. Smooth local interpolation connects these sections to an inferred rounded lower drape and porcelain base. The dark platform is represented as a rotationally symmetric circular support; its projected outline is invariant under the rotation.</p>
+<p>For local coordinates <code>(x,z)</code>, where positive z points away from the camera, the rigid clockwise rotation is:</p>
+<pre><code>x' = x cos(theta) + z sin(theta)
+z' = -x sin(theta) + z cos(theta)
+</code></pre>
+<p>Viewed from above, a point initially to the right of the axis travels toward the front. The angles are <code>theta = 5 * frame_number</code> degrees, with samples at <code>frame_number / 4</code> seconds. This gives a constant 20 degrees/second and a 95-degree clockwise arc over the sampled 0–4.75-second interval. Twenty 0.25-second frame holds produce a five-second player sequence. The camera, vertical axis, light pool, wall, and table remain fixed.</p>
+<h2>Pixel generation</h2>
+<ol>
+<li>Measure the initial foreground silhouette and wall shadow using local polygons, RGB row values, and thresholds. Fit a fourth-degree polynomial to unobscured illuminated wall pixels to recover the wall hidden by the original shadow. Recover the short hidden tabletop portion by interpolation between visible table strips. Inpaint the small area behind the original porcelain from these local background estimates. The fit is used only where moving foreground/shadow pixels reveal previously obscured background.</li>
+<li>Extract separate RGB shadow attenuation channels relative to that recovered background. This retains the photographed edge softness, dark interior illumination, and color differences. The extraction includes the short portion near the tabletop. Measure the shape from the original dark contour, including its lower portion, to avoid truncating geometry at the wall/table intersection.</li>
+<li>At each time, solve the visible half of each rotated elliptical section by inverse mapping. Sample the original porcelain photograph using bilinear interpolation. Use native pixel-center texture sampling and a one-pixel analytic coverage ramp at the silhouette edge. This preserves more initial detail than the supersampled draft.</li>
+<li>Rotate analytic ellipse normals under the same fixed lamp. Apply moderated diffuse relighting and a narrow glossy highlight. Newly exposed rear surface has no photograph: it is approximated as cream porcelain with shallow analytic vertical fold shading. This is an explicit reconstruction assumption.</li>
+<li>For the shadow, use the same rotating cross-section centers and radii, seen at the lamp angle. Inverse-warp the original RGB attenuation to the new projected widths and centers. Include a small depth-dependent vertical shift as an approximate point-light perspective correction. Composite the attenuation over the fixed recovered wall/table background, then composite the foreground porcelain in front of it.</li>
+<li>Preserve exact source pixels outside affected regions. Frame 00 is copied from the supplied PNG byte-for-byte. Save all other frames as RGB PNGs, pack them into uint32 <code>0xRRGGBB</code>, and generate the contact sheets and self-contained HTML player with the local output helper.</li>
+</ol>
+<p>This is a photograph-based, approximately three-dimensional pixel reconstruction. It is not a recovered exact sculpture mesh or a full optical simulation. The back of the statue, the hidden wall/table texture, and the wall/table shadow receiver junction are inferred. The camera projection uses fixed horizontal section heights, and the shadow receiver junction uses a screen-space attenuation approximation. These assumptions permit coherent rotation from a single scene photograph without claiming knowledge of unobserved surfaces.</p>
+<h2>Revisions and checks</h2>
+<p>All later outputs were inspected solely through local code and numeric checks. Neither contact sheet nor any later frame was opened with an image Read/View tool. The attached initial frame was the only visual input used.</p>
+<p>The first draft revealed a depth-center excursion caused by measuring only the wall part of the lower shadow. Including the original dark contour on the tabletop reduced the inferred depth-center range to approximately -1.14–2.11 pixels. Native-grid texture sampling and revised RGB attenuation reduced the unanchored initial reconstruction mean absolute RGB error from 1.80 to 0.166 intensity levels. The delivered first frame has zero error because it is the exact source PNG.</p>
+<p>Final checks passed:</p>
+<ul>
+<li>Exactly 20 RGB PNGs, each 256 × 144.</li>
+<li><code>pixels.npz</code> contains <code>pixels</code> with shape <code>(144, 256, 20)</code> and dtype <code>uint32</code>; every value is at most <code>0xFFFFFF</code>.</li>
+<li>All PNG pixels match the packed tensor exactly.</li>
+<li>Frame 00 matches the original PNG both in RGB pixels and file bytes.</li>
+<li>All 20 frames reconstructed from the HTML player's base64 delta packets match the tensor exactly.</li>
+<li>Consecutive sample times differ by 0.25 seconds; consecutive angles differ by 5 degrees clockwise.</li>
+<li>The foreground alpha centroid's x coordinate remains within 115.931–115.974 pixels. Its silhouette changes with the view angle while its rotation axis remains fixed.</li>
+<li>The fixed upper-left 70 × 70 pixel region has zero change across all frames.</li>
+<li>Consecutive-frame RGB mean absolute changes range from 0.852 to 1.951 intensity levels. The first transition is 1.951 and the second is 1.724, without the larger initial mismatch in the first draft.</li>
+<li><code>inspection.png</code> is 1024 × 330; <code>transition_check.png</code> is 768 × 696.</li>
+</ul>
+<p>The reproducible generator is <code>generate.py</code>. Run <code>python generate.py</code> from this workspace. Detailed numerical geometry and validation records are stored in <code>.tmp/numeric_checks.json</code> and <code>.tmp/final_validation.json</code>.</p>
+<h2>Deliverables</h2>
+<ul>
+<li><code>OBSERVATION.md</code>: initial measurements and twenty-frame event plan.</li>
+<li><code>generate.py</code>: local generation code.</li>
+<li><code>pixels.npz</code>: packed RGB tensor.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: RGB frame sequence.</li>
+<li><code>inspection.png</code>: eight-sample contact sheet.</li>
+<li><code>transition_check.png</code>: twelve-sample transition contact sheet with numeric change labels.</li>
+<li><code>index.html</code>: self-contained 4-fps player with playback, seeking, and replay.</li>
+<li><code>METHOD.md</code>: this account of the actual method, revisions, validation, and limitations.</li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,93 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0007</span></nav><article><h1>ball-hits-duck · 生成方法</h1><p>Task: a brown tennis ball rolls straight right out of the black pipe and hits
+the yellow rubber duck. 20 frames, 256×144, 4 fps. Frame 00 is the supplied
+<code>first_frame.png</code>. Everything is local Python pixel math (numpy, scipy.ndimage,
+Pillow affine/rotate); no external models, engines, network, or subagents.
+Generated frames were inspected only through numeric code (component
+statistics, luminance maps, ASCII masks, roundtrip checks); no image Read/View
+tool was used on any generated output.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><p><strong>Static table plate.</strong> A per-row quadratic color baseline is robustly
+fitted (medians of 10-px chunks) from clean table pixels, excluding the
+pipe, the ball/shadow, the duck/shadow and the fireplace corner. Inpaint
+zones are the ball circle (r=11 at (83.7,50.9)), its elongated cast-shadow
+ellipse (center (70,51), rx 23, ry 11) and contact shadow, plus the duck
+mask (chroma-keyed yellow/orange/eye, closed + hole-filled) and its shadow
+ellipse; all zones are dilated 3 px. The table's grain is strongly
+autocorrelated horizontally (0.91), so holes are filled by linearly
+bridging the residual field 4 px outside each masked span, plus σ=1.0
+noise and a small Gaussian smoothing. Holdout inpainting error on clean
+table: mean abs 2.4/channel (the photo's own horizontal neighbor contrast
+is 1.4), i.e. visually indistinguishable.</p>
+</li>
+<li><p><strong>Layers extracted from frame 0.</strong></p>
+<ul>
+<li>Ball: straight RGBA sprite with geometric alpha (1 inside r=8, smooth
+feather to r=11.5), keeping the photo's own dark warm shading, fuzzy
+lower-right highlight and slight motion smear.</li>
+<li>Ball shadow: per-channel multiply-opacity map <code>k = 1 − I/I_plate</code> inside a
+feathered ellipse (peak k≈0.20), translated with the ball.</li>
+<li>Duck: RGBA sprite from the filled chroma mask with distance-transform +
+Gaussian feather (≈1.6 px); shadow the same way (peak k≈0.33).</li>
+<li>Frame-0 roundtrip error with these layers: 0.49 opaque interiors,
+0.43 shadow zones (MAE per channel).</li>
+</ul>
+</li>
+<li><p><strong>Animation.</strong> Ball center pre-impact moves at constant 7.664 px/frame
+from (83.7,50.9) along the measured perspective line
+(slope −0.0457 y/x) to contact at frame 14 (191.0,46.0), where its
+r=10 edge meets the duck's left body edge at x≈202. After impact the duck
+slides 0→5 px and rocks 0→−2°→−11°→−6° about its body-bottom pivot
+(211,50); its shadow translates with it. The ball's x is derived from the
+rotated duck's measured left edge each frame so contact stays exact while
+the pair decelerates together. Layer placement uses sub-pixel
+<code>scipy.ndimage.shift</code> (bilinear) and Pillow bicubic rotation for the duck.</p>
+</li>
+<li><p><strong>Corridor compositing.</strong> Each frame starts as a byte copy of frame 0 and
+only the swept corridor (dilated, 3-px-Gaussian-feathered union of the
+ball/duck layer supports at frame 0 and at time t) is replaced by a full
+plate→shadows→ball→duck render. All other pixels — couch, pipe, fireplace,
+rug, and the pre-impact duck — stay byte-identical to frame 00. Frame 00
+itself is written verbatim from the source PNG.</p>
+</li>
+<li><p><strong>Artifacts.</strong> <code>artifact_io.save</code> writes <code>pixels.npz</code> (uint32 0xRRGGBB
+tensor, H×W×20), <code>frames/00..19.png</code>, <code>inspection.png</code> and the standalone
+<code>index.html</code> delta player. <code>transition_check.png</code> shows key frames
+12–16, 3× amplified frame-difference heatmaps, and a per-frame
+ball/duck-x track.</p>
+</li>
+</ol>
+<h2>Verification (numeric)</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly; <code>pixels.npz</code> decodes to
+exactly the 20 PNGs; a Python emulation of the player's base64 + run-length
+delta decode reconstructs all 20 frames exactly.</li>
+<li>Pipe, couch and fireplace regions: 0–1 unit change across the clip. Duck
+silhouette pre-impact (frames 1–13): max diff 1 vs frame 0.</li>
+<li>Ball dark-component centroids track the planned line monotonically
+(84.0,50.9) → (191.3,45.9) → settle (198.8,45.5); bbox size stable
+(≈14–15 × 15–16 px); ball core color constant (mean
+RGB ≈(54,38,34) throughout).</li>
+<li>Edge-to-edge gap at body band: 112 → … → 13 (frame 13) → 5 (frame 14) → 3
+during sustained contact. Duck yellow centroid x moves only after frame 14:
+213.1 → 218.9.</li>
+<li>Vacated areas match the surrounding table (old ball zone at frame 13:
+mean RGB (118,117,112), local neighbor contrast ≈ clean table; vacated
+duck-head zone frame 19: (108,111,110) vs reference (105,109,113)).</li>
+<li>Rotated duck has no dark halo (fringe luminance min 86 vs 71 in frame 0);
+per-step changes stay inside the action corridor bbox; mean frame
+luminance varies by ≤0.1.</li>
+</ul>
+<h2>Limitations / honest notes</h2>
+<ul>
+<li>The ball sprite is reused from frame 0 with translation only; its surface
+fuzz/tennis seam is not explicitly rotated (the source ball is dark, soft
+and motion-smeared, with no resolvable seam, so translation reads
+consistently with the frame-0 exposure).</li>
+<li>The post-impact duck slide/rock timing is an authored physical response,
+not a rigid-body simulation; the ball keeps a constant effective radius
+and the pair move together without bounce.</li>
+<li>Table revealed by motion is a statistical reconstruction (holdout MAE
+2.4/channel), not the true hidden pixels.</li>
+</ul>
+</article></main></body></html>

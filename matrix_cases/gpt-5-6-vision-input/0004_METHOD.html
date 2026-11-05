@@ -1,0 +1,26 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0004</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><h2>Actual generation method</h2>
+<p>This continuation is a deterministic local pixel construction written in <code>generate.py</code>. It does not use external assets, external models, network access, a physics engine, or a rendering engine.</p>
+<ol>
+<li><code>first_frame.png</code> is loaded as an RGB NumPy array. Output frame 00 is assigned directly from that array without resampling or modification.</li>
+<li>A static clean plate is reconstructed only inside the original cardstock/grabber footprint. Wall and tabletop colors are interpolated from visible source-frame scanlines, with a small amount of visible source wood texture tiled into the hidden table region. The hidden center of the black platform is rebuilt with analytic ellipses and a soft cylindrical shading gradient.</li>
+<li>The original cardstock pixels are used as the cardstock texture. OpenCV perspective transforms map its measured source quadrilateral to a sequence of progressively narrower quadrilaterals, modeling a clockwise rotation about a vertical axis. A slight face-darkening term models the paper turning away from the upper-left light.</li>
+<li>The orange tennis ball is generated analytically as a shaded sphere. Its color, upper-left illumination, deterministic fuzz texture, and two curved pale seams are calculated per pixel. Hand-authored key poses lower it from above the frame, behind the sheet, then slightly right onto the platform/table setup.</li>
+<li>A slim blue-black grabber is drawn on a transparent 4x supersampled layer using anti-aliased local vector strokes. Its jaws flank the ball and open during release. The grabber and ball are composited before the cardstock, so the source-described behind-card occlusion is physically consistent.</li>
+<li>A restrained moving highlight on the platform makes the clockwise turn readable. The fixed background, table, cable, camera, and lighting remain unchanged outside the apparatus motion envelope.</li>
+<li><code>artifact_io.save</code> writes the uint32 packed tensor, 20 PNG frames, inspection sheet, and standalone HTML player. <code>generate.py</code> additionally writes <code>transition_check.png</code> from adjacent-frame numeric differences and stores transition metrics in <code>.tmp/transition_metrics.json</code>.</li>
+</ol>
+<h2>Validation method</h2>
+<p>Generated/later frames were not opened with image Read/View tools. Validation used local code and numeric checks only:</p>
+<ul>
+<li>source image and frame 00 exact array equality;</li>
+<li>all frame dimensions, channel count, and <code>uint8</code> dtype;</li>
+<li>exact unpacked <code>pixels.npz</code> versus every saved PNG;</li>
+<li>20/20 unique frame byte arrays;</li>
+<li>adjacent-frame mean absolute error, 95th-percentile channel delta, and changed-pixel counts;</li>
+<li>exact invariance outside the x=88..201 apparatus motion envelope;</li>
+<li>thresholded orange-region count, centroid, and bounding-box trajectory to confirm entry, descent, cardstock occlusion, and final side/bottom glimpse;</li>
+<li>expected perspective-card polygon area decrease and endpoint geometry;</li>
+<li>standalone player placeholder replacement and presence of exactly 20 numbered PNGs.</li>
+</ul>
+<p>The run is deterministic: rerunning <code>python generate.py</code> regenerates the same artifacts from <code>first_frame.png</code>.</p>
+</article></main></body></html>

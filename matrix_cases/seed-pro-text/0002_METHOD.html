@@ -1,0 +1,94 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0002</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><p>Task: locked-off single shot, 20 RGB frames, 256×144, 4 fps. Two grabber
+tools release a brown tennis ball (left) and an orange block (right); both
+fall onto the two pillows on the table and settle. Frame 00 is exactly
+<code>first_frame.png</code>.</p>
+<p>Everything was produced with local Python pixel math only
+(numpy / scipy.ndimage / opencv / PIL). No image Read/View tool was used at
+any point — all inspection was numeric (per-channel sampling, ASCII maps,
+connected-component statistics, fitted circles/rectangles). See
+<code>OBSERVATION.md</code> for the measured geometry.</p>
+<h2>1. Scene measurements (from frame 00)</h2>
+<ul>
+<li>Wall: smooth gray with soft vignette (lum ≈ 130–135 center, ~95–105
+corners). Table starts near y ≈ 84 and brightens toward the viewer.</li>
+<li>Two warm-gray pillows with a dark diagonal seam; far edges at y ≈ 85–92.</li>
+<li>Ball: dark chocolate-brown sphere, fitted disk centre (71.3, 30.0),
+radius ≈ 10.2 px; body lum ≈ 7–35 with warm rim light.</li>
+<li>Orange block: front face rect x 200–209, y 29–58 (centre ≈ (204.7, 43.8)),
+colour ≈ RGB(132, 22, 3) core / (138, 28, 5) lit edge.</li>
+<li>Left grabber ends in a deep-blue inverted-U claw cupping the ball; right
+grabber has two gray shafts meeting in a jaw at ≈ (203, 28), block hanging
+just below.</li>
+</ul>
+<h2>2. Background reconstruction</h2>
+<p>When the objects leave their original positions the wall behind them must be
+restored. A smooth wall field was built by:</p>
+<ol>
+<li>Selecting clean wall pixels (y 9–82, near-neutral saturation, excluding
+bounding boxes around both tools).</li>
+<li>Least-squares fitting a degree-5 bivariate polynomial in normalised
+(x, y) to each channel (residual std ≈ 3.9–4.7 levels).</li>
+<li>Diffusing the per-pixel residual from known wall pixels into the occluded
+zones with an iterative Gaussian normalised convolution (80 iterations),
+preserving the low-frequency vignette and faint wall mottling.</li>
+</ol>
+<p>Below y ≈ 83 the layer cross-fades (2 px) into the untouched table/pillows
+of frame 00. Spot checks show the reconstructed ball hole matches the
+adjacent wall to ≈ 1 level and the block hole matches the true wall at the
+same x-column (127/122/123 vs 128/123/124).</p>
+<h2>3. Object sprites</h2>
+<ul>
+<li><strong>Alpha maps</strong>: ball = analytic disk coverage with a 1.3 px anti-aliased
+band (4×4 super-sampled); block = analytic rounded rectangle. Each is
+unioned with the measured silhouette (warmth/luminance threshold,
+Gaussian-blurred) so no edge fragment of the original object is left
+behind.</li>
+<li><strong>Object colour</strong>: the true object colour is unmixed from the wall inside
+high-coverage pixels, <code>obj = (F − (1−α)·wall)/α</code>, clipped to [0, 255];
+remaining low-coverage edge pixels are filled by <code>cv2.inpaint</code> from
+interior neighbours. The sprite therefore keeps the original shading,
+rim light and texture at every frame (no re-lighting, no rotation).</li>
+<li>Sprites are composited onto each frame with sub-pixel-accurate vertical
+translation (linear interpolation in y of both alpha and colour).</li>
+</ul>
+<h2>4. Physics (screen space, constant gravity)</h2>
+<ul>
+<li>g = 144 px/s²; release at t = 0 (frame 01 is t = 0.25 s).</li>
+<li>Ball: centre 30.0 → rest 81.0 (bottom ≈ y 91 on the left pillow).
+Pillow restitution e = 0.32 → one visible rebound (apex ≈ frame 05), a
+second tiny hop (frame 06), rest by frame 07.</li>
+<li>Block: centre 43.7 → rest 71.0 (bottom ≈ y 86 on the right pillow).
+e = 0.12 → small single contact bounce, rest by frame 04.</li>
+<li>Positions use the analytic parabola with repeated inelastic bounces;
+vertical motion only (no horizontal force, objects were dropped straight).</li>
+</ul>
+<h2>5. Grabber jaws opening</h2>
+<p>The blue claw and the right jaw are segmented from frame 00 (blue fingers
+include their attached neutral dark outline; warm ball pixels are excluded
+by colour tests). Each jaw is split at its crown/junction and re-warped with
+an outward shear that is zero at the pivot and reaches ≈ 4 px (blue claw) /
+≈ 2.4 px (right jaw) at the tips: half-open at frame 01, fully open from
+frame 02 onward. The original jaw pixels are erased to the reconstructed
+wall before the sheared layer is composited back.</p>
+<h2>6. Pillow interaction</h2>
+<p>A soft elliptical contact shadow (Gaussian darkening, strongest at first
+contact: 0.40 ball / 0.30 block, easing to 0.27 / 0.25) is painted on each
+pillow under the resting object, clipped to the surface side. Pillows
+themselves are not deformed (the objects are light relative to the pillows
+and the camera is distant).</p>
+<h2>7. Outputs and verification</h2>
+<p><code>generate.py</code> writes, via <code>artifact_io.save</code>:
+<code>pixels.npz</code> (uint32 0xRRGGBB tensor, shape 144×256×20),
+<code>frames/00.png</code>–<code>19.png</code>, <code>inspection.png</code>, and the standalone <code>index.html</code>
+player. It additionally writes <code>transition_check.png</code> (frame 00 plus the
+amplified per-transition absolute-difference maps) and asserts:</p>
+<ul>
+<li>frame 00 is byte-identical to <code>first_frame.png</code>;</li>
+<li>every saved PNG packs to exactly the corresponding tensor slice
+(all 20 frames verified after writing).</li>
+</ul>
+<p>Numeric QA: per-frame changed-pixel bounding boxes stay inside the two fall
+columns (x 53–212, y 6–94); the ball dark-core centroid tracks 27.7 → 66.0
+→ impact 71.8 → rebound → 75.6 and the block centroid 41.6 → 67.4; frames
+08–19 are pixel-identical (both objects at rest, static locked-off scene).</p>
+</article></main></body></html>

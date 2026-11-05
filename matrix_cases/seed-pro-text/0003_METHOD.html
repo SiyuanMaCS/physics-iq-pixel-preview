@@ -1,0 +1,90 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0003</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><h2>What happens</h2>
+<p>Two grabber tools hang from a dark top bar above two quilted cushions on a
+table. In frame 00 the left claw holds a brown tennis ball and the right claw
+holds an orange rectangular block. The tools release them; both objects fall
+straight down, hit the cushions, depress the fabric with one small rebound, and
+come to rest, the ball on the left cushion and the block (with a tiny settling
+wobble) on the right cushion. Camera is locked off and nothing else moves.</p>
+<p>Everything was produced with local Python pixel math only (numpy, PIL, cv2);
+no external models, engines, references, or network access. <code>first_frame.png</code>
+was inspected purely numerically (RGB statistics, masks and ASCII maps); no
+image viewing tool was used.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Measurement / masks.</strong> RGB masks separate the moving objects from the
+static tools:<ul>
+<li>ball: warm-brown felt test (<code>r&gt;g+7, r&gt;b+12, 26≤r≤120</code>) inside ROI
+x38–68, y24–48, with a soft warm-rim test for fuzz;</li>
+<li>block: saturated orange test (<code>r&gt;110, g&lt;100, b&lt;80, r−g&gt;30</code>) plus
+rose-brown rim pixels inside ROI x164–187, y31–69 (the ROI's y≥31 cut
+deliberately keeps the claw's orange jaw pad at y15–28 static);</li>
+<li>blue rubber finger (<code>b&gt;r+10</code>) and near-neutral dark metal pixels are
+never removed, and the small claw strips overlapping the ball
+(x58–62/y29–41 and x≤42/y26–40) are excluded by geometry so the claw
+survives intact after release.</li>
+</ul>
+</li>
+<li><strong>Static background.</strong> Pixels vacated by the two objects are rebuilt as
+analytic wall texture: per-row RGB mean and standard deviation measured on
+the clean wall band x100–160, plus spatially correlated Gaussian noise
+(3×3 blurred). This avoids inpainting smearing brown/orange across the
+wall. Claws, cushions, bar and the wall elsewhere are the untouched frame-00
+pixels.</li>
+<li><strong>Sprites.</strong><ul>
+<li><em>Ball</em>: 27×27 RGBA disk (r≈11, centre 13,13). Interior colour is a
+vertical gradient fitted to real ball rows (~(44,21,13) top to
+~(53,29,20) mid) with radial darkening, per-pixel felt noise and a faint
+curved felt seam; the rim uses a 2 px soft alpha ramp. All genuinely
+visible felt pixels from frame 00 are pasted over the analytic body
+(wall-blended rim pixels are down-weighted), so the held and falling ball
+match; the cap previously hidden behind the finger is analytic fill.</li>
+<li><em>Block</em>: direct 19×37 RGBA crop of the frame-00 block (pale top cap,
+orange core, rose side rims, rounded bottom), alpha from the colour masks
+with a one-pixel Gaussian-softened rim; rotated per frame with bilinear
+interpolation about its centre.</li>
+</ul>
+</li>
+<li><strong>Physics.</strong> One-dimensional simulation at 1/512 s, sampled at the 20 frame
+instants (dt=0.25 s): constant gravity g=52 px/s² while airborne; on
+penetration past the cushion surface a one-sided damped spring
+(ball ω=13, ζ=0.32, rest bottom y=104; block ω=12, ζ=0.30, rest bottom
+y=107) gives ~5 px maximum depression and one ~4–5 px rebound; ballistic
+motion resumes whenever the object lifts off. The ball additionally eases
+2.8 px to the right after first contact (gentle roll, <code>2.8(1−e^{−2.3τ})</code>),
+and the block performs a small damped tilt wobble
+(<code>5°e^{−2.1t}sin 9t</code>) after its first contact. From t=3.25 s both objects
+are snapped to their exact rest state so the last seven frames are still.
+Contacts: block first touches at frame 05, ball at frame 06; settled by
+frame 13.</li>
+<li><strong>Compositing.</strong> Each frame starts from the static background; a blurred
+dark contact ellipse is multiplied onto the landing cushion (faint/diffuse
+when the object is high, up to ~42 % darkening on contact, widening with
+depression); the ball and rotated block are then alpha-composited at their
+simulated positions. Frame 00 is always the untouched <code>first_frame.png</code>.</li>
+<li><strong>Output.</strong> <code>artifact_io.save</code> writes <code>pixels.npz</code> (uint32 0xRRGGBB,
+H×W×20), <code>frames/00.png…19.png</code>, <code>inspection.png</code> and the standalone
+<code>index.html</code> delta player. <code>transition_check.png</code> is a contact montage:
+frames 03–09 plus amplified per-pixel difference heatmaps for the
+04→05, 05→06, 06→07 and 07→08 transitions.</li>
+</ol>
+<h2>Verification (<code>verify.py</code>, all passing)</h2>
+<ul>
+<li><code>frames/00.png</code> is byte-for-byte identical to <code>first_frame.png</code>.</li>
+<li>The packed uint32 0xRRGGBB values from all 20 PNGs equal the <code>pixels.npz</code>
+tensor (H×W×20) exactly.</li>
+<li>The base64 first-frame and 19 delta streams embedded in <code>index.html</code>
+reconstruct all 20 frames exactly.</li>
+<li>Per-transition change counts descend the frame, cluster around the object
+and contact zones, and frames 13→19 are pixel-identical (rest).</li>
+</ul>
+<h2>Honest limitations</h2>
+<ul>
+<li>The tools' jaws do not visibly open; &quot;release&quot; is conveyed by the objects
+detaching and falling, chosen to avoid fabricating claw geometry.</li>
+<li>Cushion reaction is a soft shadow + spring-driven sink/rebound rather than a
+full cloth deformation.</li>
+<li>Ball sprite colours are necessarily very dark (the source ball itself is a
+dark muddy brown, RGB roughly (20–55, 8–30, 2–21)); its occluded top cap and
+the block's hidden faces are analytic reconstruction, not observed pixels.</li>
+</ul>
+</article></main></body></html>

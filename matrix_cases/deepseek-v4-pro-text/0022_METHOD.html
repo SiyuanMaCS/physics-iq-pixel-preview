@@ -1,0 +1,138 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-rolls-off · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0022</span></nav><article><h1>ball-rolls-off · 生成方法</h1><h2>Task Summary</h2>
+<p>Generate a 20-frame (4 fps, 5 seconds) animation of a grey tennis ball rolling
+out of a black pipe on a light wood coffee table, travelling rightward across
+the table.</p>
+<p><strong>Inputs</strong>: <code>first_frame.png</code> (256×144 RGB), <code>prompt.txt</code></p>
+<p><strong>Outputs</strong>: <code>frames/00.png</code>–<code>19.png</code>, <code>pixels.npz</code>, <code>inspection.png</code>,
+<code>transition_check.png</code>, <code>index.html</code></p>
+<h2>Method</h2>
+<h3>Frame 00 (Baseline)</h3>
+<p>Frame 00 is preserved exactly as <code>first_frame.png</code> — no pixels are modified.
+The ball is assumed to be fully inside the pipe at time 0 and therefore
+invisible.  The assertion <code>frames[0] == first_frame.png</code> is verified at
+generation time.</p>
+<h3>Scene Analysis</h3>
+<p>All scene measurements were taken via numeric RGB array inspection of
+<code>first_frame.png</code> — no image viewing tools were used.</p>
+<ul>
+<li><strong>Table surface</strong>: Light wood, rows ~65–143, mean RGB ≈ <code>(155, 148, 142)</code>.</li>
+<li><strong>Black pipe</strong>: Left end of table, columns 0–27, rows 70–99. Cylindrical
+shape with dark body and metallic rim reflections.</li>
+<li><strong>Pipe opening</strong>: Right-facing, at approximately column 25–28.</li>
+<li><strong>Ball path</strong>: Center Y = 82 (aligned with pipe opening center). Horizontal
+trajectory from column 14 (inside pipe) to column 219 (near right table
+edge).</li>
+</ul>
+<h3>Ball Rendering</h3>
+<p>The tennis ball is drawn procedurally using pure NumPy pixel operations:</p>
+<ol>
+<li><p><strong>Shape</strong>: A circle of radius 7 px (14 px diameter) with a soft alpha edge
+for anti-aliasing.</p>
+</li>
+<li><p><strong>3D shading</strong>: Lambertian diffuse + ambient + specular highlight.</p>
+<ul>
+<li>Light direction: upper-left (~(-0.5, -0.4, 0.77)).</li>
+<li>Surface normals computed analytically from sphere geometry.</li>
+<li>Fresnel-like rim darkening: <code>1 - 0.25 × (1 - nz)</code>.</li>
+</ul>
+</li>
+<li><p><strong>Seam lines</strong>: A white double-seam pattern characteristic of tennis balls,
+modelled as two orthogonal great-circle bands (<code>|nx| &lt; width</code>, <code>|ny| &lt; width</code>).
+The seam rotates as the ball rolls: <code>angle = t × (dx / 110px) × 2π</code>.</p>
+</li>
+<li><p><strong>Drop shadow</strong>: A dark, semi-transparent ellipse composited below and
+slightly right of the ball, with soft radial falloff.</p>
+</li>
+<li><p><strong>Compositing</strong>: RGBA alpha blending over the original background using
+<code>blended = fg × α + bg × (1 − α)</code>. Clipped to frame bounds.</p>
+</li>
+</ol>
+<h3>Pipe Occlusion</h3>
+<p>A pipe foreground mask is built by comparing each pixel in the pipe region
+(columns 0–27, rows 70–99) against a per-row reference table colour (sampled
+from columns 45–55). Pixels whose Euclidean colour distance from the reference
+exceeds 35, or whose brightness is below 35, are classified as pipe surface.
+The mask is dilated by 2 iterations to capture metallic rim reflections at
+the pipe opening.</p>
+<p>After the ball is composited, the pipe mask is used to restore original pipe
+pixels from <code>first_frame.png</code>, ensuring the ball appears to emerge from behind
+the pipe rather than being drawn on top of it.</p>
+<h3>Motion Model</h3>
+<ul>
+<li><strong>Horizontal</strong>: Constant velocity, <code>dx = 11 px/frame</code>.
+<code>ball_cx(t) = 14 + t × 11</code>.</li>
+<li><strong>Vertical</strong>: Subtle arc as the ball exits the pipe: frame 2 lifts by 1 px.</li>
+</ul>
+<h3>Frames Summary</h3>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Ball CX</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>—</td>
+  <td>Original, ball hidden in pipe</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>25</td>
+  <td>Ball emerging from pipe opening</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>36</td>
+  <td>Fully emerged, slight upward arc</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>47</td>
+  <td>Rolling on table</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>58</td>
+  <td>Rolling</td>
+</tr>
+<tr>
+  <td>05–18</td>
+  <td>1.25–4.50</td>
+  <td>69–212</td>
+  <td>Mid-table traversal</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>223</td>
+  <td>Near right table edge</td>
+</tr>
+</tbody>
+</table>
+<h3>Outputs</h3>
+<ul>
+<li><code>pixels.npz</code>: uint32-packed tensor (144, 256, 20), encoded as <code>0xRRGGBB</code>.</li>
+<li><code>frames/*.png</code>: 20 individual RGB frames, each 256×144.</li>
+<li><code>inspection.png</code>: 8-frame contact sheet with timestamps.</li>
+<li><code>transition_check.png</code>: 19-band vertical-strip visualisation of frame
+transitions plus a reference gradient.</li>
+<li><code>index.html</code>: Standalone interactive player with delta-encoded pixel data.</li>
+</ul>
+<h3>Tools Used</h3>
+<ul>
+<li><strong>NumPy</strong>: Array manipulation, shading math, alpha compositing.</li>
+<li><strong>PIL (Pillow)</strong>: PNG I/O, contact sheet assembly.</li>
+<li><strong>SciPy</strong> (<code>scipy.ndimage.binary_dilation</code>): Pipe mask edge dilation.</li>
+<li><strong>artifact_io.py</strong>: Project-provided helper for saving frames, pixel tensor,
+inspection sheet, and HTML player.</li>
+</ul>
+</article></main></body></html>

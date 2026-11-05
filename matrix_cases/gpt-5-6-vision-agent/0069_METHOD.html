@@ -1,0 +1,21 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>glass-stays-same · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0069</span></nav><article><h1>glass-stays-same · 生成方法</h1><h2>Actual generation method</h2>
+<p>I used a direct pixel-preserving static continuation. The supplied <code>first_frame.png</code> is opened with Pillow, converted to RGB without resizing or geometric transformation, converted to an unsigned 8-bit NumPy array, and repeated exactly 20 times along the time axis.</p>
+<p>This is intentional: the prompt specifies a static locked-off shot with fixed framing and says that the beverage dispenser is stationary over the glass. It describes no pouring, person, camera move, or other action. Consequently, every frame keeps the exact source pixels, including the closed spigot, level red liquid surfaces, glass reflections, woven basket texture, wall, table, and shadows.</p>
+<h2>Output encoding</h2>
+<p><code>artifact_io.save</code> writes:</p>
+<ul>
+<li><code>frames/00.png</code> through <code>frames/19.png</code> as RGB PNG files;</li>
+<li><code>pixels.npz</code> with shape <code>(144, 256, 20)</code> and dtype <code>uint32</code>, packed as <code>0xRRGGBB</code>;</li>
+<li><code>inspection.png</code>, an eight-frame contact sheet;</li>
+<li><code>index.html</code>, a standalone 4 fps sequence player.</li>
+</ul>
+<p><code>generate.py</code> also writes <code>transition_check.png</code>, showing frame 00, frame 19, and their absolute RGB difference. The difference panel is black because the prescribed setup is completely static.</p>
+<h2>Verification</h2>
+<p>The generator verifies all of the following after writing the artifacts:</p>
+<ol>
+<li>The frame array is exactly <code>(20, 144, 256, 3)</code> with dtype <code>uint8</code>.</li>
+<li>Frame 00 is pixel-identical to <code>first_frame.png</code>.</li>
+<li>All 20 PNG files decode to the in-memory RGB frames.</li>
+<li>Every PNG, repacked to <code>0xRRGGBB</code>, exactly equals its corresponding <code>pixels.npz</code> tensor slice.</li>
+</ol>
+</article></main></body></html>

@@ -1,0 +1,23 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-falls-in-box · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0060</span></nav><article><h1>duck-falls-in-box · 生成方法</h1><h2>Actual generation method</h2>
+<p>This continuation is a deterministic local pixel construction implemented in <code>generate.py</code>. No external model, engine, reference image, mask, score, or network resource was used.</p>
+<ol>
+<li><code>first_frame.png</code> is loaded as the only scene image. Frame 00 is copied from it without modification.</li>
+<li>The duck is isolated inside the measured source crop x=119..141, y=14..37. Its soft alpha is inferred from the yellow/orange object's blue-channel deficit relative to clean gray-wall samples immediately to the left and right. Only the largest connected component is retained.</li>
+<li>The foreground color at anti-aliased edges is recovered by undoing the original wall blend. The original duck location is reconstructed with a local OpenCV Telea inpaint; the grabber above the crop remains in place.</li>
+<li>The source-derived duck is translated and rotated along a hand-authored gravity trajectory. Small 2–3 pixel vertical convolution kernels add motion smear at peak speed. No new duck texture is invented.</li>
+<li>A low-opacity blurred alpha copy produces the weak moving wall shadow. It is disabled after the duck goes below the box lip.</li>
+<li>Entry into the box uses an analytic occlusion line from approximately (109,98) to (153,91). Duck pixels below that sloping front edge are suppressed, so the original front fabric panel remains opaque. Centers after contact create one damped rebound; frames 13–19 hold the stable final state.</li>
+<li><code>artifact_io.save</code> writes the packed uint32 <code>0xRRGGBB</code> tensor, 20 PNGs, inspection sheet, and standalone player. <code>transition_check.png</code> is a programmatically generated difference diagnostic.</li>
+</ol>
+<h2>Numeric validation performed</h2>
+<ul>
+<li>Shape and type: 20 frames, each 256 x 144 RGB uint8.</li>
+<li>Frame 00: exactly equal to <code>first_frame.png</code> at every channel of every pixel.</li>
+<li>Packed tensor: <code>pixels.npz</code> has shape <code>(144, 256, 20)</code>, dtype uint32; unpacking every value reproduces every generated RGB pixel exactly.</li>
+<li>PNGs: reloading all 20 saved files reproduces the in-memory frame tensor exactly.</li>
+<li>Locked camera: outside x=108..152, y=10..120, every later pixel remains exactly equal to the source.</li>
+<li>Motion measurement: the detected duck centroid moves from y=26.17 through 27.17, 31.19, 38.17, 49.74, 64.79, and 84.01 before the box lip reduces it to a small visible cap. The rebound appears near y=92.86 and then vanishes.</li>
+<li>Transition changed-pixel counts are <code>522, 515, 591, 698, 774, 767, 456, 164, 131, 131, 11, 11, 0, 0, 0, 0, 0, 0, 0</code>; the final seven frames are identical as the scene settles.</li>
+</ul>
+<p>No later generated frame or contact sheet was opened with an image Read/View tool. Inspection after generation was limited to local decoding, hashes, array comparisons, masks, bounding boxes, centroids, and other numeric checks.</p>
+</article></main></body></html>

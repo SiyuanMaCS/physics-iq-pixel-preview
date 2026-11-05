@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>duck-static · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0063</span></nav><article><h1>duck-static · 生成方法</h1><p>The prompt specifies a stationary rubber duck and a fixed camera. The
+sequence therefore uses exact copies of the supplied RGB image for every
+frame. This preserves the duck's pose, contact shadow, wood grain, wall,
+lighting, and framing for the full five seconds.</p>
+<p><code>generate.py</code> reads <code>first_frame.png</code> with Pillow and repeats its unmodified
+uint8 RGB array 20 times with NumPy. No drawing, warping, inpainting,
+simulation, artificial noise, external model, network access, or external
+rendering engine is used. The supplied output-only <code>artifact_io.py</code> writes
+the PNGs, tensor, inspection contact sheet, and standalone HTML player. The
+generator also draws a separate transition diagnostic; its labels are not
+part of the generated frames.</p>
+<p>Frames are 256 × 144 RGB at 4 fps, each displayed for 250 ms, covering five
+seconds. <code>pixels.npz</code> contains the <code>pixels</code> array with shape
+<code>(144, 256, 20)</code> and dtype <code>uint32</code>; each entry is packed as <code>0xRRGGBB</code>.
+Frame 00 exactly equals the decoded RGB pixels of <code>first_frame.png</code>.</p>
+<p>Run <code>python generate.py</code> to regenerate all outputs and perform verification.
+The generator checks every PNG's dimensions and RGB mode, every channel
+against the packed tensor, all frames against the source, and the player's
+embedded pixel data. All 19 adjacent transitions have zero changed pixels.
+The player includes 20 frames and uses a 250 ms interval.</p>
+<p><code>inspection.png</code> shows eight samples across the sequence.
+<code>transition_check.png</code> shows the first and last frames and their absolute
+RGB difference, which is entirely black for this stationary scene.</p>
+<p>Both generated diagnostic images were viewed with the image tool after
+generation. The contact sheet preserves the original composition in all
+samples, and the transition image visibly confirms a black difference
+panel. No revision was needed.</p>
+</article></main></body></html>

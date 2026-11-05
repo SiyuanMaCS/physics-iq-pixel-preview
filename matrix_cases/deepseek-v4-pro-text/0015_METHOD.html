@@ -1,0 +1,203 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0015</span></nav><article><h1>ball-in-basket · 生成方法</h1><h2>Approach</h2>
+<p>Pixel-level sprite extraction and physics-based animation using only local Python pixel operations.</p>
+<h2>Steps</h2>
+<h3>1. Ball Extraction</h3>
+<ul>
+<li>Color thresholding on the orange basketball: R dominates G and B, with R &gt; 140, G &gt; 30, B &lt; R*0.7, (R-G) &gt; 20</li>
+<li>Connected component analysis to isolate the largest orange region (the ball)</li>
+<li>Soft alpha mask computed via signed distance transform with 2-pixel feathering</li>
+<li>Sprite extracted as RGBA with original RGB colors and computed alpha</li>
+</ul>
+<h3>2. Background Inpainting</h3>
+<ul>
+<li>For each ball pixel, sample background colors from left and right edges (first non-ball pixel in each direction)</li>
+<li>Linear interpolation between left and right samples</li>
+<li>Light Gaussian blur (sigma=0.8) applied to inpainted region for smoothness</li>
+<li>Blend smoothed result into masked region while preserving original background elsewhere</li>
+</ul>
+<h3>3. Physics Animation</h3>
+<ul>
+<li>Analytic 1D vertical motion with gravity</li>
+<li>Ball starts at initial position (center_y ≈ 34), drops to rest on crate (center_y ≈ 36)</li>
+<li>Bounce modeled with decreasing amplitude (damped oscillator style):<ul>
+<li>First bounce: ~6px peak height above resting position</li>
+<li>Second bounce: ~2.5px peak</li>
+<li>Third bounce: ~1px (barely visible)</li>
+</ul>
+</li>
+<li>Squash and stretch deformation on impact:<ul>
+<li>Vertical compression up to 0.75x on first impact</li>
+<li>Horizontal expansion to approximately conserve volume (1/sqrt(squash))</li>
+<li>scipy.ndimage.zoom with order-1 interpolation for smooth deformation</li>
+</ul>
+</li>
+</ul>
+<h3>4. Frame Compositing</h3>
+<ul>
+<li>Each frame: clean background + deformed ball sprite at computed position</li>
+<li>Alpha compositing using soft alpha for smooth edges</li>
+<li>Frame 0 is exact copy of first_frame.png as required</li>
+</ul>
+<h2>Physics Details</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time</th>
+  <th>Ball Center Y</th>
+  <th>Squash</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00s</td>
+  <td>34.0</td>
+  <td>1.00</td>
+  <td>Initial state: ball held above crate</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25s</td>
+  <td>34.8</td>
+  <td>0.95</td>
+  <td>Ball contacts crate, compression begins</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50s</td>
+  <td>39.9</td>
+  <td>0.75</td>
+  <td>Maximum squash on crate surface</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75s</td>
+  <td>36.6</td>
+  <td>0.88</td>
+  <td>Ball expanding, rebounding from crate</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00s</td>
+  <td>31.5</td>
+  <td>1.00</td>
+  <td>Ball bouncing upward from crate</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25s</td>
+  <td>29.5</td>
+  <td>1.00</td>
+  <td>Ball rising after first bounce</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50s</td>
+  <td>27.5</td>
+  <td>1.00</td>
+  <td>Peak of first bounce</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75s</td>
+  <td>29.5</td>
+  <td>1.00</td>
+  <td>Ball descending after first bounce</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00s</td>
+  <td>32.0</td>
+  <td>1.00</td>
+  <td>Ball nearing crate for second impact</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25s</td>
+  <td>36.0</td>
+  <td>0.90</td>
+  <td>Second impact on crate</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50s</td>
+  <td>38.1</td>
+  <td>0.82</td>
+  <td>Second compression on crate</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75s</td>
+  <td>35.5</td>
+  <td>0.92</td>
+  <td>Ball expanding from second impact</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00s</td>
+  <td>32.0</td>
+  <td>1.00</td>
+  <td>Small second bounce upward</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25s</td>
+  <td>31.0</td>
+  <td>1.00</td>
+  <td>Peak of second bounce</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50s</td>
+  <td>32.5</td>
+  <td>1.00</td>
+  <td>Falling after second bounce</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75s</td>
+  <td>35.0</td>
+  <td>0.94</td>
+  <td>Third light contact with crate</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00s</td>
+  <td>33.0</td>
+  <td>1.00</td>
+  <td>Tiny third bounce</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25s</td>
+  <td>34.3</td>
+  <td>0.97</td>
+  <td>Ball settling on crate surface</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50s</td>
+  <td>33.8</td>
+  <td>0.99</td>
+  <td>Ball nearly at rest on crate</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75s</td>
+  <td>33.5</td>
+  <td>1.00</td>
+  <td>Ball at rest on crate surface</td>
+</tr>
+</tbody>
+</table>
+<h2>Tools Used</h2>
+<ul>
+<li>PIL/Pillow: Image loading and saving</li>
+<li>NumPy: Array operations</li>
+<li>SciPy: ndimage.label, distance_transform_edt, gaussian_filter, zoom</li>
+<li>artifact_io.py: Output helpers (save, inspection sheet, HTML player)</li>
+</ul>
+<p>No external AI models, network access, or subprocesses used.</p>
+</article></main></body></html>

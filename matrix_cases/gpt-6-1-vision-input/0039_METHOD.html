@@ -1,0 +1,40 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>blow-balloon · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0039</span></nav><article><h1>blow-balloon · 生成方法</h1><p>This sequence was generated with local Python pixel operations on the supplied <code>first_frame.png</code>. The only scene inputs were that image and <code>prompt.txt</code>. The pre-coding scene measurements and 20-frame plan are in <code>OBSERVATION.md</code>. No network, external references, external masks, AI models, rendering engines, or subagents were used.</p>
+<p>The method is photographic foreground extraction and an anchored deformation, with an approximate inflation timing law. It is not a three-dimensional simulation of latex or fluid pressure.</p>
+<ol>
+<li>Identify the dark balloon within its measured initial bounding region using RGB luminance. Fill internal holes and estimate a soft edge matte from local wall-to-rubber contrast. The matte is computed from the supplied pixels during generation.</li>
+<li>Estimate the hidden gray-green wall using a robust cubic polynomial fit to neighboring visible wall pixels. This permits removal of the original balloon where the warped lower contour reveals a small area of wall. Visible pixels elsewhere remain unchanged.</li>
+<li>Decompose the original image into an alpha matte and premultiplied RGB foreground. This retains the initial balloon's photographic shading, black rubber texture, and reflections.</li>
+<li>Apply an inverse pixel warp about <code>(110,82)</code>. At sample time <code>t=i/4</code>, the linear scale is <code>(1+2.7*i/19)^(1/3)</code>, representing constant added volume per unit time. Vertical growth is anchored at the outlet. Horizontal growth tapers over the lowest five source pixels to retain the narrow neck. The final linear scale is approximately 1.547.</li>
+<li>Resample the matte and premultiplied color with OpenCV cubic interpolation, then composite them over the stationary scene. Clamp resampling overshoot. Restore all original pixels at y≥82, including the neck, fitting, hose, table, and green apparatus. Frame 00 is copied directly from the input without processing.</li>
+<li>Use the provided output-only <code>artifact_io.py</code> helper to write the PNGs, packed tensor, inspection contact sheet, and standalone HTML player. Create <code>transition_check.png</code> from the initial, final, and adjacent-frame pixel differences.</li>
+</ol>
+<p>The animation contains 20 RGB frames at 256×144, displayed every 250 ms for a five-second sequence. Samples occur from 0.00 through 4.75 seconds. Pumping continues throughout; the balloon stays intact and connected. The fixed frame and static apparatus are retained.</p>
+<h2>Validation performed</h2>
+<p>All generated outputs were inspected through local code and numeric checks. No generated image was opened through an image Read/View tool, and no visual review of generated images is claimed.</p>
+<ul>
+<li><code>pixels.npz</code> stores the <code>pixels</code> array as uint32 with shape <code>(144,256,20)</code>, axes <code>[y,x,time]</code>, and <code>0xRRGGBB</code> values.</li>
+<li>Every decoded tensor frame exactly matches its saved RGB PNG.</li>
+<li>Frame 00 exactly matches the supplied image, with raw RGB SHA-256 <code>d6b27b838be710fb5aa5842b9cadf4555451cd9713b5bfd62c05ad7bfe6c958a</code>.</li>
+<li>The standalone player's first frame and all 19 decoded delta packets exactly match the tensor. Its timer interval is 250 ms.</li>
+<li>The balloon matte area increases in every frame, from 1901.3 to 4515.2 pixel equivalents, a factor of 2.375. Its half-opacity bounds change from <code>(87,32)–(134,82)</code> to <code>(74,5)–(148,81)</code>. The final top remains within the frame.</li>
+<li>Every frame has one connected dark balloon body, and the fixed neck remains connected across rows 81–84.</li>
+<li>All pixels at y≥82 and outside the balloon's local region are identical to the input. No camera movement or background animation is introduced.</li>
+<li>Whole-frame mean absolute adjacent RGB change decreases smoothly from 0.728 to about 0.488 intensity units. The largest diameter increments occur earlier, consistent with the cube-root volume law.</li>
+<li>The hidden-wall fit has RGB residual RMS errors of approximately <code>(2.00,2.47,2.25)</code> intensity units on its visible fitting samples. The source foreground decomposition has a maximum channel reconstruction error of 2.67 and mean error of 0.000207 intensity units; frame 00 bypasses this decomposition entirely.</li>
+<li>Both inspection PNGs were checked for RGB mode, expected dimensions, and valid PNG encoding using Pillow without displaying them.</li>
+</ul>
+<p>The deformation preserves the photographed reflection pattern by stretching it with the balloon. It does not recompute physical surface illumination. The hidden wall is interpolated, so its obscured texture is an estimate; nearly all of that region is covered by the enlarging balloon.</p>
+<h2>Artifacts and reproduction</h2>
+<p>Run <code>python generate.py</code> from this workspace. Dependencies are NumPy, SciPy, OpenCV, and Pillow. Generation is deterministic.</p>
+<ul>
+<li><code>generate.py</code>: complete generation and validation script.</li>
+<li><code>pixels.npz</code>: packed RGB frame tensor.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: 20 exact RGB frame exports.</li>
+<li><code>inspection.png</code>: eight-frame contact sheet.</li>
+<li><code>transition_check.png</code>: frames 00/01, 18/19, and 00/19 with amplified absolute RGB differences.</li>
+<li><code>index.html</code>: self-contained local player at 4 fps.</li>
+<li><code>OBSERVATION.md</code>: initial measurements and the pre-coding event plan.</li>
+<li><code>METHOD.md</code>: this method and validation record.</li>
+<li><code>verification.json</code>: machine-readable checks and per-frame measurements.</li>
+</ul>
+</article></main></body></html>

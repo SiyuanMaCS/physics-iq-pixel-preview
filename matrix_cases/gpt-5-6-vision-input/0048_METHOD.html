@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>domino-in-juice · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0048</span></nav><article><h1>domino-in-juice · 生成方法</h1><p>This sequence was generated entirely with local Python pixel operations from <code>first_frame.png</code>. No external model, image, mask, reference, network service, or rendering engine was used.</p>
+<h2>Image construction</h2>
+<ol>
+<li>The source RGB frame is loaded at its native 256 x 144 resolution. Frame 00 is assigned directly from that array with no resampling or modification.</li>
+<li>Hand-measured polygons isolate the white domino and the two blue-black grabber jaws. A lightly feathered alpha edge retains the source photograph's antialiasing.</li>
+<li>A static clean plate is formed by dilating the union of those masks and using OpenCV's local Telea inpainting. This only reconstructs the narrow area that the moving objects uncover; the mug, tabletop, background, lighting, and camera remain copied from the source.</li>
+<li>The original photographic pixels inside the masks are used as sprites. The domino receives small affine rotations and a vertical trajectory whose post-release increments increase to mimic gravity. The left and right grabber halves rotate/translate independently to open, then the grabber retracts out through the top edge. A short extension of the source top-edge texture keeps the lowered grabber connected to its off-screen handle.</li>
+<li>A curved analytic near-rim boundary clips the falling domino as it enters the mug. Pixels below <code>y = 75 + 0.006(x - 119)^2</code> are hidden, making the near wall/rim correctly occlude the ceramic rather than letting it pass in front of the mug.</li>
+<li>A soft source-localized shadow tightens on the liquid as the domino approaches. At impact, a small depression, compact reddish splash crown, and two expanding elliptical ripple lines are alpha-blended only inside the measured liquid opening. Their amplitude decays through the final frames.</li>
+<li><code>artifact_io.save</code> writes the packed <code>uint32</code> tensor, frame PNGs, inspection sheet, and standalone player. <code>transition_check.png</code> places selected previous/next frame pairs beside 4x absolute-difference maps for continuity diagnostics.</li>
+</ol>
+<h2>Timing</h2>
+<ul>
+<li>20 frames, 256 x 144 RGB, 4 fps, 5 seconds.</li>
+<li>Frames 01-05: subtle lowering and jaw opening.</li>
+<li>Frames 06-10: accelerating release and rim entry.</li>
+<li>Frames 10-13: impact, splash collapse, and expanding ripples.</li>
+<li>Frames 11-15: grabber retracts fully beyond the top edge.</li>
+<li>Frames 14-19: residual ripples decay to a settled mug.</li>
+</ul>
+<h2>Numeric verification</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly (maximum channel error 0).</li>
+<li>All 20 decoded PNG arrays have shape <code>(144, 256, 3)</code> and dtype <code>uint8</code>.</li>
+<li>Every PNG matches its corresponding plane in <code>pixels.npz</code> after packing as <code>0xRRGGBB</code>; the tensor has shape <code>(144, 256, 20)</code> and dtype <code>uint32</code>.</li>
+<li>Consecutive-frame changes are localized to approximately <code>x=81..136</code>, <code>y=0..81</code>. Pixels outside the broader action corridor <code>x=80..159</code>, <code>y=0..129</code> remain identical to the source in every checked frame.</li>
+<li>No new pure-black or near-black pixels were introduced in the action region, and late ripple transitions decay monotonically to a maximum per-channel step of only 3 levels at the last transition.</li>
+</ul>
+<p>The supplied <code>inspection.png</code> and <code>transition_check.png</code> were generated as deliverables but were not visually opened or reviewed; later-output evaluation used only local decoding and numeric checks.</p>
+</article></main></body></html>

@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-mug-block · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-text.html">← 返回本组全量视频</a><span class="tag">Case 0080</span></nav><article><h1>light-on-mug-block · 生成方法</h1><p>The sequence was produced entirely with local Python numeric pixel operations using NumPy, Pillow, and OpenCV. No network resource, external model, external engine, image viewer, or image Read/View tool was used.</p>
+<h2>Source analysis</h2>
+<p><code>first_frame.png</code> was loaded as a 256 x 144 RGB uint8 array. I inspected channel statistics, thresholded color populations, per-row/per-column numeric samples, and coarse text-printed cluster maps. Those measurements locate the mug, blue block, lit wall, dark turntable, and original wall-shadow band. The measurements and frame-by-frame plan were recorded in <code>OBSERVATION.md</code> before <code>generate.py</code> was written.</p>
+<h2>Pixel construction</h2>
+<ol>
+<li>Frame 00 is a direct array copy of <code>first_frame.png</code>; no resampling or recompression affects its RGB values.</li>
+<li>Tight antialiased masks isolate the source mug and blue block. Their real source pixels supply the object texture in later frames.</li>
+<li>The pixels uncovered behind the two source objects are reconstructed locally with OpenCV Telea inpainting. The measured original wall-shadow band is repaired with a feathered horizontal interpolation from adjacent illuminated wall pixels.</li>
+<li>The turntable surface is modeled as an obliquely viewed ellipse. Its dim source texture is inverse-mapped around the ellipse at a constant clockwise phase, with a soft rim and a luminance gate so the surrounding set does not rotate.</li>
+<li>Object anchors follow the same circular turntable coordinates projected with a 0.30 vertical foreshortening factor. The total phase change is 78 degrees over 19 equal frame intervals. The mug remains upright. The rectangular block remains upright while horizontal scale and shear vary smoothly to indicate changing yaw.</li>
+<li>The source object layers are bicubically transformed and alpha composited in projected depth order. Small blurred ellipses create contact shadows on the platform.</li>
+<li>The wall shadow is redrawn analytically from enlarged mug and block silhouettes at 4x resolution, reduced with area filtering, blurred, and multiplicatively composited only inside the measured lit-wall window. Its displacement is tied to each object's turntable displacement. The spotlight and camera never move.</li>
+</ol>
+<h2>Output and verification</h2>
+<p><code>artifact_io.save</code> writes the uint32 <code>0xRRGGBB</code> tensor, the 20 PNG frames, the inspection contact sheet, and the standalone HTML player. <code>transition_check.png</code> contains five representative adjacent-frame overlays above 4x-amplified absolute differences.</p>
+<p>The generator then reloads every PNG and <code>pixels.npz</code>, asserting:</p>
+<ul>
+<li>shape <code>(20, 144, 256, 3)</code> and dtype <code>uint8</code> for the generated frame array;</li>
+<li>exact RGB equality between frame 00 and <code>first_frame.png</code>;</li>
+<li>tensor shape <code>(144, 256, 20)</code> and dtype <code>uint32</code>;</li>
+<li>exact equality of every PNG with the corresponding packed tensor slice; and</li>
+<li>nonzero motion in every consecutive transition.</li>
+</ul>
+<p>Run the complete deterministic build and verification with:</p>
+<pre><code class="language-bash">python3 generate.py
+</code></pre>
+</article></main></body></html>

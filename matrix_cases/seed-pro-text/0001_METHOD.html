@@ -1,0 +1,70 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0001</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><h2>What was generated</h2>
+<p>20 RGB frames, 256×144, 4 fps (5 s), continuing <code>first_frame.png</code>: the two
+grabber tools release the brown tennis ball (left, blue ring gripper) and
+the orange rounded block (right, red claw); both fall vertically onto the
+two soft pillows, compress the fabric on impact, rebound slightly and
+settle. Frame 00 is byte-identical to <code>first_frame.png</code>; the grippers
+never move.</p>
+<p>All pixels were produced with local Python only (PIL, numpy, scipy).
+No external models, engines, images or image-viewing tools were used;
+the first frame was understood purely through numeric RGB/HSV inspection
+(histograms, HSV category maps, Sobel edge profiles, per-column profiles,
+hex dumps), as documented in <code>OBSERVATION.md</code>.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Sprites from frame 0.</strong><ul>
+<li>Ball: anti-aliased disk mask (center (84.5, 33.0), r = 11.2). Pixels
+at y ≥ 28 are the observed body; the cap hidden behind the gripper is
+synthesized by mirroring the lower hemisphere across cy = 33, with a
+dark analytic rim band.</li>
+<li>Block: per-pixel alpha from excess redness/darkness relative to the
+local row background, restricted to a hand-shaped rounded rectangle
+(x210–220, y35–61) and anti-aliased with a small Gaussian.</li>
+</ul>
+</li>
+<li><strong>Background reconstruction.</strong> The full ball disk, block rect and the
+dark gripper-interior pixels are seeded from row-neighbour medians and
+filled by 450 iterations of Gaussian diffusion, then re-grained
+(σ ≈ 1.5) to match the fabric noise.</li>
+<li><strong>Static hardware layer.</strong> Blue ring, inner prongs, yellow bracket and
+red claw are thresholded from frame 0 (dilated by one pixel) and stamped
+back over every frame, so the grippers are pixel-identical and always
+occlude the falling objects correctly at the ring.</li>
+<li><strong>Animation.</strong> Analytic positions per frame (g ≈ 70 px/s², release at
+t = 0.50 s); ball contacts at t ≈ 1.5 s, block slightly earlier.
+Inelastic soft contact with squash/stretch (ball to 0.90/1.08 at max
+compression), a damped rebound over frames 7–10, static from frame 12.</li>
+<li><strong>Shutter/compositing.</strong> Four sub-frame samples over the central 50% of
+each interval give motion blur during the fall; alpha compositing onto
+the reconstructed background. Analytic Gaussian contact shadows
+(strength grows with proximity) and dimple/lip fabric deformations are
+painted under each object at its measured landing spot.</li>
+<li><strong>Artifacts.</strong> <code>artifact_io.save</code> writes the uint32 <code>0xRRGGBB</code> tensor
+<code>pixels.npz</code> (144×256×20), the 20 PNGs, <code>inspection.png</code> and the
+standalone <code>index.html</code>; <code>generate.py</code> additionally writes
+<code>transition_check.png</code> (key frames and ×3 absolute inter-frame diffs).</li>
+</ol>
+<h2>Verification performed (numeric)</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> exactly; frames 01 and 02 are
+identical to it (pre-release hold).</li>
+<li>Every PNG packs to the same <code>0xRRGGBB</code> value stored in <code>pixels.npz</code>.</li>
+<li>Changed pixels from frame 00 to settled frames are confined to the two
+object/gripper regions (x61–236, y23–96); blue ring pixels and red claw
+pixels are unchanged after settling.</li>
+<li>Object masks tracked across frames confirm vertical-only fall,
+compression at frame 7 (ball) / 6 (block), rebound, then zero pixel
+changes from frame 12 onward.</li>
+<li>Vacated pixels inside both grippers are reconstructed to the surrounding
+pillow gray (~(130–139, 123–133)); no brown/orange residue remains.</li>
+</ul>
+<h2>Known simplifications</h2>
+<ul>
+<li>Pillow dimples/shadows are analytic approximations rather than a
+simulated cloth model.</li>
+<li>The ball's occluded top cap is a mirrored reconstruction, so its texture
+is approximately but not truly tennis-felt consistent.</li>
+<li>Landing spots and the g-value were chosen to read naturally against the
+measured front-roll edges rather than measured from real motion.</li>
+</ul>
+</article></main></body></html>

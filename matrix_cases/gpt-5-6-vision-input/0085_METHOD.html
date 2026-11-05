@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>liquid-on-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0085</span></nav><article><h1>liquid-on-duck · 生成方法</h1><h2>Actual method used</h2>
+<p>The animation is a deterministic local Python/Pillow raster continuation. No model, external reference, mask, engine, or network resource was used.</p>
+<ol>
+<li><code>first_frame.png</code> is loaded as the immutable 256 x 144 RGB background. Frame 00 is explicitly replaced with those exact source bytes after generation.</li>
+<li>A soft rubber-duck silhouette is derived from source RGB thresholds inside the measured duck bounding box. This is used only to clip the wet red coating to the photographed yellow surface and to keep the tray puddle behind the duck.</li>
+<li>Every animated shape is drawn at 4x resolution and Lanczos-downsampled for subpixel antialiasing.</li>
+<li>The pour is a connected cubic Bezier path from the measured spout outlet to the duck crown. Width grows during startup and then has a small deterministic subpixel sway. A dark edge, opaque crimson body, and narrow orange-red highlight give the stream cylindrical shading.</li>
+<li>The liquid coating is a growing sequence of overlapping ellipses and branching rivulet paths, clipped to the duck mask. A central bright streak supplies a wet specular reflection while leaving enough original yellow visible to preserve the duck's identity.</li>
+<li>Splash droplets are analytic ballistic particles. Five timed impact pulses use horizontal launch velocity and downward quadratic acceleration. Separate runoff beads descend from the body toward the tray.</li>
+<li>The puddle begins after runoff reaches the tray. Its footprint is a perspective-flattened irregular ellipse that grows monotonically, excludes the duck silhouette, and includes a soft contact shadow, darker rim/body layers, broken highlights, and time-delayed elliptical ripples.</li>
+<li>All layers are alpha-composited onto the same locked source photograph, so the camera, dispenser, basket, tray, table, and background never drift.</li>
+</ol>
+<h2>Artifact construction</h2>
+<p><code>artifact_io.save</code> writes the 20 PNG frames, packs each RGB pixel as uint32 <code>0xRRGGBB</code> in a <code>(144, 256, 20)</code> tensor, creates <code>inspection.png</code>, and embeds lossless delta packets in the standalone <code>index.html</code> player. <code>generate.py</code> additionally creates <code>transition_check.png</code>, with selected frames and amplified numeric adjacent-frame differences.</p>
+<h2>Verification performed</h2>
+<ul>
+<li>Asserted frame array shape <code>(20, 144, 256, 3)</code> and dtype <code>uint8</code>.</li>
+<li>Asserted frame 00 is exactly equal to <code>first_frame.png</code>.</li>
+<li>Repacked the generated RGB arrays and asserted exact equality with <code>pixels.npz</code>, including uint32 dtype and <code>(144, 256, 20)</code> shape.</li>
+<li>Reloaded every PNG and asserted exact pixel equality with the in-memory frame.</li>
+<li>Printed changed-pixel counts, adjacent-transition counts, and maximum channel deltas for numeric temporal inspection.</li>
+<li>Checked numerically that every row from y=23 through y=58 contains red liquid in the spout-to-duck corridor on representative frames, confirming stream connectivity.</li>
+<li>Generated outputs were not opened with an image-viewing tool; later inspection was limited to local code and numeric checks as requested.</li>
+</ul>
+</article></main></body></html>

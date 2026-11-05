@@ -1,0 +1,71 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0005</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>All pixels are produced by local Python operations only (numpy, OpenCV drawing/warping,
+one small sparse linear solve). No network, external models, other cases, masks or
+reference frames are used. The sole inputs are <code>first_frame.png</code> and <code>prompt.txt</code>.
+Frame 00 is the untouched <code>first_frame.png</code> (verified pixel-identical).</p>
+<h2>1. Static background (<code>build_background</code>)</h2>
+<p>The card footprint (dilated measured quad TL(82,54.4) TR(170.7,53.0) BR(175.8,123.4)
+BL(83,124.8)) is the only region ever repainted outside the moving objects.</p>
+<ul>
+<li><strong>Wall hole (rows 0–90):</strong> harmonic fill. A 91×256 five-point Laplacian system is
+built with sparse matrices (<code>scipy.sparse</code>); original pixels are Dirichlet
+boundaries and hole pixels satisfy ∇²C=0, solved per channel with <code>spsolve</code>.
+The 2 px fringe is feathered against the original, and faint Gaussian-blurred
+Gaussian noise (σ≈1) restores the wall's fine texture. The filled field is
+extrapolated three rows down its local vertical gradient through the seam band.</li>
+<li><strong>Table hole (rows 89–132):</strong> per-row plateau colours are measured from the clean
+left (x 56–77) and right (x 180–203) table strips and linearly interpolated across
+the hole; seam rows blend toward the deep-table plateau using the measured
+x=64 wall→table transition profile. Wood grain is continued by tracing high-frequency
+residuals (source minus local base) back along measured grain lines whose slope
+interpolates from −1.04 (x=40) to +0.12 (x=215); both boundary contributions are
+remapped with <code>cv2.remap</code>, validity-weighted (disk/cable pixels excluded), blurred
+σ=0.5 and added to the base. The seam exits are blended from pristine outer columns.</li>
+<li><strong>Rig pole behind the card:</strong> a narrow (x 119–123), downward-fading black strip.</li>
+<li><strong>Turntable disk:</strong> analytic. Top surface is an ellipse (cx 130, cy 128.5,
+rx 47, ry 5) filled with a near-uniform dark-gray field (v≈31) plus a soft centre
+bump and warm brown side-rim bleed; the cylindrical front face is an exponentially
+darkening gradient (26·e^(−3.2fy)+4) with soft brown side falloff; the right-rim
+cable nub is a small dark block. Soft Gaussian-blurred alpha and a faded rear rim
+keep edges photographic. The analytic disk only repaints pixels inside the dilated
+frame-0 card footprint, so pristine original disk pixels are never altered. The
+cable is copied back verbatim from the original frame.</li>
+</ul>
+<h2>2. Cardstock animation (<code>render_card</code>)</h2>
+<ul>
+<li>The frame-0 card is rectified to a 96×76 texture sheet with a perspective warp
+whose source quad is inset 2.8 px (so the dark AA fringe is never sampled);
+the outer two texel rows/cols are replaced by the fitted interior plane
+(base RGB ≈ (171.3,169.7,170.7), +17.5 across, −19 top-to-bottom).</li>
+<li>Per frame t the sheet is re-warped with <code>cv2.warpPerspective</code> into a yaw-foreshortened
+quad: x′ = 128.9 + (x−128.9)·cos φ, y unchanged, with φ = 4.3°·t (clockwise when
+viewed from above), reaching ≈82° at frame 19. Face brightness scales as
+0.60+0.40·cos φ. A 1 px light paper-thickness line appears on the near (left) edge
+only after 8° of turn. A soft 3 px dark line under the bottom edge gives the card's
+contact shadow on the disk. All edges are anti-aliased via warp alpha + Gaussian blur.</li>
+</ul>
+<h2>3. Grabber and ball (<code>draw_grabber</code>, <code>draw_ball</code>)</h2>
+<ul>
+<li><strong>Ball:</strong> analytic circle r=8.5, base orange (212,118,30), radial rim darkening,
+an upper-left Gaussian highlight, and two opposing sine-arced cream seams; edge is
+anti-aliased over ~1 px. A soft elliptical contact shadow is drawn at its rest point.</li>
+<li><strong>Grabber:</strong> 3 px black shaft with a faint glint, a dark-blue collar block, and two
+blue fingers that leave the collar, run down the ball sides and curl underneath.
+On release (frame 10) the fingers splay 38° outward; the empty head then rises
+along the rig and exits above frame by frame 14.</li>
+</ul>
+<h2>4. Choreography and compositing</h2>
+<p>Frames are a single locked-off camera at 4 fps (0.25 s). The ball descends from
+above frame (t1), crosses the card top at t5, is occluded by the card through t9,
+is released on the table behind the disk at t10 at (108.5,114.5); the head rises
+and exits t11–t14; continuous clockwise card yaw progressively reveals the resting
+ball from t15 (thin sliver) to t19 (fully visible). Per frame the layer order is:
+background → ball shadow → ball/grabber (behind card) → resting ball (t≥11) →
+card (with contact shadow). No motion blur, no camera motion.</p>
+<h2>5. Outputs and verification</h2>
+<p><code>generate.py</code> writes <code>pixels.npz</code> (uint32 <code>0xRRGGBB</code>, shape 144×256×20, packed via
+<code>artifact_io</code>), <code>frames/00.png</code>–<code>19.png</code>, <code>inspection.png</code>, <code>index.html</code>, and a custom
+<code>transition_check.png</code> (19 pairs, changed pixels tinted red with per-pair counts).
+Verified: <code>frames/00.png</code> is pixel-identical to <code>first_frame.png</code>; every PNG decodes
+exactly to its tensor slice; changed pixels between frames stay on the moving objects.
+Visual review used the image Read tool on inspection sheets, zoom crops and frame strips.</p>
+</article></main></body></html>

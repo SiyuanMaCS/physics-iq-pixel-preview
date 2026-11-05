@@ -1,0 +1,66 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0001</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><p>Honest account of how the 20 frames were produced. Everything is local
+numpy/PIL/scipy pixel math and analytic physics — no external models,
+engines, network, or image-viewing tools were used for later frames
+(later frames were inspected only through numeric checks).</p>
+<h2>Inputs and measurements</h2>
+<p>Only <code>first_frame.png</code> (256×144) and <code>prompt.txt</code>. Object geometry was
+measured numerically (colour masks, row/column sweeps, least-squares
+circle/edge fits); see <code>OBSERVATION.md</code>. Key values: ball centre (83.5,
+32.5), rx≈11–12; orange block centre (215.7, 48.0), 10×27 rounded bar;
+pillow top y≈100 at the ball column and y≈93 at the block column.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Clean static plate.</strong> The two moving objects are removed from f0 by
+per-row horizontal linear interpolation between clean wall anchor
+strips (ball: cols 56–64 → 102–110, rows 18–47; block: cols 199–207
+→ 225–232, rows 33–62). The wall is nearly flat (measured grain
+σ≈1), and roughness inside the fills (0.18–0.21) is below the real
+wall's (0.56–0.76). Blue claw legs, the black support rod and the
+right grabber fingers are explicitly excluded and stay static.</li>
+<li><strong>Premultiplied sprite extraction.</strong> Alpha = measured colour/luminance
+deficit versus the reconstructed wall, masked by a fitted support
+shape (ball ellipse; block rounded rect), with soft feathered edges.
+Sprite colour is stored <strong>premultiplied</strong> as <code>act − wall·(1−α)</code>,
+which is exactly what bilinear resampling of motion-blurred soft
+edges requires (no unsafe divide-by-alpha).</li>
+<li><strong>Physics.</strong> Semi-implicit Euler at 1 kHz, +y down, g = 50 px/s².
+Each object is a point mass on a linear spring-damper pillow contact
+(ball k=420, c=12; block k=300, c=11) with contact starting at the
+measured surface. Resulting event times: block first contact
+t=0.916 s (between f03 and f04), 3.3 px rebound peaking at
+t=1.482 s (f06), second contact t=1.848 s, settled by f09;
+ball first contact t=1.504 s (f06), 7.0 px rebound peaking at
+t=2.199 s (f09), second contact t=2.730 s (f11), settled by f13.
+The block tumbles at a constant ≤2.9° while airborne and is relaxed
+upright (0.18 s time constant) after first contact.</li>
+<li><strong>Pillow response.</strong> A local downward fabric warp (Gaussian
+footprint σ≈9 px) combines instantaneous compression with a
+lingering plastic dent (≈1.7–1.8 px equilibrium), plus a soft
+contact shadow that fades in as each object nears the surface.</li>
+<li><strong>Shutter rendering.</strong> Every frame composites 8 sub-samples spread
+over an 0.18 s shutter; sub-pixel translation/rotation uses PIL
+affine transforms of the premultiplied RGBA layers, averaged over
+the backdrop — producing vertical motion-blur trails on fast frames
+(verified: residual vertical span grows from ~31 px at rest to
+37 px block@f04 and 36 px ball@f06).</li>
+<li><strong>Frame 00</strong> is taken byte-for-byte from <code>first_frame.png</code>; it is
+never re-rendered.</li>
+</ol>
+<h2>Verification (all numeric; <code>.tmp/verify.py</code>)</h2>
+<ul>
+<li>f00 byte-exact to <code>first_frame.png</code>; all 20 PNGs equal the packed
+uint32 (<code>0xRRGGBB</code>) tensor slices; the HTML player's base64 delta
+stream reconstructs every frame exactly.</li>
+<li>Object centroids/spans per frame match the simulated trajectories
+(block cy 48.0 → 81.5; ball cy 32.1 → 88.7).</li>
+<li>Static scene untouched: top rail, both grabbers (blue claw and
+orange finger pads) pixel-identical in every frame.</li>
+<li>Vacated wall regions return exactly to the clean plate (max |Δ| = 0).</li>
+<li>Frames 15–19 are pixel-static; per-frame strong-change pixel counts
+stay localized and bounded.</li>
+</ul>
+<h2>Artifacts</h2>
+<p><code>generate.py</code>, <code>pixels.npz</code>, <code>frames/00.png</code>–<code>19.png</code>, <code>inspection.png</code>,
+<code>transition_check.png</code>, <code>index.html</code> (standalone player),
+<code>OBSERVATION.md</code>, <code>METHOD.md</code>.</p>
+</article></main></body></html>

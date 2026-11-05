@@ -1,0 +1,97 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0003</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><p>Two overhead grabbers release a brown tennis ball and an orange block, which fall onto two
+soft pillows. Locked-off camera, so every frame is a local pixel edit of frame 00. All work
+is local Python (numpy/scipy/PIL): no network, no external models or engines, no reference
+material beyond <code>first_frame.png</code> and <code>prompt.txt</code>. Frame 00 is emitted byte-for-byte
+unchanged; frames 01–19 are composited from the layers below.</p>
+<h2>1. Layer decomposition of frame 00</h2>
+<ul>
+<li><strong>Wall fill behind moving elements.</strong> Vacated regions (both objects' tracks, the left blue
+finger's swept track, the right arch-tip splay) must be replaced by clean wall. Iterative
+normalized convolution was tried first but diverged (low-frequency snap-back over large
+holes blew out to white). The final fill (<code>wall_plane_fill</code>) fits, per unknown pixel, a
+weighted quadratic surface <code>[1, x, y, x², y², xy]</code> (6×3 least squares, gaussian weights,
+σ≈10 px, radius 22) to nearby <em>clean wall</em> samples only. Clean-wall samples are defined as
+bright (&gt;95), nearly-neutral pixels, excluding the ceiling band (y&lt;15), pillow band
+(y≥86), and boxes around both arms. Because dark claws/rail/objects never enter the fit,
+the fill is stable and preserves the wall's slight vignette curvature. A small gaussian
+grain field (σ 0.7, amplitude 1.3) is added inside filled zones so they are not smoother
+than the real wall. The removal mask is feathered (gaussian 0.6–1.4 px), so F0 blends into
+the fill instead of leaving a seam.</li>
+<li><strong>Ball sprite.</strong> Soft alpha = analytic disc coverage at measured center (52, 36),
+r = 10.6, gated by color distance from the filled wall, cut off at r+1.6 px.</li>
+<li><strong>Block sprite.</strong> Alpha from redness <code>(R−G)+0.5(R−B)</code> within a dilated support hull of the
+largest connected red core, smoothed 0.7 px; RGB crop bbox x165–183, y32–68, center
+(174, 49).</li>
+<li><strong>Pillows, rail, housings</strong> stay as pixels from frame 00; only a thin horizontal band of
+the pillow is ever warped/shaded.</li>
+</ul>
+<h2>2. Reconstructed object appearance</h2>
+<ul>
+<li><strong>Analytic ball.</strong> In frame 00 the upper hemisphere is occluded by the dark/blue jaw, so
+the extracted pixels alone would show a bitten ball once it falls clear. The sphere is
+rebuilt analytically at the measured center/radius: surface normals from the disc, a dark
+core color A=(23,9,5), a Lambert term (key light upper-front) and a Fresnel rim term
+(light from lower-right). The two per-channel shading coefficients are fitted by least
+squares to the <em>visible</em> brown pixels of the real ball, so the analytic hemisphere matches
+its actual tone; a tangent-normal continuation of the same shading fills the anti-aliased
+fringe.</li>
+<li><strong>Block at rest.</strong> The extracted sprite carries a pinkish motion/AA halo and is slightly
+soft; while falling it is used as-is with speed-proportional vertical motion blur
+(multiple shifted copies, spread = |v|/26, capped at 4.5 px). On landing it crossfades over
+two frames into a crisp 8×-supersampled rounded 9×28 bar tilted +7.5° (sign chosen to match
+the measured lean: bottom edge left of the top), with an inset lighter face and a dim
+right-flank strip matching the measured sprite colors (104,15,3) / (137,24,4).</li>
+<li><strong>Grabber jaws</strong> are redrawn as 4×-supersampled quadratic-bezier strokes. The left arm to
+the rail and the dark lower prong are static; the blue upper finger lifts and retracts from
+its position over the ball toward the housing. The two orange right-arch tips splay
+outward ~3 px. Opening follows a smoothedstep over frames 01–06. The dark lower prong was
+deliberately <em>not</em> wall-erased (it tucks into the black housing); only the blue finger's
+swept bezier track (x&lt;63, y16–40) is removed from the wall.</li>
+</ul>
+<h2>3. Physics</h2>
+<p>Screen y points down. Each object is ballistic with constant gravity (ball g=46, block
+g=48 px/s²), then meets a unilateral damped spring at its pillow surface: while the contact
+point is below the undeformed surface, force <code>−K(y−eq) − 2ζ√K·v</code> with K=180, ζ=0.35,
+equilibrium <code>eq = surface − half-height + settle-indent</code> (ball 3 px, block 2.5 px); the
+spring switches off when the object rebounds above the surface. Integration uses 8000
+substeps over 5 s, sampled/interpolated at the 20 frame instants (dt=0.25 s). Results: block
+contacts at frame 6 (y 86.6→93.3, impact v≈60 px/s), ball at frame 7 (y 87.8→94.1,
+v≈69 px/s); each makes one ~2 px rebound and is effectively at rest by frame 10–11.</p>
+<h2>4. Pillow reaction</h2>
+<p>For each contact, <code>pillow_layer</code> adds, restricted to a gaussian footprint at the contact x
+(σx≈13 px) around the measured surface level:</p>
+<ul>
+<li><strong>Dent:</strong> the frame-00 pillow band is vertically remapped (<code>map_coordinates</code>) by a
+gaussian downward displacement plus a raised-rim term, depth driven by the spring
+penetration (0–8 px). Warp/shade is applied only at displaced pixels, so untouched pillow
+pixels remain bit-identical to frame 00.</li>
+<li><strong>Contact shadow:</strong> an elliptical dark gaussian (σx 11, σy 5) whose opacity fades in over
+the last 9 px of the object's fall (proximity fade) and is full once touching, plus a thin
+crease darkening inside the dent.</li>
+<li><strong>Ripple:</strong> one expanding elliptical ring (radius 6→34 px) with amplitude
+<code>0.10·exp(−age/2.2)</code>, gone by age 9.</li>
+<li>After age 6 the dent depth is quantized to 0.25 px and after age 9 ripples are forced to
+zero, so frames 16–19 are exactly static.</li>
+</ul>
+<h2>5. Compositing and outputs</h2>
+<p>Per frame f≥1: filled-wall base → warped/shaded pillow band (only where the pillow lives) →
+ball layer (extracted alpha + analytic colors, translated, motion-blurred) → block layer
+(sprite/crisp crossfade, translated, blurred) → jaw layers on top (fingers overlay objects
+while close). Compositing is unpremultiplied float alpha; results clip to uint8. Frame 00 is
+the untouched input.</p>
+<p><code>artifact_io.save</code> writes the uint32 <code>0xRRGGBB</code> tensor (144×256×20) to <code>pixels.npz</code>,
+<code>frames/00–19.png</code>, the 8-frame <code>inspection.png</code> sheet, and the standalone <code>index.html</code>
+player. <code>transition_check.png</code> is a separate diagnostic montage of selected frame pairs with
+their absolute-difference masks. Temporary crops/montages live in <code>.tmp/</code>.</p>
+<h2>6. Honest limitations</h2>
+<ul>
+<li>This is 2.5-D illusion, not simulated optics: shading is a fitted analytic model and the
+pillow is a displaced 2-D image, so contact silhouettes are plausible rather than
+physically derived.</li>
+<li>The tennis ball has no visible fuzz texture or seams; the original disc in frame 00 is a
+nearly uniform dark brown rim-lit sphere and the rebuild matches that appearance.</li>
+<li>Horizontal positions are fixed (straight vertical drops, as prompted); only jaws rotate.</li>
+<li>Wall texture in filled zones is synthesized grain; long stares at the vacated tracks can
+show it differs subtly from the original sensor noise.</li>
+</ul>
+</article></main></body></html>

@@ -1,0 +1,32 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>light-on-mug · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0078</span></nav><article><h1>light-on-mug · 生成方法</h1><h2>Actual method used</h2>
+<p>The animation is a local, deterministic Python pixel composite built from <code>first_frame.png</code>; no external model, engine, image source, reference scene, mask, or network resource was used.</p>
+<ol>
+<li>The supplied first frame is loaded as RGB and placed unchanged at frame 00.</li>
+<li>A conservative HSV mask isolates only the photographed yellow handle at the left of the mug. OpenCV Telea inpainting removes those handle pixels with a softly feathered edge, leaving the real mug body, black platform, table, wall, grain, and lighting intact.</li>
+<li>A small hand-measured mask similarly removes only the C-shaped part of the original wall shadow. The large photographed cylinder shadow itself is retained because a cylindrical mug's body silhouette changes little under yaw rotation.</li>
+<li>For frames 01–19, rotation phase is <code>2πt/20</code>. The handle is rendered at 4× resolution as a projected glazed elliptical loop, downsampled with Lanczos filtering, and composited over the real photograph. Its horizontal displacement follows <code>-cos(phase)</code> and its apparent width compresses near the front/back orientations. During the far half of the turn, an analytic body silhouette masks the inner handle so it passes behind the mug; during the near half it passes in front.</li>
+<li>The wall-shadow handle follows the same phase with larger projection radii, darker alpha, and Gaussian softness. It is depth-occluded by the retained body shadow during the far half of the turn. The shadow darkens the existing spotlight pixels by alpha compositing, so wall illumination and grain remain visible through its penumbra.</li>
+<li>Three subdued platform-surface glints orbit clockwise in the foreshortened ellipse of the black turntable. They are clipped to the platform top and excluded beneath the mug.</li>
+<li><code>artifact_io.save</code> writes the uint32 packed <code>0xRRGGBB</code> tensor, individual RGB PNGs, inspection sheet, and standalone HTML player. A separate transition sheet contains amplified delta maps and numeric change summaries for representative steps, including the loop closure.</li>
+</ol>
+<h2>Motion model</h2>
+<ul>
+<li>Sampling: 20 frames, 4 fps, one 360° revolution over 5 seconds.</li>
+<li>Camera: completely static.</li>
+<li>Mug center and platform center: fixed near <code>(132, 107)</code> and <code>(132, 132)</code> respectively.</li>
+<li>Handle projection: full left profile at frame 00, end-on/far at frame 05, full right at frame 10, end-on/near at frame 15, and nearly full left at frame 19.</li>
+<li>Shadow projection: center near <code>(170, 66)</code>, with an approximately 1.4× larger horizontal orbit and a 32-pixel-tall handle loop.</li>
+</ul>
+<h2>Numeric verification performed</h2>
+<ul>
+<li>Loaded output stack shape is <code>(20, 144, 256, 3)</code> with <code>uint8</code> RGB samples.</li>
+<li><code>frames/00.png</code> is exactly equal to <code>first_frame.png</code> (<code>max absolute error = 0</code>).</li>
+<li>Unpacking <code>pixels.npz</code> reproduces every pixel of every saved PNG exactly.</li>
+<li>Every consecutive step changes pixels, including the highly foreshortened rear interval.</li>
+<li>Consecutive-change bounding boxes remain localized to the apparatus, its wall shadow, and the platform (<code>x≈99..212</code>, <code>y≈46..141</code>); the locked background outside those regions stays unchanged.</li>
+<li>Conservative yellow segmentation moves from the left side of the body to the right and back: left-of-<code>x=116</code> counts decrease from about 124 to 7 while right-of-<code>x=149</code> counts rise from 0 to about 137, then reverse.</li>
+<li>Global per-frame RGB means remain within less than one code value of the source mean on each channel, preventing exposure flicker.</li>
+<li>The final-to-first loop transition is localized and comparable in magnitude to the other profile transitions.</li>
+</ul>
+<p>No generated frame was inspected with an image Read/View tool. Later-output assessment used local array decoding, masks, centroids, bounding boxes, per-frame means, and transition statistics only, as requested.</p>
+</article></main></body></html>

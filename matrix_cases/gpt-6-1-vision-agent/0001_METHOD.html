@@ -1,0 +1,72 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-and-block-fall · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0001</span></nav><article><h1>ball-and-block-fall · 生成方法</h1><p>This is a deterministic, locally generated pixel animation using only
+<code>first_frame.png</code> for appearance and <code>prompt.txt</code> for the action. It does not
+use an external image, downloaded reference, learned model, game engine,
+renderer, or subagent. The motion is an approximate image-space physical
+demonstration rather than a full three-dimensional simulation.</p>
+<h2>Appearance and motion</h2>
+<p><code>generate.py</code> uses Python, NumPy, Pillow, and OpenCV. The original frame is
+copied directly into frame 00. For subsequent frames:</p>
+<ol>
+<li>Geometric masks measured from the source isolate the brown ball, orange
+block, blue grabber jaws, and the moving orange jaw. These masks are
+authored in the script from the supplied scene, with soft boundaries.
+The object colors, tennis-ball seam, lighting, and blur come from source
+pixels. Foreground colors are unpremultiplied against the reconstructed
+background before transforming the sprites.</li>
+<li>OpenCV's local Navier–Stokes inpainting reconstructs small exposed wall
+areas. Quadratic surfaces fitted to nearby gray wall samples reconstruct
+the area beneath the left tool and ball and around the moving orange jaw.
+This prevents the dark rail from bleeding into exposed wall regions.
+The source rail and fixed attachment pixels are retained.</li>
+<li>The blue jaws spread horizontally below their fixed mounting point. The
+orange jaw rotates eight degrees about its attachment. Their opening is
+eased across the first two samples.</li>
+<li>The objects release at approximately 0.10 s. Image-space gravity is
+460 pixels/s², with zero initial vertical velocity. The ball first contacts
+the pillow near 0.60 s and the block near 0.55 s. Both fall vertically.
+Fast falling samples receive a short, approximately two-pixel shutter blur.</li>
+<li>A damped spring response models ball impact, slight squash, a small
+rebound, and settling. The ball drifts about 4.6 pixels on the pillow after
+landing. The block tips through roughly 72 degrees over 0.64 s after
+contact, then makes a small damped settling rock. Its projected vertical
+extent determines its supported height during tipping.</li>
+<li>Local Gaussian displacement fields warp the existing pillow texture and
+upper contour downward at the contact regions. Deformation follows impact
+and recovers toward a shallow residual indentation. Soft analytic shadows
+follow the objects, with a rotated contact shadow beneath the tipped block.</li>
+</ol>
+<p>The camera, rail, background, and unaffected fabric remain fixed. No props or
+actions beyond the two grabbers releasing their objects are added. Cubic
+interpolation provides subpixel motion while retaining the original defocused
+appearance. Once the objects settle, the last samples are effectively still.</p>
+<h2>Artifacts and reproduction</h2>
+<p>Run <code>python generate.py</code> from this directory. It generates:</p>
+<ul>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: 20 RGB images, each 256 × 144.</li>
+<li><code>pixels.npz</code>: the <code>pixels</code> array, shape <code>(144, 256, 20)</code>, dtype <code>uint32</code>,
+with each value packed as <code>0xRRGGBB</code>.</li>
+<li><code>index.html</code>: a standalone, embedded-data player with play/pause, replay,
+frame seeking, and looping, using a 250 ms frame interval.</li>
+<li><code>inspection.png</code>: an eight-sample contact sheet.</li>
+<li><code>transition_check.png</code>: frames 00–07 paired with their following frames,
+amplified RGB differences, and half-opacity overlays.</li>
+</ul>
+<p>Twenty samples at 4 fps are held for 0.25 s each, totaling 5 s. Their sample
+times are 0.00–4.75 s. Player/contact-sheet elapsed-time labels indicate the end
+of each sample's display interval. <code>OBSERVATION.md</code> records the scene
+measurements and the event plan written before generation.</p>
+<h2>Review and verification</h2>
+<p>The supplied image, generated inspection sheet, enlarged final frame,
+reconstructed background, and transition sheet were reviewed using the image
+view tool. Revisions removed ball-edge contamination from a nearby jaw,
+repaired wall remnants at the grabbers, preserved mounting pixels, and aligned
+the block's contact shadow to its resting orientation. The revised inspection
+sheet and enlarged final frame were viewed again. This was static image review;
+the animation player was verified by decoding its embedded data.</p>
+<p>Automated checks verify that frame 00 is pixel-identical to the supplied image,
+every PNG has the required RGB dimensions, every saved PNG exactly matches its
+<code>uint32</code> tensor slice, and packed values fit within 24 bits. An independent
+decoder also verifies that the first frame and all 19 delta packets embedded
+in <code>index.html</code> reproduce the tensor exactly. Required artifacts are checked
+for existence and nonzero size.</p>
+</article></main></body></html>

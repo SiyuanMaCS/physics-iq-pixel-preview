@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>domino-in-juice · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-5-6-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0046</span></nav><article><h1>domino-in-juice · 生成方法</h1><h2>Pixel generation</h2>
+<p>The sequence was generated entirely with local Python pixel operations in <code>generate.py</code>. No network service, external model, external engine, reference case, mask, or score was used.</p>
+<ol>
+<li><code>first_frame.png</code> is loaded as an RGB uint8 array. Frame 00 is a direct array copy and is never passed through a renderer or codec before being added to the sequence.</li>
+<li>The white ceramic domino and blue-black grabber are isolated using conservative, hand-measured source-space polygons combined with local color/value keys. Their mattes are softly antialiased.</li>
+<li>A clean plate is made by OpenCV Telea inpainting over only those two mattes. The small obscured liquid area is additionally stabilized with horizontally mirrored pixels sampled from the unobstructed portion of the same liquid surface. All pixels outside the dynamic region retain the source photograph exactly.</li>
+<li>The grabber is split into left/right jaw mattes. The jaws rotate and separate slightly while translating upward over frames 01–06.</li>
+<li>The original domino pixels are transformed along an accelerating downward path over frames 01–03. A measured water-plane mask progressively occludes its lower part, placing it behind the liquid and near rim. It is fully submerged from frame 04 onward.</li>
+<li>The impact is drawn as a compact dark red-brown crown with short ballistic droplets. Perspective-compressed elliptical ripple arcs expand across the measured liquid opening and decay in opacity. Effects below the surface boundary are clipped to the liquid ellipse so they cannot paint onto the mug body.</li>
+<li>Frames 14–19 are a settled hold. The camera, tabletop, mug, handle, fixed lighting, and fixed cast shadow do not move.</li>
+</ol>
+<p>Rendering of transformed sprites uses cubic interpolation. Procedural liquid effects are drawn at 4x resolution, softly filtered, and Lanczos-downsampled for edge antialiasing.</p>
+<h2>Output and verification</h2>
+<p><code>artifact_io.save</code> writes the uint32 <code>0xRRGGBB</code> tensor, the 20 RGB PNGs, the contact sheet, and the standalone player. <code>generate.py</code> also writes <code>transition_check.png</code> from numeric consecutive-frame difference maps.</p>
+<p>Verification was performed using local array/code checks only; generated later frames were not opened with an image Read/View tool.</p>
+<ul>
+<li>20 PNG files exist, numbered <code>00.png</code> through <code>19.png</code>, each 256 x 144 RGB.</li>
+<li>Stacked PNG array shape/dtype: <code>(20, 144, 256, 3)</code>, <code>uint8</code>.</li>
+<li>Tensor shape/dtype: <code>(144, 256, 20)</code>, <code>uint32</code>.</li>
+<li>PNG-to-tensor mismatch count: 0.</li>
+<li>Frame 00-to-source mismatch count: 0.</li>
+<li>Source and frame-00 decoded-pixel SHA-256: <code>3d04b62e4b4da222ee7ae90d7fffdef402e26360a7d72fe9fa3bcab4de8ce870</code>.</li>
+<li>Across frames 01–19, mismatch count outside the generous dynamic check region x=135..195, y=0..88: 0.</li>
+<li>Bright ceramic pixels in the measured action region decrease from 650 (frame 00), to 586, 500, 224, then 0 (frame 04), confirming progressive water occlusion.</li>
+<li>Measured top-region grabber pixels decrease to 0 by frame 06.</li>
+<li><code>inspection.png</code> is 1024 x 330 RGB; <code>transition_check.png</code> is 512 x 288 RGB.</li>
+</ul>
+<p>The difference statistics show large changes only during release/impact and low-amplitude liquid changes during settling. Identical late frames are intentional static hold frames after the liquid has settled.</p>
+</article></main></body></html>

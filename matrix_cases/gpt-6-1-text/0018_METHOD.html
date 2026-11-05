@@ -1,0 +1,67 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-sand · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-text.html">← 返回本组全量视频</a><span class="tag">Case 0018</span></nav><article><h1>ball-in-sand · 生成方法</h1><p>Generated a five-second, fixed-camera continuation as 20 RGB frames at 256 × 144 and 4 fps. The blue ball drops into the green kinetic sand, makes a shallow indentation, and remains at rest below the suspended, already-open grabber. Frame 00 is identical to the supplied source, including its PNG file bytes.</p>
+<h2>Inputs and inspection</h2>
+<p>Only <code>first_frame.png</code> and <code>prompt.txt</code> supplied scene information. Read the image with local PIL code and inspected numerical RGB samples, color-threshold component bounds, centroids, and frame differences. No image Read/View tool, visual review, network, external references, masks, AI model, rendering engine, physics engine, or subagent was used. The generated <code>inspection.png</code> and <code>transition_check.png</code> are inspection artifacts; their creation is not a claim that they were viewed.</p>
+<h2>Pixel construction</h2>
+<p><code>generate.py</code> uses NumPy, PIL, and SciPy for local source-pixel interpolation, matting, texture warping, and analytical motion. <code>artifact_io.py</code> only serializes the results and creates the supplied standalone player.</p>
+<p>The original image provides the fixed scene. A soft, elliptical repair region replaces the original ball and its blurred footprint with interpolated pixels from the immediately adjacent source strips. Sampling aligns the diagonal tabletop edge near the bottom of this patch; upper background sampling stays on the same row to avoid incorporating the grabber tip. The rest of the background and the complete grabber remain fixed.</p>
+<p>The moving ball reuses the source ball's RGB texture, curved seam, and illumination. An elliptical soft matte, refined at the rim using the red-channel difference from the reconstructed background, removes background contamination. Premultiplied bilinear translation preserves antialiasing at subpixel positions. The ball stays rigid and gains slight lower-hemisphere contact shading.</p>
+<p>A compact local inverse warp spreads the sand slightly outward, lowers the central crest, and raises a low rim. Every sand texel comes from the source surface. Local multiplicative shading represents the indentation and contact shadow. An irregular front lip, shaped with source grain detail, occludes the ball's lowest pixels and establishes penetration into the sand. No separate flying particles were added.</p>
+<h2>Dynamics and timing</h2>
+<p>Frame n samples t=n/4 seconds and is held for 0.25 seconds during playback. The full animation lasts five seconds.</p>
+<p>Free fall uses projected acceleration 4100 pixels/s², estimated from the roughly 31-pixel tennis-ball diameter. The measured short gap gives first contact at approximately 0.074 seconds, between frames 00 and 01. After impact, a strongly damped exponential penetration law models energy absorption by the sand. This is an analytical approximation in image coordinates; material properties and camera calibration are inferred.</p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th style="text-align:right">Time</th>
+  <th>Ball center</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td style="text-align:right">0.00 s</td>
+  <td>(118.50, 60.80)</td>
+  <td>Exact source, release underway</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td style="text-align:right">0.25 s</td>
+  <td>(119.09, 84.36)</td>
+  <td>Impact followed by penetration</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td style="text-align:right">0.50 s</td>
+  <td>(119.15, 85.47)</td>
+  <td>Nearly settled</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td style="text-align:right">0.75 s</td>
+  <td>(119.15, 85.50)</td>
+  <td>Last subpixel settling</td>
+</tr>
+<tr>
+  <td>04–19</td>
+  <td style="text-align:right">1.00–4.75 s</td>
+  <td>(119.15, 85.50)</td>
+  <td>Static final hold</td>
+</tr>
+</tbody>
+</table>
+<p>The slight lateral shift is 0.65 pixels. There is no large rebound. Camera position, frame geometry, exposure, and lighting remain constant.</p>
+<h2>Artifacts and verification</h2>
+<ul>
+<li><code>pixels.npz</code>: <code>pixels</code> array with shape (144, 256, 20), dtype uint32, encoded as 0xRRGGBB.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: twenty 256 × 144 RGB frames.</li>
+<li><code>inspection.png</code>: eight selected frames in a 1024 × 330 contact sheet.</li>
+<li><code>transition_check.png</code>: source, impact, and final frames plus six amplified transition-difference panels, 768 × 526.</li>
+<li><code>index.html</code>: self-contained player with embedded pixel data, playback, seeking, and replay at 4 fps.</li>
+<li><code>OBSERVATION.md</code>: initial measurements, twenty-frame event plan, and the numerical revision note.</li>
+<li><code>generate.py</code>: reproducible generation and verification.</li>
+</ul>
+<p>The script verifies every PNG against the packed tensor, checks source frame pixel and byte equality, decodes and checks all twenty HTML player frames, checks diagnostic dimensions, and asserts stationary scene regions. Changes remain within x=87–151 and y=43–119. Frames 04–19 are identical. A specific RGB check confirms that the vacated central ball region contains no blue trace. Full measurements are saved in <code>.tmp/verification.json</code>.</p>
+<p>Run <code>python generate.py</code> from this workspace to reproduce all generated artifacts and the checks. Temporary logs and reports are confined to <code>.tmp/</code>; bytecode generation is disabled.</p>
+</article></main></body></html>

@@ -1,0 +1,109 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-hits-duck · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0008</span></nav><article><h1>ball-hits-duck · 生成方法</h1><p>This is a local pixel animation of the supplied photograph, constructed with
+Python, NumPy, Pillow, SciPy, and OpenCV. It does not use a video model, a learned
+inpainting model, a renderer, another scene, or an external reference. The only
+scene inputs were <code>first_frame.png</code> and <code>prompt.txt</code>; <code>GENERATION_RULES.md</code> set
+the output requirements. <code>artifact_io.py</code> and <code>player_template.html</code> were used
+as the provided output-format helpers.</p>
+<p>The initial image was visible in the user's attachment. Later outputs were
+inspected exclusively through local array calculations and numerical checks.
+Neither the generated frames nor the two contact sheets were opened with an
+image Read/View tool. No visual review of generated outputs is claimed.</p>
+<h2>Scene construction</h2>
+<p><code>OBSERVATION.md</code> was written before the generation code. It records input
+measurements, the static scene, and the plan for all 20 samples. Since the
+required initial frame already shows the ball outside the pipe, the animation
+continues that forward roll from its supplied position.</p>
+<p>The couch, pipe, camera, tabletop edges, and room are retained from the input.
+Only small regions of the tabletop change. Two feathered patches reconstruct
+the exposed wood beneath the original ball and duck by borrowing unobstructed
+pixels from nearby columns on the same image rows. Smooth RGB corrections
+match the clean strips on either side of each patch. This is donor-pixel
+reconstruction, not learned inpainting.</p>
+<p>The duck is recovered as the difference between the original photograph and
+its reconstructed tabletop patch. A color-derived, hole-filled matte includes
+the yellow body, orange bill, and dark eye. The difference is separated into
+body and shadow components. The original duck and shadow are recovered exactly
+until contact. After contact, affine transforms translate the body and shadow;
+only the body rocks around its base. Using a photographic difference sprite
+preserves the original highlights and soft shadow, with a small adjustment to
+the color of the new underlying tabletop. The body's matte also excludes the
+approaching ball's tabletop shadow from its pixels.</p>
+<p>The ball uses a small sphere with an anti-aliased, slightly blurred silhouette.
+Its felt colors and seam are sampled from the original ball. Inverse rotation
+of sphere normals rotates this recovered texture around an oblique rolling
+axis, using angle = distance / radius. A fixed analytic diffuse shading field
+keeps the lighting from rotating with the texture. The unseen hemisphere
+reuses the observed felt texture; it is not recovered from additional input.
+Two soft Gaussian shadow components represent its broad rightward shadow and
+the tighter shadow at its contact with the tabletop.</p>
+<p>Frame 00 bypasses all reconstruction and rendering and copies the original
+RGB array exactly. Subsequent images are quantized to RGB uint8 only after
+compositing.</p>
+<h2>Motion and interaction</h2>
+<ul>
+<li>Twenty frames are displayed at 4 fps, for a 5-second playback. Frame sample
+times are 0.00, 0.25, …, 4.75 s; each is held for 0.25 s.</li>
+<li>The ball begins at (65.8, 52.1), radius 7.35 image pixels. It travels at
+44.48 image pixels per second on the straight line
+<code>y = 52.1 + 0.049 × (x − 65.8)</code>.</li>
+<li>Contact occurs at frame 10, t=2.50 s, with ball center (177.0, 57.5488).
+The rendered soft silhouettes meet with only a few pixels of edge overlap.</li>
+<li>At the collision, the ball's projected speed becomes 18 px/s and the duck's
+becomes 41 px/s. These are compatible with a qualitative 1-D impulse with
+duck/ball mass ratio about 0.646 and restitution about 0.517.</li>
+<li>Constant projected deceleration is 12 px/s² for the rolling ball and
+28 px/s² for the sliding duck. Positions integrate those velocities and
+clamp at rest. The duck's base follows the same table-plane slope. A damped
+rocking function produces a maximum sampled tilt of about 10.6 degrees.</li>
+<li>The ball rests at (190.5, 58.2103). The duck slides 30.018 px right and
+1.471 px down, ending upright on the table. The last three frames hold the
+same settled state.</li>
+</ul>
+<p>The scene has no calibrated world scale, depth map, mass measurement, or
+recovered 3-D geometry. The mechanics are an explicit projected approximation
+chosen to give straight rolling, contact, momentum transfer, and settling.
+The reconstruction and reused backside texture are also approximations.</p>
+<h2>Numerical verification and revision</h2>
+<p>The first numeric pass identified that the ball's shadow was composited over
+the duck before contact. The generator was revised to protect the duck body
+from that shadow. A second check found that the initial saturation mask
+included a few brown tabletop-shadow pixels; the body threshold was refined
+to exclude them before final generation.</p>
+<p>The final run of <code>python generate.py</code> passed these checks:</p>
+<ul>
+<li>Exactly 20 RGB uint8 frames, each 256 × 144.</li>
+<li>Frame 00 is identical to the input RGB pixels.</li>
+<li><code>pixels.npz</code> contains <code>pixels</code>, a uint32 tensor of shape (144, 256, 20),
+packed as <code>0xRRGGBB</code>. All 20 PNGs agree with it exactly.</li>
+<li>All embedded frames in the standalone HTML player were independently
+decoded from its base64/delta packets and agree with the tensor exactly.</li>
+<li>Pixels outside the union of the local motion and restoration footprints
+are unchanged. The pipe, couch/top background, and table front/lower room
+are specifically checked for exact equality across all frames.</li>
+<li>The original duck body is pixel-identical before impact. Its final yellow
+component remains intact, with 334–340 pixels over the sequence.</li>
+<li>The ball's trajectory has zero numerical deviation from the specified
+straight line, progresses monotonically, and decelerates after contact.</li>
+<li>Silhouettes do not overlap in the inspected pre-contact or separated
+post-contact frames; their limited edge overlap occurs at frame 10.</li>
+<li>The ball core stays brown, and the last two transitions contain zero pixel
+changes. Full-frame mean absolute RGB change never exceeds approximately
+1.27 intensity levels per transition.</li>
+</ul>
+<p><code>metrics.json</code> contains the per-frame positions, duck bounds and colors,
+transition statistics, contact measurements, and validation results.</p>
+<h2>Delivered files</h2>
+<ul>
+<li><code>generate.py</code>: deterministic local generator and numeric verifier.</li>
+<li><code>pixels.npz</code>: packed RGB frame tensor.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: individual RGB frames.</li>
+<li><code>inspection.png</code>: eight-frame overview contact sheet.</li>
+<li><code>transition_check.png</code>: six frames around approach, contact, and separation.</li>
+<li><code>index.html</code>: standalone playable 4-fps sequence with seeking and looping.</li>
+<li><code>OBSERVATION.md</code>: initial measurements and the pre-coding event plan.</li>
+<li><code>METHOD.md</code>: this method and verification record.</li>
+<li><code>metrics.json</code>: detailed machine-readable numeric inspection.</li>
+</ul>
+<p>Regenerate and verify with <code>python generate.py</code> from this workspace. Output
+files are written locally; no network or shared temporary directory is used.</p>
+</article></main></body></html>

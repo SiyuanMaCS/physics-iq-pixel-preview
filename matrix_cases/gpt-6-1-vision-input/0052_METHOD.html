@@ -1,0 +1,72 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>double-cradle · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0052</span></nav><article><h1>double-cradle · 生成方法</h1><p>This is a local, source-conditioned pixel animation made with Python, NumPy, SciPy image operations, and Pillow. No network, external images, trained models, rendering engines, or subagents were used. The only scene inputs were <code>first_frame.png</code> and <code>prompt.txt</code>. The initial image was supplied visually in the task; generated outputs were reviewed solely by local code and numeric checks, without image Read/View tools.</p>
+<p><code>generate.py</code> copies the original RGB array verbatim into frame 00. For later frames, it separates the photographed blue-and-black grabber into upper-jaw, handle, and lower-jaw masks. The jaws open in opposite vertical directions and the tool translates toward the left, leaving the image by frame 05. A small chrome fragment originally occluding the jaw is locally inpainted out of the moving tool texture so that it does not travel with the tool.</p>
+<p>The vacated tool region is reconstructed using a lighting fit to observed table pixels and a warped patch of the source wood grain. The obscured corner of the base is reconstructed as a measured dark polygon. Local Laplace relaxation fills the original ball, reflection, and string footprints. These operations estimate background pixels that were hidden in the source; they do not recover an observed clean background.</p>
+<p>The five ball centers follow measured equilibrium positions. The two balls at an active end share one pendulum angle, while the middle ball stays fixed. A small-angle ideal equal-mass exchange model switches the active pair at the center of the arc: the incoming pair stops, and the pair at the opposite end receives the motion. The initial angle is 0.245 radians, the estimated period is 1.32 seconds, the release delay is 0.07 seconds, and a small exponential amplitude decay is applied after the first transfer. This is an analytic idealization of a Newton's cradle, not a numerical contact-force simulation. Perspective projection includes horizontal displacement, the vertical rise of the pendulum arc, and the downward image component of motion toward the left.</p>
+<p>Each ball is drawn using resampled chrome pixels from the three visible source spheres, with an antialiased circular edge. The photographed highlight pattern is retained, with only a slight reduction in blue reflection as the tool withdraws. Two thin, supersampled suspension threads connect each sphere to fixed attachment points on the top rails. Dim, blurred ball reflections track the motion on the glossy base. The photographed support rails and posts are restored over the moving objects where they occlude them. Outside the local edit regions, the image remains the source photograph.</p>
+<h2>Final sampled motion</h2>
+<p>The continuous mathematical phase, rather than the approximate pre-coding event labels, determines the final frames. Pair names indicate which end is displaced; both balls at that end move together.</p>
+<table>
+<thead>
+<tr>
+  <th>Frames</th>
+  <th>Moving pair</th>
+  <th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00–01</td>
+  <td>Left</td>
+  <td>Held pair releases and approaches the resting row.</td>
+</tr>
+<tr>
+  <td>02–04</td>
+  <td>Right</td>
+  <td>First outward swing, turning point near frame 03, then return.</td>
+</tr>
+<tr>
+  <td>05–06</td>
+  <td>Left</td>
+  <td>Left pair swings out and turns back; grabber is outside the image.</td>
+</tr>
+<tr>
+  <td>07–09</td>
+  <td>Right</td>
+  <td>Right pair swings out and returns.</td>
+</tr>
+<tr>
+  <td>10–12</td>
+  <td>Left</td>
+  <td>Left pair swings out and returns.</td>
+</tr>
+<tr>
+  <td>13–14</td>
+  <td>Right</td>
+  <td>Samples on either side of the right turning point.</td>
+</tr>
+<tr>
+  <td>15–17</td>
+  <td>Left</td>
+  <td>Left pair swings out and returns.</td>
+</tr>
+<tr>
+  <td>18–19</td>
+  <td>Right</td>
+  <td>Right pair swings outward; motion continues after the clip.</td>
+</tr>
+</tbody>
+</table>
+<h2>Artifacts and validation</h2>
+<ul>
+<li><code>pixels.npz</code>: <code>pixels</code>, a uint32 tensor of shape <code>(144, 256, 20)</code>, with each value packed as <code>0xRRGGBB</code>.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: 20 RGB images at 256 × 144, played at 4 fps for a nominal five-second clip.</li>
+<li><code>index.html</code>: a self-contained player with lossless first-frame and delta data.</li>
+<li><code>inspection.png</code>: the required eight-frame contact sheet, saved without viewing it.</li>
+<li><code>transition_check.png</code>: twelve successive-frame absolute-difference tiles, amplified four times, saved without viewing it.</li>
+<li><code>OBSERVATION.md</code>: source measurements and the pre-coding event plan.</li>
+<li><code>motion.json</code>: frame times, angles, and projected centers.</li>
+<li><code>checks.json</code>: machine-readable validation results.</li>
+</ul>
+<p>All 20 PNG arrays exactly match their corresponding packed tensor slices. Frame 00 exactly matches the supplied RGB image. The standalone player's first frame and all 19 decoded deltas were independently reconstructed and matched against the tensor. The middle ball's center is fixed, and each moving end has exactly two balls with identical angular phase. Projected ball centers remain within x=99.35–186.46 and y=88.47–111.14. The top nine image rows remain byte-identical throughout. A total of 26,237 pixels remain identical to the source in every frame. Full-frame mean absolute changes between successive frames range from 0.158 to 6.355 channel levels; after the tool leaves, motion is confined to the balls, strings, and their reflections. No visual quality review of generated images is claimed.</p>
+<p>Run <code>python generate.py</code> from this workspace to regenerate the required image, tensor, player, and diagnostic artifacts. The additional player-decoding verification is reflected in the supplied <code>checks.json</code>.</p>
+</article></main></body></html>

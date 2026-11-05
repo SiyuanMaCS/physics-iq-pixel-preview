@@ -1,0 +1,127 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0004</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>Task: continue <code>first_frame.png</code> for 20 frames (256×144, 4 fps, 5 s) showing
+the blue-black grabber lowering an orange tennis ball behind a clockwise-
+rotating folded cardstock tent, then releasing it on the black platform.
+Frame 00 is a byte-exact copy of the input. Everything below was produced with
+local Python (numpy + Pillow) pixel operations and analytic geometry; no
+external models, engines, masks, or network access were used. Later frames
+were checked only by local numeric code (<code>.tmp/verify.py</code> and ASCII/statistic
+helpers), never by an image viewing tool.</p>
+<h2>1. Reconstructing the scene from frame 0</h2>
+<p>Measurements (channel statistics, colour-classifier masks, ASCII density
+maps) and a non-linear least-squares pinhole fit of the card/platform
+features give the camera and rigid geometry (fit RMSE 2.69 px):</p>
+<ul>
+<li>pinhole camera, unit view distance, elevation β=1.1568 rad, focal
+f=480.9 px, principal point (146.75, 90.16); per-pixel unit rays are built
+from the same model for every frame (locked-off shot);</li>
+<li>platform: cylinder of radius R=0.0896, height h=0.20, top at Y=0, axis
+through the origin;</li>
+<li>cardstock tent: ridge base P=(0.0067,0,−0.0134), panel half-width
+L=0.1305, fold half-depth d=0.0848, ridge height hr=0.1531, initial yaw
+θ0=0.0512 rad. The two panels are four triangles between ridge endpoints
+and the front/back hem endpoints. Yaw only changes with time:
+θ(t)=θ0−(115°)·t/19 (clockwise in image space ⇒ θ decreases).</li>
+</ul>
+<p>These constants are stored in <code>.tmp/calib.npy</code> and are the single source of
+geometry for all later steps.</p>
+<h2>2. Static clean plate</h2>
+<p>Frames 1–19 start from a &quot;plate&quot; with the frame-0 card removed:</p>
+<ol>
+<li>Rasterise the t0 card triangles (2× supersample) and dilate the mask
+(MaxFilter 5/7); union it with neutral card-like pixels (luminance
+115–200, low inter-channel spread) inside the dilated neighbourhood. The
+grabber silhouette mask is always excluded.</li>
+<li>Pixels inside the analytically projected top disk are filled with near
+uniform (6,5,3) + σ≈0.8 grain, plus a soft squared catch-light band near
+the fitted far/near rim ellipses (verified: 4721 filled px, mean
+(5.55,4.55,2.54)).</li>
+<li>Pixels above the disk (the ridge strip against the wall) are filled from a
+degree-3 polynomial wall model per channel (fitted on classified wall
+pixels, σ≈5 residual) + σ≈3.2 grain.</li>
+</ol>
+<p>The wood table, cylinder front face, and grabber are untouched frame-0
+pixels.</p>
+<h2>3. Cardstock rendering</h2>
+<p>For each frame the four panel triangles are intersected with a 512×288 grid
+of the same camera rays. Triangle membership uses <strong>exact affine coordinates
+in the skew triangle basis</strong>: with edge vectors e1,e2 (not orthogonal in
+general), the hit point is converted via the inverse Gram matrix
+<code>aa=(a22·h1−a12·h2)/det</code>, <code>bb=(a11·h2−a12·h1)/det</code>; an earlier orthogonal
+projection here incorrectly covered the whole frame. Nearest ray-hit wins a
+per-subpixel z-buffer and selects front/back texture coordinates (linear
+across each triangle).</p>
+<p>Texture: the front panel is bilinearly unwrapped from frame 0 at θ0 onto a
+320×220 (along-ridge × ridge-to-hem) grid; samples covered by the tool shaft
+or outside the frame are rebuilt from the per-row median (paper rows have
+σ&lt;2 in frame 0) plus a mild horizontal gradient, and σ≈1.1 grain is added.
+The back texture is the same paper tinted ×(0.965,0.96,0.97)+small warm
+offset, since frame 0 shows the back panel only as an edge-on sliver.</p>
+<p>Shading: each panel's analytic unit normal (which rotates rigidly with yaw)
+is lit by a fixed room light with a constant per-panel term
+<code>0.42 + 0.60·max(n·L,0) + 0.06·max(−n·L,0)</code>, divided by the same term
+evaluated for the front normal at θ0, so the re-textured card matches frame
+0 exactly at t0 (front factor 1.0; measured f01 vs f00 card patch means
+176.6 vs 177.7, quantiles within ~1) and darkens plausibly as it turns.
+Factors are clipped to [0.40,1.12]. The shading is deliberately not
+view-ray dependent: the light field is baked into the paper texture, so only
+the panel/light angle changes.</p>
+<p>The 2× colour layer is alpha-premultiplied and bilinearly downsampled to
+256×144; coverage <code>cov</code> gives soft edges, while the depth handed to the ball
+is the block-minimum z of each 2×2 subpixel group (conservative occlusion).</p>
+<h2>4. Tennis ball</h2>
+<p>The ball is a world sphere, radius 0.0335, hanging on one fixed vertical line
+X=−0.0325, Z=−0.0725 (under the back panel at θ0; the resting contact point
+is 0.0795 from the platform axis vs R=0.0896 — just inside the back rim).
+Its centre descends in height:</p>
+<p>Y = [0.30, .250, .220, .195, .170, .148, .125, .103, .083, .066,
+.052, .043, .037, .0345] for f00–f13, then 0.0335 (= radius, resting on
+the disk) for f14–f19.</p>
+<p>Each covered pixel ray is intersected analytically with the sphere; the hit
+is drawn only if its ray distance is smaller than both the card block-min z
+and the platform z-buffer (top disk plane within the radius plus the
+cylinder side). Shading: Lambert against the same room light with ambient
+0.52 and a 0.14 wrap term over orange base (223,122,27), an orange
+rim-light <code>(1−(d·n)²)·26</code>, a deterministic per-pixel fuzz jitter, and two
+pale sinusoidal great-curve seams. The sphere-vs-panel separation along the
+whole path stays ≥6.7 mm (minimum at f07), so occlusion is always a true
+behind-the-card pass, never interpenetration. Geometric visible pixels run
+252→1045 while held, 57–117 during the f09–f13 hide, and climb 62→410 through
+f19.</p>
+<h2>5. Grabber, prongs, compositing order</h2>
+<p>Per frame: plate → sphere layer (z-tested) → card premultiplied over with
+coverage → prongs → grabber.</p>
+<ul>
+<li>Two small dark prongs flank the ball from f01 while it is held, then
+retract upward (9/20 px, alpha 1.0→0.6→0.25) across f10–f12 and disappear.</li>
+<li>The grabber itself never changes appearance: its frame-0 pixels under a
+hand-fitted foreground silhouette are pasted verbatim onto f01–f13.
+After release it lifts vertically: the same RGBA frame-0 layer is
+alpha-composited at offsets {f14:8, f15:14, f16:20, f17:26, f18:30,
+f19:30} px upward; the vacated footprint shows only plate/card content.</li>
+<li>f00 is written directly from the input PNG bytes.</li>
+</ul>
+<h2>6. Outputs and verification</h2>
+<p><code>generate.py</code> writes, via <code>artifact_io.py</code>: <code>pixels.npz</code> (the 144×256×20
+uint32 <code>0xRRGGBB</code> tensor), <code>frames/00.png</code>–<code>19.png</code>, an 8-keyframe
+<code>inspection.png</code>, a self-contained delta-coded <code>index.html</code> player, and
+<code>transition_check.png</code> (key frames plus ×4 amplified consecutive-frame
+differences). <code>METHOD.md</code> (this file) and <code>OBSERVATION.md</code> accompany them.</p>
+<p><code>.tmp/verify.py</code> checks (final run: <strong>OVERALL PASS</strong>): tensor shape/dtype;
+every PNG equals its tensor uint32; <code>frames/00.png</code> is byte-identical to
+<code>first_frame.png</code>; grabber pixels are fixed f01–f13 and the lifted layer is
+exactly the shifted frame-0 tool f14–f19 with the old footprint vacated;
+orange-classifier counts follow enter → held-large (479–569 px f03–05) →
+near-full hide (0–5 px f09–13) → monotonic reveal (24→184 f14–19, ≥8× the
+deepest hide); final orange bbox at the back rim; no orange outside the
+ball corridor; ≥6 mm sphere/card clearance; one fixed descent world line
+(dx=dz=0); resting contact inside the disk; 115° CW card sweep; geometric
+z-buffer visibility windows; inter-frame changed-pixel counts bounded with
+no frozen middle frames and a moderate lift transition; near-black disk
+fill.</p>
+<p>Known cosmetic residuals, also measured rather than viewed: at f01 the
+sphere centre still projects above the frame (v=−10.2), so only a grazing
+sliver of orange reaches the top edge; the turned-away back panel stays
+quite dark in the last frames; a handful of edge pixels near the card rim
+differ subtly from frame 0 through coverage blending while the uncovered
+plate pixels themselves are constant.</p>
+</article></main></body></html>

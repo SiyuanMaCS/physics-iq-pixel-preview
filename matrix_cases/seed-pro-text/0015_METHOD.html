@@ -1,0 +1,81 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-in-basket · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组全量视频</a><span class="tag">Case 0015</span></nav><article><h1>ball-in-basket · 生成方法</h1><h2>What happens</h2>
+<p>The orange inflatable basketball is released from rest at the mouth of the
+black plastic crate, falls ~54 px into the crate under gravity, strikes the
+crate floor, bounces twice with restitution 0.40, and is at rest inside the
+crate from 2.50 s (frame 10) onward. The camera is locked; nothing except the
+ball changes. Generated entirely with local Python (NumPy/PIL/SciPy), no
+external models or assets.</p>
+<h2>Measurements from <code>first_frame.png</code> (numeric RGB inspection only)</h2>
+<ul>
+<li>Ball silhouette: least-squares circle fit to the orange edges (robust
+refit, residual σ=0.69 px) → centre <strong>(108.7, 37.9)</strong>, radius <strong>29.1 px</strong>.</li>
+<li>Crate: back rim band y≈59–67, open dark interior y≈60–101 with sparse
+molded ribs (light grey components up to luminance ~150), solid front panel
+y≈102–134; crate x≈56–153. Wooden table beneath.</li>
+<li>Ball appearance: core orange ≈ (190,73,2), limb darkening toward
+(140–150,55–60,5–30), a near-vertical dark seam at x≈107 y10–44 slanting to
+x≈109 by y58, soft specular blob at ≈(99,39) peaking at (253,240,233),
+1 px silhouette anti-aliasing.</li>
+<li>Wall: smooth low-saturation grey vignette; a local quadratic surface
+(normalised coords about the ball) fits clean wall pixels to RMSE ≈6/channel
+with fine grain σ≈2.6.</li>
+</ul>
+<h2>Static background</h2>
+<p>One backdrop is built from frame 0; all non-ball pixels stay byte-identical.
+Inside the ball footprint (d &lt; R+0.5):</p>
+<ul>
+<li>rows y≤58: filled with the fitted wall surface plus correlated grain
+(Gaussian σ=0.9 px rescaled to σ=2.6, so horizontal gradients match the
+surrounding wall texture: mean |ΔR| ≈1.8 inside vs ≈0.9 outside);</li>
+<li>row 59: a soft wall→rim blend at the measured bar edge (y≈59.6);</li>
+<li>rows 60–67: near-black rim fill from row-wise medians of real rim pixels on
+each side (left (6,6,4) → right ~(16,16,16)), with matched noise;</li>
+<li>the 2.5 px anti-aliased annulus is dissolved into the fill by coverage.</li>
+</ul>
+<h2>Ball sprite</h2>
+<p>A canonical 256×144 sprite map keyed to the measured circle:</p>
+<ul>
+<li>every real ball pixel visible above the rim in frame 0 (disk rows y≤58) is
+<strong>harvested verbatim</strong>, preserving the measured seam and specular highlight;</li>
+<li>the 1 px silhouette band is coloured from pixels 1.4 px radially inward;</li>
+<li>the bottom cap hidden by the rim in frame 0 uses an analytic shading model:
+a 10-term linear model in sphere normals (1, nx, ny, nx², ny², nx·ny,
+fresnel s, s², s·nx, s·ny, s²·ny) fitted by least squares to the harvested
+orange pixels excluding the seam column (fit RMSE ≈6/10/16 for R/G/B);</li>
+<li>the measured seam is extended ~7 px into the cap along its slant with a
+Gaussian profile and cosine fade so it dies out inside the crate.</li>
+</ul>
+<h2>Physics and per-frame rendering</h2>
+<ul>
+<li>Vertical 1-D motion from rest: g=100 px/s², floor at centre y=92,
+coefficient of restitution e=0.40. Impacts at t=1.040, 1.873, 2.205 s;
+settled after 2.33 s. Horizontal centre stays at x=108.7; no spin.</li>
+<li>Squash-and-stretch about the fixed contact point only in frames whose
+0.08 s shutter window touches an impact: vertical scale 0.95 (f04),
+0.99 (f08), 0.98 (f09), with 35% compensating horizontal spread.</li>
+<li>Each frame averages 9 sub-samples evenly spaced across a 0.08 s shutter,
+giving motion blur proportional to instantaneous velocity (up to ~8 px of
+smear near the first impact).</li>
+<li>Sprites are bilinearly sampled, coverage-alpha anti-aliased, and
+alpha-composited over the static backdrop. Coverage is forced to zero for
+y≥102 so the crate's solid front panel always occludes the lower ball;
+rows y≥102 are never modified in any frame.</li>
+<li>Frame 00 is assigned directly from <code>first_frame.png</code> and verified
+byte-identical.</li>
+</ul>
+<h2>Outputs and verification</h2>
+<ul>
+<li>20 frames at 256×144 RGB, <code>frames/00.png</code>…<code>19.png</code>, plus packed
+uint32 0xRRGGBB tensor <code>pixels.npz</code> (shape 144×256×20) via <code>artifact_io.py</code>;
+every PNG was checked numerically against its tensor slice.</li>
+<li><code>index.html</code> standalone delta player; <code>inspection.png</code> (8 keyframes);
+<code>transition_check.png</code> (f00→01, 02→03, 03→04, 04→05, 07→08, 08→09 pairs and
+×3 amplified |difference| maps).</li>
+<li>Numeric audits: frame 00 exact; ball orange centroid stays at x≈109 while
+its y follows the fall/bounce/settle curve (cy 35.9 → ~84 at rest);
+changed-pixel counts decay with the bounces (3072, 3021, 867, 444, 752, 650,
+325, 212) and are exactly zero from f10→f11 onward; rows y≥106 identical in
+every frame. Quality was assessed through numeric RGB/ASCII inspection only
+(no image viewing tool used).</li>
+</ul>
+</article></main></body></html>

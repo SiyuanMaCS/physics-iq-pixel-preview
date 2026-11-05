@@ -1,0 +1,122 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ball-behind-rotating-paper · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组全量视频</a><span class="tag">Case 0006</span></nav><article><h1>ball-behind-rotating-paper · 生成方法</h1><p>Synthesis of a 20-frame (256×144, 4 fps) RGB sequence from exactly two inputs:
+<code>first_frame.png</code> and <code>prompt.txt</code>. Everything is computed locally with numpy / PIL /
+scipy.ndimage only — no network, no learned/external models, no other reference images.
+<code>python3 generate.py</code> writes <code>pixels.npz</code>, <code>frames/00..19.png</code>, <code>inspection.png</code>,
+<code>transition_check.png</code> and <code>index.html</code>.</p>
+<h2>1. Choreography (measured geometry, hand-keyed motion)</h2>
+<p>The first frame is decomposed once, in pixel coordinates:</p>
+<ul>
+<li><strong>Wall/table seam</strong> <code>seam_y(x)</code> = two fitted line segments (corner near (52,66)).</li>
+<li><strong>Card quads</strong>: <code>FACE = [(67.3,45.9),(151.0,50.7),(151.0,127.2),(61.5,116.3)]</code> and the
+thin right side <code>STRIP = [(151,50.7),(157,51),(151.2,111.5),(147.8,116.5)]</code>.</li>
+<li><strong>Platform ellipse</strong> centre (113,132), radii (48,17).</li>
+<li><strong>Tool</strong>: a thresholded alpha sprite (dark shaft/flare plus the blue-dominated collar pixels)
+restricted to x∈(100,150), y&lt;54, morphologically closed/dilated and gaussian-feathered.</li>
+<li>Ball radius 6.2 px; rest spot <code>REST = (78,109.3)</code>; yaw centre (109,84.5), half-size (44,39.5).</li>
+</ul>
+<p>Hand-keyed per-frame data (see table in OBSERVATION.md):</p>
+<ul>
+<li><code>DY[f]</code>: vertical pixel offset of the photographed tool sprite for f1–f10 (raise −16 then lower).</li>
+<li><code>CARRY[f]</code>: centre of the claw/carried ball for f1–f9; f9 is the open claw at the rest spot.
+f10 draws an <strong>empty</strong> open claw raised to (120,50) (<code>claw_layer(..., ball=False)</code>); from f10
+the ball exists only as the resting sprite at <code>REST</code>, behind the card.</li>
+<li><code>YAW[f] = 0</code> for f≤8, else <code>72·((f−8)/11)^1.35</code> degrees (eased start/finish).</li>
+</ul>
+<h2>2. Static background plate (<code>plate</code>)</h2>
+<p>The plate reconstructs every pixel that may be uncovered during the sequence — the dilated card
+and side-strip polygons, the union of all vertically shifted tool masks, circles swept by the
+carried ball/claw (f&lt;9), and the whole dish ellipse (<code>u ≤ 0.985</code>, y&lt;139.5) — domain <strong>D</strong>.</p>
+<p><strong>Guide colour g</strong> (a proposed background, no card in it):</p>
+<ul>
+<li><em>Wall</em>: robust IRLS quadratic per-channel fit (4 reweight passes) plus a σ≈14 gaussian
+normalised residual field, clipped; noise σ≈0.9.</li>
+<li><em>Wood</em>: columns mirrored about two vertical axes (x=112 and x=343) blended with a smoothstep,
+source rows reflected across the seam (<code>2·seam−y</code>, never clamped) so no kink appears at the
+junction; an analytic two-lobe gaussian contact shadow darkens the base. Wall/wood are
+cross-faded across the seam over 5 px.</li>
+<li><em>Dish</em>: a fully analytic radial matte ellipse — (7,7,8) core → (19,15,11) mid → (42,29,19)
+rim — fuzzing into the wood over u∈[0.94,1.10]. Keeping the dish guide independent of the
+card polygon is deliberate: it lets the rim continue seamlessly wherever the yawed card
+exposes it. Real photographed texture (rim speckles, cable) returns through the Poisson
+constraints below.</li>
+</ul>
+<p><strong>Harmonic (Poisson) correction h</strong>: <code>∇²h = 0</code> inside D with hard constraints
+<code>h = SRC − g</code> on (a) the outer boundary band (bright pixels with mean ≥ 95 inside the dish
+ellipse band are <em>excluded</em> — they are card/wood, and anchoring them dragged a bright arc over
+the platter) and (b) observed dish pixels (<code>u&lt;0.96</code>, y&lt;138, outside the card and a 2-px safety
+ring around it, brightness &lt; 95). Pixels hidden behind the card (<code>u&lt;1.04</code> inside the card
+footprint + ring) are instead pinned <code>h = 0</code>, i.e. we trust the analytic guide there; without
+this, residuals from the wood zone above washed a grey cloud across the inpainted platter.
+Solved by Gauss–Jacobi gaussian relaxation (2600 iterations on a 2× coarse grid, bilinear
+upscale, 700 full-res iterations), h=0 outside D. <code>fill = g + h</code>; D is alpha-composited over
+the photo with hard alpha inside and a σ0.7 feather only on the domain edge. A soft ball
+contact shadow is added at the rest spot (it stays inside the domain, behind the card).</p>
+<h2>3. Cardstock sprite</h2>
+<ul>
+<li><strong>Intrinsic alpha</strong> <code>CARD_A</code>: soft polygon coverage of <code>FACE</code> (solid — the lower band is
+occluded later by the rim overlay, so gating it out here only created ragged holes and
+scattered rim specks when yawed), plus <code>STRIP</code> gated on low saturation to drop the brown
+table sliver beyond the slanted side edge. Polygons are rasterised at 4× and LANCZOS-downscaled
+for subpixel AA.</li>
+<li><strong>Intrinsic colour</strong> <code>CARD_COL</code>: a per-channel quadratic surface fitted with σ=6 IRLS to the
+eroded card interior. The yawed sheet is textured with this field rather than with
+photographed pixels, so its moving edges always expose card colour (fit error on the interior:
+mean 0.9, p95 2.1, max 4.5 RGB levels).</li>
+<li><strong>Yaw warp</strong> (inverse sampling in <code>scipy.ndimage.affine_transform</code> at 4×):
+<code>in_x = m00·out_x + m01·out_y + off</code>, <code>in_y = out_y</code>, with
+<code>m00 = 1/max(cos α, 0.18)</code> (foreshortening) and <code>m01 = −(44/39.5)·0.07·sin α/max(cos α,0.18)</code>
+(small shear); colour is multiplied by <code>0.52 + 0.48·|cos α|</code> (edge-on darkening), then
+premultiplied-alpha box-downsampled.</li>
+</ul>
+<h2>4. Tool, claw and ball sprites</h2>
+<ul>
+<li>Tool: the feathered photographed sprite, bilinear-translated vertically at 4×.</li>
+<li>Claw (<code>claw_layer</code>): thin dark rod from the flare to the claw, two navy-blue Bézier fingers
+(grip: curved around the ball; open: splayed upward), each with a lighter blue edge stroke.
+The ball is optional (empty claw at f10).</li>
+<li>Ball (<code>draw_ball</code>): concentric filled discs giving a (238,146,54)→(198,94,26) radial gradient,
+a darker Bézier &quot;seam&quot; stroke, a soft upper-left specular highlight and a lower-right
+multiply veil for shading.</li>
+</ul>
+<h2>5. Per-frame compositing (<code>build(f)</code>)</h2>
+<ol>
+<li>f00: returns the first frame untouched (the saved PNG is byte-identical to <code>first_frame.png</code>).</li>
+<li>Start from <code>plate</code>.</li>
+<li>Resting ball at <code>REST</code> for f≥10 (hidden until the yaw uncovers it).</li>
+<li>Shifted tool sprite; claw (+ carried ball) for f1–f9; empty open claw for f10.</li>
+<li>Yawed card via standard alpha-over.</li>
+<li><strong>Front-rim overlay</strong>: analytic rim colour keyed to the <em>warped</em> card alpha over the fixed
+rim shape (<code>u</code> fade × below <code>y = 108+0.12x</code>), so the platform lip occludes the card base at
+every yaw without cutting the table or the revealed ball.</li>
+</ol>
+<p>All moving layers are rendered at 4× and premultiplied box-filtered down, so edges stay smooth.</p>
+<h2>6. Outputs and checks</h2>
+<ul>
+<li><code>frames/00..19.png</code> (256×144) and <code>pixels.npz</code> (<code>pixels</code>, uint32 <code>0x00RRGGBB</code>, shape
+(144,256,20)); every PNG was verified to equal its packed tensor, and <code>frames/00.png</code> is
+byte-identical to <code>first_frame.png</code>.</li>
+<li><code>inspection.png</code>: 8 key frames with time labels; <code>index.html</code>: self-contained delta-encoded
+player (written by the provided output helper <code>artifact_io.py</code>).</li>
+<li><code>transition_check.png</code>: 9 key frames plus 9 predecessor absolute-difference images (×4),
+confirming motion energy is confined to the tool/ball (f1–f7), the release (f8–f9) and the
+yawing card edges + ball reveal (f11–f19).</li>
+</ul>
+<h2>7. Honest approximations / limitations</h2>
+<ul>
+<li>The yaw is a 2-parameter affine approximation of a true perspective rotation (foreshortening<ul>
+<li>fixed shear, a 1/cos clamp past ~80°); card height is held constant and there is no
+out-of-plane depth blur.</li>
+</ul>
+</li>
+<li>Uncovered background is a statistical reconstruction (wall fit, mirrored wood, analytic dish<ul>
+<li>harmonic fill), not hidden ground truth; occluded dish texture under the original card is
+intentionally smooth/analytic. A handful of near-black pixels along the card base differ from
+the photo by ≤16 levels (invisible at playback scale).</li>
+</ul>
+</li>
+<li>The black tool arm/flare stays in its frame-0 pose after f11 (the prompt implies the grabber
+remains above the rig; an off-screen exit was not keyed).</li>
+<li>Motion is hand-timed to the prompt within the 20-frame/5-second budget; the ball release
+happens behind the card (f9), so only the claw is seen opening at the card edge (f9–f10).</li>
+</ul>
+</article></main></body></html>

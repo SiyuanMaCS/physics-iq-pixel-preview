@@ -1,0 +1,79 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block-domino · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-text.html">← 返回本组全量视频</a><span class="tag">Case 0036</span></nav><article><h1>block-domino · 生成方法</h1><p><code>generate.py</code> creates a five-second, fixed-camera sequence with 20 RGB frames
+at 256 × 144 and 4 fps. The first sample is at t=0; frame 19 is sampled at
+t=4.75 seconds and occupies the last quarter-second of playback. Frame 00
+uses the input pixels directly.</p>
+<h2>Actual pixel method</h2>
+<p>The only scene inputs are <code>first_frame.png</code> and <code>prompt.txt</code>. All measurements
+were made locally with Python, numerical RGB inspection, color predicates,
+connected components, and coordinate text maps. No image Read/View tool,
+network resource, external model, external rendering engine, or subagent was
+used. The saved inspection images were not visually viewed.</p>
+<p>Each block is represented by a calibrated projected rectangular prism. Its
+three initially visible faces are extracted from the input using OpenCV
+perspective transforms. Source edge pixels from the table or a neighboring
+block are repaired with nearest valid color samples from the same face. The
+photographed painted textures are then warped onto the rotating faces.
+Back-face culling hides faces as their projected orientation changes. A small
+analytic lighting adjustment brightens the broad face as it turns upward.</p>
+<p>The original moving silhouettes and their contact shadows are removed in
+bounded regions with local OpenCV inpainting. Fine residual wood texture from
+the unobstructed lower part of the same table is added to smooth repaired
+areas. The arm's original footprint is repaired separately because it crosses
+the tabletop and the platform lip; the obscured portion of that lip uses a
+numerically fitted elliptical boundary and nearby original platform colors.
+The remaining platform, table, and background retain the original pixels.
+Unreached blocks retain their source appearance until the cascade reaches them.</p>
+<p>The tan arm texture is sampled from the input and mapped onto a thin projected
+arm that rotates clockwise along an elliptical image trajectory around its
+fixed attachment. It drives into the purple block, clears the row, and brakes
+to a stop after a single sweep. Its uppermost free end temporarily occludes
+part of the wall as the elevated arm rotates away from the viewer.</p>
+<p>Blocks tip in the order purple, blue, green, pink, red, yellow. Their initial
+motion follows staggered analytic acceleration curves. Separating-axis tests
+on idealized rigid two-dimensional cross-sections limit each angle against its
+left neighbor; binary searches find the contact angle. This prevents the
+blocks from passing through one another in the inferred cross-section model
+and produces an overlapping resting line. Yellow lies flat; the other blocks
+rest against their neighbors at approximately 65–66 degrees from vertical.
+Yellow has a small damped recoil before settling. This is constrained analytic
+animation using inferred geometry, rather than a full dynamics simulation or
+a reconstruction of unseen geometry.</p>
+<p>Moving shadows are projected from the block vertices, blurred locally, and
+composited on the table. Geometry and face warps are rasterized at 4× resolution
+and reduced with area filtering for smooth edges. Pixels outside the moving
+objects, exposed tabletop repair regions, and shadows are copied exactly from
+the source. The fixed framing never pans or zooms.</p>
+<h2>Revision and numerical validation</h2>
+<p>An initial numeric inspection found shaded paint holes in the removal masks.
+The solid repair masks were expanded, and the sequence was regenerated. The
+final clean plate has zero pixels meeting the six paint predicates within its
+repair mask, avoiding remnants of upright blocks in the exposed table.</p>
+<p>The final run passed:</p>
+<ul>
+<li>20 RGB PNGs, each exactly 256 × 144.</li>
+<li>Exact pixel equality of frame 00 and <code>first_frame.png</code>.</li>
+<li><code>pixels.npz</code> contains <code>pixels</code> with shape <code>(144, 256, 20)</code> and dtype
+<code>uint32</code>, encoded as <code>0xRRGGBB</code>.</li>
+<li>Every PNG agrees exactly with the corresponding packed tensor slice.</li>
+<li>Neighbor collision checks at 1,141 uniformly spaced times pass for the
+inferred two-dimensional cross-section model.</li>
+<li>The unoccluded upper wall and lower table pixels remain exactly fixed.</li>
+<li>Frames 14–19 are identical, providing a stable final hold.</li>
+</ul>
+<p>Machine-readable pose and transition metrics are in <code>.tmp/validation.json</code>.
+The largest average adjacent-frame RGB change is 4.6801 on the 0–255 scale
+during the falling wave; changes diminish to zero after settling. These are
+numerical checks, not a claim of visual review.</p>
+<h2>Artifacts</h2>
+<ul>
+<li><code>OBSERVATION.md</code>: measurements and the preimplementation 20-frame plan.</li>
+<li><code>generate.py</code>: reproducible local generator; run with <code>python generate.py</code>.</li>
+<li><code>pixels.npz</code>: packed RGB frame tensor.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: individual RGB samples.</li>
+<li><code>inspection.png</code>: eight-frame contact sheet.</li>
+<li><code>transition_check.png</code>: selected transitions, RGB differences, and change maps.</li>
+<li><code>index.html</code>: standalone local player with embedded exact frame data, 4 fps
+playback, seeking, and replay, produced with the provided output helper.</li>
+<li><code>METHOD.md</code>: this account of the actual method and its limits.</li>
+</ul>
+</article></main></body></html>

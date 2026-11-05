@@ -1,0 +1,78 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>block-domino · 生成方法</title><style>:root{color-scheme:dark;--bg:#101216;--panel:#1a1e24;--line:#303741;--muted:#a8b1be;--accent:#a5ef83}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f1f4f7;font:15px/1.75 system-ui,-apple-system,sans-serif}main{max-width:920px;margin:auto;padding:26px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;margin-bottom:20px;color:var(--muted);font-size:13px}a{color:#bddaff;text-decoration:none}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}article{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}h1{font-size:28px;margin:0 0 18px}h2{font-size:20px;margin:26px 0 8px;border-top:1px solid var(--line);padding-top:20px}h3{font-size:16px;margin:20px 0 6px}p,li{color:#d9dee5}code{background:#101419;border:1px solid #2b323b;border-radius:5px;padding:1px 5px;color:#dff5d4}pre{background:#0d1013;border:1px solid #2b323b;border-radius:10px;padding:13px;overflow:auto}pre code{border:0;padding:0;background:transparent}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{padding:8px 10px;border:1px solid var(--line);white-space:nowrap}th{background:#11151a}blockquote{border-left:3px solid var(--accent);margin:15px 0;padding:2px 14px;color:var(--muted)}@media(max-width:600px){main{padding:15px 11px 45px}article{padding:15px}h1{font-size:23px}}</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组全量视频</a><span class="tag">Case 0034</span></nav><article><h1>block-domino · 生成方法</h1><p>The continuation is an authored 2.5D pixel animation implemented in local Python. Its only scene sources are <code>first_frame.png</code> and <code>prompt.txt</code>. The source photograph supplies the visible environment, painted block faces, and fine wood texture. NumPy, Pillow, OpenCV image operations, and SciPy filtering perform the numerical projection, texture sampling, rasterization, and saving. No network, external assets, trained models, external rendering/physics engines, or subagents were used.</p>
+<h2>Image construction</h2>
+<p><code>OBSERVATION.md</code> was written before implementation. Six cuboids are calibrated to measured source-image lower corners, projected widths, depths, and heights. Their front, left, and top face textures are sampled from the original photograph by homography. The previously hidden narrow right face is reconstructed from the same block's painted front texture and receives orientation-dependent shading as it becomes visible. The broad front face retains its source coloration.</p>
+<p>Each moved block is removed from its original silhouette and shadow region. OpenCV local inpainting reconstructs the revealed table, with a small amount of high-frequency grain copied numerically from an unobstructed source tabletop patch. Only hidden sections of the black platform are filled with a measured elliptical cylinder and matching dark surface colors. Source pixels outside the active cleanup regions remain fixed. Unstruck faces reuse the original image pixels.</p>
+<p>Cuboid surfaces rotate about their lower left edges. Their transformed source textures are rasterized at three times the final resolution and reduced by area averaging. A common camera-depth buffer resolves occlusion between block faces and the arm. Soft cast and contact shadows are computed by projecting cuboid corners onto the tabletop and filtering the resulting masks. The camera, platform body, wall, and illumination do not move.</p>
+<h2>Motion</h2>
+<p>The dark wooden arm follows a horizontal circular path projected as an ellipse around (183.5,42.5). Its angular phase is <code>0.55 + 1.90*t</code> radians, so it rotates clockwise continuously at approximately 109 degrees per second. The tip sweeps into the purple block at approximately 0.75 seconds.</p>
+<p>Block motion uses analytic accelerating angular trajectories, <code>0.45*tau + 2.5*tau^2</code>, constrained by exact separating-axis contact calculations for rigid rectangles in the row/height plane. Each following block activates when the preceding block first reaches its contact angle. Each angle is limited by contact with its neighbor. The yellow block lands on the table and has a tiny decaying rebound; the other blocks settle onto their neighbors. This is physically motivated authored motion, with geometric nonpenetration constraints.</p>
+<table>
+<thead>
+<tr>
+  <th>Block</th>
+  <th style="text-align:right">Motion begins</th>
+  <th style="text-align:right">Final tilt from upright</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Purple</td>
+  <td style="text-align:right">0.750 s</td>
+  <td style="text-align:right">52.394°</td>
+</tr>
+<tr>
+  <td>Blue</td>
+  <td style="text-align:right">0.907 s</td>
+  <td style="text-align:right">55.472°</td>
+</tr>
+<tr>
+  <td>Green</td>
+  <td style="text-align:right">1.093 s</td>
+  <td style="text-align:right">62.767°</td>
+</tr>
+<tr>
+  <td>Pink</td>
+  <td style="text-align:right">1.331 s</td>
+  <td style="text-align:right">65.984°</td>
+</tr>
+<tr>
+  <td>Orange</td>
+  <td style="text-align:right">1.603 s</td>
+  <td style="text-align:right">68.552°</td>
+</tr>
+<tr>
+  <td>Yellow</td>
+  <td style="text-align:right">1.885 s</td>
+  <td style="text-align:right">90.000°</td>
+</tr>
+</tbody>
+</table>
+<p>The cascade is substantially settled by frame 11 (2.75 seconds). The arm continues clockwise through the remaining frames. Twenty samples at times <code>k/4</code>, <code>k=0..19</code>, are displayed for 0.25 seconds each, giving five seconds at 4 fps. Frame 00 bypasses rendering and is copied exactly from the input RGB array.</p>
+<h2>Verification and inspection policy</h2>
+<p>Generated frames, sheets, and player were checked with local code and numeric measurements only. No generated image was opened with an image Read/View tool, and no visual review of the outputs is claimed. The supplied initial frame was visible in the user message.</p>
+<p><code>numeric_checks.json</code> records assertions and measurements from the final generator run:</p>
+<ul>
+<li>Exactly 20 RGB frames, each 256 × 144; decoded array shape <code>(20,144,256,3)</code> and dtype <code>uint8</code>.</li>
+<li>Frame 00 is pixel-identical to <code>first_frame.png</code>.</li>
+<li><code>pixels.npz</code> contains the <code>pixels</code> tensor with shape <code>(144,256,20)</code>, dtype <code>uint32</code>, and values packed as <code>0xRRGGBB</code>.</li>
+<li>Every saved PNG matches its tensor slice exactly.</li>
+<li>Every HTML delta packet was decoded locally; the player reconstructs the same 20 tensor frames and uses a 250 ms playback interval.</li>
+<li>All 15 block pairs have zero polygon intersections at every generated sample; all block corners stay on or above the modeled tabletop.</li>
+<li>A 10,458-pixel fixed region remains exactly equal to the source in every frame.</li>
+<li>The interior pixels of each unstruck block remain exactly equal to the source before its contact time.</li>
+<li>Source-color segmentation confirms that all six colors remain visible in the final arrangement. Final approximate counts are yellow 1,007, orange 808, pink 737, green 798, blue 622, purple 784 pixels; these are threshold measurements, not object masks.</li>
+</ul>
+<p>The numerical revision pass corrected the arm's depth convention, the contact search interval for a neighbor lying flat, and the fixed-region test boundary so it excluded the actual falling-block path. No image-viewing tools were used during revision.</p>
+<h2>Files</h2>
+<ul>
+<li><code>generate.py</code>: complete reproducible generation and verification script; run <code>python generate.py</code> from this workspace.</li>
+<li><code>frames/00.png</code> through <code>frames/19.png</code>: the twenty RGB frames.</li>
+<li><code>pixels.npz</code>: the required packed pixel tensor.</li>
+<li><code>index.html</code>: standalone player with embedded frame data, play/pause, replay, seek, and loop controls.</li>
+<li><code>inspection.png</code>: eight representative frames in a contact sheet.</li>
+<li><code>transition_check.png</code>: six transition rows, each showing the preceding frame, next frame, and absolute RGB difference amplified three times.</li>
+<li><code>OBSERVATION.md</code>: scene measurements and the original twenty-frame event plan.</li>
+<li><code>METHOD.md</code>: this method report.</li>
+<li><code>numeric_checks.json</code>: final machine-readable verification results.</li>
+</ul>
+</article></main></body></html>
