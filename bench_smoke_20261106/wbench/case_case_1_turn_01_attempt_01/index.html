@@ -1,0 +1,446 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld generation trace</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="../../index.html">← Smoke 总览</a></p><h1>case_1_turn_01</h1><p class="muted">GPT-5.6-Sol · vision-agent · 256×143 · 20 frames / 4 fps</p><div class="box"><strong>当前任务输入</strong><p>The subject moves forward. The camera follows, maintaining distance and framing.</p></div><h2>最终视频</h2><div class="player" data-player="{&quot;asset&quot;: &quot;final/pixels-bd0f78db6c9f2fcb.png&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="final/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p><a href="final/generate.py">生成代码</a> · <a href="contract.json">输入与输出契约</a></p><div class="box">保存的候选：2 · output tokens：8594 · reasoning output tokens：3116 · 耗时：171s</div><h2>逐轮生成与修改</h2><p class="muted">候选由外部 harness 保存。是否读图，以对应工具事件为依据。</p><article><h3>Candidate 1</h3><p class="muted">2026-11-05T18:10:35.534539+00:00 · RGB hash bd0f78db6c9f2fcb</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_00/pixels-bd0f78db6c9f2fcb.png&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_00/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_00/inspection.png"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -0,0 +1,194 @@
++from pathlib import Path
++
++import cv2
++import numpy as np
++from PIL import Image, ImageDraw
++
++import artifact_io
++
++
++CASE_DIR = Path(__file__).resolve().parent
++WIDTH, HEIGHT = 256, 143
++FRAME_COUNT = 20
++
++
++def dog_mask(image: np.ndarray) -&gt; np.ndarray:
++    &quot;&quot;&quot;Extract the dog with a tightly constrained, classical GrabCut mask.&quot;&quot;&quot;
++    guide = np.zeros((HEIGHT, WIDTH), np.uint8)
++    silhouette = np.array(
++        [
++            (124, 69), (128, 73), (133, 71), (132, 78), (135, 82),
++            (135, 89), (132, 94), (133, 101), (136, 106), (137, 114),
++            (136, 122), (136, 128), (133, 130), (130, 128), (130, 115),
++            (127, 110), (126, 119), (126, 127), (123, 131), (120, 130),
++            (119, 126), (120, 116), (120, 109), (118, 103), (119, 94),
++            (121, 89), (119, 85), (120, 77), (123, 75),
++        ],
++        np.int32,
++    )
++    cv2.fillPoly(guide, [silhouette], cv2.GC_PR_FGD)
++
++    # Known fur samples prevent similarly colored street pixels from leaking in.
++    certain = np.array(
++        [
++            (124, 75), (129, 77), (132, 82), (128, 87), (124, 91),
++            (127, 96), (130, 101), (125, 105), (132, 109), (123, 113),
++            (133, 117), (122, 123), (133, 125),
++        ],
++        np.int32,
++    )
++    for x, y in certain:
++        cv2.circle(guide, (int(x), int(y)), 2, cv2.GC_FGD, -1)
++
++    bg_model = np.zeros((1, 65), np.float64)
++    fg_model = np.zeros((1, 65), np.float64)
++    cv2.grabCut(image, guide, None, bg_model, fg_model, 7, cv2.GC_INIT_WITH_MASK)
++    mask = np.where((guide == cv2.GC_FGD) | (guide == cv2.GC_PR_FGD), 255, 0).astype(np.uint8)
++
++    # Keep only the component around the dog&#x27;s center and gently feather its edge.
++    count, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
++    if count &gt; 1:
++        center_label = labels[95, 127]
++        if center_label == 0:
++            center_label = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
++        mask = np.where(labels == center_label, 255, 0).astype(np.uint8)
++    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
++    return cv2.GaussianBlur(mask, (3, 3), 0.55)
++
++
++def clean_background(image: np.ndarray, alpha: np.ndarray) -&gt; np.ndarray:
++    &quot;&quot;&quot;Replace the dog with nearby street texture for the moving background plate.&quot;&quot;&quot;
++    hole = cv2.dilate((alpha &gt; 18).astype(np.uint8) * 255, np.ones((7, 7), np.uint8))
++    # Telea is a deterministic local pixel propagation, suitable for this small road patch.
++    clean = cv2.inpaint(image, hole, 5, cv2.INPAINT_TELEA)
++
++    # Restore a little asphalt grain so the filled area does not look airbrushed.
++    rng = np.random.default_rng(7319)
++    grain = rng.normal(0.0, 2.0, image.shape[:2]).astype(np.float32)
++    area = cv2.GaussianBlur((hole &gt; 0).astype(np.float32), (9, 9), 2.0)[..., None]
++    clean = np.clip(clean.astype(np.float32) + grain[..., None] * area, 0, 255).astype(np.uint8)
++    return clean
++
++
++def warp_background(background: np.ndarray, index: int) -&gt; np.ndarray:
++    &quot;&quot;&quot;Move the camera down the street with expansion about the vanishing point.&quot;&quot;&quot;
++    if index == 0:
++        return background.copy()
++    progress = index / (FRAME_COUNT - 1)
++    # About 13% forward expansion over five seconds, with a subtle walking sway.
++    scale = 1.0 + 0.132 * progress
++    phase = 2.0 * np.pi * index / 7.5
++    vp_x = 130.0 + 0.38 * np.sin(phase)
++    vp_y = 48.0 + 0.22 * np.sin(phase * 2.0)
++    yy, xx = np.indices((HEIGHT, WIDTH), dtype=np.float32)
++    src_x = vp_x + (xx - vp_x) / scale
++    src_y = vp_y + (yy - vp_y) / scale
++
++    # The closest road moves a touch faster than the distant skyline.
++    ground = np.clip((yy - vp_y) / (HEIGHT - vp_y), 0.0, 1.0)
++    src_y -= progress * 1.15 * ground * ground
++    src_x += 0.18 * np.sin(phase) * ground
++    src_x = src_x.astype(np.float32)
++    src_y = src_y.astype(np.float32)
++    return cv2.remap(
++        background,
++        src_x,
++        src_y,
++        interpolation=cv2.INTER_CUBIC,
++        borderMode=cv2.BORDER_REFLECT_101,
++    )
++
++
++def affine_layer(rgb: np.ndarray, alpha: np.ndarray, matrix: np.ndarray) -&gt; tuple[np.ndarray, np.ndarray]:
++    moved_rgb = cv2.warpAffine(
++        rgb, matrix, (WIDTH, HEIGHT), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT
++    )
++    moved_alpha = cv2.warpAffine(
++        alpha, matrix, (WIDTH, HEIGHT), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT
++    )
++    return moved_rgb, moved_alpha
++
++
++def composite(dst: np.ndarray, rgb: np.ndarray, alpha: np.ndarray) -&gt; np.ndarray:
++    weight = alpha.astype(np.float32)[..., None] / 255.0
++    return np.clip(dst.astype(np.float32) * (1.0 - weight) + rgb.astype(np.float32) * weight, 0, 255).astype(np.uint8)
++
++
++def render_dog(frame: np.ndarray, source: np.ndarray, alpha: np.ndarray, index: int) -&gt; np.ndarray:
++    &quot;&quot;&quot;Keep the dog framed while giving its hind legs a restrained walk cycle.&quot;&quot;&quot;
++    phase = 2.0 * np.pi * index / 7.5
++    bob = -0.65 * (0.5 - 0.5 * np.cos(phase * 2.0))
++    sway = 0.34 * np.sin(phase)
++
++    yy, xx = np.indices((HEIGHT, WIDTH))
++    left_region = np.array([(118, 101), (127, 102), (128, 112), (126, 131), (118, 132)], np.int32)
++    right_region = np.array([(127, 101), (137, 103), (138, 131), (129, 131), (128, 112)], np.int32)
++    left = np.zeros_like(alpha)
++    right = np.zeros_like(alpha)
++    cv2.fillPoly(left, [left_region], 255)
++    cv2.fillPoly(right, [right_region], 255)
++    left = cv2.min(left, alpha)
++    right = cv2.min(right, alpha)
++    leg_union = cv2.max(left, right)
++
++    # Body overlaps the thighs, which hides the leg-layer seams.
++    body_keep = np.where(yy &lt;= 110, 255, 0).astype(np.uint8)
++    body_keep = cv2.GaussianBlur(body_keep, (1, 5), 0.7)
++    body_alpha = cv2.max(cv2.min(alpha, body_keep), cv2.subtract(alpha, leg_union))
++
++    global_matrix = np.float32([[1, 0, sway], [0, 1, bob]])
++    body_rgb, body_a = affine_layer(source, body_alpha, global_matrix)
++
++    # Opposing shears pivot visually at the hips, alternating the paws by ~2 px.
++    stride = 1.75 * np.sin(phase)
++    lift_left = -0.8 * max(0.0, np.sin(phase))
++    lift_right = -0.8 * max(0.0, -np.sin(phase))
++    left_matrix = np.float32([[1, stride / 27.0, sway - stride * 108.0 / 27.0], [0, 1, bob + lift_left]])
++    right_matrix = np.float32([[1, -stride / 27.0, sway + stride * 108.0 / 27.0], [0, 1, bob + lift_right]])
++    left_rgb, left_a = affine_layer(source, left, left_matrix)
++    right_rgb, right_a = affine_layer(source, right, right_matrix)
++
++    # A soft contact shadow moves with the animal and sells its contact with the street.
++    shadow = np.zeros((HEIGHT, WIDTH), np.uint8)
++    center = (int(round(128 + sway)), int(round(129 + bob)))
++    cv2.ellipse(shadow, center, (11, 3), 0, 0, 360, 62, -1)
++    shadow = cv2.GaussianBlur(shadow, (9, 5), 2.0)
++    dark = np.clip(frame.astype(np.float32) * 0.68, 0, 255).astype(np.uint8)
++    frame = composite(frame, dark, shadow)
++    frame = composite(frame, left_rgb, left_a)
++    frame = composite(frame, right_rgb, right_a)
++    frame = composite(frame, body_rgb, body_a)
++    return frame
++
++
++def save_candidate_strip(frames: np.ndarray) -&gt; None:
++    picks = [0, 4, 8, 12, 16, 19]
++    canvas = Image.new(&quot;RGB&quot;, (WIDTH * 3, HEIGHT * 2 + 34), (22, 24, 29))
++    draw = ImageDraw.Draw(canvas)
++    for slot, frame_index in enumerate(picks):
++        x = (slot % 3) * WIDTH
++        y = (slot // 3) * (HEIGHT + 17)
++        draw.text((x + 4, y + 2), f&quot;candidate v1 - frame {frame_index:02d}&quot;, fill=(245, 245, 245))
++        canvas.paste(Image.fromarray(frames[frame_index]), (x, y + 17))
++    canvas.save(CASE_DIR / &quot;candidate_v1.png&quot;)
++
++
++def generate() -&gt; np.ndarray:
++    source = np.asarray(Image.open(CASE_DIR / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;), dtype=np.uint8)
++    alpha = dog_mask(source)
++    background = clean_background(source, alpha)
++    frames = [source.copy()]
++    for index in range(1, FRAME_COUNT):
++        frame = warp_background(background, index)
++        frame = render_dog(frame, source, alpha, index)
++        frames.append(frame)
++    result = np.stack(frames).astype(np.uint8)
++    assert result.shape == (20, 143, 256, 3)
++    assert np.array_equal(result[0], source)
++    return result
++
++
++if __name__ == &quot;__main__&quot;:
++    generated = generate()
++    save_candidate_strip(generated)
++    artifact_io.save(generated, CASE_DIR)</pre></details><a href="candidate_00/generate.py">本轮完整代码</a></article><article><h3>Candidate 2</h3><p class="muted">2026-11-05T18:10:38.730984+00:00 · RGB hash bd0f78db6c9f2fcb</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_01/pixels-bd0f78db6c9f2fcb.png&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_01/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_01/inspection.png"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_01/generate.py">本轮完整代码</a></article><h2>可观测工具时间线</h2><details><summary>:56.565387+00:00 · agent_message · I’ll inspect the prompt and generation rules first, then build the video directly in the repository and visually check representative frames before finalizing i</summary><pre>I’ll inspect the prompt and generation rules first, then build the video directly in the repository and visually check representative frames before finalizing it.</pre><pre></pre></details><details><summary>:57.556316+00:00 · command_execution · pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;!runs&#x27; -g &#x27;!site&#x27; -g &#x27;!evaluation_outputs&#x27; | sort &amp;&amp; sed -n &#x27;1,240p&#x27; prompt.txt &amp;&amp; sed -n &#x27;1,280p</summary><pre>pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;!runs&#x27; -g &#x27;!site&#x27; -g &#x27;!evaluation_outputs&#x27; | sort &amp;&amp; sed -n &#x27;1,240p&#x27; prompt.txt &amp;&amp; sed -n &#x27;1,280p&#x27; GENERATION_RULES.md</pre><pre>[workspace path]
+/bin/bash: line 155: rg: command not found
+The subject moves forward. The camera follows, maintaining distance and framing.# PixelWorld generation contract v2
+
+- Use only `first_frame.png`, `prompt.txt` and `task_spec.json`. Work inside this workspace. No network, other cases, reference continuations, masks, scores, memory, external AI models, learned weights, external simulation/rendering engines, or subagents.
+- Generate 20 RGB frames at 256×143, 4 fps, for 5 seconds. Frame 00 must be pixel-identical to `first_frame.png`.
+- Implement `generate.py` and call `artifact_io.save(frames, case_dir)` with uint8 RGB arrays of shape `(20,143,256,3)`. Local Python/numpy/PIL, mathematical geometry, motion, lighting, copying and warping pixels are allowed.
+- Save intermediate generated results in the workspace when producing candidates for inspection. Choose whether and how to check or revise your output.
+</pre></details><details><summary>:03.238957+00:00 · agent_message · The contract is concise: 20 frames at 256×143 and 4 fps, with frame 0 preserved exactly. I’m going to model a forward-tracking camera by expanding the street ar</summary><pre>The contract is concise: 20 frames at 256×143 and 4 fps, with frame 0 preserved exactly. I’m going to model a forward-tracking camera by expanding the street around its vanishing point while holding the dog at a stable screen size, then add a restrained walking gait and road motion so the result reads as forward movement rather than a zoom.</pre><pre></pre></details><details><summary>:04.960562+00:00 · command_execution · find . -maxdepth 2 -type f -print | sort &amp;&amp; sed -n &#x27;1,240p&#x27; task_spec.json &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;</summary><pre>find . -maxdepth 2 -type f -print | sort &amp;&amp; sed -n &#x27;1,240p&#x27; task_spec.json &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.mode, im.size)
+PY</pre><pre>./GENERATION_RULES.md
+./artifact_io.py
+./first_frame.png
+./player_template.html
+./prompt.txt
+./task_spec.json
+{
+  &quot;task_type&quot;: &quot;i2v&quot;,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 143,
+  &quot;frames&quot;: 20,
+  &quot;fps&quot;: 4,
+  &quot;audio&quot;: null,
+  &quot;benchmark&quot;: &quot;wbench&quot;,
+  &quot;turn&quot;: 1,
+  &quot;action&quot;: &quot;W&quot;
+}
+RGB (256, 143)
+</pre></details><details><summary>:09.525654+00:00 · command_execution · sed -n &#x27;1,260p&#x27; artifact_io.py</summary><pre>sed -n &#x27;1,260p&#x27; artifact_io.py</pre><pre>&quot;&quot;&quot;Output-only helpers. No drawing or generation policy is implemented here.&quot;&quot;&quot;
+from pathlib import Path
+import base64
+import json
+import wave
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+
+def save(frames, case_dir, audio=None):
+    case_dir = Path(case_dir)
+    frames = np.asarray(frames)
+    path = case_dir / &quot;task_spec.json&quot;
+    spec = json.loads(path.read_text()) if path.is_file() else {}
+    n, h, w, fps = (spec.get(&quot;frames&quot;, 20), spec.get(&quot;height&quot;, 144), spec.get(&quot;width&quot;, 256), spec.get(&quot;fps&quot;, 4))
+    assert frames.shape == (n, h, w, 3) and frames.dtype == np.uint8, frames.shape
+    audio_spec = spec.get(&quot;audio&quot;)
+    audio_url = None
+    if audio_spec:
+        samples = round(n / fps * audio_spec[&quot;sample_rate&quot;])
+        pcm = np.asarray(audio)
+        if pcm.ndim == 1:
+            pcm = pcm[:, None]
+        assert pcm.shape == (samples, audio_spec[&quot;channels&quot;]) and pcm.dtype == np.int16, (pcm.shape, pcm.dtype)
+        with wave.open(str(case_dir / &quot;audio.wav&quot;), &quot;wb&quot;) as handle:
+            handle.setnchannels(audio_spec[&quot;channels&quot;])
+            handle.setsampwidth(2)
+            handle.setframerate(audio_spec[&quot;sample_rate&quot;])
+            handle.writeframes(pcm.astype(&quot;&lt;i2&quot;).tobytes())
+        audio_url = &quot;data:audio/wav;base64,&quot; + base64.b64encode((case_dir / &quot;audio.wav&quot;).read_bytes()).decode()
+    values = frames.astype(np.uint32)
+    packed = (values[:, :, :, 0] &lt;&lt; 16) | (values[:, :, :, 1] &lt;&lt; 8) | values[:, :, :, 2]
+    tensor = packed.transpose(1, 2, 0)
+    np.savez_compressed(case_dir / &quot;pixels.npz&quot;, pixels=tensor)
+
+    folder = case_dir / &quot;frames&quot;
+    folder.mkdir(exist_ok=True)
+    for index, frame in enumerate(frames):
+        Image.fromarray(frame).save(folder / f&quot;{index:02d}.png&quot;)
+
+    sheet = Image.new(&quot;RGB&quot;, (w * 4, (h + 21) * 2), (25, 28, 35))
+    draw = ImageDraw.Draw(sheet)
+    for index, frame_index in enumerate(np.linspace(0, n - 1, 8).round().astype(int)):
+        x, y = (index % 4) * w, (index // 4) * (h + 21)
+        draw.text((x + 5, y + 3), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        sheet.paste(Image.fromarray(frames[frame_index]), (x, y + 21))
+    sheet.save(case_dir / &quot;inspection.png&quot;)
+
+    transition = Image.new(&quot;RGB&quot;, (w * 4, h * 2 + 21), (25, 28, 35))
+    draw = ImageDraw.Draw(transition)
+    for index, frame_index in enumerate(min(i, n-1) for i in range(4)):
+        x = index * w
+        draw.text((x + 5, 4), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        transition.paste(Image.fromarray(frames[frame_index]), (x, 21))
+        transition.paste(Image.fromarray(frames[frame_index]).resize((w, h), Image.Resampling.NEAREST), (x, h + 21))
+    transition.save(case_dir / &quot;transition_check.png&quot;)
+
+    encode = lambda array: base64.b64encode(np.asarray(array, dtype=&quot;&lt;u4&quot;).tobytes()).decode()
+    deltas = []
+    for index in range(1, n):
+        current = packed[index].reshape(-1)
+        previous = packed[index - 1].reshape(-1)
+        positions = np.flatnonzero(current != previous)
+        packet = []
+        if len(positions):
+            bounds = np.r_[0, np.flatnonzero(np.diff(positions) &gt; 1) + 1, len(positions)]
+            for start, end in zip(bounds[:-1], bounds[1:]):
+                offset = int(positions[start])
+                count = int(end - start)
+                packet.extend([offset, count])
+                packet.extend(current[offset:offset + count].tolist())
+        deltas.append(encode(packet))
+    data = {
+        &quot;id&quot;: case_dir.name,
+        &quot;width&quot;: w, &quot;height&quot;: h, &quot;frames&quot;: n, &quot;fps&quot;: fps, &quot;audio&quot;: audio_url,
+        &quot;first&quot;: encode(packed[0].reshape(-1)),
+        &quot;deltas&quot;: deltas,
+        &quot;caption&quot;: (case_dir / &quot;prompt.txt&quot;).read_text().strip(),
+    }
+    template = (Path(__file__).parent / &quot;player_template.html&quot;).read_text()
+    payload = json.dumps(data, separators=(&quot;,&quot;, &quot;:&quot;), ensure_ascii=False).replace(&quot;&lt;&quot;, &quot;\\u003c&quot;)
+    (case_dir / &quot;index.html&quot;).write_text(template.replace(&quot;__ID__&quot;, case_dir.name).replace(&quot;__DATA__&quot;, payload))
+</pre></details><details><summary>:18.624945+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2
+ print(&#x27;cv2&#x27;, cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+PY
+command -v ffmpeg || true
+command -v convert || true</pre><pre>cv2 4.13.0
+</pre></details><details><summary>:48.027039+00:00 · agent_message · The main visual risk is “camera zoom” versus “camera following.” I’m handling that by removing the dog from the moving background, applying perspective expansio</summary><pre>The main visual risk is “camera zoom” versus “camera following.” I’m handling that by removing the dog from the moving background, applying perspective expansion around the street’s vanishing point, and compositing a constant-scale dog back in with alternating leg motion, a small body bob, and a grounded shadow. This keeps framing stable while the road and buildings carry the forward motion.</pre><pre></pre></details><details><summary>:09.964794+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:16.225233+00:00 · command_execution · ls -l generate.py &amp;&amp; python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;</summary><pre>ls -l generate.py &amp;&amp; python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+first=np.asarray(Image.open(&#x27;first_frame.png&#x27;),dtype=np.uint32)
+packed=(first[:,:,0]&lt;&lt;16)|(first[:,:,1]&lt;&lt;8)|first[:,:,2]
+print(&#x27;tensor&#x27;,z.shape,z.dtype,&#x27;first_exact&#x27;,np.array_equal(z[:,:,0],packed))
+print(&#x27;artifacts&#x27;, Image.open(&#x27;inspection.png&#x27;).size, Image.open(&#x27;candidate_v1.png&#x27;).size)
+PY</pre><pre>-rw-r--r-- 1 tiger tiger 8155 Nov  6 02:10 generate.py
+Traceback (most recent call last):
+  File &quot;[workspace path]&quot;, line 190, in &lt;module&gt;
+    generated = generate()
+                ^^^^^^^^^^
+  File &quot;[workspace path]&quot;, line 180, in generate
+    frame = warp_background(background, index)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &quot;[workspace path]&quot;, line 91, in warp_background
+    return cv2.remap(
+           ^^^^^^^^^^
+cv2.error: OpenCV(4.13.0) /io/opencv/modules/imgproc/src/imgwarp.cpp:1670: error: (-215:Assertion failed) ((map1.type() == CV_32FC2 || map1.type() == CV_16SC2) &amp;&amp; map2.empty()) || (map1.type() == CV_32FC1 &amp;&amp; map2.type() == CV_32FC1) in function &#x27;remap&#x27;
+
+</pre></details><details><summary>:25.277511+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:34.556989+00:00 · command_execution · python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+first=np.asarray(Image.open(&#x27;first_frame.png&#x27;),dtype=np.uint32)
+packed=(first[:,:,0]&lt;&lt;16)|(first[:,:,1]&lt;&lt;8)|first[:,:,2]
+print(&#x27;tensor&#x27;,z.shape,z.dtype,&#x27;first_exact&#x27;,np.array_equal(z[:,:,0],packed))
+print(&#x27;artifacts&#x27;, Image.open(&#x27;inspection.png&#x27;).size, Image.open(&#x27;candidate_v1.png&#x27;).size)
+PY</pre><pre>tensor (143, 256, 20) uint32 first_exact True
+artifacts (1024, 328) (768, 320)
+</pre></details><details><summary>:38.632654+00:00 · agent_message · The first candidate is rendered and passes the structural checks, including an exact frame-0 pixel match. I’m inspecting both the full motion progression and th</summary><pre>The first candidate is rendered and passes the structural checks, including an exact frame-0 pixel match. I’m inspecting both the full motion progression and the first few frames now; the latter is important for catching any segmentation edge or sudden jump that a static contact sheet can hide.</pre><pre></pre></details><details><summary>:53.394532+00:00 · agent_message · The inspection looks coherent: the skyline stays anchored, near road markings and parked cars expand toward the viewer, and the dog remains centered at nearly c</summary><pre>The inspection looks coherent: the skyline stays anchored, near road markings and parked cars expand toward the viewer, and the dog remains centered at nearly constant size while its paws alternate. The first generated frame also transitions cleanly from the source. I’m doing the final artifact and reproducibility checks now.</pre><pre></pre></details><details><summary>:58.972507+00:00 · command_execution · python -m py_compile generate.py artifact_io.py &amp;&amp; python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python -m py_compile generate.py artifact_io.py &amp;&amp; python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+from PIL import Image
+root=Path(&#x27;.&#x27;)
+frames=[np.asarray(Image.open(root/&#x27;frames&#x27;/f&#x27;{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)]
+a=np.stack(frames)
+source=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(&#x27;shape/dtype:&#x27;, a.shape, a.dtype)
+print(&#x27;frame00 exact:&#x27;, np.array_equal(a[0], source))
+print(&#x27;frame files:&#x27;, len(list((root/&#x27;frames&#x27;).glob(&#x27;*.png&#x27;))))
+print(&#x27;adjacent changed pixels:&#x27;, [int(np.any(a[i]!=a[i-1],axis=2).sum()) for i in range(1,20)])
+print(&#x27;required outputs:&#x27;, {p: (root/p).stat().st_size for p in [&#x27;pixels.npz&#x27;,&#x27;index.html&#x27;,&#x27;inspection.png&#x27;,&#x27;transition_check.png&#x27;,&#x27;candidate_v1.png&#x27;]})
+PY
+git status --short</pre><pre>shape/dtype: (20, 143, 256, 3) uint8
+frame00 exact: True
+frame files: 20
+adjacent changed pixels: [35321, 35543, 35511, 35470, 35453, 35352, 35473, 35366, 35434, 35330, 35326, 35248, 35362, 35339, 35193, 35260, 35294, 35291, 35137]
+required outputs: {&#x27;pixels.npz&#x27;: 1753775, &#x27;index.html&#x27;: 3969093, &#x27;inspection.png&#x27;: 567545, &#x27;transition_check.png&#x27;: 575168, &#x27;candidate_v1.png&#x27;: 426970}
+ M ../../../../../../../../pixelworld/assets/artifact_io.py
+ M ../../../../../../../../pixelworld/assets/player_template.html
+ M ../../../../../../../../pixelworld/audit.py
+ M ../../../../../../../../pixelworld/cli.py
+ M ../../../../../../../../pixelworld/config.py
+ M ../../../../../../../../pixelworld/runner.py
+ M ../../../../../../../../pixelworld/snapshot.py
+ M ../../../../../../../../pyproject.toml
+?? ../../../../../../../../docs/SMOKE_GOAL.md
+?? ../../../../../../../../pixelworld/assets/smoke_player.js
+?? ../../../../../../../../pixelworld/interaction.py
+?? ../../../../../../../../pixelworld/media.py
+?? ../../../../../../../../pixelworld/smoke_web.py
+?? ../../../../../../../../tests/test_interaction.py
+?? ../../../../../../../../tests/test_media.py
+</pre></details><details><summary>:04.452464+00:00 · agent_message · Generated the requested 20-frame RGB video at 256×143 and 4 fps.</summary><pre>Generated the requested 20-frame RGB video at 256×143 and 4 fps.
+
+- Frame 00 is pixel-identical to `first_frame.png`.
+- The dog moves forward while the camera follows at stable distance and framing.
+- Added perspective street motion, a subtle walking gait, body bob, and contact shadow.
+- Output validated as `(20, 143, 256, 3)` `uint8`.
+
+Files:
+
+- [Interactive video player]([workspace path]
+- [Generated pixels]([workspace path]
+- [Inspection sheet]([workspace path]
+- [Generation code]([workspace path]</pre><pre></pre></details><p><a href="observed_trace.json">完整可观测事件 JSON</a></p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+</script></html>
