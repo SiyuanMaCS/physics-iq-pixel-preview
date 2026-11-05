@@ -1,0 +1,454 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld generation trace</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="../../index.html">← Smoke 总览</a></p><h1>case_1_turn_03</h1><p class="muted">GPT-5.6-Sol · vision-agent · 256×143 · 20 frames / 4 fps</p><div class="box"><strong>当前任务输入</strong><p>The camera orbits clockwise around the subject. The subject stays still.</p></div><h2>最终视频</h2><div class="player" data-player="{&quot;asset&quot;: &quot;final/pixels-4472b3fd6fe0cd65.png&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="final/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p><a href="final/generate.py">生成代码</a> · <a href="contract.json">输入与输出契约</a></p><div class="box">保存的候选：7 · output tokens：11513 · reasoning output tokens：4340 · 耗时：221s</div><h2>逐轮生成与修改</h2><p class="muted">候选由外部 harness 保存。是否读图，以对应工具事件为依据。</p><article><h3>Candidate 1</h3><p class="muted">2026-11-05T18:15:52.588528+00:00 · RGB hash 6c1ec0fc845a465f</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_00/pixels-6c1ec0fc845a465f.png&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_00/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_00/inspection.png"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -0,0 +1,195 @@
++from pathlib import Path
++
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++
++import artifact_io
++
++
++W, H = 256, 143
++CX, HORIZON = 127.5, 61.0
++FOCAL = 205.0
++
++
++def bilinear(image, x, y):
++    &quot;&quot;&quot;Sample an RGB image at floating point pixel coordinates.&quot;&quot;&quot;
++    h, w = image.shape[:2]
++    x = np.clip(x, 0.0, w - 1.001)
++    y = np.clip(y, 0.0, h - 1.001)
++    x0 = np.floor(x).astype(np.int32)
++    y0 = np.floor(y).astype(np.int32)
++    x1 = np.minimum(x0 + 1, w - 1)
++    y1 = np.minimum(y0 + 1, h - 1)
++    fx = (x - x0)[..., None]
++    fy = (y - y0)[..., None]
++    a = image[y0, x0] * (1.0 - fx) + image[y0, x1] * fx
++    b = image[y1, x0] * (1.0 - fx) + image[y1, x1] * fx
++    return a * (1.0 - fy) + b * fy
++
++
++def scalar_bilinear(field, x, y):
++    h, w = field.shape
++    x = np.clip(x, 0.0, w - 1.001)
++    y = np.clip(y, 0.0, h - 1.001)
++    x0 = np.floor(x).astype(np.int32)
++    y0 = np.floor(y).astype(np.int32)
++    x1 = np.minimum(x0 + 1, w - 1)
++    y1 = np.minimum(y0 + 1, h - 1)
++    fx = x - x0
++    fy = y - y0
++    return ((field[y0, x0] * (1.0 - fx) + field[y0, x1] * fx) * (1.0 - fy)
++            + (field[y1, x0] * (1.0 - fx) + field[y1, x1] * fx) * fy)
++
++
++def make_subject_mask():
++    &quot;&quot;&quot;A hand-traced soft matte for the dog and its ground shadow.&quot;&quot;&quot;
++    dog = Image.new(&quot;L&quot;, (W, H), 0)
++    draw = ImageDraw.Draw(dog)
++    outline = [
++        (124, 72), (130, 73), (134, 77), (135, 81), (131, 85),
++        (133, 91), (131, 98), (134, 104), (132, 112), (135, 119),
++        (134, 128), (131, 133), (127, 133), (126, 118), (124, 115),
++        (123, 124), (122, 134), (118, 133), (116, 127), (117, 118),
++        (119, 109), (117, 103), (118, 95), (119, 88), (119, 84),
++        (117, 81), (120, 78), (120, 75),
++    ]
++    draw.polygon(outline, fill=255)
++
++    # The original contact shadow belongs with the stationary dog.  Keeping it
++    # on this layer prevents it from sliding with the road during the orbit.
++    shadow = Image.new(&quot;L&quot;, (W, H), 0)
++    sd = ImageDraw.Draw(shadow)
++    sd.ellipse((123, 124, 153, 143), fill=170)
++    shadow = shadow.filter(ImageFilter.GaussianBlur(3.0))
++    dog = dog.filter(ImageFilter.GaussianBlur(0.65))
++    return np.maximum(np.asarray(dog), np.asarray(shadow)).astype(np.float32) / 255.0
++
++
++def make_clean_background(source, cut):
++    &quot;&quot;&quot;Fill the small subject footprint from nearby road samples.&quot;&quot;&quot;
++    bg = source.astype(np.float32).copy()
++    # Horizontal road interpolation is stable here because all affected rows
++    # are below the horizon and contain nearly horizontal asphalt texture.
++    for yy in range(69, H):
++        xs = np.flatnonzero(cut[yy] &gt; 0.025)
++        if not len(xs):
++            continue
++        lo = max(0, int(xs.min()) - 3)
++        hi = min(W - 1, int(xs.max()) + 3)
++        left = bg[yy, max(0, lo - 5):lo]
++        right = bg[yy, hi + 1:min(W, hi + 6)]
++        lv = left.mean(axis=0) if len(left) else bg[yy, lo]
++        rv = right.mean(axis=0) if len(right) else bg[yy, hi]
++        ramp = np.linspace(0.0, 1.0, hi - lo + 1)[:, None]
++        fill = lv[None, :] * (1.0 - ramp) + rv[None, :] * ramp
++        # Preserve low-amplitude asphalt grain so the repair is not a flat bar.
++        grain = ((np.arange(hi - lo + 1) * 37 + yy * 17) % 13 - 6)[:, None] * 0.34
++        bg[yy, lo:hi + 1] = np.clip(fill + grain, 0, 255)
++    # Blend only where the removed layer was visible.
++    blur = Image.fromarray(np.uint8(np.clip(cut * 255, 0, 255))).filter(
++        ImageFilter.GaussianBlur(2.2))
++    a = np.asarray(blur).astype(np.float32)[..., None] / 255.0
++    return source.astype(np.float32) * (1.0 - a) + bg * a
++
++
++def make_depth():
++    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
++    # The road is a ground plane whose depth tends to infinity at the horizon.
++    road_z = 8.0 * (130.0 - HORIZON) / np.maximum(yy - HORIZON, 1.0)
++    road_z = np.clip(road_z, 7.6, 92.0)
++
++    # Facades at the edges are close, while the central city canyon is distant.
++    side_z = 8.5 + 78.0 * np.power(1.0 - np.minimum(np.abs(xx - CX) / 132.0, 1.0), 1.55)
++    vertical = side_z + np.maximum(HORIZON - yy, 0.0) * 0.10
++    depth = np.where(yy &gt; HORIZON, road_z, vertical)
++
++    # Sky and the bright opening down the street form the farthest layer.
++    sky = (yy &lt; 52) &amp; (xx &gt; 74) &amp; (xx &lt; 166)
++    distance_opening = (np.abs(xx - CX) &lt; (18.0 + np.maximum(68.0 - yy, 0.0) * 0.45))
++    depth[sky] = 115.0
++    depth[distance_opening &amp; (yy &lt; 84)] = np.maximum(depth[distance_opening &amp; (yy &lt; 84)], 92.0)
++
++    # Light separable smoothing prevents depth stair-steps without erasing
++    # broad parallax (and works on float depth in every Pillow version).
++    kernel = np.array([1, 4, 7, 10, 7, 4, 1], dtype=np.float32)
++    kernel /= kernel.sum()
++    padded = np.pad(depth, ((0, 0), (3, 3)), mode=&quot;edge&quot;)
++    smooth = sum(kernel[k] * padded[:, k:k + W] for k in range(7))
++    padded = np.pad(smooth, ((3, 3), (0, 0)), mode=&quot;edge&quot;)
++    smooth = sum(kernel[k] * padded[k:k + H, :] for k in range(7))
++    return smooth.astype(np.float32)
++
++
++def project(source, depth, angle):
++    &quot;&quot;&quot;Inverse-map a yawing camera that orbits a target eight units away.&quot;&quot;&quot;
++    gy, gx = np.mgrid[0:H, 0:W].astype(np.float32)
++    sx, sy = gx.copy(), gy.copy()
++    s, c = np.sin(angle), np.cos(angle)
++    radius = 8.0
++    cam_x = radius * s
++    cam_z = radius * (1.0 - c)
++
++    # Fixed-point inversion of the depth-dependent forward projection.
++    for _ in range(8):
++        z = scalar_bilinear(depth, sx, sy)
++        wx = (sx - CX) * z / FOCAL
++        wy = (sy - HORIZON) * z / FOCAL
++        rx = c * (wx - cam_x) + s * (z - cam_z)
++        rz = -s * (wx - cam_x) + c * (z - cam_z)
++        rz = np.maximum(rz, 1.0)
++        px = CX + FOCAL * rx / rz
++        py = HORIZON + FOCAL * wy / rz
++        sx += np.clip(gx - px, -6.0, 6.0) * 0.72
++        sy += np.clip(gy - py, -4.0, 4.0) * 0.72
++    return bilinear(source, sx, sy)
++
++
++def warp_subject(source, mask, amount):
++    &quot;&quot;&quot;Give the fixed dog a subtle viewpoint change without moving its feet.&quot;&quot;&quot;
++    gy, gx = np.mgrid[0:H, 0:W].astype(np.float32)
++    anchor_x, anchor_y = 126.5, 132.0
++    # Head moves a few pixels relative to planted paws as the view swings from
++    # directly behind toward the dog&#x27;s rear quarter.
++    vertical = np.clip((anchor_y - gy) / 60.0, 0.0, 1.0)
++    out_x = anchor_x + (gx - anchor_x) * (1.0 + 0.055 * amount) + 4.2 * amount * vertical
++    out_y = gy - 0.5 * amount * vertical
++    # Invert the simple displacement to sample the original layer.
++    src_x = anchor_x + (gx - anchor_x - 4.2 * amount * vertical) / (1.0 + 0.055 * amount)
++    src_y = gy + 0.5 * amount * vertical
++    rgb = bilinear(source.astype(np.float32), src_x, src_y)
++    alpha = scalar_bilinear(mask, src_x, src_y)[..., None]
++    # Discard samples whose forward location is well outside the canvas.
++    valid = ((out_x &gt;= -1) &amp; (out_x &lt;= W) &amp; (out_y &gt;= -1) &amp; (out_y &lt;= H))[..., None]
++    return rgb, alpha * valid
++
++
++def generate():
++    root = Path(__file__).resolve().parent
++    source = np.asarray(Image.open(root / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;), dtype=np.uint8)
++    subject = make_subject_mask()
++    background = make_clean_background(source, subject)
++    depth = make_depth()
++
++    frames = []
++    for i in range(20):
++        if i == 0:
++            frames.append(source.copy())
++            continue
++        u = i / 19.0
++        # Smooth start and finish reads as a deliberate camera move rather than
++        # an abrupt image effect. Total orbit is about 32 degrees.
++        eased = u * u * (3.0 - 2.0 * u)
++        angle = np.deg2rad(32.0) * eased
++        frame = project(background, depth, angle)
++        dog_rgb, dog_a = warp_subject(source, subject, eased)
++        frame = frame * (1.0 - dog_a) + dog_rgb * dog_a
++        frames.append(np.uint8(np.clip(frame + 0.5, 0, 255)))
++
++    result = np.stack(frames).astype(np.uint8)
++    assert result.shape == (20, H, W, 3)
++    assert np.array_equal(result[0], source)
++    artifact_io.save(result, root)
++
++
++if __name__ == &quot;__main__&quot;:
++    generate()</pre></details><a href="candidate_00/generate.py">本轮完整代码</a></article><article><h3>Candidate 2</h3><p class="muted">2026-11-05T18:16:33.948759+00:00 · RGB hash 975eb2cdd67cc4fe</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_01/pixels-975eb2cdd67cc4fe.png&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_01/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_01/inspection.png"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -41,8 +41,8 @@
+             + (field[y1, x0] * (1.0 - fx) + field[y1, x1] * fx) * fy)
+ 
+ 
+-def make_subject_mask():
+-    &quot;&quot;&quot;A hand-traced soft matte for the dog and its ground shadow.&quot;&quot;&quot;
++def make_subject_masks():
++    &quot;&quot;&quot;Hand-traced dog matte plus a broader removal matte for its shadow.&quot;&quot;&quot;
+     dog = Image.new(&quot;L&quot;, (W, H), 0)
+     draw = ImageDraw.Draw(dog)
+     outline = [
+@@ -62,7 +62,17 @@
+     sd.ellipse((123, 124, 153, 143), fill=170)
+     shadow = shadow.filter(ImageFilter.GaussianBlur(3.0))
+     dog = dog.filter(ImageFilter.GaussianBlur(0.65))
+-    return np.maximum(np.asarray(dog), np.asarray(shadow)).astype(np.float32) / 255.0
++    dog_a = np.asarray(dog).astype(np.float32) / 255.0
++    removal = np.maximum(np.asarray(dog), np.asarray(shadow)).astype(np.float32) / 255.0
++    return dog_a, removal
++
++
++def make_shadow_mask():
++    &quot;&quot;&quot;A clean stationary contact shadow, independent of copied road pixels.&quot;&quot;&quot;
++    shadow = Image.new(&quot;L&quot;, (W, H), 0)
++    draw = ImageDraw.Draw(shadow)
++    draw.ellipse((122, 127, 151, 143), fill=150)
++    return np.asarray(shadow.filter(ImageFilter.GaussianBlur(3.2))).astype(np.float32) / 255.0
+ 
+ 
+ def make_clean_background(source, cut):
+@@ -129,9 +139,15 @@
+     cam_x = radius * s
+     cam_z = radius * (1.0 - c)
+ 
++    # Reflected padding supplies plausible continuation at frame borders as the
++    # orbit reveals a narrow sliver beyond the original photograph.
++    padx, pady = 72, 24
++    padded_source = np.pad(source, ((pady, pady), (padx, padx), (0, 0)), mode=&quot;reflect&quot;)
++    padded_depth = np.pad(depth, ((pady, pady), (padx, padx)), mode=&quot;reflect&quot;)
++
+     # Fixed-point inversion of the depth-dependent forward projection.
+     for _ in range(8):
+-        z = scalar_bilinear(depth, sx, sy)
++        z = scalar_bilinear(padded_depth, sx + padx, sy + pady)
+         wx = (sx - CX) * z / FOCAL
+         wy = (sy - HORIZON) * z / FOCAL
+         rx = c * (wx - cam_x) + s * (z - cam_z)
+@@ -141,7 +157,7 @@
+         py = HORIZON + FOCAL * wy / rz
+         sx += np.clip(gx - px, -6.0, 6.0) * 0.72
+         sy += np.clip(gy - py, -4.0, 4.0) * 0.72
+-    return bilinear(source, sx, sy)
++    return bilinear(padded_source, sx + padx, sy + pady)
+ 
+ 
+ def warp_subject(source, mask, amount):
+@@ -166,8 +182,9 @@
+ def generate():
+     root = Path(__file__).resolve().parent
+     source = np.asarray(Image.open(root / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;), dtype=np.uint8)
+-    subject = make_subject_mask()
+-    background = make_clean_background(source, subject)
++    subject, removal = make_subject_masks()
++    shadow = make_shadow_mask()[..., None]
++    background = make_clean_background(source, removal)
+     depth = make_depth()
+ 
+     frames = []
+@@ -177,10 +194,11 @@
+             continue
+         u = i / 19.0
+         # Smooth start and finish reads as a deliberate camera move rather than
+-        # an abrupt image effect. Total orbit is about 32 degrees.
++        # an abrupt image effect. Total orbit is about 20 degrees.
+         eased = u * u * (3.0 - 2.0 * u)
+-        angle = np.deg2rad(32.0) * eased
++        angle = np.deg2rad(20.0) * eased
+         frame = project(background, depth, angle)
++        frame *= 1.0 - 0.27 * shadow
+         dog_rgb, dog_a = warp_subject(source, subject, eased)
+         frame = frame * (1.0 - dog_a) + dog_rgb * dog_a
+         frames.append(np.uint8(np.clip(frame + 0.5, 0, 255)))</pre></details><a href="candidate_01/generate.py">本轮完整代码</a></article><article><h3>Candidate 3</h3><p class="muted">2026-11-05T18:16:36.211497+00:00 · RGB hash 975eb2cdd67cc4fe</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_02/pixels-975eb2cdd67cc4fe.png&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_02/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_02/inspection.png"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_02/generate.py">本轮完整代码</a></article><article><h3>Candidate 4</h3><p class="muted">2026-11-05T18:16:55.058083+00:00 · RGB hash 5f47d13e6b0b5c8d</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_03/pixels-5f47d13e6b0b5c8d.png&quot;, &quot;poster&quot;: &quot;candidate_03/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_03/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_03/inspection.png"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -59,8 +59,8 @@
+     # on this layer prevents it from sliding with the road during the orbit.
+     shadow = Image.new(&quot;L&quot;, (W, H), 0)
+     sd = ImageDraw.Draw(shadow)
+-    sd.ellipse((123, 124, 153, 143), fill=170)
+-    shadow = shadow.filter(ImageFilter.GaussianBlur(3.0))
++    sd.ellipse((121, 120, 155, 143), fill=255)
++    shadow = shadow.filter(ImageFilter.GaussianBlur(2.2))
+     dog = dog.filter(ImageFilter.GaussianBlur(0.65))
+     dog_a = np.asarray(dog).astype(np.float32) / 255.0
+     removal = np.maximum(np.asarray(dog), np.asarray(shadow)).astype(np.float32) / 255.0</pre></details><a href="candidate_03/generate.py">本轮完整代码</a></article><article><h3>Candidate 5</h3><p class="muted">2026-11-05T18:16:57.200584+00:00 · RGB hash 5f47d13e6b0b5c8d</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_04/pixels-5f47d13e6b0b5c8d.png&quot;, &quot;poster&quot;: &quot;candidate_04/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_04/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_04/inspection.png"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_04/generate.py">本轮完整代码</a></article><article><h3>Candidate 6</h3><p class="muted">2026-11-05T18:17:22.456506+00:00 · RGB hash 4472b3fd6fe0cd65</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_05/pixels-4472b3fd6fe0cd65.png&quot;, &quot;poster&quot;: &quot;candidate_05/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_05/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_05/inspection.png"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -96,8 +96,11 @@
+         grain = ((np.arange(hi - lo + 1) * 37 + yy * 17) % 13 - 6)[:, None] * 0.34
+         bg[yy, lo:hi + 1] = np.clip(fill + grain, 0, 255)
+     # Blend only where the removed layer was visible.
+-    blur = Image.fromarray(np.uint8(np.clip(cut * 255, 0, 255))).filter(
+-        ImageFilter.GaussianBlur(2.2))
++    # Threshold the already-soft removal mask before feathering it again. This
++    # fully removes the dark tail of the photographed shadow instead of merely
++    # making that tail translucent.
++    solid_cut = np.where(cut &gt; 0.012, 255, 0).astype(np.uint8)
++    blur = Image.fromarray(solid_cut).filter(ImageFilter.GaussianBlur(1.3))
+     a = np.asarray(blur).astype(np.float32)[..., None] / 255.0
+     return source.astype(np.float32) * (1.0 - a) + bg * a
+ </pre></details><a href="candidate_05/generate.py">本轮完整代码</a></article><article><h3>Candidate 7</h3><p class="muted">2026-11-05T18:17:24.785747+00:00 · RGB hash 4472b3fd6fe0cd65</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_06/pixels-4472b3fd6fe0cd65.png&quot;, &quot;poster&quot;: &quot;candidate_06/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_06/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_06/inspection.png"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_06/generate.py">本轮完整代码</a></article><h2>可观测工具时间线</h2><details><summary>:33.334677+00:00 · agent_message · I’ll inspect the generation brief and repository rules first, then build the animation directly as RGB frames, render the required video, and visually check the</summary><pre>I’ll inspect the generation brief and repository rules first, then build the animation directly as RGB frames, render the required video, and visually check the result against the supplied first frame.</pre><pre></pre></details><details><summary>:34.050640+00:00 · command_execution · pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;!runs&#x27; -g &#x27;!site&#x27; -g &#x27;!evaluation_outputs&#x27; | sort &amp;&amp; sed -n &#x27;1,240p&#x27; GENERATION_RULES.md &amp;&amp; print</summary><pre>pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;!runs&#x27; -g &#x27;!site&#x27; -g &#x27;!evaluation_outputs&#x27; | sort &amp;&amp; sed -n &#x27;1,240p&#x27; GENERATION_RULES.md &amp;&amp; printf &#x27;\nPROMPT\n&#x27; &amp;&amp; sed -n &#x27;1,240p&#x27; prompt.txt &amp;&amp; printf &#x27;\nFILES\n&#x27; &amp;&amp; rg --files | sed -n &#x27;1,200p&#x27;</pre><pre>[workspace path]
+/bin/bash: line 155: rg: command not found
+# PixelWorld generation contract v2
+
+- Use only `first_frame.png`, `prompt.txt` and `task_spec.json`. Work inside this workspace. No network, other cases, reference continuations, masks, scores, memory, external AI models, learned weights, external simulation/rendering engines, or subagents.
+- Generate 20 RGB frames at 256×143, 4 fps, for 5 seconds. Frame 00 must be pixel-identical to `first_frame.png`.
+- Implement `generate.py` and call `artifact_io.save(frames, case_dir)` with uint8 RGB arrays of shape `(20,143,256,3)`. Local Python/numpy/PIL, mathematical geometry, motion, lighting, copying and warping pixels are allowed.
+- Save intermediate generated results in the workspace when producing candidates for inspection. Choose whether and how to check or revise your output.
+
+PROMPT
+The camera orbits clockwise around the subject. The subject stays still.
+FILES
+/bin/bash: line 155: rg: command not found
+</pre></details><details><summary>:39.047266+00:00 · agent_message · The brief is a 5-second, 20-frame clockwise camera orbit while the dog remains planted in place. I’ll treat the given street image as frame 0 exactly, then simu</summary><pre>The brief is a 5-second, 20-frame clockwise camera orbit while the dog remains planted in place. I’ll treat the given street image as frame 0 exactly, then simulate the orbit through progressive perspective warps and layered parallax: nearby dog/road features shift more than the distant buildings, while the dog’s pose and silhouette remain unchanged.</pre><pre></pre></details><details><summary>:40.338318+00:00 · command_execution · sed -n &#x27;1,240p&#x27; task_spec.json &amp;&amp; file first_frame.png &amp;&amp; sha256sum first_frame.png</summary><pre>sed -n &#x27;1,240p&#x27; task_spec.json &amp;&amp; file first_frame.png &amp;&amp; sha256sum first_frame.png</pre><pre>{
+  &quot;task_type&quot;: &quot;i2v&quot;,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 143,
+  &quot;frames&quot;: 20,
+  &quot;fps&quot;: 4,
+  &quot;audio&quot;: null,
+  &quot;benchmark&quot;: &quot;wbench&quot;,
+  &quot;turn&quot;: 3,
+  &quot;action&quot;: &quot;right&quot;
+}
+/bin/bash: line 155: file: command not found
+</pre></details><details><summary>:11.269379+00:00 · agent_message · I’m using a layered 3D-style reprojection rather than a simple pan. The road gets depth from its vanishing point, the buildings get nearer toward the frame edge</summary><pre>I’m using a layered 3D-style reprojection rather than a simple pan. The road gets depth from its vanishing point, the buildings get nearer toward the frame edges, and the dog/shadow are separated and re-anchored at the same ground point. That should make the background rotate around the stationary subject instead of making the whole photograph slide uniformly.</pre><pre></pre></details><details><summary>:34.740796+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:38.475841+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>[workspace path] DeprecationWarning: &#x27;mode&#x27; parameter is deprecated and will be removed in Pillow 13 (2026-10-15)
+  dimg = Image.fromarray(depth.astype(np.float32), mode=&quot;F&quot;).filter(ImageFilter.GaussianBlur(1.4))
+Traceback (most recent call last):
+  File &quot;[workspace path]&quot;, line 189, in &lt;module&gt;
+    generate()
+  File &quot;[workspace path]&quot;, line 165, in generate
+    depth = make_depth()
+            ^^^^^^^^^^^^
+  File &quot;[workspace path]&quot;, line 113, in make_depth
+    dimg = Image.fromarray(depth.astype(np.float32), mode=&quot;F&quot;).filter(ImageFilter.GaussianBlur(1.4))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &quot;[workspace path]&quot;, line 1379, in filter
+    return self._new(filter.filter(self.im))
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  File &quot;[workspace path]&quot;, line 193, in filter
+    return image.gaussian_blur(xy)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: image has wrong mode
+</pre></details><details><summary>:42.459412+00:00 · agent_message · The first render exposed one local library limitation: this Pillow build cannot blur a floating-point depth image. I’m replacing that one smoothing step with a </summary><pre>The first render exposed one local library limitation: this Pillow build cannot blur a floating-point depth image. I’m replacing that one smoothing step with a small NumPy blur; the geometry and output contract remain unchanged.</pre><pre></pre></details><details><summary>:48.542286+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:51.297639+00:00 · command_execution · python generate.py &amp;&amp; find . -maxdepth 2 -type f -printf &#x27;%P %s bytes\n&#x27; | sort</summary><pre>python generate.py &amp;&amp; find . -maxdepth 2 -type f -printf &#x27;%P %s bytes\n&#x27; | sort</pre><pre>GENERATION_RULES.md 786 bytes
+__pycache__/artifact_io.cpython-311.pyc 9011 bytes
+artifact_io.py 4026 bytes
+first_frame.png 69443 bytes
+frames/00.png 69443 bytes
+frames/01.png 66537 bytes
+frames/02.png 64558 bytes
+frames/03.png 63852 bytes
+frames/04.png 62901 bytes
+frames/05.png 61905 bytes
+frames/06.png 60782 bytes
+frames/07.png 59533 bytes
+frames/08.png 57897 bytes
+frames/09.png 57252 bytes
+frames/10.png 56852 bytes
+frames/11.png 56617 bytes
+frames/12.png 56335 bytes
+frames/13.png 56278 bytes
+frames/14.png 56163 bytes
+frames/15.png 56089 bytes
+frames/16.png 56001 bytes
+frames/17.png 55916 bytes
+frames/18.png 55875 bytes
+frames/19.png 55940 bytes
+generate.py 7949 bytes
+index.html 3723761 bytes
+inspection.png 469106 bytes
+pixels.npz 1525533 bytes
+player_template.html 3262 bytes
+prompt.txt 72 bytes
+task_spec.json 162 bytes
+transition_check.png 513659 bytes
+</pre></details><details><summary>:53.950155+00:00 · agent_message · The candidate is rendered successfully with all 20 frames and a byte-identical frame 0. I’m checking the generated contact sheet now for edge tearing, subject g</summary><pre>The candidate is rendered successfully with all 20 frames and a byte-identical frame 0. I’m checking the generated contact sheet now for edge tearing, subject ghosting, and whether the parallax reads as a clockwise arc rather than a zoom.</pre><pre></pre></details><details><summary>:22.095578+00:00 · agent_message · The check caught two artifacts worth fixing before handoff: a stretched road strip at the newly exposed left edge, and a crescent of copied asphalt attached to </summary><pre>The check caught two artifacts worth fixing before handoff: a stretched road strip at the newly exposed left edge, and a crescent of copied asphalt attached to the dog’s shadow. I’m extending the source with reflected street texture for the orbit’s newly revealed border, separating the dog from its shadow, and rendering the shadow independently at the planted paws. I’m also tightening the arc slightly so the motion stays photographic.</pre><pre></pre></details><details><summary>:30.626118+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:33.029398+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre></pre></details><details><summary>:44.898555+00:00 · agent_message · The border repair worked—the final view now stays continuous and the buildings/road show distinct parallax around the fixed dog. One faint remnant of the origin</summary><pre>The border repair worked—the final view now stays continuous and the buildings/road show distinct parallax around the fixed dog. One faint remnant of the original diagonal shadow is still visible, so I’m widening the removal matte by a few pixels and rerendering the clean final candidate.</pre><pre></pre></details><details><summary>:50.925592+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:54.785124+00:00 · command_execution · python generate.py &amp;&amp; cmp -s first_frame.png frames/00.png &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python generate.py &amp;&amp; cmp -s first_frame.png frames/00.png &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+f = np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+print(&#x27;shape&#x27;, f.shape, &#x27;dtype&#x27;, f.dtype)
+print(&#x27;frame0_equal&#x27;, np.array_equal(f[0], np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))))
+print(&#x27;mean_abs_consecutive_change&#x27;, round(float(np.abs(np.diff(f.astype(np.int16), axis=0)).mean()), 3))
+print(&#x27;unique_frame_hashes&#x27;, len({x.tobytes() for x in f}))
+PY</pre><pre>shape (20, 143, 256, 3) dtype uint8
+frame0_equal True
+mean_abs_consecutive_change 8.652
+unique_frame_hashes 20
+</pre></details><details><summary>:17.874899+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:21.589564+00:00 · command_execution · python generate.py &amp;&amp; cmp -s first_frame.png frames/00.png</summary><pre>python generate.py &amp;&amp; cmp -s first_frame.png frames/00.png</pre><pre></pre></details><details><summary>:34.088877+00:00 · agent_message · Generated the requested 20-frame RGB video sequence:</summary><pre>Generated the requested 20-frame RGB video sequence:
+
+- 256×143 pixels, 4 fps, 5 seconds
+- Clockwise camera orbit with depth-based street/building parallax
+- Dog remains planted at the same location
+- Frame 00 is pixel-identical to `first_frame.png`
+- All 20 frames are unique `uint8` RGB images
+
+Outputs include [pixels.npz]([workspace path] [index.html]([workspace path] and [generate.py]([workspace path]</pre><pre></pre></details><p><a href="observed_trace.json">完整可观测事件 JSON</a></p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+</script></html>
