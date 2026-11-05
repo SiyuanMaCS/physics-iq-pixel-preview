@@ -1,0 +1,392 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>siphon · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_gpt-6-1-vision-input.html">← 返回本组视频</a><span class="tag">GPT-6.1-Sol · vision-input · Case 0163</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>siphon</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>5</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>4</strong><span>generate.py 执行</span></div><div class="stat"><strong>14</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>2</strong><span>文件变更事件</span></div><div class="stat"><strong>7.4m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A glass jar gets lowered to cover a bundle of lit matchsticks that are placed in a bowl filled with red liquid.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>14 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>5 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/candidate-463261951722.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T17:40:54.808511+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +257/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 4632619517226896 · code 8bd13993c072eada</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,257 @@
++&quot;&quot;&quot;Deterministic source-image pixel animation. No models or renderer are used.&quot;&quot;&quot;
++from pathlib import Path
++import json
++import hashlib
++import numpy as np
++from PIL import Image, ImageDraw
++from scipy.ndimage import gaussian_filter, map_coordinates
++from scipy.sparse import lil_matrix
++from scipy.sparse.linalg import spsolve
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++H, W = 144, 256
++Y, X = np.mgrid[:H, :W].astype(np.float64)
++SOURCE = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++SRC = SOURCE.astype(np.float64)
++
++def smoothstep(a, b, x):
++    z = np.clip((x-a)/(b-a), 0.0, 1.0)
++    return z*z*(3-2*z)
++
++
++def harmonic_fill(source, mask):
++    &quot;&quot;&quot;Solve a local discrete Laplace problem, with source boundary colors.&quot;&quot;&quot;
++    coords = np.argwhere(mask)
++    ids = np.full(mask.shape, -1, dtype=np.int32)
++    ids[mask] = np.arange(len(coords))
++    mat = lil_matrix((len(coords), len(coords)), dtype=np.float64)
++    rhs = np.zeros((len(coords), 3))
++    for i, (y, x) in enumerate(coords):
++        neighbors = [(yy,xx) for yy,xx in [(y-1,x),(y+1,x),(y,x-1),(y,x+1)]
++                     if 0 &lt;= yy &lt; H and 0 &lt;= xx &lt; W]
++        mat[i,i] = len(neighbors)
++        for yy,xx in neighbors:
++            if mask[yy,xx]:
++                mat[i,ids[yy,xx]] = -1
++            else:
++                rhs[i] += source[yy,xx]
++    result = source.copy()
++    result[mask] = spsolve(mat.tocsr(), rhs)
++    return result
++
++# The orange flame/halo is removed locally by interpolation of the surrounding
++# photographed glass. Match heads at y&gt;=16 and all of the holder stay intact.
++flame_hole = (Y &lt; 16) &amp; (X &gt;= 137) &amp; (X &lt;= 168)
++clean = harmonic_fill(SRC, flame_hole)
++emission = np.zeros_like(SRC)
++emission[flame_hole] = SRC[flame_hole] - clean[flame_hole]
++
++# Infer an unglazed backdrop from same-row neighboring source textures. Only
++# the inferred transmission is moved; this does not translate the match bundle.
++backdrop = SRC.copy()
++for y in range(86):
++    if y &lt; 30:
++        left = SRC[y, 108:116].mean(axis=0)
++        right = SRC[y, 189:197].mean(axis=0)
++    else:
++        left = SRC[y, 105:115].mean(axis=0)
++        right = SRC[y, 194:200].mean(axis=0)
++    for x in range(115,190):
++        f = (x-112)/(196-112)
++        backdrop[y,x] = (1-f)*left + f*right
++
++# Glass has a measured asymmetric dark edge. Preserve those photographed
++# profiles, and interpolate across the stationary solid bundle and match tips.
++ratio = np.ones_like(SRC)
++ratio[:86,115:190] = clean[:86,115:190] / np.maximum(backdrop[:86,115:190], 1)
++for y in range(86):
++    if y &lt; 30:
++        lo, hi = 131, 146
++    else:
++        lo, hi = 129, 161
++    for x in range(lo, hi+1):
++        f = (x-lo)/(hi-lo)
++        ratio[y,x] = (1-f)*ratio[y,lo-1] + f*ratio[y,hi+1]
++ratio = np.clip(ratio, 0.38, 1.10)
++# Preserve subpixel photographic edge texture rather than drawing hard outlines.
++ratio[:86,115:190] = gaussian_filter(ratio[:86,115:190], sigma=(0.45,0.32,0))
++
++left_edge = 116.5 + .023*np.clip(Y,0,82)
++right_edge = 186.6 - .017*np.clip(Y,0,82)
++side_mask = smoothstep(left_edge-1.0,left_edge+0.9,X) * (1-smoothstep(right_edge-.5,right_edge+1.0,X))
++initial_bottom = 82 + 4.5*np.sqrt(np.clip(1-((X-152)/33.5)**2,0,1))
++initial_mask = side_mask*(1-smoothstep(initial_bottom-1,initial_bottom+1.2,Y))
++# The foreground bowl rim is fixed. The red foreground liquid increasingly
++# obscures the moving glass lower down in the bowl.
++visibility = (1-smoothstep(79,99,Y)*.94)
+… diff truncated; 170 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/candidate-901a9b69b919.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T17:42:05.225030+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +16/−1</span></div><p class="hashes">pixels 901a9b69b9194afb · code 2ff59cc64cd98357</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -74,8 +74,13 @@
+         f = (x-lo)/(hi-lo)
+         ratio[y,x] = (1-f)*ratio[y,lo-1] + f*ratio[y,hi+1]
+ ratio = np.clip(ratio, 0.38, 1.10)
++# The photographed bowl rim is an occluding stationary feature, not a marking
++# on the jar. Remove its signature from the transport field by interpolation.
++for y in range(27, 38):
++    f = (y-26)/(38-26)
++    ratio[y,115:190] = (1-f)*ratio[26,115:190] + f*ratio[38,115:190]
+ # Preserve subpixel photographic edge texture rather than drawing hard outlines.
+-ratio[:86,115:190] = gaussian_filter(ratio[:86,115:190], sigma=(0.45,0.32,0))
++ratio[:86,115:190] = gaussian_filter(ratio[:86,115:190], sigma=(1.4,0.32,0))
+ 
+ left_edge = 116.5 + .023*np.clip(Y,0,82)
+ right_edge = 186.6 - .017*np.clip(Y,0,82)
+@@ -87,6 +92,8 @@
+ visibility = (1-smoothstep(79,99,Y)*.94)
+ visibility *= 1-.96*np.exp(-((Y-(31.3+.00065*(X-137)**2))/1.5)**2)
+ visibility *= smoothstep(113.5,116.5,X)*(1-smoothstep(189,192,X))
++solid_bundle = smoothstep(130,132,X)*(1-smoothstep(155.5,158,X))*smoothstep(14,17,Y)*(1-smoothstep(80,84,Y))
++visibility *= 1-.75*solid_bundle
+ initial_transmission = 1+(ratio-1)*initial_mask[...,None]
+ 
+ # Source-derived flame extended a few pixels above the cropped frame. The
+@@ -105,6 +112,11 @@
+     sy = Y-descent
+     transported = np.stack([map_coordinates(ratio[...,c], [np.clip(sy,0,85),X], order=1,mode=&#x27;nearest&#x27;)
+                             for c in range(3)],axis=-1)
++    # A clear cylinder&#x27;s broad transmission follows the stationary backdrop.
++    # Its narrow wall reflections move with the glass. Keeping most body
++    # transmission fixed avoids translating background/table features.
++    edge_transport = .10 + .55*(np.exp(-((X-119)/3.2)**2)+np.exp(-((X-185)/2.8)**2))
++    transported = ratio + (transported-ratio)*edge_transport[...,None]
+     # The inverted jar&#x27;s closed upper end is just outside the first image and
+     # enters at the end of the descent. Its curved silhouette has soft edges.
+     upper_edge = -13 + descent + 2.1*(np.clip((X-151.5)/34.5,-1,1)**2)
+@@ -193,6 +205,9 @@
+     # Outside the local dynamic setup source pixels remain literally identical.
+     dynamic_roi=(X&gt;=114)&amp;(X&lt;=192)&amp;(Y&lt;=103)
+     frame[~dynamic_roi]=SOURCE[~dynamic_roi]
++    # The front rim&#x27;s photographed curve occludes the jar and stays fixed.
++    fixed_rim=(Y&gt;=29)&amp;(Y&lt;=34)&amp;(X&gt;=70)&amp;(X&lt;=208)
++    frame[fixed_rim]=SOURCE[fixed_rim]
+     return frame, dict(frame=i,time_seconds=t,jar_descent_px=round(float(descent),4),
+                        flame_amplitude=round(float(amplitude),5),flame_scale=round(float(scale),5),
+                        inner_water_rise_px=round(float(rise),4),smoke_opacity=round(float(smoke_amount),5))</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/candidate-901a9b69b919.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T17:42:07.109331+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 901a9b69b9194afb · code 2ff59cc64cd98357</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/candidate-a5445c0e11b7.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T17:43:06.687641+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +24/−0</span></div><p class="hashes">pixels a5445c0e11b745f7 · code 0a09809ce70e1029</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -151,6 +151,12 @@
+     # slight flicker, and continuous oxygen-starvation shrinkage.
+     starve=smoothstep(1.75,3.65,t)
+     scale=(1-.88*starve)*(1+.045*np.sin(9.2*t))
++    # The lowering closed end confines the tall, initially cropped flame.
++    # Shortening leaves a small clearance rather than letting the flame pass
++    # through the glass. The source extension reaches y=-8 at full height.
++    flame_ceiling=-13+descent+1.8
++    ceiling_scale=np.clip((12.2-flame_ceiling)/20.2,.10,1.2)
++    scale=min(scale,float(ceiling_scale))
+     amplitude=(1-starve)**.80*(1+.045*np.sin(13.1*t))
+     flame_dx=.65*np.sin(10.7*t)*(1-starve)
+     flame_sx=151.1+(X-151.1-flame_dx)/(1-.38*starve)
+@@ -210,6 +216,7 @@
+     frame[fixed_rim]=SOURCE[fixed_rim]
+     return frame, dict(frame=i,time_seconds=t,jar_descent_px=round(float(descent),4),
+                        flame_amplitude=round(float(amplitude),5),flame_scale=round(float(scale),5),
++                       flame_ceiling_y=round(float(flame_ceiling),4),
+                        inner_water_rise_px=round(float(rise),4),smoke_opacity=round(float(smoke_amount),5))
+ 
+ frames=[]
+@@ -255,15 +262,32 @@
+ assert all(np.array_equal(f[Y&gt;=104],SOURCE[Y&gt;=104]) for f in frames)
+ assert all(np.array_equal(f[X&lt;114],SOURCE[X&lt;114]) for f in frames)
+ assert all(np.array_equal(f[X&gt;192],SOURCE[X&gt;192]) for f in frames)
++assert all(np.array_equal(f[29:35,70:209],SOURCE[29:35,70:209]) for f in frames)
+ assert all(states[i][&#x27;jar_descent_px&#x27;]&lt;=states[i+1][&#x27;jar_descent_px&#x27;] for i in range(19))
+ assert all(states[i][&#x27;inner_water_rise_px&#x27;]&lt;=states[i+1][&#x27;inner_water_rise_px&#x27;] for i in range(19))
+ assert states[-1][&#x27;flame_amplitude&#x27;]==0
+ r,g,b=frames.transpose(3,0,1,2)
+ hot=(r&gt;220)&amp;(g&gt;135)&amp;(b&lt;160)&amp;(Y[None]&lt;20)&amp;(X[None]&gt;=137)&amp;(X[None]&lt;=169)
++glass_edge_max=[]
++flame_boxes=[]
++for i,f in enumerate(frames):
++    gray=f.astype(float).mean(axis=2)
++    edge=np.abs(np.diff(gray,axis=0))
++    line_energy=np.concatenate([edge[:,122:130],edge[:,170:182]],axis=1).mean(axis=1)
++    glass_edge_max.append(round(float(line_energy[35:75].max()),6))
++    yy,xx=np.where(hot[i])
++    flame_boxes.append([int(xx.min()),int(yy.min()),int(xx.max()),int(yy.max())] if len(xx) else None)
++    if len(xx):
++        assert yy.min()&gt;=max(0,int(np.floor(states[i][&#x27;flame_ceiling_y&#x27;]))), (i,yy.min(),states[i])
++assert max(glass_edge_max)&lt;4.0, glass_edge_max
++assert not hot[15:].any()
+ report={&#x27;shape&#x27;:list(frames.shape),&#x27;dtype&#x27;:str(frames.dtype),&#x27;tensor_shape&#x27;:list(packed.shape),
+         &#x27;tensor_dtype&#x27;:str(packed.dtype),&#x27;fps&#x27;:4,&#x27;duration_seconds&#x27;:5,
+         &#x27;frame_00_exact&#x27;:True,&#x27;png_tensor_matches&#x27;:20,&#x27;static_exterior_exact&#x27;:True,
++        &#x27;stationary_bowl_rim_exact&#x27;:True,
+         &#x27;hot_flame_pixels_per_frame&#x27;:[int(x.sum()) for x in hot],
++        &#x27;hot_flame_bounding_boxes&#x27;:flame_boxes,
++        &#x27;glass_interior_horizontal_edge_max_per_frame&#x27;:glass_edge_max,
+         &#x27;source_sha256&#x27;:hashlib.sha256((ROOT/&#x27;first_frame.png&#x27;).read_bytes()).hexdigest(),
+         &#x27;inspection_method&#x27;:&#x27;Python RGB/tensor comparisons and numeric region/transition statistics; generated images not viewed&#x27;,
+         &#x27;transitions&#x27;:checks,&#x27;frame_states&#x27;:states}</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/candidate-a5445c0e11b7.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T17:43:08.496666+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels a5445c0e11b745f7 · code 0a09809ce70e1029</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/gpt-6-1-vision-input/0163/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Observation and event plan</h1>
+<p>The only scene references are the attached first frame and prompt.txt. Coordinates below use the source image's 256 x 144 pixel grid. The initial frame was supplied visually by the user. Subsequent generated images will be inspected only by Python and numeric checks.</p>
+<h2>Measurements and interpretation</h2>
+<ul>
+<li>The shot is locked off. A neutral gray-green wall occupies the upper image, with a wall/table boundary near y=66 on the left and y=62 on the right. A wood-grain tabletop fills the lower image.</li>
+<li>The glass bowl spans approximately x=70..208 and y=30..114. Its upper rim is a thin curved dark line around y=30..37; its sloping glass sides end in a rounded base. The dark red liquid's visible front surface extends approximately x=79..195, y=83..113, with the meniscus highest at the side walls.</li>
+<li>The stationary upright bundle/holder occupies approximately x=131..157, y=17..84. The lower rectangle is muted red with a blue band around y=33..44. Small dark/brown match tips are visible near x=133..145, y=15..28. The flame is orange-yellow around x=145..158, y=0..12 and is cropped by the top of the frame. A diffuse warm halo surrounds it.</li>
+<li>A transparent glass jar is already visible at the start: its left edge is around x=117..120 and its right edge around x=184..187. Its top lies above the image; its opening/lower rim is interpreted as near y=81. The bowl overlaps its lower portion. The jar is about 69 pixels wide. Lowering it roughly 16 pixels submerges its mouth below the liquid surface near y=87. The closed upper end remains mostly cropped, with a faint curved bottom edge becoming visible near the image top at the end of the descent.</li>
+<li>Lighting is subdued, with soft reflections and blur. Preserve the table, bowl silhouette, background, camera, match position, and source color/texture. No hand or additional object is introduced because the prompt limits the scene to this setup.</li>
+</ul>
+<h2>Physical continuation</h2>
+<p>The inverted jar descends vertically from its already visible starting position. Its glass walls transmit and gently refract the scene. The mouth meets the liquid at about 1.0 s, and finishes descending at 1.75 s. The flame continues briefly in trapped air, shrinks between 1.75 and 3.5 s, and is extinguished by 3.75 s. Cooling and contraction then produce a modest red-liquid rise inside the jar (about 6 pixels), with a small damped meniscus ripple. A faint, brief smoke wisp remains near the extinguished tips. All time changes are continuous at four frames per second.</p>
+<h2>Twenty-frame plan</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Jar descent (px, approximate)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>0.0</td>
+  <td>Exact supplied RGB pixels; flame lit.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>0.9</td>
+  <td>Jar begins smooth downward motion; small flame flicker.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>3.2</td>
+  <td>Jar approaches the liquid; source background revealed above it.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>6.3</td>
+  <td>Mouth approaches the meniscus; flame stays bright.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>9.7</td>
+  <td>Mouth enters the liquid; a gentle ripple appears.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>12.8</td>
+  <td>Jar continues lowering; flame flickers in enclosed air.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>15.1</td>
+  <td>Jar slows; submerged mouth is visible as a weak curved reflection.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>16.0</td>
+  <td>Jar settles at its final position; flame starts to shorten.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>16.0</td>
+  <td>Flame weakens; surface disturbance damps.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>16.0</td>
+  <td>Flame contracts toward its fixed base; slight liquid response.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>16.0</td>
+  <td>Flame becomes smaller and orange; inner liquid begins rising.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>16.0</td>
+  <td>Further flame shortening; red meniscus moves upward slightly.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>16.0</td>
+  <td>Weak flame remains close to the tips.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>16.0</td>
+  <td>Last small flame; faint smoke begins.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>16.0</td>
+  <td>A dim final ember; liquid rise continues.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>16.0</td>
+  <td>Flame extinguished; thin smoke wisp dissipates.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>16.0</td>
+  <td>Red liquid rises farther within the jar; dark tips remain fixed.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>16.0</td>
+  <td>Meniscus approaches a roughly six-pixel rise; smoke fades.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>16.0</td>
+  <td>Liquid settling; no flame.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>16.0</td>
+  <td>Jar stationary, flame out, elevated inner meniscus settles.</td>
+</tr>
+</tbody>
+</table>
+<h2>Intended method and validation</h2>
+<p>Use local Python/Numpy/Pillow/Scipy pixel operations: source-preserving layer decomposition, nearby texture interpolation for obscured background, vertically advected transparent-glass residuals, analytic glass highlights and meniscus ellipses, and source-flame resampling with continuous fading. No learned model, rendering engine, network, external reference, or other case is used. The final method document will describe actual operations and numeric validation honestly. Save all required files, check all 20 PNGs against the packed uint32 0xRRGGBB tensor, confirm frame 00 is identical, and create inspection/transition artifacts without opening them in image tools.</p>
+<h2>Numeric revision note</h2>
+<p>The pre-code plan above was refined during implementation. The jar's closed upper end becomes visible near the top of the image late in its descent. Consequently, the tall flame begins contracting as early as frames 03..06 to fit beneath that end, while its brightness remains substantial until oxygen starvation develops after frame 07. The final flame still reaches zero by frame 15, and the inner liquid still rises approximately six pixels by frame 19. Numeric edge checks also identified and removed a stationary bowl-rim signature from the moving glass field. All later inspections remained code/numeric only.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Method</h1>
+<p>This is a deterministic, local Python pixel continuation of first_frame.png. The only scene inputs are that image and prompt.txt. The initial image was supplied visually by the user; <strong>no generated image was opened with an image Read/View tool or visually reviewed</strong>. All later inspection used array operations, numeric statistics, and file decoding.</p>
+<h2>Pixel construction</h2>
+<ol>
+<li>Preserve the photographed scene as the base. Reconstruct only the flame/halo footprint (x=137..168, y=0..15) with a discrete harmonic interpolation of adjacent source colors. Extract the difference between the original flame and that local reconstructed background as an RGB emission layer. The stationary match tips and red/blue holder remain in place.</li>
+<li>Estimate the jar's transparency and asymmetric dark edge profiles from the photographed jar and neighboring pixels in the same rows. Interpolate across solid objects and remove the bowl rim's signature from this moving field. Advance the jar's narrow glass reflections by bilinear sampling; most broad transparency remains anchored to the scene so that table and bowl features do not move. Subpixel soft silhouettes and analytic curved highlights describe the emerging closed upper end and descending mouth.</li>
+<li>Lower the jar 16 source pixels with a cubic smoothstep over the first 1.75 seconds. Its inferred mouth moves from about y=82 to y=98. The closed upper end enters near y=3 at its final position. Glass visibility decreases behind the red foreground liquid. The photographed foreground rim (y=29..34) is copied exactly in every frame.</li>
+<li>Animate the source flame with subpixel horizontal flicker and vertical contraction about a fixed base near (151,12). A tapered extension above the initially cropped image supplies the shrinking flame's tip. Its height is limited by the lowering jar's closed end. A smooth oxygen-starvation envelope reduces the flame after 1.75 seconds, reaching zero by frame 15 at 3.75 seconds.</li>
+<li>Draw a modest inner red-liquid rise with smooth elliptical menisci, borrowing red-liquid RGB texture from the same source bowl. The rise starts at 2.2 seconds and reaches 6.3 pixels at 4.75 seconds. Add a low-amplitude damped contact ripple and a faint fading smoke field near the fixed match tips.</li>
+<li>Round/clamp to uint8 RGB. Frame 00 is assigned the original pixels exactly. All pixels outside x=114..192, y=0..103 remain exactly equal to the source. The timing and fluid response are prescribed analytic curves, not a calibrated thermodynamic or fluid simulation.</li>
+</ol>
+<p>The implementation uses Numpy, Pillow and Scipy (interpolation, smoothing and a local sparse linear solve). It uses no external image/reference, mask, learned model, network, rendering engine, or subagent. artifact_io.py only packages the completed RGB frames and creates the provided player and inspection sheet.</p>
+<h2>Numeric revisions</h2>
+<p>An initial transport field accidentally carried the stationary bowl rim down with the glass. Numeric horizontal-gradient checks detected an unintended edge around y=46, with a lane-averaged gradient of 43.62 gray levels. The final implementation interpolates that signature out of the glass field, keeps broad scene transmission stationary, and copies the front rim exactly. The final maximum gradient over the checked glass-only lanes and y=35..74 is 3.250, compared with 3.233 in the source. A second revision confines the flame beneath the emerging closed end; hot-pixel bounding boxes verify clearance. These were numeric checks, not visual reviews.</p>
+<h2>Artifacts</h2>
+<ul>
+<li>generate.py: deterministic complete pixel generation and primary numeric validation.</li>
+<li>pixels.npz: key <code>pixels</code>, shape <code>(144, 256, 20)</code>, uint32 values encoded as <code>0xRRGGBB</code>.</li>
+<li>frames/00.png through frames/19.png: 20 RGB PNGs at 256 x 144.</li>
+<li>inspection.png: eight-frame source-scale contact sheet, 1024 x 330.</li>
+<li>transition_check.png: all frame-to-frame absolute-difference heatmaps and numeric labels, 1280 x 700.</li>
+<li>index.html: self-contained canvas player, with all pixel data embedded and a 250 ms frame interval.</li>
+<li>OBSERVATION.md: source measurements and pre-code 20-frame plan, with a revision note.</li>
+<li>validation.json: per-frame states, difference statistics, source checksum and verification results.</li>
+</ul>
+<h2>Verified results</h2>
+<ul>
+<li>Exactly 20 RGB frames, 256 x 144, uint8, at 4 fps; playback duration 5 seconds.</li>
+<li>Frame 00 is pixel-for-pixel equal to first_frame.png.</li>
+<li>All 20 PNGs exactly match the independently unpacked uint32 tensor.</li>
+<li>The standalone HTML's first frame and 19 decoded delta packets independently reconstruct all 20 tensor frames exactly.</li>
+<li>The static exterior and photographed bowl-rim band remain exact. The holder's blue-band pixel locations remain unchanged across all frames.</li>
+<li>Jar descent and inner-liquid rise are monotonic and stop at their planned endpoints.</li>
+<li>Hot-flame pixels decline from 85 initially to zero; all frames 15..19 have zero hot-flame pixels and a zero flame-emission amplitude. Earlier hot-pixel bounding boxes stay beneath the jar ceiling.</li>
+<li>The largest full-frame mean absolute RGB step is 0.253599 levels on the 0..255 scale. Local maximum steps can be larger at the moving flame and glass boundaries; all transition statistics are saved in validation.json.</li>
+<li>Both inspection PNGs decode as RGB at their documented sizes. Generated images were not displayed or visually reviewed.</li>
+</ul>
+<p>Reproduce from this workspace with <code>python generate.py</code>. The separate standalone-player decoding check was performed locally after the final generation and is recorded in validation.json.</p>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/gpt-6-1-vision-input/0163-5cb031737fbe.png';</script></body></html>
