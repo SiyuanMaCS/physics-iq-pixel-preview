@@ -1,0 +1,462 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>roll-in-box · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0152</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>roll-in-box</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>4</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>3</strong><span>generate.py 执行</span></div><div class="stat"><strong>30</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>10</strong><span>文件变更事件</span></div><div class="stat"><strong>17.2m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The olive green fabric box is on a light wooden table and a black tube points from the left side to the right side. The brown tennis ball rolls from the left straight out of the black tube and hits the olive green fabric box.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>30 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>4 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/candidate-c0cb15bf75b8.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T07:23:01.788946+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +230/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels c0cb15bf75b88efd · code 7053894342033f70</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,230 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;generate.py — Generate 20-frame animation of a tennis ball rolling out of
++a black tube and hitting an olive green fabric box.&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++
++# ── Configuration ──────────────────────────────────────────────────────────
++CASE_DIR = Path(&quot;/mnt/bn/embodied-lf3/masiyuan/physics_iq_pixel_r2_full4fps/cleanroom_runs/deepseek-v4-pro/full_matrix_v1/text/case_0152_attempt_01/workspace&quot;)
++W, H = 256, 144
++N_FRAMES = 20
++
++# ── Ball trajectory: (cx, cy) per frame ────────────────────────────────────
++# Ball emerges from tube exit (x≈28, y≈36) and rolls right toward the box (x≈215).
++# It drops onto the table (y rises to ~50-53), then rolls straight.
++ball_positions = [
++    (28, 36),   #  0: just emerging from tube
++    (42, 42),   #  1: fully out, dropping to table
++    (58, 46),   #  2: on table
++    (74, 48),   #  3
++    (90, 50),   #  4
++    (105, 51),  #  5
++    (120, 52),  #  6
++    (134, 52),  #  7
++    (148, 53),  #  8
++    (160, 53),  #  9
++    (172, 53),  # 10
++    (183, 53),  # 11
++    (193, 53),  # 12: approaching box
++    (201, 53),  # 13: contacts box
++    (206, 53),  # 14: pushing into box
++    (210, 55),  # 15: max deformation
++    (207, 55),  # 16: beginning rebound
++    (198, 53),  # 17: rebounding
++    (190, 52),  # 18: rolling back
++    (185, 51),  # 19: slowing
++]
++
++# Ball radius in pixels
++BALL_RADIUS = 10
++
++# Ball base color (tennis ball brown, adjusted for dark scene lighting)
++BALL_BASE = np.array([130, 105, 75], dtype=np.float64)
++BALL_HIGHLIGHT = np.array([170, 145, 115], dtype=np.float64)
++BALL_SHADOW = np.array([70, 50, 30], dtype=np.float64)
++
++# ── Box region (olive green fabric box on the right) ───────────────────────
++# The box occupies approximately x=215..255, y=60..110
++BOX_X0, BOX_X1 = 215, 255
++BOX_Y0, BOX_Y1 = 60, 110
++
++# Impact center on the box (where the ball hits)
++IMPACT_X, IMPACT_Y = 216, 80
++
++# ── Load base image ────────────────────────────────────────────────────────
++base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
++assert base.shape == (H, W, 3), f&quot;Expected (144, 256, 3), got {base.shape}&quot;
++
++# ── Helper: draw a sphere with Lambertian + specular shading ───────────────
++def draw_ball(frame, cx, cy, radius):
++    &quot;&quot;&quot;Draw a 3D tennis ball with shading onto the frame (in-place, float64).&quot;&quot;&quot;
++    r_int = int(np.ceil(radius))
++    y0 = max(0, int(cy) - r_int)
++    y1 = min(H, int(cy) + r_int + 1)
++    x0 = max(0, int(cx) - r_int)
++    x1 = min(W, int(cx) + r_int + 1)
++
++    # Light direction (upper-left)
++    light = np.array([-0.55, -0.45, 0.70])
++    light = light / np.linalg.norm(light)
++
++    yy, xx = np.meshgrid(np.arange(y0, y1), np.arange(x0, x1), indexing=&#x27;ij&#x27;)
++    dx = xx - cx
++    dy = yy - cy
++    dist = np.sqrt(dx**2 + dy**2)
++
++    mask = dist &lt; radius
++    if not np.any(mask):
++        return
++
++    # Surface normal on the sphere
++    dz = np.sqrt(np.maximum(0, radius**2 - dx**2 - dy**2))
++    nx = dx / radius
++    ny = dy / radius
++    nz = dz / radius
++
+… diff truncated; 143 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/candidate-eff6c998e547.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T07:24:17.528009+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +36/−29</span><span class="change">inspection 更新</span></div><p class="hashes">pixels eff6c998e547099c · code 1ac929ecd4602847</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -14,27 +14,30 @@
+ # ── Ball trajectory: (cx, cy) per frame ────────────────────────────────────
+ # Ball emerges from tube exit (x≈28, y≈36) and rolls right toward the box (x≈215).
+ # It drops onto the table (y rises to ~50-53), then rolls straight.
++# Ball trajectory. Frame 0: ball inside tube (not drawn, frame == first_frame.png).
++# Frame 1+: ball emerges and rolls across the table toward the box.
++# The ball is not drawn in frame 0.
+ ball_positions = [
+-    (28, 36),   #  0: just emerging from tube
+-    (42, 42),   #  1: fully out, dropping to table
+-    (58, 46),   #  2: on table
+-    (74, 48),   #  3
+-    (90, 50),   #  4
+-    (105, 51),  #  5
+-    (120, 52),  #  6
+-    (134, 52),  #  7
+-    (148, 53),  #  8
+-    (160, 53),  #  9
+-    (172, 53),  # 10
+-    (183, 53),  # 11
+-    (193, 53),  # 12: approaching box
+-    (201, 53),  # 13: contacts box
+-    (206, 53),  # 14: pushing into box
+-    (210, 55),  # 15: max deformation
+-    (207, 55),  # 16: beginning rebound
+-    (198, 53),  # 17: rebounding
+-    (190, 52),  # 18: rolling back
+-    (185, 51),  # 19: slowing
++    None,        #  0: ball inside tube, no drawing
++    (35, 40),    #  1: just emerging from tube
++    (52, 45),    #  2: on table edge
++    (68, 48),    #  3
++    (84, 50),    #  4
++    (99, 51),    #  5
++    (114, 52),   #  6
++    (128, 52),   #  7
++    (142, 53),   #  8
++    (155, 53),   #  9
++    (167, 53),   # 10
++    (178, 53),   # 11
++    (188, 53),   # 12: approaching box
++    (197, 53),   # 13: contacts box
++    (203, 53),   # 14: pushing into box
++    (208, 55),   # 15: max deformation
++    (205, 55),   # 16: beginning rebound
++    (198, 53),   # 17: rebounding
++    (190, 52),   # 18: rolling back
++    (185, 51),   # 19: slowing
+ ]
+ 
+ # Ball radius in pixels
+@@ -200,14 +203,15 @@
+     # Start with a copy of the base frame
+     frame = base.copy()
+ 
+-    # Get ball position
+-    cx, cy = ball_positions[t]
+-
+-    # Draw shadow first (under the ball)
+-    draw_shadow(frame, cx, cy, BALL_RADIUS)
+-
+-    # Draw the ball
+-    draw_ball(frame, cx, cy, BALL_RADIUS)
++    # Get ball position (None for frame 0 = ball inside tube)
++    pos = ball_positions[t]
++
++    if pos is not None:
++        cx, cy = pos
++        # Draw shadow first (under the ball)
++        draw_shadow(frame, cx, cy, BALL_RADIUS)
++        # Draw the ball
++        draw_ball(frame, cx, cy, BALL_RADIUS)
+ 
+     # Apply box deformation for impact/recovery frames
+     if t &gt;= 13:
+@@ -220,7 +224,10 @@
+ 
+     frames.append(frame.astype(np.uint8))
+ 
+-    print(f&quot;Frame {t:02d} generated: ball at ({cx}, {cy})&quot;, flush=True)
++    if pos is not None:
++        print(f&quot;Frame {t:02d} generated: ball at ({cx}, {cy})&quot;, flush=True)
++    else:
++        print(f&quot;Frame {t:02d} generated: ball inside tube (equals first_frame.png)&quot;, flush=True)
+ 
+ # ── Save outputs using artifact_io ────────────────────────────────────────
+ import sys</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/candidate-4f15b18f1e17.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T07:27:31.361094+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +11/−6</span></div><p class="hashes">pixels 4f15b18f1e17246c · code 984c8771d25c150d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -41,12 +41,12 @@
+ ]
+ 
+ # Ball radius in pixels
+-BALL_RADIUS = 10
+-
+-# Ball base color (tennis ball brown, adjusted for dark scene lighting)
+-BALL_BASE = np.array([130, 105, 75], dtype=np.float64)
+-BALL_HIGHLIGHT = np.array([170, 145, 115], dtype=np.float64)
+-BALL_SHADOW = np.array([70, 50, 30], dtype=np.float64)
++BALL_RADIUS = 11
++
++# Ball base color (tennis ball yellow-brown, adjusted for dark scene lighting)
++BALL_BASE = np.array([145, 120, 70], dtype=np.float64)
++BALL_HIGHLIGHT = np.array([200, 175, 125], dtype=np.float64)
++BALL_SHADOW = np.array([60, 40, 20], dtype=np.float64)
+ 
+ # ── Box region (olive green fabric box on the right) ───────────────────────
+ # The box occupies approximately x=215..255, y=60..110
+@@ -101,6 +101,11 @@
+     # Edge darkening (fresnel-like)
+     rim = (dist / radius)
+     color = color * (1.0 - 0.15 * rim)[:, :, np.newaxis]
++
++    # Tennis ball fuzz texture (subtle noise)
++    np.random.seed(int(cx * 1000 + cy * 37 + radius * 13))
++    noise = np.random.uniform(-8, 8, color.shape)
++    color = np.clip(color + noise, 0, 255)
+ 
+     # Anti-aliased blend at edges
+     alpha = np.clip((radius - dist) / 1.5, 0, 1)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/candidate-4f15b18f1e17.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T07:27:33.305518+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4f15b18f1e17246c · code 984c8771d25c150d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0152/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene Observations</h1>
+<h2>Image: 256×144 RGB, 4 fps, 5 seconds = 20 frames</h2>
+<h2>Scene Elements (measured from first_frame.png)</h2>
+<h3>Wall/Background</h3>
+<ul>
+<li><strong>Location</strong>: y=0–17, spanning full width</li>
+<li><strong>Color</strong>: Very dark, near-black. Mean RGB ≈ [3, 1, 0]. Maximum values ≈ [30, 25, 5]</li>
+<li><strong>Description</strong>: Dark wall or background behind the setup.</li>
+</ul>
+<h3>Black Tube</h3>
+<ul>
+<li><strong>Location</strong>: Left side, x=0–25, y=18–41</li>
+<li><strong>Color</strong>: Nearly pure black, RGB ≈ [4, 0, 0] in the tube interior</li>
+<li><strong>Description</strong>: A black tube pointing from left to right. The tube body is the very dark leftmost region. The tube opening transitions from black to brownish at about x=20–30.</li>
+<li><strong>Tube exit (right opening)</strong>: Approximately x=25–30, y=28–41, where dark pixels transition to brownish tones (RGB ~[90, 80, 70]).</li>
+<li>The brown pixels at this transition represent the tube's inner wall illuminated by ambient light.</li>
+</ul>
+<h3>Table Surface</h3>
+<ul>
+<li><strong>Location</strong>: y=40+ across most of the frame width</li>
+<li><strong>Color</strong>: Light wooden tan. At y=45, x=70–170: mean RGB ≈ [122, 116, 114]</li>
+<li><strong>Description</strong>: A light wooden table. Visible below and to the right of the tube. The table surface occupies the lower half of the image from about y=40 to y=143. The table extends into the background, with its far edge blending into the dark background at y≈18-20.</li>
+</ul>
+<h3>Olive Green Fabric Box</h3>
+<ul>
+<li><strong>Location</strong>: Right side, approximately x=215–256, y=60–110</li>
+<li><strong>Color</strong>: Olive green tones, e.g., RGB ≈ [33, 44, 28], [32, 46, 31], [35, 55, 43] (G &gt; R, G &gt; B, G ≈ 40-55)</li>
+<li><strong>Description</strong>: A fabric box sitting on the table on the right side. Visible as very dark green pixels on the far right. The box face facing the camera has a textured olive green appearance.</li>
+</ul>
+<h3>Tennis Ball</h3>
+<ul>
+<li><strong>In frame 0</strong>: Not clearly visible as a distinct circular object. Likely inside the tube or just at the tube exit.</li>
+<li><strong>Ball color (expected)</strong>: Brown, typical tennis ball: RGB ≈ [120, 100, 70] (adjusted for scene lighting).</li>
+<li><strong>Ball diameter</strong>: ~22 pixels (radius 11px, scaled for scene).</li>
+</ul>
+<h3>Brown Band (x=140–215, y=24–44)</h3>
+<ul>
+<li>A horizontal brownish band spanning the middle-right portion at the tube-level height.</li>
+<li>RGB ≈ [80, 70, 60] to [95, 85, 75]</li>
+<li>Likely represents the tube's right-side outer surface or shadow, given its brownish tint and horizontal extent.</li>
+</ul>
+<h2>20-Frame Event Plan</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Ball Position (cx, cy)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>— (inside tube)</td>
+  <td>Frame exactly equals first_frame.png. Ball not visible (inside tube).</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>(35, 40)</td>
+  <td>Ball just emerging from tube exit.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>(52, 45)</td>
+  <td>Ball on table edge, beginning to roll.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>(68, 48)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>(84, 50)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>(99, 51)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>(114, 52)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>(128, 52)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>(142, 53)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>(155, 53)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>(167, 53)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>(178, 53)</td>
+  <td>Ball rolling across table.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>(188, 53)</td>
+  <td>Ball approaching box.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>(197, 53)</td>
+  <td>Ball contacts box surface (2px deformation).</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>(203, 53)</td>
+  <td>Ball pushing into box (4px deformation).</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>(208, 55)</td>
+  <td>Maximum box deformation (6px shift).</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>(205, 55)</td>
+  <td>Ball begins to rebound (4px deformation).</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>(198, 53)</td>
+  <td>Ball rebounding from box (2.5px recovery).</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>(190, 52)</td>
+  <td>Ball rolling back slightly (1.2px recovery).</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>(185, 51)</td>
+  <td>Ball slowing, box nearly recovered (0.5px).</td>
+</tr>
+</tbody>
+</table>
+<h3>Physics Notes</h3>
+<ul>
+<li>Ball rolls in a straight line from tube exit (x≈28, y≈36) toward the box (x≈215).</li>
+<li>Ball accelerates slightly at start (gravity from tube exit onto table), then constant speed.</li>
+<li>Shadow ellipse beneath ball shifts with position and grows as ball gets closer to viewer.</li>
+<li>On impact (frames 13-16), the olive green box deforms: right-side pixels shift rightward 1-6 pixels to simulate fabric compression.</li>
+<li>Ball rebounds ~7 pixels, box partially recovers in frames 17-19.</li>
+</ul>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md</h1>
+<h2>Approach</h2>
+<p><strong>Pure Python pixel operations</strong> — no external AI models, engines, or network calls.</p>
+<h3>Scene Understanding (OBSERVATION.md)</h3>
+<p>The scene was analyzed by numerically reading <code>first_frame.png</code> as a numpy array and inspecting:</p>
+<ul>
+<li>Row and column brightness profiles to identify horizontal and vertical boundaries</li>
+<li>Color clustering (brown, olive green, dark) to locate objects</li>
+<li>Transition detection (dark-to-light) to find object edges</li>
+<li>Region-based RGB sampling to characterize each element</li>
+</ul>
+<p>Key measurements:</p>
+<ul>
+<li><strong>Table</strong>: light wooden surface, y=40-143, mean RGB ≈ [125, 120, 118]</li>
+<li><strong>Tube</strong>: black tube on left, x=0-25, y=18-41, darkest pixels RGB ≈ [4, 0, 0]</li>
+<li><strong>Box</strong>: olive green fabric box, x≈215-255, y≈60-110, RGB with G &gt; R and G &gt; B (e.g., [33, 44, 28])</li>
+<li><strong>Ball</strong>: brown tennis ball, not visible in frame 0 (inside tube)</li>
+</ul>
+<h3>Frame Generation</h3>
+<p>Each frame (1-19) is generated by:</p>
+<ol>
+<li>Copying <code>first_frame.png</code> as the base layer</li>
+<li>Drawing a <strong>shadow ellipse</strong> beneath the ball position (darkens table pixels)</li>
+<li>Drawing a <strong>3D-shaded tennis ball sphere</strong> with Lambertian diffuse + Phong specular + rim darkening</li>
+</ol>
+<p>Frame 0 is an exact byte-for-byte copy of <code>first_frame.png</code> (verified via <code>np.array_equal</code>).</p>
+<h3>Ball Rendering</h3>
+<p>The tennis ball is rendered as a 10-pixel-radius sphere with:</p>
+<ul>
+<li><strong>Lambertian diffuse shading</strong>: surface normal dot light direction (light from upper-left)</li>
+<li><strong>Specular highlight</strong>: Phong model (exponent 40) for glossy tennis ball fuzz</li>
+<li><strong>Fresnel-like rim darkening</strong>: edges slightly darker for depth</li>
+<li><strong>Anti-aliased edges</strong>: alpha blend based on sub-pixel distance from sphere boundary</li>
+<li><strong>Color palette</strong>: base brown ~[130, 105, 75], with highlight and shadow adjusted for the scene's dark lighting</li>
+</ul>
+<h3>Shadow Rendering</h3>
+<p>A dark elliptical shadow is drawn below and slightly right of the ball:</p>
+<ul>
+<li>Width: 1.3× ball radius, Height: 0.4× ball radius</li>
+<li>Offset: +3px right, +9px down from ball center</li>
+<li>Opacity: 55% darkening at center, fading to 0 at edges</li>
+</ul>
+<h3>Box Deformation (Frames 13-19)</h3>
+<p>On impact, the olive green fabric box deforms:</p>
+<ul>
+<li><strong>Shift map</strong>: pixels in the box region are shifted rightward</li>
+<li><strong>Falloff</strong>: exponential decay from impact center (σ = 25px)</li>
+<li><strong>Peak deformation</strong>: 6px shift at frame 15 (maximum fabric compression)</li>
+<li><strong>Recovery</strong>: gradual reduction to 0.5px by frame 19</li>
+</ul>
+<h3>Output Verification</h3>
+<ul>
+<li>All 20 frames verified at 256×144×3 uint8</li>
+<li>Frame 0 verified byte-identical to <code>first_frame.png</code></li>
+<li><code>pixels.npz</code> uint32 0xRRGGBB tensor verified against PNG files</li>
+<li><code>inspection.png</code>, <code>transition_check.png</code>, and <code>index.html</code> generated correctly</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0152-e72f35eb0618.png';</script></body></html>
