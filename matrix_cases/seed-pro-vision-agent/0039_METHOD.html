@@ -1,0 +1,660 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>blow-balloon · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · vision-agent · Case 0039</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>blow-balloon</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>9</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>5</strong><span>generate.py 执行</span></div><div class="stat"><strong>84</strong><span>工具命令完成</span></div><div class="stat"><strong>20</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>27</strong><span>文件变更事件</span></div><div class="stat"><strong>61.2m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The balloon is attached to a black hose that points upwards from behind a wooden table. Air is being pumped into the black balloon.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>可自主调用</strong><span>输出视觉工具</span></div><div class="event"><strong>84 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>9 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">events.jsonl 可验证该 Agent 成功读取了 20 张 PNG；上面的 round 图不等同于读取次数，而是 Harness 独立冻结的候选。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-913505ae5932.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T21:50:34.391135+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +212/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 913505ae5932b77e · code 454bcecea2fffa7a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,212 @@
++&quot;&quot;&quot;PixelWorld case 0039: air being pumped into a black balloon on an upward hose.
++
++Local pixel operations only. Frame 0 is an exact copy of first_frame.png.
++Balloon: data-driven coverage/intrinsic-color matte of the frame-0 ellipse, then
++per-frame similarity scaling about the fixed mouth anchor with damped elastic
++response to two pump strokes; green bellows panel squashes in sync.
++See METHOD.md for the full description.
++&quot;&quot;&quot;
++import shutil
++import numpy as np
++from PIL import Image
++
++import artifact_io
++
++rng = np.random.default_rng(7)
++
++# ---------------------------------------------------------------- geometry --
++F0 = np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float64)
++H, W = F0.shape[:2]
++assert (H, W) == (144, 256)
++
++CX0, CY0, A0, B0 = 110.848, 56.354, 23.921, 24.874   # fitted balloon ellipse
++PX, PY = 110.7, 81.2                                  # mouth anchor on nozzle
++
++yy, xx = np.mgrid[0:H, 0:W]
++pcx, pcy = xx + 0.5, yy + 0.5
++rho = np.sqrt(((pcx - CX0) / A0) ** 2 + ((pcy - CY0) / B0) ** 2)
++ang = np.arctan2((pcy - CY0) / B0, (pcx - CX0) / A0)
++lum = F0.mean(2)
++
++
++def bilinear(img, qx, qy):
++    qx = np.asarray(qx, dtype=np.float64)
++    qy = np.asarray(qy, dtype=np.float64)
++    x0i = np.floor(qx).astype(np.int64)
++    y0i = np.floor(qy).astype(np.int64)
++    fx, fy = qx - x0i, qy - y0i
++    x0 = np.clip(x0i, 0, W - 1); x1 = np.clip(x0i + 1, 0, W - 1)
++    y0 = np.clip(y0i, 0, H - 1); y1 = np.clip(y0i + 1, 0, H - 1)
++    wa = (1 - fx) * (1 - fy); wb = fx * (1 - fy); wc = (1 - fx) * fy; wd = fx * fy
++    if img.ndim == 3:
++        wa, wb, wc, wd = wa[..., None], wb[..., None], wc[..., None], wd[..., None]
++    return img[y0, x0] * wa + img[y0, x1] * wb + img[y1, x0] * wc + img[y1, x1] * wd
++
++
++# ---------------------------------------- frame-0 balloon matte / intrinsic --
++# Robust wall estimate: two definitely-outside rings sampled densely in angle,
++# median + gaussian smoothed along the ring, then radially interpolated.
++from scipy.ndimage import median_filter, gaussian_filter1d
++
++thv = np.radians(np.arange(-160, 161, 1.0))
++
++
++def wall_ring(scale):
++    samp = bilinear(F0, CX0 + scale * A0 * np.cos(thv), CY0 + scale * B0 * np.sin(thv))
++    samp = median_filter(samp, (7, 1))
++    return gaussian_filter1d(samp, 4, axis=0)
++
++
++R1, R2 = wall_ring(1.22), wall_ring(1.34)
++ti = np.clip(((np.degrees(ang) + 160) / 1.0).astype(int), 0, len(thv) - 1)
++fr = np.clip((rho - 1.22) / (1.34 - 1.22), -3.0, 1.0)[..., None]
++wall = np.clip(R1[ti] + (R2[ti] - R1[ti]) * fr, 0, 255)
++
++deep = bilinear(F0, CX0 + 0.55 * (pcx - CX0), CY0 + 0.55 * (pcy - CY0))
++alpha0 = np.clip((wall.mean(2) - lum) / np.maximum(wall.mean(2) - deep.mean(2), 6), 0, 1)
++alpha0[rho &lt; 0.80] = 1.0
++alpha0[rho &gt; 1.22] = 0.0
++# downward nozzle sector: analytic edge, nozzle stays put and is nearly black
++analytic = np.clip(0.5 + (1 - rho) / 0.05, 0, 1)
++blend = np.clip((ang - 1.45) / 0.16, 0, 1)
++alpha0 = alpha0 * (1 - blend) + analytic * blend
++
++# intrinsic balloon color: exact un-blend at real edge pixels, inward fallback
++af = np.maximum(alpha0[..., None], 0.12)
++K_un = (F0 - wall * (1 - af)) / af
++K_in = bilinear(F0, CX0 + 0.85 * (pcx - CX0), CY0 + 0.85 * (pcy - CY0))
++K = np.where(alpha0[..., None] &gt; 0.12, K_un, K_in)
++K = np.clip(K, 0, 255)
++
++# ----------------------------------------------------- bellows background ---
++# green panel soft coverage
++greenness = F0[..., 1] - np.maximum(F0[..., 0], F0[..., 2]) - 6.0
++panel_a = np.clip(greenness / 26.0, 0, 1)
++panel_a *= ((xx &gt; 116) &amp; (xx &lt; 164) &amp; (yy &gt; 107) &amp; (yy &lt; 134))
++panel_a = gaussian_filter1d(gaussian_filter1d(panel_a, 0.8, axis=0), 0.8, axis=1)
++panel_a = np.clip(panel_a, 0, 1)
+… diff truncated; 125 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-e152696fd5ce.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T21:54:19.356947+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +28/−23</span></div><p class="hashes">pixels e152696fd5cef9d1 · code 82320afaabc320b3</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -112,38 +112,40 @@
+ # ------------------------------------------------------------- motion model --
+ STROKE_AT = (4.5, 12.5)        # frame index of each downstroke
+ SCALE_AFTER = (1.090, 1.180)   # settled scale after each stroke
+-FREQ = 0.55                    # elastic oscillation, cycles per frame (2.2 Hz)
+-TAU = 2.2                      # damping in frames
++
++
++def _smooth(x):
++    x = np.clip(x, 0, 1)
++    return x * x * (3 - 2 * x)
+ 
+ 
+ def base_scale(i):
++    # volume steps spread over ~2 frame intervals so the 4 fps sampling is smooth
+     s = 1.0
+     for k, m in enumerate(STROKE_AT):
+-        x = np.clip((i - (m - 0.5)) / 1.0, 0, 1)   # step across one frame interval
+-        x = x * x * (3 - 2 * x)
++        x = _smooth((i - (m - 1.0)) / 2.0)
+         prev = SCALE_AFTER[k - 1] if k else 1.0
+         s += (SCALE_AFTER[k] - prev) * x
+     return s
+ 
+ 
+ def elastic(i):
+-    &quot;&quot;&quot;Return (breath, wobble2, sway) from damped oscillations after strokes.&quot;&quot;&quot;
++    &quot;&quot;&quot;Single smooth pressure kick per stroke: (breath, wobble2, sway).&quot;&quot;&quot;
+     breath = wob = sway = 0.0
+     for m in STROKE_AT:
+-        h = i - m
+-        if h &gt;= -0.5:
+-            # oscillation starts at the downstroke; no response before it
+-            hh = max(h, 0.0)
+-            env = np.exp(-hh / TAU)
+-            osc = np.sin(2 * np.pi * FREQ * (hh + 0.12))
+-            breath += 0.012 * env * osc
+-            wob += 0.005 * env * np.cos(2 * np.pi * FREQ * hh + 0.6)
+-            sway += 0.85 * env * np.sin(2 * np.pi * FREQ * hh + 0.35)
++        h = i - (m - 0.5)
++        if h &gt; 0:
++            rise = (1 - np.exp(-h / 0.35))
++            env = np.exp(-h / 2.6)
++            e = rise * env
++            breath += 0.008 * e
++            wob += 0.0035 * e
++            sway += 0.45 * e
+     return breath, wob, sway
+ 
+ 
+ # bellows press amount per frame (0..1): downstroke then recovery
+-PRESS = {4: 0.45, 5: 1.0, 6: 0.55, 11: 0.30, 12: 0.75, 13: 1.0, 14: 0.55}
++PRESS = {4: 0.5, 5: 1.0, 6: 0.45, 11: 0.25, 12: 0.6, 13: 1.0, 14: 0.45}
+ PANEL_PIVOT = 130.0
+ 
+ 
+@@ -160,13 +162,8 @@
+         a = bilinear(panel_a, qx, qy)
+         col = bilinear(F0, qx, qy)
+         col *= (1.0 - 0.10 * pr)                      # pressed bellows slightly darker
+-        sub = frame[pby0:pby1, pbx0:pbx1]
+         bg = plate[pby0:pby1, pbx0:pbx1]
+-        sub2 = sub * (1 - a[..., None]) + col * a[..., None]
+-        # where the panel recedes, the inpainted background shows instead of F0
+-        reveal = a &lt; bilinear(panel_a, qx, qy + 1.2)  # keep simple: always plate under
+-        sub2 = bg * (1 - a[..., None]) + col * a[..., None]
+-        frame[pby0:pby1, pbx0:pbx1] = sub2
++        frame[pby0:pby1, pbx0:pbx1] = bg * (1 - a[..., None]) + col * a[..., None]
+ 
+     # ---- balloon ----
+     s = base_scale(i)
+@@ -190,9 +187,17 @@
+         rq = rrn / np.maximum(1.0 + delta, 0.5)
+         qx = CX0 + A0 * rq * np.cos(phi)
+         qy = CY0 + B0 * rq * np.sin(phi)
+-        m = (rq &lt; 1.30)
++        m = (rq &lt; 1.28)
+         a = np.zeros_like(rrn)
+-        a[m] = bilinear(alpha0, qx[m], qy[m])
++        # sample coverage on a radius-compressed band so the AA width stays
++        # ~constant in screen pixels instead of softening as the ellipse grows
++        rqa = 1.0 + (rq - 1.0) / (s * 0.90)
++        qxa = CX0 + A0 * rqa * np.cos(phi)
++        qya = CY0 + B0 * rqa * np.sin(phi)
++        a[m] = bilinear(alpha0, qxa[m], qya[m])
++        # nothing balloon below the mouth line: the static nozzle stays intact
++        mouth = np.clip((PY + 0.9 - (ys + 0.5)) / 1.4, 0, 1)
++        a *= mouth
+… diff truncated; 3 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-e152696fd5ce.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T21:54:22.174563+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels e152696fd5cef9d1 · code 82320afaabc320b3</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-1e33acd49f74.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T21:58:33.446031+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +10/−11</span></div><p class="hashes">pixels 1e33acd49f749fc3 · code de2b82a85714c99f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -185,20 +185,19 @@
+         # inverse elastic normal displacement (m=2 elliptical mode)
+         delta = wob * np.cos(2 * (phi - 0.4))
+         rq = rrn / np.maximum(1.0 + delta, 0.5)
+-        qx = CX0 + A0 * rq * np.cos(phi)
+-        qy = CY0 + B0 * rq * np.sin(phi)
+-        m = (rq &lt; 1.28)
+-        a = np.zeros_like(rrn)
+-        # sample coverage on a radius-compressed band so the AA width stays
+-        # ~constant in screen pixels instead of softening as the ellipse grows
+-        rqa = 1.0 + (rq - 1.0) / (s * 0.90)
+-        qxa = CX0 + A0 * rqa * np.cos(phi)
+-        qya = CY0 + B0 * rqa * np.sin(phi)
+-        a[m] = bilinear(alpha0, qxa[m], qya[m])
++        # analytic coverage with constant screen-space AA width (half coverage
++        # at the measured ellipse); keeps the rim crisp as the balloon grows
++        wnorm = 1.25 / At
++        a = np.clip(0.5 + (1.0 - rrn) / wnorm, 0, 1)
++        a[rrn &gt; 1.30] = 0
+         # nothing balloon below the mouth line: the static nozzle stays intact
+         mouth = np.clip((PY + 0.9 - (ys + 0.5)) / 1.4, 0, 1)
+         a *= mouth
+-        kcol = bilinear(K, qx, qy)
++        # intrinsic color sampled from the stable interior only (&lt;=0.93 radius)
++        rqk = np.minimum(rq, 0.93)
++        qkx = CX0 + A0 * rqk * np.cos(phi)
++        qky = CY0 + B0 * rqk * np.sin(phi)
++        kcol = bilinear(K, qkx, qky)
+         # faint overall brightness breathing of the skin under pressure pulses
+         kcol = kcol * (1.0 + 0.05 * breath)
+         sub = frame[ylo:yhi, xlo:xhi]</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-1e33acd49f74.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T21:58:35.338249+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 1e33acd49f749fc3 · code de2b82a85714c99f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-7edbf2d0c0c3.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T22:02:19.730129+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +9/−1</span></div><p class="hashes">pixels 7edbf2d0c0c35888 · code 3c29c0cbe4fad4d3</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -200,7 +200,15 @@
+         kcol = bilinear(K, qkx, qky)
+         # faint overall brightness breathing of the skin under pressure pulses
+         kcol = kcol * (1.0 + 0.05 * breath)
+-        sub = frame[ylo:yhi, xlo:xhi]
++        # background plate inside the bbox: frame-0 balloon analytically rebuilt
++        # over the wall model, so a barely-grown rim never ghosts against the
++        # old rim; nozzle sector stays untouched (both masks vanish there)
++        sub = frame[ylo:yhi, xlo:xhi].copy()
++        a_old = np.clip(0.5 + (1.0 - rho[ylo:yhi, xlo:xhi]) / (1.25 / B0), 0, 1)
++        a_old *= np.clip((PY + 0.9 - (ys + 0.5)) / 1.4, 0, 1)
++        bg_old = (wall[ylo:yhi, xlo:xhi] * (1 - a_old[..., None]) +
++                  K[ylo:yhi, xlo:xhi] * a_old[..., None])
++        sub = sub * (1 - a_old[..., None]) + bg_old * a_old[..., None]
+         frame[ylo:yhi, xlo:xhi] = sub * (1 - a[..., None]) + kcol * a[..., None]
+ 
+     return np.clip(frame, 0, 255).astype(np.uint8)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-7edbf2d0c0c3.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T22:02:21.671376+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 7edbf2d0c0c35888 · code 3c29c0cbe4fad4d3</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-5151bf91e32e.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T22:07:01.307536+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +12/−16</span></div><p class="hashes">pixels 5151bf91e32e312d · code 24ad7b4f4524a906</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -87,27 +87,23 @@
+ panel_a = np.clip(panel_a, 0, 1)
+ pbx0, pbx1, pby0, pby1 = 115, 165, 106, 135
+ 
+-# local inpaint of the background behind the panel (diffusion from known rim)
++# local inpaint of the background behind the panel: nearest-known-pixel fill
++# (geodesic from the real rim colors) so a revealed top strip keeps the dark
++# housing/shadow band instead of washing out toward the wall color
++from scipy.ndimage import distance_transform_edt
+ plate = F0.copy()
+ hole = panel_a &gt; 0.18
+ work = np.zeros((H, W), bool)
+ work[pby0:pby1, pbx0:pbx1] = True
+ hole &amp;= work
+-known = work &amp; ~hole
+-acc = F0.copy()
+-acc[hole] = 0.0
+-wacc = known.astype(np.float64)
+-for _ in range(140):
+-    num = (np.pad(acc, ((1, 1), (1, 1), (0, 0)))[0:-2, 1:-1] +
+-           np.pad(acc, ((1, 1), (1, 1), (0, 0)))[2:, 1:-1] +
+-           np.pad(acc, ((1, 1), (1, 1), (0, 0)))[1:-1, 0:-2] +
+-           np.pad(acc, ((1, 1), (1, 1), (0, 0)))[1:-1, 2:])
+-    den = (np.pad(wacc, 1)[0:-2, 1:-1] + np.pad(wacc, 1)[2:, 1:-1] +
+-           np.pad(wacc, 1)[1:-1, 0:-2] + np.pad(wacc, 1)[1:-1, 2:])
+-    fill = work &amp; ~known &amp; (den &gt; 0)
+-    acc[fill] = num[fill] / np.maximum(den[fill], 1e-6)[..., None]
+-    wacc[fill] = 1.0
+-plate[hole] = acc[hole]
++known = ~hole
++_, (iy, ix) = distance_transform_edt(hole, return_indices=True)
++plate[hole] = F0[iy[hole], ix[hole]]
++# one light smoothing pass over the inpainted zone only
++sm = hole &amp; np.roll(hole, 1, 0) &amp; np.roll(hole, -1, 0)
++mean = (plate + np.roll(plate, 1, 0) + np.roll(plate, -1, 0) +
++        np.roll(plate, 1, 1) + np.roll(plate, -1, 1)) / 5
++plate[sm] = mean[sm]
+ 
+ # ------------------------------------------------------------- motion model --
+ STROKE_AT = (4.5, 12.5)        # frame index of each downstroke</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/candidate-5151bf91e32e.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T22:07:03.501313+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 5151bf91e32e312d · code 24ad7b4f4524a906</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0039/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION</h1>
+<h2>Frame format and scene</h2>
+<ul>
+<li><code>first_frame.png</code>: 256×144 RGB, uint8. Camera locked off; one static wide shot of a wall corner, a wooden table edge in the foreground, and a black balloon on an upward hose standing behind the table.</li>
+<li>Action implied by prompt: air is pumped into the balloon → balloon visibly inflates in place while the pump works.</li>
+</ul>
+<h2>Measured geometry (pixel coordinates, origin top-left; pixel centers at x+0.5)</h2>
+<h3>Black balloon (frame 0)</h3>
+<ul>
+<li>Silhouette is a slightly vertically elongated ellipse (party-balloon shape), fitted to sub-pixel half-coverage edge points over polar angles −140°…+82° (downward sector excluded because the nozzle joins there):<ul>
+<li>center <code>C0 = (110.85, 56.35)</code></li>
+<li>horizontal semi-axis <code>A0 = 23.92</code>, vertical semi-axis <code>B0 = 24.87</code> (fit RMS 0.18 px, max 0.42 px)</li>
+<li>bottom pole (mouth/nipple anchor) at <code>P = (110.8, 81.2)</code></li>
+</ul>
+</li>
+<li>Surface is very dark: interior medians RGB ≈ (10,10,10) over r 12–20; broad faint center glow ~(29,31,31).</li>
+<li>Two specular highlights: left peak near (94,56) lum ~65, right peak near (114,56) lum ~76 (soft, ~3–4 px wide).</li>
+<li>Limb is almost black (8–15) with a faint greenish cast on the lower-right limb (reflected color from the green bellows, e.g. RGB (13,24,12) at (121,78)).</li>
+<li>Edge anti-aliasing is anisotropic in the source render: top limb is a crisp ~1 px step, flanks are ~2–3 px soft; the left limb is mildly stair-stepped. A data-driven per-pixel coverage matte (see METHOD) reproduces frame 0 with band mean error 0.46/255, max 4.</li>
+</ul>
+<h3>Fittings below the balloon</h3>
+<ul>
+<li>Black nozzle stub under the mouth: x 107–114, y 81–88, core RGB ~(8,9,3)–(13,13,8), AA edge columns ~(45,48,46).</li>
+<li>Blue collar/tape: y 88–92, x 108–113, core (12,25,70)–(17,31,86), diagonal blue-grey AA fringes.</li>
+<li>Black hose: ~3 px wide, centerline (109.5,88) → (114,100) → (116.5,112) → (117,114), then disappears into the pump housing behind the table.</li>
+<li>Pump housing: dark rounded body behind the table edge, roughly x 95–182, y 115–134, RGB ~(20–35,21–33,14–28); soft shadow band above it on the wall (wall darkens 122→85 around y 108–114).</li>
+<li>Green bellows/pump panel: bright green parallelogram, median RGB (0,114,28), corners ≈ (132,112) (158,114) (149,129) (122,124), continuing behind the table edge; soft AA over wall/housing.</li>
+<li>Table: far edge runs y≈111 at x≈32 down to y≈142 at x≈224 (wood RGB ~(85,70,40)), occupies the bottom of the frame.</li>
+<li>Background wall: smooth grey-green gradient, ~(149,160,154) top-center, ~(142,154,145) mid-right, ~(120,131,125) left, dark room-corner strip near x 0–15.</li>
+</ul>
+<h2>Animation: 20 frames @ 4 fps (t = i·0.25 s, 0–4.75 s)</h2>
+<p>Physics choices: inflation happens through pump strokes, so volume grows in two discrete steps (two strokes within 5 s) rather than linearly; each injection is followed by one smooth, damped elastic pressure kick of the rubber skin (radius breathing + m=2 elliptical wobble + tiny lateral sway); the green bellows compresses in sync with each stroke and recovers. The mouth anchor P stays fixed at the nozzle; the ellipse center rises as the balloon grows.</p>
+<ul>
+<li>Scale about anchor P: semi-axes <code>A=s·A0</code>, <code>B=s·B0</code>, center <code>C = P + s·(C0−P)</code> (+ tiny x sway).</li>
+<li>Baseline scale: s=1.000 at rest; each stroke ramps s with a 2-frame smoothstep centered on the downstroke; stroke 1 (frame index 4.5) settles to s=1.090 (radius 23.9→26.1); stroke 2 (frame index 12.5) settles to s=1.180 (radius →28.2; top rises to ≈ y 22.6, flanks reach x ≈ 77 and 145 — stays safely inside the frame).</li>
+<li>Elastic kick per stroke: <code>e(h) = (1−exp(−h/0.35))·exp(−h/2.6)</code> with h in frames since the kick; drives uniform radius breathing amplitude 0.8% and m=2 wobble 0.35% (peaks ~0.5% one frame after the downstroke) plus lateral sway amplitude 0.45 px (peak ~0.3 px); the envelope tail is below 0.05 amplitude by ~7 frames.</li>
+<li>Bellows: vertical squash <code>sy = 1−0.12·press</code> of the green panel about its bottom edge (top edge dips ≤2.2 px), pressed color darkened 10%; press schedule 0.5/1.0/0.45 across the three frames of each stroke; newly exposed strip filled with a nearest-known-pixel inpaint of the dark housing/shadow band.</li>
+<li>Nozzle, blue collar, hose, table, pump housing and wall otherwise static (verified: zero pixel change in the hose bbox on every frame); locked frame, constant exposure.</li>
+</ul>
+<h3>Frame-by-frame</h3>
+<p>Kick amplitude e is the value of the damped pressure-kick envelope on that frame (scale factors at peak e=1: radius breath 0.8%, m=2 wobble 0.35%, lateral sway 0.45 px); the base scale ramps on a 2-frame smoothstep, so f4/f12 are the downstroke frames themselves.</p>
+<table>
+<thead>
+<tr>
+  <th>i</th>
+  <th>t (s)</th>
+  <th>s (base)</th>
+  <th>kick e (breath / sway)</th>
+  <th>bellows press</th>
+  <th>visible event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>0.00</td>
+  <td>1.000</td>
+  <td>0</td>
+  <td>0</td>
+  <td>exact first frame</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>0.25</td>
+  <td>1.000</td>
+  <td>0</td>
+  <td>0</td>
+  <td>unchanged (pre-stroke)</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>0.50</td>
+  <td>1.000</td>
+  <td>0</td>
+  <td>0</td>
+  <td>unchanged</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>0.75</td>
+  <td>1.000</td>
+  <td>0</td>
+  <td>0</td>
+  <td>unchanged</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>1.00</td>
+  <td>1.014</td>
+  <td>0</td>
+  <td>0.5</td>
+  <td>stroke 1 downstroke: panel half-compressed, balloon starts growing</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>1.25</td>
+  <td>1.076</td>
+  <td>0.64 (breath +0.5%, sway +0.29 px)</td>
+  <td>1.0</td>
+  <td>balloon near step-1 size, kick peaks, panel flat</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>1.50</td>
+  <td>1.090</td>
+  <td>0.46</td>
+  <td>0.45</td>
+  <td>step-1 size reached, panel recovering</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>1.75</td>
+  <td>1.090</td>
+  <td>0.32</td>
+  <td>0</td>
+  <td>residual settle</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>2.00</td>
+  <td>1.090</td>
+  <td>0.21</td>
+  <td>0</td>
+  <td>faint breathing</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>2.25</td>
+  <td>1.090</td>
+  <td>0.15</td>
+  <td>0</td>
+  <td>near hold</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>1.090</td>
+  <td>0.10</td>
+  <td>0</td>
+  <td>stillness before stroke 2</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>1.090</td>
+  <td>0.07</td>
+  <td>0.25</td>
+  <td>panel begins compressing</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>1.104</td>
+  <td>0.05</td>
+  <td>0.6</td>
+  <td>stroke 2 downstroke, balloon starts step-up</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>1.166</td>
+  <td>0.67 (breath +0.5%, sway +0.30 px)</td>
+  <td>1.0</td>
+  <td>near step-2 size, kick peaks, panel flat</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>1.180</td>
+  <td>0.48</td>
+  <td>0.45</td>
+  <td>final size reached, panel recovering</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>1.180</td>
+  <td>0.33</td>
+  <td>0</td>
+  <td>residual settle</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>1.180</td>
+  <td>0.22</td>
+  <td>0</td>
+  <td>faint breathing</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>1.180</td>
+  <td>0.15</td>
+  <td>0</td>
+  <td>near hold</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>1.180</td>
+  <td>0.10</td>
+  <td>0</td>
+  <td>near hold</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>1.180</td>
+  <td>0.07 (sway +0.03 px)</td>
+  <td>0</td>
+  <td>final inflated size</td>
+</tr>
+</tbody>
+</table>
+<h2>Rendering method (summary; full detail in METHOD.md)</h2>
+<ul>
+<li>Extract frame-0 balloon appearance: local wall color from two outward (ρ=1.22, 1.34), angularly median+gaussian-smoothed sample rings radially interpolated; coverage matte by luminance un-blending against wall vs deep-interior references (ρ&lt;0.8 pinned opaque, ρ&gt;1.22 transparent; the downward nozzle sector uses an analytic ellipse edge); intrinsic balloon color K by exact un-blending where coverage &gt;0.12, inward radial fallback (0.85) elsewhere.</li>
+<li>Frames i≥4: analytic coverage of the grown/moved ellipse with a constant 1.25-px screen-space AA band (half coverage at the measured edge), intrinsic color sampled by inverse similarity-map into K (clamped to ρ≤0.93 so stretched rims sample real skin), plus the m=2 normal perturbation and a 1.4-px linear fade above the mouth anchor. Before compositing, the old frame-0 rim inside the render bbox is erased against a rebuilt wall+K plate, so growth never ghosts; the mouth fade leaves the static nozzle/collar sector bit-identical.</li>
+<li>Green panel: greenness soft matte inside x116–163, y108–133, warped by a vertical squash about y=130 (pressed color −10%), composited over a nearest-known-pixel inpaint plate (dark housing/shadow) with one 5-neighbor smoothing pass.</li>
+<li>Frame 0 is copied byte-for-byte from <code>first_frame.png</code>; all edits are local Python/numpy/scipy/PIL pixel operations.</li>
+</ul>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD</h1>
+<p>Case 0039 — <em>&quot;Air is being pumped into the black balloon.&quot;</em>
+All work is local Python pixel operations (numpy / scipy.ndimage / PIL) on the single
+input <code>first_frame.png</code>. No external models, network, or other assets are used.
+The generator is <code>generate.py</code>; run <code>python3 generate.py</code> to (re)create every
+output artifact through the provided <code>artifact_io.save</code>.</p>
+<h2>1. Scene decomposition (from frame 0)</h2>
+<p>The 256×144 frame contains, back to front: a grey-green wall with a dark left
+corner, a wooden table edge across the lower third, a dark pump housing behind
+the table, a bright green bellows panel on the pump, a black hose rising from it
+with a blue collar, and a near-black inflated balloon tied to the hose top.
+Camera and exposure are static, so every non-balloon / non-bellows pixel is kept
+bit-identical to frame 0.</p>
+<h3>Balloon geometry</h3>
+<p>The balloon silhouette is a slightly prolate ellipse with the mouth at the
+bottom. Half-coverage edge points were measured over the visible polar range
+(−140°…+82°; the downward sector is occluded by the nozzle) and fitted by least
+squares to</p>
+<ul>
+<li>center <code>C0 = (110.848, 56.354)</code>, semi-axes <code>A0 = 23.921</code> (x), <code>B0 = 24.874</code> (y)
+(fit RMS 0.18 px, max 0.42 px);</li>
+<li>fixed mouth anchor <code>P = (110.7, 81.2)</code> on the nozzle.</li>
+</ul>
+<p>Interior skin is nearly black (~RGB 10) with a faint central glow, two soft
+specular spots near (94,56) and (114,56), and a faint greenish lower-right limb.</p>
+<h2>2. Extracting the balloon's intrinsic appearance</h2>
+<p>To re-render the balloon at other sizes we need (a) the background color behind
+it and (b) its intrinsic skin color, at every frame-0 balloon pixel.</p>
+<p><strong>Wall model.</strong> Two densely sampled rings just outside the ellipse
+(ρ = 1.22 and 1.34, with ρ the normalized ellipse radius of the pixel center)
+are bilinearly sampled from frame 0, run through a length-7 median filter and a
+σ=4 Gaussian along the angle, then linearly interpolated radially to each pixel.
+The median/Gaussian steps remove the dark left-corner gradient and isolated
+dark pixels from the estimate.</p>
+<p><strong>Coverage matte α₀.</strong> At each pixel, balloon coverage is recovered by
+luminance un-blending:</p>
+<pre><code>α = clip((L_wall − L) / (L_wall − L_deep), 0, 1),
+L_deep = luminance(F0 sampled at 0.55·radius)
+</code></pre>
+<p>pinned to 1 for ρ &lt; 0.80 and 0 for ρ &gt; 1.22. In the downward nozzle sector
+(angle &gt; 1.45 rad) an analytic edge <code>clip(0.5 + (1−ρ)/0.05, 0, 1)</code> is blended
+in, because the un-blend assumption fails where the nearly-black nozzle meets
+the nearly-black balloon. As a calibration self-test, this matte reproduces the
+frame-0 balloon band with mean |error| 0.46/255, max 4.</p>
+<p><strong>Intrinsic color K.</strong> Where α₀ &gt; 0.12 the skin color is obtained by exact
+inverse compositing, <code>K = (F0 − wall·(1−α)) / α</code>; elsewhere K falls back to the
+frame-0 color sampled at 0.85 of the pixel's radius (real interior skin, never
+the rim). K is clipped to [0,255].</p>
+<h2>3. Motion model</h2>
+<p>Air arrives through two hand-pump strokes within the 5 s window; inflation is
+therefore stepwise rather than linear.</p>
+<ul>
+<li><p><strong>Base scale about the fixed mouth anchor P</strong> (the tied neck cannot move):
+semi-axes <code>A = s·A0</code>, <code>B = s·B0</code>, center <code>C = P + s·(C0 − P)</code>, so the center
+rises as the balloon grows. Each stroke adds its scale increment through a
+2-frame smoothstep centered at frame index 4.5 (settles at s = 1.090) and
+12.5 (settles at s = 1.180). Effective per-frame base scales:
+f0–3 1.000, f4 1.014, f5 1.076, f6–11 1.090, f12 1.104, f13 1.166, f14–19
+1.180. At 1.18 the top reaches y ≈ 22.6 and flanks x ≈ 77/145, comfortably
+inside the frame.</p>
+</li>
+<li><p><strong>One damped elastic pressure kick per stroke</strong>, starting half a frame after
+the downstroke:</p>
+<pre><code>e(h) = (1 − exp(−h/0.35)) · exp(−h/2.6),   h = frames since kick
+</code></pre>
+<p>driving a uniform radius breathing (amp 0.008), an m=2 elliptical normal
+perturbation <code>δ = 0.0035·e·cos(2(φ−0.4))</code>, and a lateral center sway
+(0.45·e px). The kick peaks on the frame after each downstroke (e ≈ 0.64) and
+its tail is below 0.1 amplitude within ~6 frames. Skin color is brightened by
+at most 5%·breath during the pulse.</p>
+</li>
+<li><p><strong>Bellows press schedule</strong> (fraction pressed): f4 0.5, f5 1.0, f6 0.45;
+f11 0.25, f12 0.6, f13 1.0, f14 0.45; 0 elsewhere. The panel starts moving one
+frame before the balloon's step-up completes and is fully released two frames
+after each downstroke.</p>
+</li>
+</ul>
+<h2>4. Rendering a frame</h2>
+<h3>Balloon (frames i ≥ 4)</h3>
+<ol>
+<li>Compute pose (s, breath, wobble, sway) and the render bbox (ellipse + 4 px).</li>
+<li><strong>Coverage</strong>: analytic, <code>α = clip(0.5 + (1 − ρ_t)/w, 0, 1)</code> with
+<code>w = 1.25/A_t</code>, so the anti-aliased band keeps a constant ~1.25 px width on
+screen at every size (half coverage exactly on the fitted ellipse). The m=2
+perturbation only affects color sampling, not the coverage silhouette.</li>
+<li><strong>Mouth fade</strong>: multiply α by <code>clip((P_y + 0.9 − y)/1.4, 0, 1)</code>; balloon
+coverage ends ~1.4 px above the anchor so the nozzle, blue collar and hose
+are never painted. A numeric check confirms zero changed pixels in the hose
+bbox (x 100–125, y 82–106) on every frame.</li>
+<li><strong>Intrinsic color</strong>: inverse-map each covered pixel through the similarity
+transform (with the m=2 inverse normal displacement) into frame-0 ellipse
+coordinates and bilinearly sample K, clamping the sampled radius to 0.93 so a
+stretched rim always reads real interior skin instead of extrapolated edge.</li>
+<li><strong>Old-rim erase</strong>: before compositing, the frame-0 balloon inside the bbox is
+blended out against a rebuilt plate <code>wall·(1−α_old) + K·α_old</code> using the
+frame-0 analytic rim (with the same mouth fade). This removes the old dark
+rim from the thin crescent exposed by growth; without it the grown balloon
+showed a faint doubled outline.</li>
+<li>Composite <code>out = plate·(1−α) + K_t·α</code> over the bbox only.</li>
+</ol>
+<h3>Green bellows</h3>
+<ul>
+<li>Soft panel coverage from greenness <code>G − max(R,B) − 6</code>, restricted to
+x 117–163 / y 108–133 and smoothed (σ 0.8 in each axis).</li>
+<li>A background <strong>plate</strong> is built once: panel pixels (α &gt; 0.18 inside the panel
+bbox) are filled by nearest-known-pixel via <code>distance_transform_edt</code> indices,
+then one 5-neighbor averaging pass is applied over the fully-interior fill.
+Nearest-pixel fill (rather than a blur/inpaint toward wall color) preserves
+the dark pump-housing/shadow band revealed above a squashed panel.</li>
+<li>Per pressed frame the panel layer is vertically squashed about y = 130
+(<code>s_y = 1 − 0.12·press</code>, top edge dips ≤ 2.2 px) by inverse bilinear sampling
+of both its color and alpha, its color darkened by 10%·press, and composited
+over the plate inside the small panel bbox.</li>
+</ul>
+<p>Everything outside the two render bboxes is a direct copy of frame 0.</p>
+<h2>5. Frame 0 and artifact output</h2>
+<p><code>frames[0]</code> is replaced with a fresh decode of <code>first_frame.png</code>, and
+<code>frames/00.png</code> is additionally byte-copied from <code>first_frame.png</code>, so frame 00
+is exactly the supplied PNG (md5 verified equal). <code>artifact_io.save</code> writes the
+20 PNGs, the uint32 <code>0xRRGGBB</code> tensor <code>pixels.npz</code>, <code>inspection.png</code> (frames
+0/2/5/8/11/14/17/19) and <code>index.html</code> from the player template.
+<code>transition_check.png</code> is produced separately by <code>.tmp/make_checks.py</code>: a
+2×10 half-size strip of all 20 labeled frames plus full-resolution
+before/after crops of the four stroke transitions (04→05, 05→06, 12→13, 13→14).</p>
+<h2>6. Verification</h2>
+<ul>
+<li><code>frames/00.png</code> byte-identical to <code>first_frame.png</code> (md5 match).</li>
+<li>Every <code>frames/NN.png</code> re-decodes to exactly the packed uint32 tensor stored in
+<code>pixels.npz</code>; tensor shape (20,144,256,3)-equivalent, dtype/contract per
+<code>artifact_io</code>.</li>
+<li>Changed-pixel bbox audits: at rest frames changes are confined to the balloon
+silhouette region; on pressed frames they additionally cover only the panel
+bbox; hose/nozzle/collar/table pixels are unchanged (max abs diff 0) on every
+frame.</li>
+<li>Visual reviews (image Read tool) of frame 0 reconstruction, rim close-ups at
+all growth sizes, nozzle junction, panel press/recovery, a f00/f05/f13/f19
+full-frame contact sheet, diff overlays, and the final <code>transition_check.png</code>.</li>
+</ul>
+<h2>7. Known approximations</h2>
+<ul>
+<li>The balloon is modeled as an axis-uniform ellipse plus a small m=2 mode; real
+party balloons deviate slightly from an ellipse and show higher-order skin
+wrinkles. The specular highlights are carried along rigidly with the skin map
+rather than re-derived from a changing surface normal.</li>
+<li>Frame-0 edge AA is anisotropic (1 px on top, 2–3 px on flanks); grown frames
+use a uniform 1.25 px analytic band, so edge character differs subtly from
+frame 0 while remaining a consistent, crisp rim.</li>
+<li>A very faint vertical seam can remain at the left edge of the squashed panel
+where the nearest-pixel inpaint meets the original housing; it is within the
+existing soft edge fringe.</li>
+<li>Stroke timing, step magnitudes (s = 1.09 / 1.18) and kick amplitudes are
+artistic choices consistent with two hand-pump strokes in 5 seconds, not
+measurements of a hidden ground truth.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-vision-agent/0039-97dfdea025d8.png';</script></body></html>

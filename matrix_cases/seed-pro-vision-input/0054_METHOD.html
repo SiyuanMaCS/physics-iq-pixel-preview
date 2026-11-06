@@ -1,0 +1,858 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>double-cradle · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · vision-input · Case 0054</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>double-cradle</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>20</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>16</strong><span>generate.py 执行</span></div><div class="stat"><strong>89</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>29</strong><span>文件变更事件</span></div><div class="stat"><strong>79.6m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The blue-black grabber tool was holding two metal balls at the position of the amplitude of the Newton&#x27;s cradle. The Newton&#x27;s cradle with five metal balls is sitting on a table. Two metal balls of the Newton&#x27;s cradle device are released by the blue-black grabber tool.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>89 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>20 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-277a5809d44a.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T05:03:02.701068+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +375/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 277a5809d44a5009 · code c9e18a19963360d3</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,375 @@
++&quot;&quot;&quot;PixelWorld vision-input generator — case_0054.
++
++Newton&#x27;s cradle: two left balls, held at amplitude by a blue/black grabber,
++are released and oscillate (2-in/2-out exchange), damped. Frame 0 is the
++byte-exact first frame; frames 1..19 are composited with local pixel ops:
++modeled clean plate, original chrome crops, extracted ball/shadow/grabber
++sprites, analytic pendulum motion.
++&quot;&quot;&quot;
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import artifact_io, math
++
++W0 = 256; H0 = 144
++CASE = &#x27;.&#x27;
++orig_u8 = np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++orig = orig_u8.astype(np.float32)
++O = orig.copy()
++
++# ---------------------------------------------------------------- geometry
++PIV_Y = 29.0
++PIV_X = [88, 100, 112, 124, 136]          # string pivots on front bar
++L = 70.0                                  # pendulum length, px
++REST_Y = PIV_Y + L                        # 99
++BALL_R = 6.0
++DX0 = -16.5                               # initial amplitude displacement
++TH0 = math.asin(DX0 / L)                  # 0.2376 rad
++PERIOD = 1.5
++OM = 2 * math.pi / PERIOD
++DAMP = 0.88                               # per half-cycle
++TCOLL = [0.375 + 0.75 * k for k in range(7)]
++
++
++def state(t):
++    &quot;&quot;&quot;Return (&#x27;L&#x27;|&#x27;R&#x27;, theta of moving pair) or (&#x27;rest&#x27;,0).&quot;&quot;&quot;
++    if t &lt; TCOLL[0]:
++        return &#x27;L&#x27;, -TH0 * math.cos(OM * t)
++    k = 0
++    while k + 1 &lt; len(TCOLL) and t &gt;= TCOLL[k + 1]:
++        k += 1
++    dt = t - TCOLL[k]
++    amp = TH0 * DAMP ** (k + 1)
++    s = math.sin(OM * dt)
++    if k % 2 == 0:                         # after c0: right pair out
++        return &#x27;R&#x27;, amp * s
++    else:                                  # after c1: left pair out
++        return &#x27;L&#x27;, -amp * s
++
++
++def ball_positions(t):
++    &quot;&quot;&quot;Five ball centers; moving pair offset by theta.&quot;&quot;&quot;
++    side, th = state(t)
++    cx = [float(x) for x in PIV_X]
++    cy = [REST_Y] * 5
++    if side == &#x27;L&#x27;:                        # balls 0,1 move
++        for i in (0, 1):
++            cx[i] = PIV_X[i] + L * math.sin(th)
++            cy[i] = PIV_Y + L * math.cos(th)
++    elif side == &#x27;R&#x27;:                      # balls 3,4 move
++        for i in (3, 4):
++            cx[i] = PIV_X[i] + L * math.sin(th)
++            cy[i] = PIV_Y + L * math.cos(th)
++    return list(zip(cx, cy)), side, th
++
++
++# ---------------------------------------------------------------- helpers
++def paste_rgba(dst, src_rgba, x, y):
++    &quot;&quot;&quot;Paste float RGBA image (HxWx4, 0..255) with top-left at (x,y).&quot;&quot;&quot;
++    h, w = src_rgba.shape[:2]
++    H, W = dst.shape[:2]
++    x0, y0 = max(0, x), max(0, y)
++    x1, y1 = min(W, x + w), min(H, y + h)
++    if x0 &gt;= x1 or y0 &gt;= y1:
++        return
++    sx0, sy0 = x0 - x, y0 - y
++    sx1, sy1 = sx0 + (x1 - x0), sy0 + (y1 - y0)
++    a = src_rgba[sy0:sy1, sx0:sx1, 3:4] / 255.0
++    dst[y0:y1, x0:x1] = dst[y0:y1, x0:x1] * (1 - a) + src_rgba[sy0:sy1, sx0:sx1, :3] * a
++
++
++def soft_disk(size, r_in=5.1, r_out=6.3, cc=None):
++    &quot;&quot;&quot;Soft circular alpha, 1 inside r_in, 0 outside r_out.&quot;&quot;&quot;
++    if cc is None:
++        cc = ((size - 1) / 2, (size - 1) / 2)
++    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
++    r = np.hypot(xx - cc[0], yy - cc[1])
++    a = np.clip((r_out - r) / (r_out - r_in), 0, 1)
++    return a
+… diff truncated; 288 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b557bc296e08.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T05:08:22.701538+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +123/−188</span></div><p class="hashes">pixels b557bc296e08cf60 · code c24a0f32f880b232</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -3,35 +3,34 @@
+ Newton&#x27;s cradle: two left balls, held at amplitude by a blue/black grabber,
+ are released and oscillate (2-in/2-out exchange), damped. Frame 0 is the
+ byte-exact first frame; frames 1..19 are composited with local pixel ops:
+-modeled clean plate, original chrome crops, extracted ball/shadow/grabber
+-sprites, analytic pendulum motion.
++ridge-inpainted clean plate, original chrome crops, an averaged resting
++chrome-ball sprite, extracted contact-shadow/grabber sprites, analytic
++pendulum motion and redrawn V strings.
+ &quot;&quot;&quot;
+ import numpy as np
+ from PIL import Image, ImageDraw, ImageFilter
++from scipy import ndimage
+ import artifact_io, math
+ 
+ W0 = 256; H0 = 144
+-CASE = &#x27;.&#x27;
+ orig_u8 = np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+ orig = orig_u8.astype(np.float32)
+-O = orig.copy()
+ 
+ # ---------------------------------------------------------------- geometry
+ PIV_Y = 29.0
+-PIV_X = [88, 100, 112, 124, 136]          # string pivots on front bar
+-L = 70.0                                  # pendulum length, px
+-REST_Y = PIV_Y + L                        # 99
++PIV_X = [88, 100, 112, 124, 136]
++L = 70.0
++REST_Y = PIV_Y + L
+ BALL_R = 6.0
+-DX0 = -16.5                               # initial amplitude displacement
+-TH0 = math.asin(DX0 / L)                  # 0.2376 rad
++DX0 = -16.5
++TH0 = math.asin(DX0 / L)
+ PERIOD = 1.5
+ OM = 2 * math.pi / PERIOD
+-DAMP = 0.88                               # per half-cycle
++DAMP = 0.88
+ TCOLL = [0.375 + 0.75 * k for k in range(7)]
+ 
+ 
+ def state(t):
+-    &quot;&quot;&quot;Return (&#x27;L&#x27;|&#x27;R&#x27;, theta of moving pair) or (&#x27;rest&#x27;,0).&quot;&quot;&quot;
+     if t &lt; TCOLL[0]:
+         return &#x27;L&#x27;, -TH0 * math.cos(OM * t)
+     k = 0
+@@ -40,31 +39,27 @@
+     dt = t - TCOLL[k]
+     amp = TH0 * DAMP ** (k + 1)
+     s = math.sin(OM * dt)
+-    if k % 2 == 0:                         # after c0: right pair out
+-        return &#x27;R&#x27;, amp * s
+-    else:                                  # after c1: left pair out
+-        return &#x27;L&#x27;, -amp * s
++    return (&#x27;R&#x27;, amp * s) if k % 2 == 0 else (&#x27;L&#x27;, -amp * s)
+ 
+ 
+ def ball_positions(t):
+-    &quot;&quot;&quot;Five ball centers; moving pair offset by theta.&quot;&quot;&quot;
+     side, th = state(t)
+     cx = [float(x) for x in PIV_X]
+     cy = [REST_Y] * 5
+-    if side == &#x27;L&#x27;:                        # balls 0,1 move
+-        for i in (0, 1):
+-            cx[i] = PIV_X[i] + L * math.sin(th)
+-            cy[i] = PIV_Y + L * math.cos(th)
+-    elif side == &#x27;R&#x27;:                      # balls 3,4 move
+-        for i in (3, 4):
+-            cx[i] = PIV_X[i] + L * math.sin(th)
+-            cy[i] = PIV_Y + L * math.cos(th)
++    if side == &#x27;L&#x27;:
++        idxs = (0, 1)
++    elif side == &#x27;R&#x27;:
++        idxs = (3, 4)
++    else:
++        idxs = ()
++    for i in idxs:
++        cx[i] = PIV_X[i] + L * math.sin(th)
++        cy[i] = PIV_Y + L * math.cos(th)
+     return list(zip(cx, cy)), side, th
+ 
+ 
+ # ---------------------------------------------------------------- helpers
+ def paste_rgba(dst, src_rgba, x, y):
+-    &quot;&quot;&quot;Paste float RGBA image (HxWx4, 0..255) with top-left at (x,y).&quot;&quot;&quot;
+     h, w = src_rgba.shape[:2]
+     H, W = dst.shape[:2]
+     x0, y0 = max(0, x), max(0, y)
+… diff truncated; 390 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b557bc296e08.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T05:08:24.576243+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels b557bc296e08cf60 · code c24a0f32f880b232</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b14726c846d3.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T05:10:04.842890+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−5</span></div><p class="hashes">pixels b14726c846d3cf01 · code 28f2dd12e015fc52</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -88,12 +88,9 @@
+                                   resample=Image.BILINEAR)).astype(np.float32)
+ 
+ # ------------------------------------------------------------ ball sprite
+-# Average of the three resting balls, aligned to a common center, so the
+-# representative chrome shading/neighbor reflections are merged.
++# Single resting ball (center ball 4): chrome shading + specular stay crisp.
+ SS = 15
+-crops = [subpixel_crop(orig, cxx, cyy, SS)
+-         for cxx, cyy in [(111.8, 99.5), (124.2, 100.5), (133.8, 100.8)]]
+-ball_rgb = np.mean(crops, 0)
++ball_rgb = subpixel_crop(orig, 124.2, 100.5, SS)
+ ball_a = soft_disk(SS, 4.9, 6.1)
+ ball_sprite = np.dstack([ball_rgb, ball_a * 255]).astype(np.uint8)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b14726c846d3.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T05:10:06.814728+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels b14726c846d3cf01 · code 28f2dd12e015fc52</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-53e5e8d78338.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-06T05:12:03.653337+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels 53e5e8d7833855db · code 2151eb985adaf52b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -22,7 +22,7 @@
+ L = 70.0
+ REST_Y = PIV_Y + L
+ BALL_R = 6.0
+-DX0 = -16.5
++DX0 = 16.5                                # initial amplitude magnitude
+ TH0 = math.asin(DX0 / L)
+ PERIOD = 1.5
+ OM = 2 * math.pi / PERIOD</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-53e5e8d78338.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-06T05:12:05.578900+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 53e5e8d7833855db · code 2151eb985adaf52b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-d9440e17b532.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-06T05:13:51.124067+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−2</span></div><p class="hashes">pixels d9440e17b5320c77 · code dc1465a9eef3a672</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -88,9 +88,12 @@
+                                   resample=Image.BILINEAR)).astype(np.float32)
+ 
+ # ------------------------------------------------------------ ball sprite
+-# Single resting ball (center ball 4): chrome shading + specular stay crisp.
++# Single resting ball (ball 4, integer center (124,100)) taken as a direct
++# crop so 1-2 px specular peaks survive (bilinear resample dulled them).
+ SS = 15
+-ball_rgb = subpixel_crop(orig, 124.2, 100.5, SS)
++BCX, BCY = 124, 100
++hc = (SS - 1) // 2
++ball_rgb = orig[BCY - hc:BCY + hc + 1, BCX - hc:BCX + hc + 1].copy()
+ ball_a = soft_disk(SS, 4.9, 6.1)
+ ball_sprite = np.dstack([ball_rgb, ball_a * 255]).astype(np.uint8)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-d9440e17b532.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-06T05:13:53.078561+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels d9440e17b5320c77 · code dc1465a9eef3a672</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-79d4240ede51.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-06T05:21:04.253274+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +65/−40</span></div><p class="hashes">pixels 79d4240ede51b097 · code e3442ecebe7e8c13</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -165,47 +165,57 @@
+ # ------------------------------------------------------------ clean plate
+ plate = orig.copy()
+ 
+-# wall rows 34..46: per-row linear fit from clean donors
+-for y in range(34, 47):
+-    xs = np.arange(160, 229)
+-    for k in range(3):
+-        a, b = np.polyfit(xs, orig[y, xs, k], 1)
+-        plate[y, 58:151, k] = np.clip(a * np.arange(58, 151) + b, 0, 255)
+-
+-# table rows 46..91: keep original texture, erase only thin string ridges
+-strip = plate[34:92, 56:152].copy()
+-sl = strip.mean(2)
+-ridge = np.zeros(sl.shape, bool)
+-for x in range(2, strip.shape[1] - 2):
+-    left = sl[:, max(0, x - 3):x].mean(1)
+-    right = sl[:, x + 1:x + 4].mean(1)
+-    ridge[:, x] = (sl[:, x] &gt; np.maximum(left, right) + 2.5)
+-# only thin vertically-continuous features (strings), not broad blobs
+-thin = ndimage.binary_opening(ridge, np.ones((3, 1)))
+-thin = ndimage.binary_dilation(thin, np.ones((2, 1)))
+-filled = strip.copy()
++# wall + table: keep original pixels, erase only the ten original string
++# segments with narrow neighbor interpolation (redrawn per frame later).
++def erase_segment(img, p0, p1, half=1.0):
++    (x0, y0), (x1, y1) = p0, p1
++    n = int(abs(y1 - y0)) + 1
++    for j in range(n):
++        y = int(round(y0 + (y1 - y0) * j / max(n - 1, 1)))
++        x = x0 + (x1 - x0) * j / max(n - 1, 1)
++        for ox in np.arange(-1.4, 1.5, 0.25):
++            xi = int(round(x + ox))
++            w = max(0.0, 1.0 - abs(ox) / 1.5)
++            if w &lt;= 0 or not (1 &lt;= xi &lt; W0 - 1):
++                continue
++            ref = 0.5 * (img[y, max(0, xi - 2)] + img[y, min(W0 - 1, xi + 2)])
++            img[y, xi] = img[y, xi] * (1 - w) + ref * w
++
++# held pair (theta = -TH0): slanted Vs
++ux0, uy0 = math.sin(-TH0), math.cos(-TH0)
++for i in (0, 1):
++    cx = PIV_X[i] + L * ux0
++    cy = PIV_Y + L * uy0
++    for sgn in (-1, 1):
++        top = (PIV_X[i] + sgn * 4.0, PIV_Y + 1.5)
++        bx = cx - 5.4 * ux0 + sgn * 3.2 * uy0
++        by = cy - 5.4 * uy0 - sgn * 3.2 * ux0
++        erase_segment(plate, top, (bx, by))
++# resting balls: vertical Vs
++for i in (2, 3, 4):
++    for sgn in (-1, 1):
++        erase_segment(plate, (PIV_X[i] + sgn * 4.0, PIV_Y + 1.5),
++                      (PIV_X[i] + sgn * 3.2, REST_Y - 5.4))
++
++# table under the tool (x0..58, y72..108): mirror clean table from the
++# right side (x170..228) with a per-channel affine color transfer learned
++# on rows 58..72 where both left and right are tool-free.
++src = orig[58:73, 170:229].reshape(-1, 3)
++dst = orig[58:73, 0:42].reshape(-1, 3)
++aff = []
+ for c in range(3):
+-    ch = strip[:, :, c]
+-    side = 0.5 * (np.roll(ch, 3, 1) + np.roll(ch, -3, 1))
+-    ch[thin] = side[thin]
+-    filled[:, :, c] = ch
+-plate[34:92, 56:152] = filled
+-
+-# erase remnants of the lifted balls in the back-edge strip (x63..93,y86..92)
+-patch = plate[86:93, 63:94].copy()
+-pl = patch.mean(2)
+-bright = pl &gt; 70
+-bright = ndimage.binary_closing(bright, np.ones((3, 3)), iterations=1)
+-for c in range(3):
+-    above = plate[85, 63:94, c]
+-    below = board_tone(np.array([93]), np.arange(63, 94))[0]
+-    base_c = below if c &gt; 0 else below
+-    # blend table-&gt;board across the 7 rows
+-    for j, y in enumerate(range(86, 93)):
+-        f = (y - 85.5) / 7.5
+-        ref = above * (1 - f) + (below + (2 if c == 2 else 0)) * f
+-        patch[j, bright[j], c] = ref[bright[j]]
+-plate[86:93, 63:94] = patch
++    a = dst[:, c].std() / max(src[:, c].std(), 1e-6)
++    b = dst[:, c].mean() - a * src[:, c].mean()
++    aff.append((a, b))
++mirror = orig[:, 170:229][:, ::-1][:, :59]          # x: 228..170 -&gt; 0..58
++mt = np.empty_like(mirror)
+… diff truncated; 32 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-79d4240ede51.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-06T05:21:06.138454+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 79d4240ede51b097 · code e3442ecebe7e8c13</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-79d4240ede51.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-06T05:23:59.776601+00:00</span></div><div class="changes"><span class="change code">代码 +29/−19</span></div><p class="hashes">pixels 79d4240ede51b097 · code 64be58dc901eec8f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -197,25 +197,35 @@
+         erase_segment(plate, (PIV_X[i] + sgn * 4.0, PIV_Y + 1.5),
+                       (PIV_X[i] + sgn * 3.2, REST_Y - 5.4))
+ 
+-# table under the tool (x0..58, y72..108): mirror clean table from the
+-# right side (x170..228) with a per-channel affine color transfer learned
+-# on rows 58..72 where both left and right are tool-free.
+-src = orig[58:73, 170:229].reshape(-1, 3)
+-dst = orig[58:73, 0:42].reshape(-1, 3)
+-aff = []
+-for c in range(3):
+-    a = dst[:, c].std() / max(src[:, c].std(), 1e-6)
+-    b = dst[:, c].mean() - a * src[:, c].mean()
+-    aff.append((a, b))
+-mirror = orig[:, 170:229][:, ::-1][:, :59]          # x: 228..170 -&gt; 0..58
+-mt = np.empty_like(mirror)
+-for c, (a, b) in enumerate(aff):
+-    mt[:, :, c] = np.clip(a * mirror[:, :, c] + b, 0, 255)
+-# vertical feather on the right edge toward the original (near the board)
+-wx = np.ones(59, np.float32); wx[-5:] = np.linspace(1, 0, 5)
+-wx = wx[None, :, None]
+-region = plate[72:108, 0:59]
+-plate[72:108, 0:59] = region * (1 - wx) + mt[72:108] * wx
++# table under the tool (x0..58, y72..108): synthetic soft wood — per-row
++# channel gradients fit on the clean right side, plus a left-edge
++# darkening envelope calibrated from tool-free left rows; faint grain.
++left_lum = {y: float(np.median(orig[y, 0:6].mean(1))) for y in
++            list(range(68, 78)) + list(range(89, 111))}
++def left_target(y):
++    if y in left_lum:
++        return left_lum[y]
++    if y &lt; 89:
++        return np.interp(y, [77, 89], [left_lum[77], left_lum[89]])
++    return left_lum[min(110, max(89, y))]
++
++rng = np.random.default_rng(7)
++grain = ndimage.gaussian_filter(rng.normal(0, 1, (112, 60)), (2.4, 3.2)) * 4.5
++for y in range(72, 109):
++    xsr = np.arange(176, 252)
++    col = []
++    for c in range(3):
++        a, b = np.polyfit(xsr, orig[y, xsr, c], 1)
++        col.append(a * np.arange(59) + b)
++    fill = np.stack(col, 1)
++    pred_lum = fill[0].mean()
++    d = left_target(y) - pred_lum                       # left-edge correction
++    fade = np.clip((92 - np.arange(59)) / 92.0, 0, 1)
++    fill += d * fade[:, None]
++    fill += grain[y, :, None]
++    cur = plate[y, 0:59].astype(np.float32)
++    wx = np.ones(59, np.float32); wx[-4:] = np.linspace(1, 0, 4)
++    plate[y, 0:59] = cur * (1 - wx[:, None]) + np.clip(fill, 0, 255) * wx[:, None]
+ 
+ # board top surface model
+ ys = np.arange(89, 129)[:, None]</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b9a1a89a6da7.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-06T05:24:38.520693+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span><span class="change">inspection 更新</span></div><p class="hashes">pixels b9a1a89a6da7780a · code 79f37ec980ceb5df</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -210,7 +210,7 @@
+     return left_lum[min(110, max(89, y))]
+ 
+ rng = np.random.default_rng(7)
+-grain = ndimage.gaussian_filter(rng.normal(0, 1, (112, 60)), (2.4, 3.2)) * 4.5
++grain = ndimage.gaussian_filter(rng.normal(0, 1, (112, 59)), (2.4, 3.2)) * 4.5
+ for y in range(72, 109):
+     xsr = np.arange(176, 252)
+     col = []</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-fca2481e9961.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-06T05:31:01.534515+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +58/−63</span></div><p class="hashes">pixels fca2481e99616393 · code ea5c1f0df09aec84</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -98,38 +98,8 @@
+ ball_sprite = np.dstack([ball_rgb, ball_a * 255]).astype(np.uint8)
+ 
+ # --------------------------------------------------------- shadow decal
+-def board_tone(y, x):
+-    t = np.interp(y, [89, 92, 96, 102, 108, 114, 119, 124, 128],
+-                  [48, 40, 34, 36, 42, 36, 26, 28, 31])
+-    t = t + 0.10 * (x - 100)
+-    t = t + np.clip((x - 139) * 2.2, 0, 26)          # edge glow near right leg
+-    return t
+-
+-DS = 20
+-dcx, dcy = 0.0, 14.0
+-shadow_lum = np.zeros((DS, DS), np.float32)
+-shadow_w = np.zeros((DS, DS), np.float32)
+-for bcx, bcy in [(111.8, 99.5), (124.2, 100.5), (133.8, 100.8)]:
+-    p = subpixel_crop(orig, bcx + dcx, bcy + dcy, DS)
+-    yy, xx = np.mgrid[0:DS, 0:DS].astype(np.float32)
+-    w = np.clip(1 - np.hypot((xx - (DS - 1) / 2) / 8.0,
+-                             (yy - (DS - 1) / 2) / 7.0), 0, 1)
+-    shadow_lum += p.mean(2) * w
+-    shadow_w += w
+-shadow_lum /= np.maximum(shadow_w, 1e-6)
+-yy, xx = np.mgrid[0:DS, 0:DS].astype(np.float32)
+-gx = xx - (DS - 1) / 2
+-gy = yy - (DS - 1) / 2
+-ell = np.exp(-0.5 * ((gx / 4.0) ** 2 + (gy / 3.4) ** 2))
+-ell *= np.clip(1 - (gy - 1) / 9.0, 0, 1)           # fade toward the bevel
+-sy = np.arange(DS) + (100.3 + dcy) - (DS - 1) / 2
+-sx = np.arange(DS) + (124.2 + dcx) - (DS - 1) / 2
+-BM = board_tone(sy[:, None], sx[None, :])
+-alpha = np.clip((BM - shadow_lum) / 22.0, 0, 1) * ell * 0.68
+-alpha = np.array(Image.fromarray((alpha * 255).astype(np.uint8))
+-                 .filter(ImageFilter.GaussianBlur(0.9)), np.float32) / 255.0
+-shadow_rgb = np.repeat(shadow_lum[:, :, None], 3, 2)
+-shadow_decal = np.dstack([shadow_rgb, alpha * 255]).astype(np.uint8)
++# Built later from (original - inpainted plate); placeholder until the
++# plate exists (see SHADOW DECAL section below).
+ 
+ # ------------------------------------------------------------ grabber sprite
+ Rc, Gc, Bc = [orig[:, :, k] for k in range(3)]
+@@ -227,37 +197,62 @@
+     wx = np.ones(59, np.float32); wx[-4:] = np.linspace(1, 0, 4)
+     plate[y, 0:59] = cur * (1 - wx[:, None]) + np.clip(fill, 0, 255) * wx[:, None]
+ 
+-# board top surface model
+-ys = np.arange(89, 129)[:, None]
+-xs = np.arange(54, 152)[None, :]
+-tone = np.interp(ys, [89, 92, 96, 102, 108, 114, 119, 124, 128],
+-                 [48, 40, 34, 36, 42, 36, 26, 28, 31]).repeat(xs.shape[1], 1)
+-tone = tone + 0.10 * (xs - 100) + np.clip((xs - 139) * 2.2, 0, 26)
+-br, bg, bb = tone - 2, tone + 0, tone + 4
+-sheen = 24 * np.exp(-((ys - 120) ** 2) / (2 * 3.0 ** 2)) * np.clip((125 - xs) / 90, 0, 1)
+-boardfill = np.clip(np.stack([br + sheen, bg + sheen, bb + sheen], 2), 0, 255)
+-top_edge = 91.5 - (xs - 54) * (2.0 / 108.0)
+-bot_edge = 125 - (xs - 63) * (4.0 / 107.0)
+-mask = (ys &gt;= top_edge) &amp; (ys &lt;= bot_edge)
+-# feather the back edge
+-edgef = np.clip((ys - (top_edge - 1.5)) / 2.0, 0, 1) * mask
+-sub = plate[89:129, 54:152]
+-plate[89:129, 54:152] = sub * (1 - edgef[:, :, None]) + boardfill * edgef[:, :, None]
+-
+-# back-edge strip x60..95,y83..91 held metal / blue jaw remnants: rebuild
+-# from table tone above blending into the now-modeled board below.
+-strip = plate[83:92, 60:96].copy()
+-sl = strip.mean(2)
+-mask8 = sl &gt; 60
+-mask8 = ndimage.binary_closing(mask8, np.ones((3, 3)), iterations=1)
+-for j, y in enumerate(range(83, 92)):
+-    xs = np.arange(60, 96)
+-    ref_up = orig[max(0, y - 4), xs].astype(np.float32)
+-    ref_dn = plate[min(127, y + 5), xs]
+-    f = np.clip((y - 86.0) / 4.0, 0, 1)
+-    ref = ref_up * (1 - f) + ref_dn * f
+-    strip[j][mask8[j]] = ref[mask8[j]]
+-plate[83:92, 60:96] = strip
++# board top surface: keep the original lacquer/sheen pixels and inpaint
++# out only movable objects (5 balls, their contact shadows, the tool)
++# with OpenCV Telea inpainting.
++import cv2
++yy, xx = np.mgrid[0:H0, 0:W0]
++rmask = np.zeros((H0, W0), np.uint8)
++ball_centers0 = [(71.5, 97.0), (83.5, 97.0), (112.0, 99.0),
++                 (124.0, 99.0), (136.0, 99.0)]
++for bcx, bcy in ball_centers0:
++    rr = np.hypot(xx - bcx, yy - bcy)
++    rmask[rr &lt;= 8.0] = 255                       # ball + finial
++    # contact-shadow ellipse below
+… diff truncated; 47 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-fca2481e9961.webp" alt="Round 14 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 14</h3><span class="clock">2026-11-06T05:31:03.413587+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels fca2481e99616393 · code ea5c1f0df09aec84</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-ab41e13097a1.webp" alt="Round 15 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 15</h3><span class="clock">2026-11-06T05:33:41.865526+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−2</span><span class="change">inspection 更新</span></div><p class="hashes">pixels ab41e13097a1f041 · code 743a7c3c7dbf6208</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -248,8 +248,8 @@
+     dec_w += win
+ dec_a /= np.maximum(dec_w, 1e-6)
+ dec_rgb /= np.maximum(dec_w[:, :, None], 1e-6)
+-ell = np.exp(-0.5 * ((gx2 / 4.6) ** 2 + (gy2 / 3.8) ** 2))
+-dec_alpha = np.clip(dec_a / 18.0, 0, 1) * ell
++ell = np.exp(-0.5 * ((gx2 / 5.0) ** 2 + (gy2 / 4.2) ** 2))
++dec_alpha = np.clip(dec_a / 13.0, 0, 1) * ell
+ dec_alpha = np.array(Image.fromarray((dec_alpha * 255).astype(np.uint8))
+                      .filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255.0
+ shadow_decal = np.dstack([dec_rgb, dec_alpha * 255]).astype(np.uint8)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-3128add3c15d.webp" alt="Round 16 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 16</h3><span class="clock">2026-11-06T05:34:31.084468+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−9</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 3128add3c15d0280 · code 838278abce5224c9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -231,10 +231,9 @@
+ # Empirical: darkening of the original under the three resting balls vs
+ # the inpainted clean plate, averaged and windowed by an ellipse.
+ DS = 20
+-dcx, dcy = 0.0, 13.0
++dcx, dcy = 0.0, 14.0
+ dec_rgb = np.zeros((DS, DS, 3), np.float32)
+ dec_a = np.zeros((DS, DS), np.float32)
+-dec_w = np.zeros((DS, DS), np.float32)
+ yy2, xx2 = np.mgrid[0:DS, 0:DS].astype(np.float32)
+ gx2 = xx2 - (DS - 1) / 2
+ gy2 = yy2 - (DS - 1) / 2
+@@ -242,13 +241,11 @@
+ for bcx, bcy in [(112.0, 99.0), (124.0, 99.0), (136.0, 99.0)]:
+     op = subpixel_crop(orig, bcx + dcx, bcy + dcy, DS)
+     pp = subpixel_crop(plate, bcx + dcx, bcy + dcy, DS)
+-    dark = (pp.mean(2) - op.mean(2)).clip(0, None)
+-    dec_a += dark * win
+-    dec_rgb += op * win[:, :, None]
+-    dec_w += win
+-dec_a /= np.maximum(dec_w, 1e-6)
+-dec_rgb /= np.maximum(dec_w[:, :, None], 1e-6)
+-ell = np.exp(-0.5 * ((gx2 / 5.0) ** 2 + (gy2 / 4.2) ** 2))
++    dark = (pp.mean(2) - op.mean(2)).clip(0, None) * win
++    take = dark &gt; dec_a
++    dec_a[take] = dark[take]
++    dec_rgb[take] = op[take]
++ell = np.exp(-0.5 * ((gx2 / 5.0) ** 2 + (gy2 / 4.4) ** 2))
+ dec_alpha = np.clip(dec_a / 13.0, 0, 1) * ell
+ dec_alpha = np.array(Image.fromarray((dec_alpha * 255).astype(np.uint8))
+                      .filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255.0</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-3df23ca95bdc.webp" alt="Round 17 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 17</h3><span class="clock">2026-11-06T05:38:23.991188+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +19/−11</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 3df23ca95bdc2bf9 · code ed52f91c4d511007</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -120,17 +120,23 @@
+     if bluez[ys, xs].any() or xs.min() &lt;= 3:
+         keep |= lab == i
+ keep = ndimage.binary_closing(keep, np.ones((3, 3)), iterations=1)
+-# never let the held metal balls ride along inside the sprite
+-for bcx, bcy in [(71.0, 94.5), (83.5, 97.5)]:
++keep_full = keep.copy()
++# retracting frames: cut the held metal balls out of the sprite
++for bcx, bcy in [(71.5, 97.0), (83.5, 97.0)]:
+     rr = np.hypot(xx - bcx, yy - bcy)
+     keep &amp;= rr &gt; 7.2
+-tys, txs = np.where(keep)
++tys, txs = np.where(keep_full)
+ tx0, tx1, ty0, ty1 = txs.min(), txs.max(), tys.min(), tys.max()
+-tool_a = keep[ty0:ty1 + 1, tx0:tx1 + 1].astype(np.float32)
+-tool_a = np.array(Image.fromarray((tool_a * 255).astype(np.uint8))
+-                  .filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255.0
+ tool_rgb = orig[ty0:ty1 + 1, tx0:tx1 + 1]
+-tool_sprite = np.dstack([tool_rgb, tool_a * 255]).astype(np.uint8)
++
++def make_tool_sprite(mask):
++    a = mask[ty0:ty1 + 1, tx0:tx1 + 1].astype(np.float32)
++    a = np.array(Image.fromarray((a * 255).astype(np.uint8))
++                 .filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255.0
++    return np.dstack([tool_rgb, a * 255]).astype(np.uint8)
++
++tool_sprite_full = make_tool_sprite(keep_full)   # f1: balls stamped on top
++tool_sprite = make_tool_sprite(keep)             # f2/f3: holes cleared
+ 
+ # ------------------------------------------------------------ clean plate
+ plate = orig.copy()
+@@ -303,14 +309,16 @@
+     base_im.alpha_composite(ov)
+     img = np.array(base_im.convert(&#x27;RGB&#x27;)).astype(np.float32)
+ 
++    # tool behind the balls (balls swing in front of the jaws)
++    dx = {0.25: 0, 0.50: -18, 0.75: -46}.get(t)
++    if dx is not None:
++        spr = tool_sprite_full if dx == 0 else tool_sprite
++        paste_rgba(img, spr, tx0 + dx, ty0)
++
+     for cx, cy in centers:
+         sx = int(round(cx - (SS - 1) / 2))
+         sy = int(round(cy - (SS - 1) / 2))
+         paste_rgba(img, ball_sprite, sx, sy)
+-
+-    dx = {0.25: 0, 0.50: -18, 0.75: -46}.get(t)
+-    if dx is not None:
+-        paste_rgba(img, tool_sprite, tx0 + dx, ty0)
+ 
+     paste_rgba(img, front_left, 59, 40)
+     paste_rgba(img, front_right, 153, 30)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b217e82382dc.webp" alt="Round 18 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 18</h3><span class="clock">2026-11-06T05:42:27.048243+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels b217e82382dc0328 · code 9e200a155196fd1b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -310,7 +310,7 @@
+     img = np.array(base_im.convert(&#x27;RGB&#x27;)).astype(np.float32)
+ 
+     # tool behind the balls (balls swing in front of the jaws)
+-    dx = {0.25: 0, 0.50: -18, 0.75: -46}.get(t)
++    dx = {0.25: 0, 0.50: -24}.get(t)
+     if dx is not None:
+         spr = tool_sprite_full if dx == 0 else tool_sprite
+         paste_rgba(img, spr, tx0 + dx, ty0)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/candidate-b217e82382dc.webp" alt="Round 19 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 19</h3><span class="clock">2026-11-06T05:42:28.930132+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels b217e82382dc0328 · code 9e200a155196fd1b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0054/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0054 (Newton's cradle, two balls released)</h1>
+<p>All measurements taken from <code>first_frame.png</code> (256×144) with local numpy/PIL
+analysis only (luminance profiles, gradient Hough circle fits, ridge maps).</p>
+<h2>Scene layout (pixel coordinates)</h2>
+<ul>
+<li>Static locked-off camera; light wooden table; light gray back wall;
+wall/table corner around y≈45–47.</li>
+<li>Newton's cradle on a glossy black base:<ul>
+<li>Base top surface quad roughly (54,92)–(162,90) back edge to
+(63,125)–(170,121) front edge; front face below to y≈142.</li>
+<li>Top surface luminance ~34 (back) → ~43 (mid) with dark contact
+shadows (~8–15) under balls and a glossy sheen band along the front
+bevel y≈118–126 (brighter toward the left corner).</li>
+</ul>
+</li>
+<li>Two chrome U-frames: rear top bar y≈12–18 (x≈92–243), front top bar
+y≈24–33 (x≈61–152). Front legs x≈61–63 and x≈155–159; rear-left leg
+x≈95–98 (ends near board back edge y≈89).</li>
+<li>Five balls, radius r≈5.5–6 px, touch each other (center spacing 12).
+String pivot points on front bar underside at (88,100,112,124,136), y≈29.</li>
+<li>Resting ball centers (Hough/gradient fits):
+(111.8,99.5), (124.2,100.5), (133.8,100.75). Pendulum length L≈70.</li>
+<li>Two left balls held at left amplitude: centers ≈(71.0,94.5) and
+(83.5,97.5); displacement dx≈−16.5 → θ₀ = asin(16.5/70) ≈ 0.238 rad
+(13.6°); predicted lift 70(1−cosθ₀)≈2.0 px, matches observations.</li>
+<li>Strings: faint 1 px V-pairs (two per ball, ±4 px at pivot / ±3.2 at
+ball top), gray ~150–185, low contrast.</li>
+<li>Balls: chrome, dark lower hemisphere (reflects black base), bright
+specular blobs upper-center/upper-left, tiny bright finial at string
+attach point (2–3 px at top).</li>
+<li>Blue/black grabber entering from the left: black handle/body x≈2–55,
+blue jaws roughly x≈5–81, y≈76–105; upper jaw tip near (80,80),
+lower jaw cup under the two lifted balls. The tool passes behind the
+front-left chrome leg.</li>
+<li>Lighting from upper-left; wall near (192,191,189) at top; table wood
+~(150,112,63) on the right, darker toward the left corner.</li>
+</ul>
+<h2>Physics plan</h2>
+<ul>
+<li>Pendulum: θ(t) = −θ₀cos(ωt), ω = 2π/1.5 s (period 1.5 s), L = 70 px.</li>
+<li>First collision at t = 0.375 s (quarter period); collisions every
+0.75 s thereafter: 0.375, 1.125, 1.875, 2.625, 3.375, 4.125, 4.875.</li>
+<li>Newton's-cradle exchange: 2 balls in → 2 balls out. Left pair active
+before 0.375; right pair (pivots 124,136) exits; alternates sides each
+collision. Three non-participating balls rest touching (when right
+pair active: centers 88,100,112; when left pair active: 112,124,136).</li>
+<li>Damping: amplitude ×0.88 per half-cycle (a₁ = 0.88θ₀, …).</li>
+<li>Ball center for angle θ: (px + Lsinθ, py + Lcosθ).</li>
+</ul>
+<h2>Grabber plan</h2>
+<ul>
+<li>f00: untouched original (exact copy of first_frame.png).</li>
+<li>f01 (0.25 s): tool still at original position (just released).</li>
+<li>f02 (0.50 s): retracting, shifted 24 px left, jaws empty.</li>
+<li>f03 (0.75 s) onward: tool gone; vacated area reveals modeled table
+(synthetic left-corner wood gradient) and inpainted base.</li>
+</ul>
+<h2>20-frame event table (t = i·0.25 s)</h2>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t (s)</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>exact first frame: left pair held at θ=−θ₀ by grabber</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>left pair descending, θ=−0.5θ₀; grabber present</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>just after first collision: right pair emerging (θ≈0.44θ₀); grabber retracts</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>right pair near right amplitude (a₁); tool nearly gone</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>right pair returning; tool gone</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>after collision c1: left pair exiting left</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>left pair at left amplitude (a₂)</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>left pair descending</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>after c2: right pair out</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>right amplitude (a₃)</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>right pair returning</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>after c3: left pair out</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>left amplitude (a₄)</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>descending</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>after c4: right pair out</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>right amplitude (a₅)</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>returning</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>after c5: left pair out</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>left amplitude (a₆)</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>descending toward collision at 4.875</td>
+</tr>
+</tbody>
+</table>
+<h2>Rendering method (local pixel ops only)</h2>
+<ol>
+<li>Build a static clean plate: model wall rows (per-row medians), table
+rows (per-row horizontal gradients from clean donor columns), black
+base top-surface + bevel gradients measured from the original.</li>
+<li>Re-stamp static chrome from original crops (rear-left leg, both front
+legs; front legs composite ABOVE balls/tool).</li>
+<li>Per frame: contact-shadow decals (sampled from the original under a
+resting ball), re-drawn V strings, ball sprites (subpixel-aligned
+circular RGBA crop of a resting chrome ball from the original),
+finial nubs, then the grabber sprite for f01–f03.</li>
+<li>f00 is the byte-exact original. Save through <code>artifact_io.save</code>;
+verify the uint32 0xRRGGBB tensor against every PNG.</li>
+</ol>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0054</h1>
+<h2>What happens</h2>
+<p>Two balls of a five-ball Newton's cradle, held at left amplitude by a
+blue/black grabber, are released. They swing down, collide, and the
+classic 2-in/2-out exchange sends the right two balls swinging out; the
+motion continues, lightly damped, alternating sides for the 5 s clip.
+The grabber releases at t≈0.25 s, retracts during the next quarter
+second, and is gone by t=0.75 s.</p>
+<p>Frame 00 is the byte-exact <code>first_frame.png</code>; the other 19 frames are
+generated entirely with local Python pixel operations (numpy, PIL,
+scipy.ndimage, OpenCV inpainting). No image tools were used for review;
+all checks below are numeric / ASCII renders.</p>
+<h2>Geometry (measured from frame 00)</h2>
+<ul>
+<li>String pivots x = 88, 100, 112, 124, 136 on the front bar at y = 29.</li>
+<li>Pendulum length L = 70 px (resting ball centers at y = 99).</li>
+<li>Held pair centers ≈ (71.5, 97), (83.5, 97): displacement 16.5 px,
+θ₀ = asin(16.5/70) = 0.238 rad (13.6°).</li>
+<li>Ball radius ≈ 5.5–6 px.</li>
+</ul>
+<h2>Physics (analytic)</h2>
+<ul>
+<li>θ(t) = −θ₀ cos(ω t) before the first collision; pendulum period 1.5 s
+(ω = 2π/1.5). First collision at t = 0.375 s, then every 0.75 s.</li>
+<li>After each collision the moving pair swaps sides (2-in/2-out exchange
+for equal masses): left pair (indices 0,1) or right pair (3,4); the
+other three rest at their string-vertical positions and touch.</li>
+<li>Damping 0.88 per half-swing; sampled at 4 fps so collisions fall
+between frames (frames show approach / emergence, no overlap).</li>
+<li>Center for ball i: (piv_x + L sinθ, 29 + L cosθ).</li>
+</ul>
+<h2>Rendering pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Clean plate.</strong> Wall/table pixels are kept from the original; the
+ten faint string segments are erased with narrow neighbor
+interpolation (they are redrawn per frame). The board top surface is
+restored by masking the five balls, their contact shadows and the
+grabber (color masks: blue jaws B&gt;R+15, black body luminance &lt;62,
+disks at the measured ball centers) and running OpenCV Telea
+inpainting over that mask, preserving the original lacquer/sheen
+texture. The tool-covered table at the left edge (x&lt;59, y72–108),
+which has no donor pixels, is a synthetic soft-wood fill: per-row
+channel gradients extrapolated from the clean right-side table with
+a left-edge darkening envelope calibrated from tool-free left rows,
+plus faint blurred grain.</li>
+<li><strong>Sprites from the original.</strong> Ball: a direct 15×15 crop of resting
+ball 4 centered at (124,100), with a soft circular alpha (radius
+~5–6 px). Chrome legs/corner: feathered rectangular crops of the
+rear-left leg and the two front legs, composited above everything
+(the front-left leg passes in front of the tool, as in the photo).
+Grabber: the masked blue/black tool body (blue dilation + connected
+black handle, holes filled); two versions — full (f01) and with the
+two ball disks cut out (f02, empty jaws while retracting).</li>
+<li><strong>Contact shadows.</strong> The dark ellipse under each resting ball is
+extracted empirically as max(plate − original) over the three
+resting balls, windowed by an ellipse and alpha-blurred; stamped
+under every ball each frame.</li>
+<li><strong>Per frame, bottom-up:</strong> plate → rear leg → contact shadows →
+redrawn V strings (faint gray RGBA lines from each pivot to the
+ball top, rotated with θ) → grabber (f01 at original position;
+f02 shifted 24 px left) → five ball sprites → front legs/corner.</li>
+<li>Saved through <code>artifact_io.save</code> (uint32 0xRRGGBB tensor, 20 PNGs,
+inspection sheet, standalone player) plus a 4×5 labeled
+<code>transition_check.png</code>.</li>
+</ol>
+<h2>Verification (numeric)</h2>
+<ul>
+<li><code>frames/00.png</code> equals <code>first_frame.png</code> byte-for-byte.</li>
+<li>Every PNG repacks to exactly the <code>pixels.npz</code> uint32 tensor.</li>
+<li>Specular-highlight centroids track the analytic positions in every
+frame: left pair 71→92 (f00→f01), right pair out to 151 at f03,
+alternating with shrinking amplitude thereafter; the three resting
+balls stay fixed.</li>
+<li>Frame-to-frame changed-pixel counts peak during release/retract
+(f01–f03) and decay with the damped swing.</li>
+<li>No blue jaw pixels remain in the vacated zone from f03 on.</li>
+</ul>
+<h2>Limitations</h2>
+<ul>
+<li>The left-edge table previously hidden by the tool is modeled, not
+recovered (no donor region exists in the one input image); it is a
+plausible wood tone matched at its boundaries.</li>
+<li>Ball chrome uses one representative sprite, so neighbor-reflection
+details are approximate when a ball swings alone over the board.</li>
+<li>Strings are faint 1 px lines; over the bright wall they stay near
+invisible, as in the source photo.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-vision-input/0054-f49a1cae516e.png';</script></body></html>

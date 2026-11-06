@@ -1,0 +1,820 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>liquid-on-duck · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0085</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>liquid-on-duck</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>14</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>8</strong><span>generate.py 执行</span></div><div class="stat"><strong>33</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>16</strong><span>文件变更事件</span></div><div class="stat"><strong>19.5m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The yellow rubber duck is placed on an empty baking tray, and the beverage dispenser sits on a woven basket behind it. The glass beverage dispenser is filled with a bright-red liquid. The glass beverage dispenser pours the bright red liquid on the yellow rubber duck.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>33 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>14 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-8af39ca3885b.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T19:35:45.283219+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +427/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 8af39ca3885b8647 · code 45a676233d16014c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,427 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;generate.py — Red liquid pouring animation on yellow rubber duck.
++
++Physics-based particle simulation with gravity, surface flow, splashing,
++and pooling.  Pure NumPy + PIL, no external engines.
++
++Method: Particle system with gravity and surface adhesion.
++  - Particles spawn at the dispenser spout each frame.
++  - Gravity pulls them downward; they accelerate over time.
++  - On hitting the duck surface (yellow mask), particles stick and
++    slide down the surface contour.
++  - On reaching the tray, particles pool and spread outward.
++  - A persistent accumulation buffer tracks where liquid has been.
++  - Each frame overlays red liquid onto the base image with alpha
++    blending for realistic thin-film appearance.
++&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++import sys
++
++# ---------------------------------------------------------------------------
++# Constants
++# ---------------------------------------------------------------------------
++W, H = 256, 144
++FPS = 4
++N_FRAMES = 20
++CASE_DIR = Path(__file__).parent
++
++# Red liquid base colour (bright red, matches dispenser contents)
++LIQUID_RGB = np.array([178, 48, 24], dtype=np.float64)
++
++# ---------------------------------------------------------------------------
++# Load base frame
++# ---------------------------------------------------------------------------
++base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
++assert base.shape == (H, W, 3), f&quot;Expected (144,256,3), got {base.shape}&quot;
++
++# ---------------------------------------------------------------------------
++# Scene analysis: compute masks and geometry from frame 0
++# ---------------------------------------------------------------------------
++
++def compute_duck_mask(img):
++    &quot;&quot;&quot;Identify the yellow rubber duck pixels.
++    Duck = bright yellow-orange tones, high R and G, very low B.
++    &quot;&quot;&quot;
++    r, g, b = img[..., 0], img[..., 1], img[..., 2]
++    # Core yellow: very high R and G, low B
++    core = (r &gt; 160) &amp; (g &gt; 120) &amp; (b &lt; 60) &amp; (r &gt; b + 60)
++    # Extended duck: includes shaded/edge areas
++    extended = (r &gt; 100) &amp; (g &gt; 60) &amp; (r &gt; b + 20) &amp; (g &gt; b + 10)
++    # Combine and clean: keep only the largest connected component
++    # in the expected duck region (X:150-220, Y:50-110)
++    mask = np.zeros((H, W), dtype=bool)
++    mask[50:110, 150:220] = extended[50:110, 150:220]
++    return mask
++
++
++def compute_dispenser_mask(img):
++    &quot;&quot;&quot;Identify glass dispenser region (glass + red liquid inside).&quot;&quot;&quot;
++    r, g, b = img[..., 0], img[..., 1], img[..., 2]
++    # Glass dispenser: light blue-gray glass or reddish content
++    # Upper portion has distinct blue/glass tones
++    glass = (b &gt; 100) &amp; (r &lt; 80) &amp; (g &lt; 100) &amp; (r &gt; 10)
++    # Red liquid inside: high R, lower G and B
++    liquid_inside = (r &gt; 140) &amp; (g &lt; 100) &amp; (b &lt; 70) &amp; (r &gt; g + 40)
++    return glass | liquid_inside
++
++
++def compute_tray_mask(img, duck_mask):
++    &quot;&quot;&quot;Identify baking tray area below/around duck.&quot;&quot;&quot;
++    r, g, b = img[..., 0], img[..., 1], img[..., 2]
++    # Tray: dark-metallic horizontal surface below duck
++    # In the bottom region, find the flat-ish surface
++    mask = np.zeros((H, W), dtype=bool)
++    # Below duck area, metallic colors
++    tray_colors = (
++        (r &gt; 40) &amp; (r &lt; 85) &amp;
++        (g &gt; 38) &amp; (g &lt; 75) &amp;
++        (b &gt; 30) &amp; (b &lt; 65) &amp;
++        (np.abs(r.astype(float) - g.astype(float)) &lt; 20)
++    )
++    # Only in the lower portion
++    mask[H//2:, :] = tray_colors[H//2:, :]
++    # Expand: include area under duck
++    duck_ys, duck_xs = np.where(duck_mask)
+… diff truncated; 340 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-9fdf18757fe4.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T19:37:22.712147+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +271/−310</span></div><p class="hashes">pixels 9fdf18757fe413e5 · code 470b443ffdf5bb74</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,18 +1,16 @@
+ #!/usr/bin/env python3
+ &quot;&quot;&quot;generate.py — Red liquid pouring animation on yellow rubber duck.
+ 
+-Physics-based particle simulation with gravity, surface flow, splashing,
+-and pooling.  Pure NumPy + PIL, no external engines.
+-
+-Method: Particle system with gravity and surface adhesion.
+-  - Particles spawn at the dispenser spout each frame.
+-  - Gravity pulls them downward; they accelerate over time.
+-  - On hitting the duck surface (yellow mask), particles stick and
+-    slide down the surface contour.
+-  - On reaching the tray, particles pool and spread outward.
+-  - A persistent accumulation buffer tracks where liquid has been.
+-  - Each frame overlays red liquid onto the base image with alpha
+-    blending for realistic thin-film appearance.
++Physics-based particle simulation with gravity, surface flow, and pooling.
++Pure NumPy + PIL, no external engines.
++
++Method:
++  1. Scene analysis from frame 0: duck mask, tray mask, spout position.
++  2. Particle system: particles spawn at spout, fall under gravity,
++     collide with duck surface, slide down, drip onto tray.
++  3. Accumulation buffer tracks where liquid has deposited.
++  4. Downward-only biased diffusion simulates viscous flow.
++  5. Alpha-blend red tint onto base image proportional to accumulation.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -28,89 +26,72 @@
+ N_FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-# Red liquid base colour (bright red, matches dispenser contents)
+-LIQUID_RGB = np.array([178, 48, 24], dtype=np.float64)
++# Red liquid colour (matches dispenser content)
++LIQUID_RGB = np.array([185, 50, 28], dtype=np.float64)
++LIQUID_HIGHLIGHT = np.array([220, 80, 40], dtype=np.float64)
+ 
+ # ---------------------------------------------------------------------------
+ # Load base frame
+ # ---------------------------------------------------------------------------
+ base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
+-assert base.shape == (H, W, 3), f&quot;Expected (144,256,3), got {base.shape}&quot;
+-
+-# ---------------------------------------------------------------------------
+-# Scene analysis: compute masks and geometry from frame 0
++assert base.shape == (H, W, 3)
++
++# ---------------------------------------------------------------------------
++# Scene analysis
+ # ---------------------------------------------------------------------------
+ 
+ def compute_duck_mask(img):
+-    &quot;&quot;&quot;Identify the yellow rubber duck pixels.
+-    Duck = bright yellow-orange tones, high R and G, very low B.
+-    &quot;&quot;&quot;
++    &quot;&quot;&quot;Yellow duck: bright yellow-orange, X~150-220, Y~50-110.&quot;&quot;&quot;
+     r, g, b = img[..., 0], img[..., 1], img[..., 2]
+-    # Core yellow: very high R and G, low B
+-    core = (r &gt; 160) &amp; (g &gt; 120) &amp; (b &lt; 60) &amp; (r &gt; b + 60)
+-    # Extended duck: includes shaded/edge areas
+-    extended = (r &gt; 100) &amp; (g &gt; 60) &amp; (r &gt; b + 20) &amp; (g &gt; b + 10)
+-    # Combine and clean: keep only the largest connected component
+-    # in the expected duck region (X:150-220, Y:50-110)
++    # Core bright yellow
++    core = (r &gt; 160) &amp; (g &gt; 120) &amp; (b &lt; 60)
++    # With slightly darker edges (shaded duck)
++    edges = (r &gt; 130) &amp; (g &gt; 90) &amp; (r &gt; b + 40) &amp; (g &gt; b + 30)
+     mask = np.zeros((H, W), dtype=bool)
+-    mask[50:110, 150:220] = extended[50:110, 150:220]
++    region = np.s_[50:110, 150:220]
++    mask[region] = (core | edges)[region]
+     return mask
+ 
+ 
+-def compute_dispenser_mask(img):
+-    &quot;&quot;&quot;Identify glass dispenser region (glass + red liquid inside).&quot;&quot;&quot;
++def compute_tray_mask(img, duck_mask):
++    &quot;&quot;&quot;Baking tray: dark metallic flat surface under duck.&quot;&quot;&quot;
+     r, g, b = img[..., 0], img[..., 1], img[..., 2]
+-    # Glass dispenser: light blue-gray glass or reddish content
+-    # Upper portion has distinct blue/glass tones
+-    glass = (b &gt; 100) &amp; (r &lt; 80) &amp; (g &lt; 100) &amp; (r &gt; 10)
+-    # Red liquid inside: high R, lower G and B
+-    liquid_inside = (r &gt; 140) &amp; (g &lt; 100) &amp; (b &lt; 70) &amp; (r &gt; g + 40)
+-    return glass | liquid_inside
+-
+… diff truncated; 603 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-9fdf18757fe4.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T19:37:24.583800+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 9fdf18757fe413e5 · code 470b443ffdf5bb74</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-039dc71dccf4.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T19:38:57.733187+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +212/−305</span></div><p class="hashes">pixels 039dc71dccf46f90 · code 1038e7de01077b7c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,20 +1,16 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;generate.py — Red liquid pouring animation on yellow rubber duck.
+-
+-Physics-based particle simulation with gravity, surface flow, and pooling.
++&quot;&quot;&quot;generate.py — Red liquid pouring onto yellow rubber duck.
++
++Approach: Hybrid particle + direct-paint simulation.
++  - Stream: particles falling from spout to duck with gravity.
++  - Surface flow: cellular automaton on duck/tray masks.
++  - Rendering: alpha-blend red onto base, with smooth gradient.
++
+ Pure NumPy + PIL, no external engines.
+-
+-Method:
+-  1. Scene analysis from frame 0: duck mask, tray mask, spout position.
+-  2. Particle system: particles spawn at spout, fall under gravity,
+-     collide with duck surface, slide down, drip onto tray.
+-  3. Accumulation buffer tracks where liquid has deposited.
+-  4. Downward-only biased diffusion simulates viscous flow.
+-  5. Alpha-blend red tint onto base image proportional to accumulation.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+-from PIL import Image
++from PIL import Image, ImageDraw
+ from pathlib import Path
+ import sys
+ 
+@@ -26,321 +22,234 @@
+ N_FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-# Red liquid colour (matches dispenser content)
+-LIQUID_RGB = np.array([185, 50, 28], dtype=np.float64)
+-LIQUID_HIGHLIGHT = np.array([220, 80, 40], dtype=np.float64)
+-
+-# ---------------------------------------------------------------------------
+-# Load base frame
++LIQUID_RGB = np.array([190, 50, 25], dtype=np.float64)
++LIQUID_BRIGHT = np.array([225, 75, 35], dtype=np.float64)
++STREAM_RGB = np.array([185, 48, 22], dtype=np.float64)
++
++# ---------------------------------------------------------------------------
++# Load base
+ # ---------------------------------------------------------------------------
+ base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
+ assert base.shape == (H, W, 3)
+ 
+ # ---------------------------------------------------------------------------
+-# Scene analysis
+-# ---------------------------------------------------------------------------
+-
+-def compute_duck_mask(img):
+-    &quot;&quot;&quot;Yellow duck: bright yellow-orange, X~150-220, Y~50-110.&quot;&quot;&quot;
+-    r, g, b = img[..., 0], img[..., 1], img[..., 2]
+-    # Core bright yellow
+-    core = (r &gt; 160) &amp; (g &gt; 120) &amp; (b &lt; 60)
+-    # With slightly darker edges (shaded duck)
+-    edges = (r &gt; 130) &amp; (g &gt; 90) &amp; (r &gt; b + 40) &amp; (g &gt; b + 30)
+-    mask = np.zeros((H, W), dtype=bool)
+-    region = np.s_[50:110, 150:220]
+-    mask[region] = (core | edges)[region]
+-    return mask
+-
+-
+-def compute_tray_mask(img, duck_mask):
+-    &quot;&quot;&quot;Baking tray: dark metallic flat surface under duck.&quot;&quot;&quot;
+-    r, g, b = img[..., 0], img[..., 1], img[..., 2]
+-    tray = (
+-        (r &gt; 38) &amp; (r &lt; 88) &amp; (g &gt; 35) &amp; (g &lt; 80) &amp; (b &gt; 28) &amp; (b &lt; 70) &amp;
+-        (np.abs(r.astype(float) - g.astype(float)) &lt; 22) &amp;
+-        (np.abs(r.astype(float) - b.astype(float)) &lt; 30)
+-    )
+-    mask = np.zeros((H, W), dtype=bool)
+-    duck_ys = np.where(duck_mask.any(axis=1))[0]
+-    if len(duck_ys):
+-        y_start = duck_ys.max() + 1
+-        mask[y_start:, :] = tray[y_start:, :]
+-    return mask
+-
+-
+-def compute_basket_mask(img):
+-    &quot;&quot;&quot;Woven basket: brown/tan left of duck.&quot;&quot;&quot;
+-    r, g, b = img[..., 0], img[..., 1], img[..., 2]
+-    basket = (
+-        (r &gt; 55) &amp; (r &lt; 165) &amp; (g &gt; 40) &amp; (g &lt; 125) &amp;
+-        (b &gt; 22) &amp; (b &lt; 95) &amp; (r &gt; b + 5)
+… diff truncated; 509 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-039dc71dccf4.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T19:38:59.720730+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 039dc71dccf46f90 · code 1038e7de01077b7c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-5ba7a199d787.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T19:40:28.890601+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +196/−200</span></div><p class="hashes">pixels 5ba7a199d787e781 · code befa427d003f6c33</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,12 +1,15 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;generate.py — Red liquid pouring onto yellow rubber duck.
+-
+-Approach: Hybrid particle + direct-paint simulation.
+-  - Stream: particles falling from spout to duck with gravity.
+-  - Surface flow: cellular automaton on duck/tray masks.
+-  - Rendering: alpha-blend red onto base, with smooth gradient.
+-
+-Pure NumPy + PIL, no external engines.
++&quot;&quot;&quot;generate.py — Red liquid pouring animation.
++
++Method:
++  1. Scene masks from frame 0: duck, tray, basket, glass.
++  2. Stream: falling liquid column from spout to duck surface.
++  3. Duck coverage: red tint spreads downward from impact zone.
++  4. Drips: red drops from duck bottom to tray.
++  5. Tray pool: expanding red puddle on tray surface.
++  6. Alpha-blend rendering with smooth colour transition.
++
++Pure NumPy + PIL. No external engines or AI.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -14,106 +17,117 @@
+ from pathlib import Path
+ import sys
+ 
+-# ---------------------------------------------------------------------------
+-# Constants
+-# ---------------------------------------------------------------------------
+ W, H = 256, 144
+ FPS = 4
+ N_FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-LIQUID_RGB = np.array([190, 50, 25], dtype=np.float64)
+-LIQUID_BRIGHT = np.array([225, 75, 35], dtype=np.float64)
+-STREAM_RGB = np.array([185, 48, 22], dtype=np.float64)
+-
+-# ---------------------------------------------------------------------------
+-# Load base
++LIQUID_RGB = np.array([195, 50, 22], dtype=np.float64)
++LIQUID_HI = np.array([230, 80, 30], dtype=np.float64)
++
++# ---------------------------------------------------------------------------
++# Load &amp; analyse
+ # ---------------------------------------------------------------------------
+ base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
+-assert base.shape == (H, W, 3)
+-
+-# ---------------------------------------------------------------------------
+-# Scene masks
+-# ---------------------------------------------------------------------------
+ r, g, b = base[..., 0], base[..., 1], base[..., 2]
+ 
+-# Duck: bright yellow + shaded edges
++# Duck mask
+ duck_mask = np.zeros((H, W), dtype=bool)
+-core = (r &gt; 155) &amp; (g &gt; 115) &amp; (b &lt; 65) &amp; (r &gt; b + 55)
+-edges = (r &gt; 125) &amp; (g &gt; 85) &amp; (r &gt; b + 35) &amp; (g &gt; b + 25) &amp; (r &lt; 210) &amp; (g &lt; 210)
+-duck_mask[48:110, 145:220] = (core | edges)[48:110, 145:220]
+-
+-# Tray: dark metallic below duck
+-tray = (
+-    (r &gt; 38) &amp; (r &lt; 90) &amp; (g &gt; 34) &amp; (g &lt; 82) &amp; (b &gt; 27) &amp; (b &lt; 70) &amp;
+-    (np.abs(r - g) &lt; 24) &amp; (np.abs(r - b) &lt; 35)
++duck_raw = (r &gt; 140) &amp; (g &gt; 80) &amp; (r &gt; b + 35) &amp; (g &gt; b + 20) &amp; (r &lt; 230)
++duck_mask[45:115, 145:225] = duck_raw[45:115, 145:225]
++
++# Tray mask
++tray_mask = np.zeros((H, W), dtype=bool)
++tray_raw = (
++    (r &gt; 35) &amp; (r &lt; 92) &amp; (g &gt; 32) &amp; (g &lt; 85) &amp; (b &gt; 25) &amp; (b &lt; 72) &amp;
++    (np.abs(r - g) &lt; 26) &amp; (np.abs(r - b) &lt; 38)
+ )
+-tray_mask = np.zeros((H, W), dtype=bool)
+-duck_bot = np.where(duck_mask.any(axis=1))[0]
+-if len(duck_bot):
+-    y0 = int(duck_bot.max()) + 1
+-    tray_mask[y0:, :] = tray[y0:, :]
+-
+-# Basket
+-basket = (r &gt; 55) &amp; (r &lt; 165) &amp; (g &gt; 38) &amp; (g &lt; 128) &amp; (b &gt; 20) &amp; (b &lt; 98) &amp; (r &gt; b + 4)
++tray_start = int(np.where(duck_mask.any(axis=1))[0].max()) + 1
++tray_mask[tray_start:, :] = tray_raw[tray_start:, :]
++
++# Basket mask
+… diff truncated; 399 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-5ba7a199d787.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T19:40:30.961410+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 5ba7a199d787e781 · code befa427d003f6c33</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-2ed203669be3.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T19:42:24.494127+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +19/−18</span></div><p class="hashes">pixels 2ed203669be3e9c7 · code fd89975b8ace35c7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -121,7 +121,7 @@
+ 
+     # Spawn
+     rate = min(1.0, t / 2.0)
+-    n_spawn = int(35 * rate)
++    n_spawn = int(50 * rate)
+     for _ in range(n_spawn):
+         sx = spout_x + np.random.normal(0, 1.5)
+         sy = spout_y + np.random.uniform(0, 1.0)
+@@ -143,42 +143,42 @@
+         # Free-fall deposit (stream visibility)
+         if not duck_mask[py, px] and not tray_mask[py, px] and not basket_mask[py, px]:
+             if not no_liquid[py, px]:
+-                acc[py, px] += 0.06
++                acc[py, px] += 0.12
+         # Duck collision
+         elif duck_mask[py, px]:
+-            acc[py, px] += 0.5
++            acc[py, px] += 0.75
+             # Flow down surface
+             if 0 &lt;= py &lt; H and 0 &lt;= px &lt; W:
+-                d.vx += duck_nx[py, px] * 2.0
+-                d.vy += duck_ny[py, px] * 2.0
+-            d.vy *= 0.2
+-            d.vx *= 0.3
++                d.vx += duck_nx[py, px] * 2.5
++                d.vy += duck_ny[py, px] * 2.5
++            d.vy *= 0.15
++            d.vx *= 0.25
+             if py &gt;= duck_bot[px]:
+                 d.alive = False
+         # Tray
+         elif tray_mask[py, px]:
+-            acc[py, px] += 0.5
+-            d.vy *= 0.03
+-            d.vx *= 0.1
++            acc[py, px] += 0.75
++            d.vy *= 0.02
++            d.vx *= 0.08
+             d.alive = False
+         # Basket
+         elif basket_mask[py, px]:
+-            acc[py, px] += 0.3
+-            d.vy *= 0.08
+-            d.vx *= 0.1
++            acc[py, px] += 0.4
++            d.vy *= 0.06
++            d.vx *= 0.08
+             d.alive = False
+ 
+     drops[:] = [d for d in drops if d.alive]
+ 
+     # --- Surface flow (downward-biased diffusion on solid surfaces) ---
+-    for _ in range(2):
++    for _ in range(1):
+         acc_pad = np.pad(acc, 1, mode=&#x27;constant&#x27;)
+         left = acc_pad[1:-1, 0:-2]
+         right = acc_pad[1:-1, 2:]
+         up = acc_pad[0:-2, 1:-1]
+         down = acc_pad[2:, 1:-1]
+ 
+-        new = acc * 0.55 + left * 0.05 + right * 0.05 + up * 0.02 + down * 0.33
++        new = acc * 0.60 + left * 0.04 + right * 0.04 + up * 0.02 + down * 0.30
+         new = np.where(no_liquid, 0.0, new)
+         new = np.maximum(new, 0)
+         new = np.minimum(new, 4.0)
+@@ -203,12 +203,13 @@
+ 
+ def render(acc):
+     out = base.copy()
+-    a = np.clip(acc, 0.0, 1.0)
++    # Boost opacity: liquid is more visible at lower accumulation
++    a = np.clip(acc * 1.3, 0.0, 1.0)
+     for c in range(3):
+         out[..., c] = (1.0 - a) * out[..., c] + a * LIQUID_RGB[c]
+-    thick = acc &gt; 1.0
++    thick = acc &gt; 0.77  # ~ 1.0/1.3
+     if thick.any():
+-        extra = np.clip((acc - 1.0) * 0.5, 0, 1)
++        extra = np.clip((acc - 0.77) * 2.0, 0, 1)
+         for c in range(3):
+             out[thick, c] = (1.0 - extra[thick]) * out[thick, c] + extra[thick] * LIQUID_HI[c]
+     return np.clip(out, 0, 255).astype(np.uint8)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-2ed203669be3.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T19:42:26.413362+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 2ed203669be3e9c7 · code fd89975b8ace35c7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-18629935d5ef.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-05T19:44:22.929359+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +252/−185</span></div><p class="hashes">pixels 18629935d5ef0530 · code 28640f7ebffb31f1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,13 +1,12 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;generate.py — Red liquid pouring animation.
++&quot;&quot;&quot;generate.py — Red liquid pouring onto yellow rubber duck.
+ 
+ Method:
+   1. Scene masks from frame 0: duck, tray, basket, glass.
+-  2. Stream: falling liquid column from spout to duck surface.
+-  3. Duck coverage: red tint spreads downward from impact zone.
+-  4. Drips: red drops from duck bottom to tray.
+-  5. Tray pool: expanding red puddle on tray surface.
+-  6. Alpha-blend rendering with smooth colour transition.
++  2. Stream: falling liquid column from spout to duck, with splash.
++  3. Duck wetting: flood-fill expansion from impact zone, gravity-biased.
++  4. Tray pooling: expanding puddle from drip points.
++  5. Alpha-blend rendering.
+ 
+ Pure NumPy + PIL. No external engines or AI.
+ &quot;&quot;&quot;
+@@ -16,14 +15,15 @@
+ from PIL import Image, ImageDraw
+ from pathlib import Path
+ import sys
++from collections import deque
+ 
+ W, H = 256, 144
+ FPS = 4
+ N_FRAMES = 20
+ CASE_DIR = Path(__file__).parent
+ 
+-LIQUID_RGB = np.array([195, 50, 22], dtype=np.float64)
+-LIQUID_HI = np.array([230, 80, 30], dtype=np.float64)
++LIQUID_RGB = np.array([200, 52, 20], dtype=np.float64)
++LIQUID_HI = np.array([235, 85, 28], dtype=np.float64)
+ 
+ # ---------------------------------------------------------------------------
+ # Load &amp; analyse
+@@ -31,183 +31,239 @@
+ base = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;), dtype=np.float64)
+ r, g, b = base[..., 0], base[..., 1], base[..., 2]
+ 
+-# Duck mask
++# Duck mask — bright yellow duck
+ duck_mask = np.zeros((H, W), dtype=bool)
+-duck_raw = (r &gt; 140) &amp; (g &gt; 80) &amp; (r &gt; b + 35) &amp; (g &gt; b + 20) &amp; (r &lt; 230)
+-duck_mask[45:115, 145:225] = duck_raw[45:115, 145:225]
+-
+-# Tray mask
++core = (r &gt; 150) &amp; (g &gt; 110) &amp; (b &lt; 70) &amp; (r &gt; b + 50)
++edges = (r &gt; 120) &amp; (g &gt; 80) &amp; (r &gt; b + 30) &amp; (g &gt; b + 18) &amp; (r &lt; 220)
++duck_mask[44:118, 140:228] = (core | edges)[44:118, 140:228]
++
++# Tray mask — dark metallic area below duck
+ tray_mask = np.zeros((H, W), dtype=bool)
+-tray_raw = (
+-    (r &gt; 35) &amp; (r &lt; 92) &amp; (g &gt; 32) &amp; (g &lt; 85) &amp; (b &gt; 25) &amp; (b &lt; 72) &amp;
+-    (np.abs(r - g) &lt; 26) &amp; (np.abs(r - b) &lt; 38)
++tray_c = (
++    (r &gt; 34) &amp; (r &lt; 95) &amp; (g &gt; 30) &amp; (g &lt; 88) &amp; (b &gt; 22) &amp; (b &lt; 75) &amp;
++    (np.abs(r - g) &lt; 27) &amp; (np.abs(r - b) &lt; 40)
+ )
+-tray_start = int(np.where(duck_mask.any(axis=1))[0].max()) + 1
+-tray_mask[tray_start:, :] = tray_raw[tray_start:, :]
++duck_bottom_y = int(np.where(duck_mask.any(axis=1))[0].max()) + 1
++tray_mask[duck_bottom_y:, :] = tray_c[duck_bottom_y:, :]
+ 
+ # Basket mask
+ basket_mask = np.zeros((H, W), dtype=bool)
+-b_raw = (r &gt; 55) &amp; (r &lt; 168) &amp; (g &gt; 38) &amp; (g &lt; 130) &amp; (b &gt; 18) &amp; (b &lt; 100) &amp; (r &gt; b + 2)
+-basket_mask[28:100, 0:160] = b_raw[28:100, 0:160]
+-
+-# Glass/dispenser zone
++b_raw = (r &gt; 52) &amp; (r &lt; 170) &amp; (g &gt; 35) &amp; (g &lt; 132) &amp; (b &gt; 16) &amp; (b &lt; 102) &amp; (r &gt; b + 2)
++basket_mask[26:102, 0:162] = b_raw[26:102, 0:162]
++
++# Glass/dispenser — widened exclusion zone
+ no_liquid = np.zeros((H, W), dtype=bool)
+-g_body = (r &gt; 100) &amp; (r &lt; 220) &amp; (g &gt; 85) &amp; (g &lt; 205) &amp; (b &gt; 55) &amp; (b &lt; 210)
+-no_liquid[0:60, 100:228] = g_body[0:60, 100:228]
+-
+-# Spout
++g_body = (r &gt; 95) &amp; (r &lt; 225) &amp; (g &gt; 80) &amp; (g &lt; 210) &amp; (b &gt; 50) &amp; (b &lt; 215)
++no_liquid[0:62, 95:232] = g_body[0:62, 95:232]
++
++# Spout position
+ spout_x, spout_y = 191, 31
+ 
+-# Duck surface
+… diff truncated; 447 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-18629935d5ef.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-05T19:44:24.804235+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 18629935d5ef0530 · code 28640f7ebffb31f1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-350cb01dd649.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-05T19:45:49.731694+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−4</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 350cb01dd649c67c · code 98796bdb217a123e</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -51,10 +51,12 @@
+ b_raw = (r &gt; 52) &amp; (r &lt; 170) &amp; (g &gt; 35) &amp; (g &lt; 132) &amp; (b &gt; 16) &amp; (b &lt; 102) &amp; (r &gt; b + 2)
+ basket_mask[26:102, 0:162] = b_raw[26:102, 0:162]
+ 
+-# Glass/dispenser — widened exclusion zone
++# Glass/dispenser — widened exclusion zone, but don&#x27;t occlude duck
+ no_liquid = np.zeros((H, W), dtype=bool)
+ g_body = (r &gt; 95) &amp; (r &lt; 225) &amp; (g &gt; 80) &amp; (g &lt; 210) &amp; (b &gt; 50) &amp; (b &lt; 215)
+-no_liquid[0:62, 95:232] = g_body[0:62, 95:232]
++no_liquid[0:48, 95:232] = g_body[0:48, 95:232]
++# Remove glass zone where duck is (duck is in front)
++no_liquid[duck_mask] = False
+ 
+ # Spout position
+ spout_x, spout_y = 191, 31
+@@ -118,7 +120,7 @@
+                 if (ny, nx) not in visited:
+                     visited.add((ny, nx))
+                     new_dist = dist + 1
+-                    wetness = max(0.01, max_wet - new_dist * 0.12)
++                    wetness = max(0.05, max_wet - new_dist * 0.08)
+                     if wetness &gt; 0 and new_wet[ny, nx] &lt; wetness:
+                         new_wet[ny, nx] = max(new_wet[ny, nx], wetness)
+                         q.append((ny, nx, new_dist))
+@@ -205,7 +207,7 @@
+     wet_map = expand_wetting(wet_map, duck_mask, max_wet, n_steps=8)
+     
+     # Convert duck wetness to accumulation
+-    acc = np.maximum(acc, wet_map * 1.2)
++    acc = np.maximum(acc, wet_map * 1.8)
+     
+     # --- Tray pooling ---
+     # Find duck bottom drip points</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-f29346c7f205.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-05T19:47:19.201493+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +13/−8</span></div><p class="hashes">pixels f29346c7f2053ae5 · code 1fdb6561831caefd</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -221,17 +221,17 @@
+                     break
+     
+     # Paint tray puddles at drip points
+-    tray_alpha = min(1.0, (t - 3) / 12.0)  # starts after frame 3
++    tray_alpha = min(1.0, max(0, (t - 3)) / 10.0)  # starts after frame 3
+     for dy, dx in drip_points:
+         if 0 &lt;= dy &lt; H and tray_mask[dy, dx]:
+-            radius = int(1 + tray_alpha * 12)
++            radius = int(2 + tray_alpha * 18)
+             for ry in range(-radius, radius + 1):
+                 for rx in range(-radius, radius + 1):
+                     ny, nx = dy + ry, dx + rx
+                     dist = np.sqrt(rx*rx + ry*ry)
+                     if 0 &lt;= ny &lt; H and 0 &lt;= nx &lt; W and tray_mask[ny, nx] and dist &lt;= radius:
+                         wet = tray_alpha * (1.0 - dist / max(radius, 1))
+-                        acc[ny, nx] += wet * 0.8
++                        acc[ny, nx] += wet * 1.2
+     
+     # --- Downward-biased diffusion ---
+     acc_pad = np.pad(acc, 1, mode=&#x27;constant&#x27;)
+@@ -260,16 +260,21 @@
+ 
+ 
+ def render(acc):
+-    &quot;&quot;&quot;Alpha-blend accumulation onto base image.&quot;&quot;&quot;
++    &quot;&quot;&quot;Alpha-blend accumulation onto base image. Only render where acc &gt; threshold.&quot;&quot;&quot;
+     out = base.copy()
++    # Only render where liquid is clearly present
++    visible = acc &gt; 0.06
++    if not visible.any():
++        return np.clip(out, 0, 255).astype(np.uint8)
++
+     a = np.clip(acc * 1.3, 0.0, 1.0)
+     for c in range(3):
+-        out[..., c] = (1.0 - a) * out[..., c] + a * LIQUID_RGB[c]
+-    thick = acc &gt; 0.77
++        out[visible, c] = ((1.0 - a[visible]) * out[visible, c] + a[visible] * LIQUID_RGB[c])
++    thick = visible &amp; (acc &gt; 0.77)
+     if thick.any():
+-        extra = np.clip((acc - 0.77) * 2.0, 0, 1)
++        extra = np.clip((acc[thick] - 0.77) * 2.0, 0, 1)
+         for c in range(3):
+-            out[thick, c] = (1.0 - extra[thick]) * out[thick, c] + extra[thick] * LIQUID_HI[c]
++            out[thick, c] = ((1.0 - extra) * out[thick, c] + extra * LIQUID_HI[c])
+     return np.clip(out, 0, 255).astype(np.uint8)
+ 
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/candidate-f29346c7f205.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-05T19:47:21.118700+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels f29346c7f2053ae5 · code 1fdb6561831caefd</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0085/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION.md — Scene Measurements &amp; Frame Plan</h1>
+<h2>Scene Analysis</h2>
+<p><strong>Frame size:</strong> 256×144 pixels<br />
+<strong>Frame rate:</strong> 4 fps → 20 frames (5 seconds)</p>
+<h3>Object Inventory (from <code>first_frame.png</code> analysis)</h3>
+<table>
+<thead>
+<tr>
+  <th>Object</th>
+  <th>Bounding Box</th>
+  <th>Pixel Count</th>
+  <th>Key Colors</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Yellow rubber duck</td>
+  <td>X:[140,228], Y:[44,118]</td>
+  <td>~2744 px</td>
+  <td>Bright yellow: R:150–230, G:110–210, B:0–70</td>
+</tr>
+<tr>
+  <td>Glass beverage dispenser (upper body)</td>
+  <td>X:[95,232], Y:[0,48]</td>
+  <td>—</td>
+  <td>Light blue-gray glass with red content</td>
+</tr>
+<tr>
+  <td>Bright-red liquid (inside dispenser)</td>
+  <td>X:[110,200], Y:[0,40]</td>
+  <td>—</td>
+  <td>R:160–180, G:40–60, B:20–35</td>
+</tr>
+<tr>
+  <td>Woven basket</td>
+  <td>X:[0,162], Y:[26,102]</td>
+  <td>~7052 px</td>
+  <td>Brown/tan woven: R:52–170, G:35–132, B:16–102</td>
+</tr>
+<tr>
+  <td>Baking tray (empty)</td>
+  <td>X:[120,256], Y:[108,143]</td>
+  <td>~5052 px</td>
+  <td>Metallic gray: R:34–95, G:30–88, B:22–75</td>
+</tr>
+<tr>
+  <td>Background wall</td>
+  <td>Full frame</td>
+  <td>—</td>
+  <td>Warm beige/yellowish at top, darker brown at bottom</td>
+</tr>
+</tbody>
+</table>
+<h3>Key Reference Points</h3>
+<ul>
+<li><strong>Spout exit:</strong> (191, 31) — bottom of dispenser tap where liquid emerges</li>
+<li><strong>Impact point on duck:</strong> (191, 44) — stream hits duck head surface</li>
+<li><strong>Fall distance (spout to duck):</strong> ~13 pixels</li>
+<li><strong>Duck center:</strong> approximately (184, 81)</li>
+<li><strong>Tray surface:</strong> starts at Y≈108, extends to bottom of frame</li>
+</ul>
+<hr />
+<h2>20-Frame Event Plan</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td><strong>Initial state</strong> — exact copy of <code>first_frame.png</code>. Duck on tray, dispenser on basket, red liquid visible in glass.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>Stream begins: liquid drops emerge from spout, first fall visible. Duck surface begins wetting at impact point.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>Stream grows; duck surface wetting expands via flood-fill (gravity-biased). ~600 duck pixels wetted.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>Continuous stream visible. Duck wetting reaches ~900 pixels. Liquid spreading down duck body.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>Stream at half strength. Duck wetting covers ~1200 pixels (44% of duck). Red tint clearly visible on duck head and upper body.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>Duck wetting reaches ~1500 pixels (55%). Red coverage extends down duck sides. First drips appear at duck bottom.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>~1800 duck pixels wetted (66%). Tray pooling begins — first red puddle visible below duck.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>Duck ~77% covered. Tray puddle growing. Stream fully developed.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>Duck ~88% covered. Tray pool expands to ~10px radius.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>Duck ~90% covered (near maximum). Tray pool continues expanding.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>Full duck coverage (90%). Tray pool at ~14px radius. Stream continues at full rate.</td>
+</tr>
+<tr>
+  <td>11–14</td>
+  <td>2.75–3.50</td>
+  <td>Steady state: continuous pouring, full duck red coating, expanding tray puddle.</td>
+</tr>
+<tr>
+  <td>15–19</td>
+  <td>3.75–4.75</td>
+  <td>Extended pouring: duck fully coated, tray pool reaches ~20px radius from drip points. Liquid spreads across tray surface, diffusing outward.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>Method Summary</h2>
+<ol>
+<li><strong>Scene masks</strong> computed from frame 0 via RGB thresholds.</li>
+<li><strong>Stream</strong>: ~45 traced particles/frame from spout, gravity-accelerated fall.</li>
+<li><strong>Duck wetting</strong>: BFS flood-fill expansion from impact zone, gravity-biased down.</li>
+<li><strong>Tray pooling</strong>: Expanding circular puddles at duck-bottom drip points.</li>
+<li><strong>Rendering</strong>: Alpha-blended red overlay with boosted opacity for visibility.</li>
+</ol>
+<p>No external engines, AI models, or network resources used.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md</h1>
+<h2>Approach</h2>
+<p>Hybrid simulation: traced-particle stream + flood-fill duck wetting +
+tray puddle painting, rendered as alpha-blended red overlay.</p>
+<h3>Scene Analysis (frame 0)</h3>
+<ul>
+<li><strong>Duck mask</strong>: bright-yellow threshold (R&gt;150, G&gt;110, B&lt;70) with edge tones.</li>
+<li><strong>Tray mask</strong>: dark metallic region below duck bottom.</li>
+<li><strong>Basket mask</strong>: warm brown left of duck.</li>
+<li><strong>Glass/dispenser exclusion zone</strong>: widened to prevent boundary leakage.</li>
+<li><strong>Spout</strong>: (191, 31), impact on duck at approximately (191, 49).</li>
+</ul>
+<h3>Stream Simulation</h3>
+<ul>
+<li>~45 drops/frame traced from spout, ramping over 2s.</li>
+<li>Gravity: 55 px/s², sub-step tracing for accuracy.</li>
+<li>Light deposit (0.08) in free-fall for stream visibility.</li>
+<li>Full deposit (0.6) on duck collision with splash (3×3 spread).</li>
+<li>Duck wetness tracking via flood-fill expansion from impact points.</li>
+</ul>
+<h3>Duck Wetting</h3>
+<ul>
+<li>Flood-fill BFS from impact zone each frame.</li>
+<li>Gravity-biased: processes seeds bottom-up for downward flow.</li>
+<li>Wetness decays with distance from source (0.12 per pixel).</li>
+<li>Up to 300 new pixels per frame, 8-step expansion.</li>
+<li>Converts wetness to accumulation (×1.2 factor).</li>
+</ul>
+<h3>Tray Pooling</h3>
+<ul>
+<li>Detects drip points at duck bottom where wetness &gt; 0.5.</li>
+<li>Paints expanding circular puddles (radius grows 1→12 over time).</li>
+<li>Tray pooling starts after frame 3 (0.75s).</li>
+</ul>
+<h3>Rendering</h3>
+<ul>
+<li>Alpha-blend: (1-α)<em>base + α</em>liquid_rgb, α=clamp(acc*1.3,0,1).</li>
+<li>Thick regions (acc&gt;0.77): bright highlight blend.</li>
+<li>Liquid colour: RGB(200, 52, 20).</li>
+</ul>
+<h3>Tools: NumPy + PIL only. No external engines or AI.</h3>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0085-dd65ca3d256b.png';</script></body></html>

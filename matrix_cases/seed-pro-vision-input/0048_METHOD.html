@@ -1,0 +1,930 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>domino-in-juice · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-input.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · vision-input · Case 0048</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>domino-in-juice</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>20</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>19</strong><span>generate.py 执行</span></div><div class="stat"><strong>113</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>47</strong><span>文件变更事件</span></div><div class="stat"><strong>98.1m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The mug is sitting on a wooden surface. The blue-black grabber tool drops the white ceramic domino into the mug that is filled with a dark-colored liquid.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>113 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>20 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-c4e8fbb92367.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T00:39:21.514701+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +370/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels c4e8fbb923678ef9 · code b9c8aa49c4bc90c7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,370 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;PixelWorld case_0048: grabber drops a white ceramic domino into a navy
++mug of dark tea/coffee.
++
++Pure local pixel math: object sprites are segmented from first_frame.png,
++a clean plate is built by Telea inpaint (table) + horizontal mirror fill
++(mug opening/rim), and sprites are re-composited per frame with bilinear
++affine transforms, analytic submersion darkening, a damped sine-wave ripple
++field, a splash crown and parabolic droplets. Frame 00 is a verbatim copy.
++&quot;&quot;&quot;
++from pathlib import Path
++import math
++import numpy as np
++import cv2
++from PIL import Image, ImageDraw
++from scipy import ndimage
++from artifact_io import save
++
++ROOT = Path(__file__).parent
++rng = np.random.default_rng(48)
++
++# ---------------------------------------------------------------- geometry
++H, W = 144, 256
++F0 = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++R = F0[:, :, 0].astype(np.int16)
++G = F0[:, :, 1].astype(np.int16)
++B = F0[:, :, 2].astype(np.int16)
++YY, XX = np.mgrid[0:H, 0:W]
++
++OUT_CX, OUT_CY = 119.0, 70.5          # rim outer ellipse
++OUT_RX, OUT_RY = 35.0, 29.0
++IN_CX, IN_CY = 120.5, 70.5            # liquid surface ellipse
++IN_RX, IN_RY = 27.5, 15.8
++
++def ellipse_grid(cx, cy, rx, ry):
++    return ((XX - cx) / rx) ** 2 + ((YY - cy) / ry) ** 2 &lt;= 1.0
++
++EOUT = ellipse_grid(OUT_CX, OUT_CY, OUT_RX, OUT_RY)
++EIN = ellipse_grid(IN_CX, IN_CY, IN_RX, IN_RY)
++
++# ---------------------------------------------------------------- masks
++# --- domino: bright white core + pale periwinkle fringe
++roi = (XX &gt;= 94) &amp; (XX &lt;= 122) &amp; (YY &gt;= 9) &amp; (YY &lt;= 60)
++core0 = (R &gt; 165) &amp; (G &gt; 175) &amp; (B &gt; 185) &amp; roi
++lbl, n = ndimage.label(core0)
++sizes = ndimage.sum_labels(np.ones_like(lbl), lbl, range(1, n + 1))
++dom_core = lbl == (1 + int(np.argmax(sizes)))
++fringe_cand = (B &gt; 118) &amp; (B &gt; R + 6) &amp; (R &gt; 88) &amp; roi
++fringe_cand &amp;= ndimage.binary_dilation(dom_core, iterations=5)
++lbl2, n2 = ndimage.label(dom_core | fringe_cand)
++seed_y, seed_x = np.argwhere(dom_core)[0]
++dom_support = lbl2 == lbl2[seed_y, seed_x]
++dom_alpha = np.zeros((H, W), np.float32)
++dom_alpha[dom_support] = np.clip((B[dom_support] - 118) / 70.0, 0.35, 1.0) * 255.0
++dom_alpha[dom_core] = 255.0
++
++# --- grabber: saturated blue fingers + neutral black disc, top-connected
++blue = (B &gt; 120) &amp; (B - R &gt; 40) &amp; (R &lt; 140)
++ch_range = np.maximum(np.maximum(R, G), B) - np.minimum(np.minimum(R, G), B)
++neutral = (ch_range &lt; 24) &amp; (R &lt; 72)
++groi = (YY &lt; 14) &amp; (XX &gt;= 77) &amp; (XX &lt;= 127)
++l3, n3 = ndimage.label((blue | neutral) &amp; groi)
++top = set(np.unique(l3[0])) - {0}
++grab_core = np.isin(l3, list(top))
++woodish = (R &gt; B + 22)
++bright_dom = (R &gt; 150) &amp; (G &gt; 160) &amp; (B &gt; 200)
++g1 = ndimage.binary_dilation(grab_core, iterations=1) &amp; ~woodish &amp; ~bright_dom
++g2 = ndimage.binary_dilation(grab_core, iterations=2) &amp; ~woodish &amp; ~bright_dom
++grab_support = grab_core | g1 | g2
++grab_alpha = np.zeros((H, W), np.float32)
++grab_alpha[g2] = 80.0
++grab_alpha[g1] = 150.0
++grab_alpha[grab_core] = 255.0
++grab_alpha *= grab_support
++
++# removal mask (sprite footprint, dilated to swallow the soft tip halo)
++removal = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=4)
++           | ndimage.binary_dilation(grab_alpha &gt; 25, iterations=3))
++removal &amp;= (YY &lt; 62) | EOUT  # never touch unrelated dark corners
++
++# ---------------------------------------------------------------- plate
++plate = F0.copy()
++table_hole = removal &amp; ~EOUT
++mask_u8 = (table_hole.astype(np.uint8)) * 255
++inp = cv2.inpaint(cv2.cvtColor(mask_u8, cv2.COLOR_GRAY2BGR) * 0 +
++                  cv2.cvtColor(F0, cv2.COLOR_RGB2BGR), mask_u8, 6,
++                  cv2.INPAINT_TELEA)
+… diff truncated; 283 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-474b117dbf48.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T00:48:03.561339+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +56/−31</span></div><p class="hashes">pixels 474b117dbf489098 · code 0ad57da96d163b4c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -11,7 +11,6 @@
+ from pathlib import Path
+ import math
+ import numpy as np
+-import cv2
+ from PIL import Image, ImageDraw
+ from scipy import ndimage
+ from artifact_io import save
+@@ -54,24 +53,32 @@
+ dom_alpha[dom_support] = np.clip((B[dom_support] - 118) / 70.0, 0.35, 1.0) * 255.0
+ dom_alpha[dom_core] = 255.0
+ 
+-# --- grabber: saturated blue fingers + neutral black disc, top-connected
+-blue = (B &gt; 120) &amp; (B - R &gt; 40) &amp; (R &lt; 140)
+-ch_range = np.maximum(np.maximum(R, G), B) - np.minimum(np.minimum(R, G), B)
++# --- grabber: saturated blue fingers + neutral black disc, top-connected.
++# The tool is blurred at the top edge: a gray-blue halo blob (x~45-106,
++# y0-11) belongs to the moving tool and is carried in the sprite as well.
++ch_min = np.minimum(np.minimum(R, G), B)
++sat = (B - ch_min) / np.maximum(B, 1)
++ch_range = np.maximum(np.maximum(R, G), B) - ch_min
++hard_blue = (B &gt; 95) &amp; (sat &gt; 0.60) &amp; (B - R &gt; 30)
+ neutral = (ch_range &lt; 24) &amp; (R &lt; 72)
+-groi = (YY &lt; 14) &amp; (XX &gt;= 77) &amp; (XX &lt;= 127)
+-l3, n3 = ndimage.label((blue | neutral) &amp; groi)
++woodish = (R &gt; B + 22)
++bright_dom = (R &gt; 150) &amp; (G &gt; 160) &amp; (B &gt; 200)
++groi = (YY &lt; 14) &amp; (XX &gt;= 43) &amp; (XX &lt;= 127)
++l3, n3 = ndimage.label((hard_blue | neutral) &amp; groi)
+ top = set(np.unique(l3[0])) - {0}
+ grab_core = np.isin(l3, list(top))
+-woodish = (R &gt; B + 22)
+-bright_dom = (R &gt; 150) &amp; (G &gt; 160) &amp; (B &gt; 200)
++halo = ((B - R) &gt; 28) &amp; (B &gt; 95) &amp; (YY &lt; 12) &amp; (XX &gt;= 43) &amp; (XX &lt;= 127) \
++    &amp; ~woodish &amp; ~bright_dom
++lh, nh = ndimage.label(grab_core | halo)
++keep = set(np.unique(lh[grab_core]))
++halo = np.isin(lh, list(keep)) &amp; ~grab_core
+ g1 = ndimage.binary_dilation(grab_core, iterations=1) &amp; ~woodish &amp; ~bright_dom
+ g2 = ndimage.binary_dilation(grab_core, iterations=2) &amp; ~woodish &amp; ~bright_dom
+-grab_support = grab_core | g1 | g2
+ grab_alpha = np.zeros((H, W), np.float32)
+-grab_alpha[g2] = 80.0
+-grab_alpha[g1] = 150.0
++grab_alpha[halo] = np.clip((B[halo] - R[halo] - 28) / 45.0, 0, 1) * 140.0
++grab_alpha[g2 &amp; ~halo] = np.maximum(grab_alpha[g2 &amp; ~halo], 90.0)
++grab_alpha[g1 &amp; ~halo] = np.maximum(grab_alpha[g1 &amp; ~halo], 180.0)
+ grab_alpha[grab_core] = 255.0
+-grab_alpha *= grab_support
+ 
+ # removal mask (sprite footprint, dilated to swallow the soft tip halo)
+ removal = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=4)
+@@ -79,25 +86,42 @@
+ removal &amp;= (YY &lt; 62) | EOUT  # never touch unrelated dark corners
+ 
+ # ---------------------------------------------------------------- plate
+-plate = F0.copy()
++# Table fill: cv2 inpainting bled the bright domino colour through the
++# narrow corridor, so the wood is instead rebuilt per row — smooth linear
++# interpolation between clean table pixels on either side of each hole,
++# plus same-row oak grain copied from a clean strip 58 px to the right.
++plate = F0.copy().astype(np.float32)
+ table_hole = removal &amp; ~EOUT
+-mask_u8 = (table_hole.astype(np.uint8)) * 255
+-inp = cv2.inpaint(cv2.cvtColor(mask_u8, cv2.COLOR_GRAY2BGR) * 0 +
+-                  cv2.cvtColor(F0, cv2.COLOR_RGB2BGR), mask_u8, 6,
+-                  cv2.INPAINT_TELEA)
+-plate = cv2.cvtColor(inp, cv2.COLOR_BGR2RGB)
+-
+-# re-add high-frequency oak grain residual over the inpainted table strip
+-patch = F0[8:46, 128:208].astype(np.float32)
+-resid = patch - patch.mean(axis=1, keepdims=True)
+-rng2 = np.random.default_rng(7)
+-row_off = rng2.integers(0, 80, size=H)
+-py, px_ = np.where(table_hole)
+-for y, x in zip(py, px_):
+-    ry_ = min(max(y - 8, 0), 37)
+-    rx_ = (x - 128 + int(row_off[y])) % 80
+-    plate[y, x] = np.clip(plate[y, x].astype(np.float32)
+-                          + 0.55 * resid[ry_, rx_], 0, 255)
++for y in range(0, 62):
++    xs = np.where(table_hole[y])[0]
++    if len(xs) == 0:
++        continue
++    # split into contiguous runs
++    runs = np.split(xs, np.where(np.diff(xs) &gt; 1)[0] + 1)
++    for run in runs:
++        x0, x1 = run[0], run[-1]
+… diff truncated; 35 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-474b117dbf48.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T00:48:05.362968+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 474b117dbf489098 · code 0ad57da96d163b4c</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-d8415578e1fe.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T00:51:25.078259+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−4</span></div><p class="hashes">pixels d8415578e1fe800a · code 63c92565c62ec6ae</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -174,12 +174,14 @@
+ GRAB_PIVOT = (110.5, 12.5 + PAD)
+ 
+ def stamp(canvas, layer, angle_deg, pivot, shift, out_offset=0):
+-    &quot;&quot;&quot;Bilinear affine composite. screen = pivot+shift + R(src-pivot).&quot;&quot;&quot;
++    &quot;&quot;&quot;Bilinear affine composite. screen = pivot+shift + R(src-pivot).
++    pivot/shift are (x, y); scipy works in (row=y, col=x) order.&quot;&quot;&quot;
+     a = math.radians(angle_deg)
+     c, s = math.cos(a), math.sin(a)
+-    Minv = np.array([[c, s], [-s, c]])          # output -&gt; input rotation
+-    t = np.array([pivot[0] + shift[0], pivot[1] + shift[1]])
+-    off = np.array(pivot) - Minv @ t
++    Minv = np.array([[c, -s], [s, c]])           # yx output -&gt; input
++    piv = np.array([pivot[1], pivot[0]])
++    t = piv + np.array([shift[1], shift[0]])
++    off = piv - Minv @ t
+     out_h = layer.shape[1]
+     acc = np.empty((4, out_h, W), np.float32)
+     for ch in range(4):</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-d8415578e1fe.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T00:51:26.905696+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels d8415578e1fe800a · code 63c92565c62ec6ae</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-0f086ffab670.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-06T01:22:43.119356+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +226/−98</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 0f086ffab6704b23 · code 7baf983836b7d92f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,12 +1,24 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;PixelWorld case_0048: grabber drops a white ceramic domino into a navy
+-mug of dark tea/coffee.
+-
+-Pure local pixel math: object sprites are segmented from first_frame.png,
+-a clean plate is built by Telea inpaint (table) + horizontal mirror fill
+-(mug opening/rim), and sprites are re-composited per frame with bilinear
+-affine transforms, analytic submersion darkening, a damped sine-wave ripple
+-field, a splash crown and parabolic droplets. Frame 00 is a verbatim copy.
++&quot;&quot;&quot;PixelWorld case_0048: blue-black grabber drops a white ceramic domino
++into a navy mug of dark tea/coffee.
++
++Pure local pixel math on first_frame.png (no external assets/models):
++  * domino and grabber sprites are segmented by colour/connected-component
++    masks with soft alpha;
++  * a clean background plate is rebuilt: the oak top is reconstructed per
++    row (robust linear colour fit across clean table pixels + same-row grain
++    residual copy), the dark out-of-focus wedge in the top-left is extended
++    flat, and the occluded back rim/opening is filled by horizontal mirror
++    about x=119 from the fully visible right half, routed through an
++    empirically measured mug silhouette;
++  * the domino is re-composited each frame with a bilinear affine transform
++    (lower + clockwise tip), with submersion darkening inside the measured
++    liquid ellipse and restoration of the front ceramic lip over the block;
++  * the liquid gets a contact dimple, two damped sine-wave ripple fields,
++    a splash crown, parabolic airborne droplets and entry rings;
++  * every liquid effect is masked to the measured surface ellipse and every
++    droplet to the mug silhouette.
++Frame 00 is a verbatim byte-exact copy of first_frame.png.
+ &quot;&quot;&quot;
+ from pathlib import Path
+ import math
+@@ -26,18 +38,20 @@
+ B = F0[:, :, 2].astype(np.int16)
+ YY, XX = np.mgrid[0:H, 0:W]
+ 
+-OUT_CX, OUT_CY = 119.0, 70.5          # rim outer ellipse
+-OUT_RX, OUT_RY = 35.0, 29.0
+ IN_CX, IN_CY = 120.5, 70.5            # liquid surface ellipse
+ IN_RX, IN_RY = 27.5, 15.8
++# tight surface disk used to mask all in-liquid effects (keeps ~1 px off
++# the empirical ceramic edge)
++T_CX, T_CY, T_RX, T_RY = IN_CX, IN_CY, IN_RX - 1.6, IN_RY - 1.2
+ 
+ def ellipse_grid(cx, cy, rx, ry):
+     return ((XX - cx) / rx) ** 2 + ((YY - cy) / ry) ** 2 &lt;= 1.0
+ 
+-EOUT = ellipse_grid(OUT_CX, OUT_CY, OUT_RX, OUT_RY)
+ EIN = ellipse_grid(IN_CX, IN_CY, IN_RX, IN_RY)
+-
+-# ---------------------------------------------------------------- masks
++EIN_T = ellipse_grid(T_CX, T_CY, T_RX, T_RY)
++D2_T = ((XX - T_CX) / T_RX) ** 2 + ((YY - T_CY) / T_RY) ** 2
++
++# ---------------------------------------------------------------- sprites
+ # --- domino: bright white core + pale periwinkle fringe
+ roi = (XX &gt;= 94) &amp; (XX &lt;= 122) &amp; (YY &gt;= 9) &amp; (YY &lt;= 60)
+ core0 = (R &gt; 165) &amp; (G &gt; 175) &amp; (B &gt; 185) &amp; roi
+@@ -54,8 +68,8 @@
+ dom_alpha[dom_core] = 255.0
+ 
+ # --- grabber: saturated blue fingers + neutral black disc, top-connected.
+-# The tool is blurred at the top edge: a gray-blue halo blob (x~45-106,
+-# y0-11) belongs to the moving tool and is carried in the sprite as well.
++# The blurred gray-blue halo blob (x~43-106, y0-11) moves with the tool and
++# is carried in the sprite with partial alpha.
+ ch_min = np.minimum(np.minimum(R, G), B)
+ sat = (B - ch_min) / np.maximum(B, 1)
+ ch_range = np.maximum(np.maximum(R, G), B) - ch_min
+@@ -80,78 +94,158 @@
+ grab_alpha[g1 &amp; ~halo] = np.maximum(grab_alpha[g1 &amp; ~halo], 180.0)
+ grab_alpha[grab_core] = 255.0
+ 
+-# removal mask (sprite footprint, dilated to swallow the soft tip halo)
+-removal = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=4)
+-           | ndimage.binary_dilation(grab_alpha &gt; 25, iterations=3))
+-removal &amp;= (YY &lt; 62) | EOUT  # never touch unrelated dark corners
++# ---------------------------------------------------------------- material
++# Generic scene classifiers (background rebuild must never depend on the
++# analytic ellipse alone — the real rim is slightly tilted/asymmetric).
++wood = (R &gt; B + 14) &amp; (R &gt; 80) &amp; (R &lt; 235) \
++    &amp; ~((R &gt; 180) &amp; (G &gt; 190) &amp; (B &gt; 210))
++toolblue = (B &gt; R + 40) &amp; (B &gt; 110) &amp; (YY &lt; 18)
++pale_fringe = (R &gt; 105) &amp; (B &gt; R + 18)
++sprite_def = dom_core | grab_core | (
++    ndimage.binary_dilation(dom_support, iterations=1) &amp; pale_fringe)
++
+… diff truncated; 383 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-f4ea4821260f.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-06T01:30:01.144094+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +22/−9</span><span class="change">inspection 更新</span></div><p class="hashes">pixels f4ea4821260f8b14 · code 56eca7aaf85d0709</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -81,11 +81,16 @@
+ l3, n3 = ndimage.label((hard_blue | neutral) &amp; groi)
+ top = set(np.unique(l3[0])) - {0}
+ grab_core = np.isin(l3, list(top))
+-halo = ((B - R) &gt; 28) &amp; (B &gt; 95) &amp; (YY &lt; 12) &amp; (XX &gt;= 43) &amp; (XX &lt;= 127) \
+-    &amp; ~woodish &amp; ~bright_dom
+-lh, nh = ndimage.label(grab_core | halo)
++# the blur blob is split from the fingers by a thin neutral gap, so join
++# with a morphological closing before keeping only components that touch
++# the core; &quot;not oak-coloured&quot; inside the tool bbox is the blur test (the
++# background there is either oak, the dark corner wedge, or tool)
++blob = ((YY &lt; 12) &amp; (XX &gt;= 41) &amp; (XX &lt;= 127) &amp; ~woodish &amp; ~bright_dom
++        &amp; ~((R + G + B &lt; 80) &amp; (XX &lt; 46)))
++bridged = ndimage.binary_closing(grab_core | blob, iterations=3)
++lh, nh = ndimage.label(bridged)
+ keep = set(np.unique(lh[grab_core]))
+-halo = np.isin(lh, list(keep)) &amp; ~grab_core
++halo = np.isin(lh, list(keep)) &amp; blob &amp; ~grab_core
+ g1 = ndimage.binary_dilation(grab_core, iterations=1) &amp; ~woodish &amp; ~bright_dom
+ g2 = ndimage.binary_dilation(grab_core, iterations=2) &amp; ~woodish &amp; ~bright_dom
+ grab_alpha = np.zeros((H, W), np.float32)
+@@ -123,7 +128,7 @@
+ # ---------------------------------------------------------------- removal
+ # Sprite footprint, dilated to swallow the soft halos — but pixels that are
+ # still verifiably clean wood (or the flat dark wedge) stay untouched.
+-removal0 = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=4)
++removal0 = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=7)
+             | ndimage.binary_dilation(grab_alpha &gt; 25, iterations=3))
+ core_zone = (ndimage.binary_dilation(dom_alpha &gt; 96, iterations=1)
+              | ndimage.binary_dilation(grab_alpha &gt; 96, iterations=1))
+@@ -181,7 +186,8 @@
+     for run in runs:
+         x0, x1 = int(run[0]), int(run[-1])
+         edge = wedge_edge(y)
+-        # --- dark wedge portion (flat, near-black background)
++        # --- dark wedge portion (flat near-black, with a soft ramp into
++        # the wood where the blurred blob crossed the wedge edge)
+         dark_cols = run[run &lt;= edge + 1]
+         if len(dark_cols):
+             ref_cols = np.arange(max(0, x0 - 18), x0)
+@@ -189,7 +195,12 @@
+                 &amp; (plate[y, ref_cols].sum(1) &lt; 120)
+             pool = plate[y, ref_cols[ok]]
+             base = np.median(pool, 0) if len(pool) else np.array([6, 6, 8])
+-            plate[y, dark_cols] = base + noise[y, dark_cols]
++            edgewood = fit_row_colour(y, [edge + 2])[0]
++            vals = np.repeat(base[None, :], len(dark_cols), 0).copy()
++            for i, x in enumerate(dark_cols):
++                f = np.clip((x - (edge - 4)) / 5.0, 0, 1) * 0.6
++                vals[i] = (1 - f) * base + f * edgewood
++            plate[y, dark_cols] = vals + noise[y, dark_cols]
+         # --- wood portion (linear fit + same-row grain residual)
+         wood_cols = run[run &gt; edge + 1]
+         if len(wood_cols) == 0:
+@@ -423,8 +434,10 @@
+     8: (30.0, (9.5, 42.5), -16.0),
+ }
+ WETK = {1: .9, 2: .85, 3: .7, 4: .82, 5: .86, 6: .90, 7: .94, 8: .97}
+-# near ceramic lip / inner front wall — always occludes the sinking block
+-FRONT_RIM = mugS &amp; (D2_T &gt; 1.0) &amp; (YY &gt;= 63)
++# near ceramic lip / inner front wall — always occludes the sinking block;
++# a 0.8-1.0 d2 band at the very front hides any edge ghost past the lip
++FRONT_RIM = mugS &amp; (((D2_T &gt; 1.0) &amp; (YY &gt;= 63))
++                    | ((D2_T &gt; 0.80) &amp; (YY &gt;= 80)))
+ 
+ for t in range(1, 20):
+     img = platef.copy()</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-3b3b1ce419d3.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-06T01:32:13.705065+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−2</span></div><p class="hashes">pixels 3b3b1ce419d38b3d · code 096d42eb7b95f8c9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -449,8 +449,10 @@
+         edge = np.clip((1.06 - D2_T) / 0.18, 0, 1)
+         k = WETK[t] * edge * (stamped &gt; 0.15)
+         img[:] = img * (1 - k[:, :, None]) + platef * k[:, :, None]
+-        # ceramic front lip covers any block painted onto it
+-        hide = (stamped &gt; 0.04) &amp; FRONT_RIM
++        # ceramic front lip covers any block painted onto it; once the
++        # block is fully sinking (f7/f8) the far inner wall hides its top
++        hide = (stamped &gt; 0.04) &amp; (
++            FRONT_RIM | (t &gt;= 7) &amp; (D2_T &gt; 0.9) &amp; (YY &lt;= 58))
+         img[hide] = platef[hide]
+         stamp(img, grab_pad, 0.0, GRAB_PIVOT, (0.0, gshift), out_offset=PAD)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-3b3b1ce419d3.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-06T01:32:15.583243+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 3b3b1ce419d38b3d · code 096d42eb7b95f8c9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-1bd786c6704f.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-06T01:38:49.789576+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +10/−4</span></div><p class="hashes">pixels 1bd786c6704f8362 · code 236d2b272d513c27</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -449,11 +449,17 @@
+         edge = np.clip((1.06 - D2_T) / 0.18, 0, 1)
+         k = WETK[t] * edge * (stamped &gt; 0.15)
+         img[:] = img * (1 - k[:, :, None]) + platef * k[:, :, None]
+-        # ceramic front lip covers any block painted onto it; once the
+-        # block is fully sinking (f7/f8) the far inner wall hides its top
+-        hide = (stamped &gt; 0.04) &amp; (
+-            FRONT_RIM | (t &gt;= 7) &amp; (D2_T &gt; 0.9) &amp; (YY &lt;= 58))
++        # ceramic front lip covers any block painted onto it. At f7/f8 the
++        # tile&#x27;s top end rests against the far inner wall: the outer rim
++        # band (outside the surface disk) hides it outright, while the wet
++        # end face just inside the opening stays as a heavily dimmed sliver.
++        back = (stamped &gt; 0.04) &amp; (t &gt;= 7) &amp; (YY &lt;= 58)
++        back_hard = back &amp; (D2_T &gt; 1.02)
++        back_soft = back &amp; (D2_T &lt;= 1.02) &amp; ~FRONT_RIM
++        hide = (stamped &gt; 0.04) &amp; (FRONT_RIM | back_hard)
+         img[hide] = platef[hide]
++        kb = 0.82 if t == 7 else 0.92
++        img[back_soft] = img[back_soft] * (1 - kb) + platef[back_soft] * kb
+         stamp(img, grab_pad, 0.0, GRAB_PIVOT, (0.0, gshift), out_offset=PAD)
+ 
+     apply_dimple(img, t)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-1bd786c6704f.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-06T01:38:51.601918+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 1bd786c6704f8362 · code 236d2b272d513c27</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-3d9176c97ce5.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-06T01:46:07.009948+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +12/−4</span></div><p class="hashes">pixels 3d9176c97ce5c13c · code 8cc68d3b58e20d7d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -84,9 +84,12 @@
+ # the blur blob is split from the fingers by a thin neutral gap, so join
+ # with a morphological closing before keeping only components that touch
+ # the core; &quot;not oak-coloured&quot; inside the tool bbox is the blur test (the
+-# background there is either oak, the dark corner wedge, or tool)
+-blob = ((YY &lt; 12) &amp; (XX &gt;= 41) &amp; (XX &lt;= 127) &amp; ~woodish &amp; ~bright_dom
+-        &amp; ~((R + G + B &lt; 80) &amp; (XX &lt; 46)))
++# background there is either oak, the dark corner wedge, or tool). Over the
++# dark top-left wedge the blurred tool body shows as neutral gray all the
++# way down to y~20 and left to x~27 (measured), so that wing is included;
++# only genuinely near-black wedge pixels stay background.
++blob = ((YY &lt; 21) &amp; (XX &gt;= 27) &amp; (XX &lt;= 127) &amp; ~woodish &amp; ~bright_dom
++        &amp; ~((R + G + B &lt; 22) &amp; (XX &lt; 46)))
+ bridged = ndimage.binary_closing(grab_core | blob, iterations=3)
+ lh, nh = ndimage.label(bridged)
+ keep = set(np.unique(lh[grab_core]))
+@@ -94,7 +97,12 @@
+ g1 = ndimage.binary_dilation(grab_core, iterations=1) &amp; ~woodish &amp; ~bright_dom
+ g2 = ndimage.binary_dilation(grab_core, iterations=2) &amp; ~woodish &amp; ~bright_dom
+ grab_alpha = np.zeros((H, W), np.float32)
+-grab_alpha[halo] = np.clip((B[halo] - R[halo] - 28) / 45.0, 0, 1) * 140.0
++# blue halo grades by blue excess; the neutral gray wing over the dark
++# wedge grades by luminance above the near-black wedge baseline
++halo_luma = (R[halo] + G[halo] + B[halo]) / 3.0
++a_blue = np.clip((B[halo] - R[halo] - 28) / 45.0, 0, 1)
++a_gray = np.clip((halo_luma - 10) / 34.0, 0, 1) * 0.9
++grab_alpha[halo] = np.maximum(a_blue, a_gray) * 140.0
+ grab_alpha[g2 &amp; ~halo] = np.maximum(grab_alpha[g2 &amp; ~halo], 90.0)
+ grab_alpha[g1 &amp; ~halo] = np.maximum(grab_alpha[g1 &amp; ~halo], 180.0)
+ grab_alpha[grab_core] = 255.0</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-3d9176c97ce5.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-06T01:46:09.100806+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 3d9176c97ce5c13c · code 8cc68d3b58e20d7d</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-4b6ed477a860.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-06T01:47:12.654382+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels 4b6ed477a8604672 · code 9c97420f47609d24</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -137,7 +137,7 @@
+ # Sprite footprint, dilated to swallow the soft halos — but pixels that are
+ # still verifiably clean wood (or the flat dark wedge) stay untouched.
+ removal0 = (ndimage.binary_dilation(dom_alpha &gt; 25, iterations=7)
+-            | ndimage.binary_dilation(grab_alpha &gt; 25, iterations=3))
++            | ndimage.binary_dilation(grab_alpha &gt; 16, iterations=4))
+ core_zone = (ndimage.binary_dilation(dom_alpha &gt; 96, iterations=1)
+              | ndimage.binary_dilation(grab_alpha &gt; 96, iterations=1))
+ dark_wedge = (R + G + B &lt; 80) &amp; (XX &lt; 50) &amp; (YY &lt; 16)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-4b6ed477a860.webp" alt="Round 14 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 14</h3><span class="clock">2026-11-06T01:47:14.542912+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4b6ed477a8604672 · code 9c97420f47609d24</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-674209889427.webp" alt="Round 15 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 15</h3><span class="clock">2026-11-06T01:48:13.549426+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +3/−1</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 674209889427eb65 · code 787efc1637d8c71a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -140,7 +140,9 @@
+             | ndimage.binary_dilation(grab_alpha &gt; 16, iterations=4))
+ core_zone = (ndimage.binary_dilation(dom_alpha &gt; 96, iterations=1)
+              | ndimage.binary_dilation(grab_alpha &gt; 96, iterations=1))
+-dark_wedge = (R + G + B &lt; 80) &amp; (XX &lt; 50) &amp; (YY &lt; 16)
++# genuine near-black wedge background tops out around sum 20; the blurred
++# tool wing reads as faint neutral gray (sum ~30-110) and must not be kept
++dark_wedge = (R + G + B &lt; 26) &amp; (XX &lt; 50) &amp; (YY &lt; 16)
+ clean = (((wood &amp; (R &gt; 90)) | dark_wedge) &amp; ~core_zone)
+ removal = removal0 &amp; ~clean
+ removal &amp;= (YY &lt; 66) | mugS</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-1a7a9f9d15e8.webp" alt="Round 16 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 16</h3><span class="clock">2026-11-06T01:50:07.971796+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +9/−0</span></div><p class="hashes">pixels 1a7a9f9d15e8eb03 · code e3bebf51155ab578</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -231,6 +231,15 @@
+         for j, x in enumerate(seam):
+             a = 0.5 if x &lt;= edge + 2 else 0.8
+             plate[y, x] = a * plate[y, x] + (1 - a) * plate[y, x - 1]
++        # the measured wedge edge can overshoot the real one near its lower
++        # bulge: then the run ends dark while true oak starts immediately to
++        # the right in unremoved pixels — blend the boundary over 2 px
++        right = x1 + 1
++        if right &lt; W and not removal[y, right] and wood[y, right]:
++            plate[y, x1] = 0.5 * plate[y, x1] + 0.5 * plate[y, right]
++            if x1 - 1 &gt;= x0:
++                plate[y, x1 - 1] = (0.8 * plate[y, x1 - 1]
++                                    + 0.2 * plate[y, right])
+ 
+ # Occluded opening / back rim: horizontal mirror about x=119 from the
+ # visible right half; rim targets take rim sources, liquid targets take</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-1a7a9f9d15e8.webp" alt="Round 17 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 17</h3><span class="clock">2026-11-06T01:50:09.689454+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 1a7a9f9d15e8eb03 · code e3bebf51155ab578</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-4d55ce003d4e.webp" alt="Round 18 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 18</h3><span class="clock">2026-11-06T01:50:56.942486+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +9/−9</span></div><p class="hashes">pixels 4d55ce003d4ef31a · code 237fba1a39921bc9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -211,6 +211,15 @@
+                 f = np.clip((x - (edge - 4)) / 5.0, 0, 1) * 0.6
+                 vals[i] = (1 - f) * base + f * edgewood
+             plate[y, dark_cols] = vals + noise[y, dark_cols]
++        # the measured wedge edge can overshoot the real one near its lower
++        # bulge: then the run ends dark while true oak starts immediately to
++        # the right in unremoved pixels — blend the boundary over 2 px
++        right = x1 + 1
++        if right &lt; W and not removal[y, right] and wood[y, right]:
++            plate[y, x1] = 0.5 * plate[y, x1] + 0.5 * plate[y, right]
++            if x1 - 1 &gt;= x0:
++                plate[y, x1 - 1] = (0.8 * plate[y, x1 - 1]
++                                    + 0.2 * plate[y, right])
+         # --- wood portion (linear fit + same-row grain residual)
+         wood_cols = run[run &gt; edge + 1]
+         if len(wood_cols) == 0:
+@@ -231,15 +240,6 @@
+         for j, x in enumerate(seam):
+             a = 0.5 if x &lt;= edge + 2 else 0.8
+             plate[y, x] = a * plate[y, x] + (1 - a) * plate[y, x - 1]
+-        # the measured wedge edge can overshoot the real one near its lower
+-        # bulge: then the run ends dark while true oak starts immediately to
+-        # the right in unremoved pixels — blend the boundary over 2 px
+-        right = x1 + 1
+-        if right &lt; W and not removal[y, right] and wood[y, right]:
+-            plate[y, x1] = 0.5 * plate[y, x1] + 0.5 * plate[y, right]
+-            if x1 - 1 &gt;= x0:
+-                plate[y, x1 - 1] = (0.8 * plate[y, x1 - 1]
+-                                    + 0.2 * plate[y, right])
+ 
+ # Occluded opening / back rim: horizontal mirror about x=119 from the
+ # visible right half; rim targets take rim sources, liquid targets take</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/candidate-4d55ce003d4e.webp" alt="Round 19 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 19</h3><span class="clock">2026-11-06T01:50:58.614233+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 4d55ce003d4ef31a · code 237fba1a39921bc9</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-input/0048/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0048</h1>
+<p>All measurements below are numeric, taken from <code>first_frame.png</code> with local
+Python (PIL/numpy/scipy); no image viewing of generated frames was used.</p>
+<h2>Canvas / format</h2>
+<ul>
+<li>256×144 RGB, 20 frames, 4 fps (dt = 0.25 s, 5 s total). Frame 00 is a
+byte-exact copy of <code>first_frame.png</code> (asserted and <code>cmp</code>-verified).</li>
+<li>Locked-off camera, static wood surface and mug; only the grabber, domino,
+liquid surface and splash move.</li>
+</ul>
+<h2>Scene measurements (pixel coordinates, origin top-left)</h2>
+<ul>
+<li>Wooden tabletop: light oak, near-horizontal grain, smooth diagonal
+lighting gradient. Samples: top area (132,110,69)@(60,20),
+(136,116,91)@(200,20); lower-left brighter (170,150,123)@(50,130);
+mid (147,125,85)@(60,60). Clean grain samples exist across each row
+outside the tool/mug columns and are the basis of the per-row fill.</li>
+<li>Out-of-focus near-black wedge in the top-left corner: genuine wedge
+pixels sum RGB ≤ ~20 (≈(3,3,3)); its blurred edge over the oak follows
+roughly x = 44 + 0.36·min(y,18) above y≈22, then curves back left by
+y≈24–26. The moving tool casts a broad soft neutral-gray blur halo over
+this wedge and the oak: faint gray (mean 12–55) was measured as far left
+as x≈27 (y0–5) and as low as y≈21 (x36–42), with the saturated blue
+tool body to its right.</li>
+<li>Navy ceramic mug. An analytic outer ellipse (center ≈ (119,70.5),
+rx ≈ 34, ry ≈ 27.5, top y≈43, front y≈98) is only an approximation; the
+actual far rim is tilted/asymmetric, so the generator uses an empirical
+silhouette mask instead: the connected non-wood/non-tool/non-sprite
+component in bbox x80–162,y43–132 seeded at (148,90), holes filled, per
+row spans closed across the occluded back strip (lo ≥ 84, hi ≤ 156,
+width ≤ 62 when mug is observed both sides of x=119), binary closing.<ul>
+<li>Liquid surface (inner) ellipse: center (120.5,70.5), rx 27.5,
+ry 15.8 (back edge y≈55 near x120, front edge y≈86); the effect mask
+is inset 1.6/1.2 px to rx 25.9, ry 14.6.</li>
+<li>Liquid = dark reddish-brown (tea/coffee), core samples
+(39,6,1), (28,3,4), (42,4,1), blue channel &lt;≈7.</li>
+<li>Rim/body navy samples (7–47, 11–46, 32–71); specular glints on the
+front rim/handle. The right half of the opening and rim is fully
+visible and is the source for horizontal-mirror reconstruction about
+axis x=119.</li>
+</ul>
+</li>
+<li>White ceramic domino: rounded rectangular block, pale-blue/periwinkle
+anti-aliased edges (e.g. (154,167,226)), near-white core ≈(220,239,254).<ul>
+<li>White core bbox x95–118, y11–55; full soft support x95–118, y10–56;
+width ≈ 24 px, visible length ≈ 46 px (≈2:1 domino proportions),
+axis tilted ≈ 6–7°.</li>
+<li>Soft navy-blur fringe where the tip meets the back rim/liquid.</li>
+</ul>
+</li>
+<li>Blue-black grabber tool: enters from the top edge; saturated blue
+fingers (core B≈130–205, R&lt;70; e.g. (1,81,164)), a small left finger at
+x≈78–85, main blue mass x≈89–106, and a neutral black disc/joint
+x106–116, y0–11 (e.g. (34,28,28)). Core is the top-connected
+blue/neutral components at y&lt;14. The blurred gray-blue halo blob
+(including the neutral wing over the dark wedge, see above) moves with
+the tool and is carried in its sprite with partial alpha.<ul>
+<li>Grips the domino top around y11–14.</li>
+</ul>
+</li>
+</ul>
+<h2>Layering / reconstruction (as implemented)</h2>
+<ul>
+<li>Clean plate = frame 0 with the dilated domino footprint (7 iterations)
+and grabber footprint (4 iterations) removed, EXCEPT pixels verifiably
+clean: oak with R&gt;90, or genuine near-black wedge (sum&lt;26), never
+inside the 1-px core halo zone; removal is also limited to y&lt;66 or the
+empirical mug silhouette.<ul>
+<li>Table: per-row robust linear per-channel polyfit across clean wood
+samples in x∈[x0−28, x1+140], plus same-row oak-grain residual copied
+from offsets 46/58/74/90/106 (weight 0.85). The dark wedge is filled
+flat from the local dark median with a 5-px 0.6 ramp toward wood at
+its measured edge, plus Gaussian σ≈1.2 noise; a final 2-px boundary
+blend smooths the dark→oak seam when the real oak edge lies in
+unremoved pixels just right of a run.</li>
+<li>Occluded mug opening/back rim: per-pixel horizontal mirror about
+x=119 from the visible half, k∈{0,±2,…,±22}, dy∈{0,±1,±2}, requiring
+the source inside the mug silhouette, unremoved, and in the same
+zone (liquid ↔ liquid, rim ↔ rim). Back-band pixels under the domino
+fringe are routed into the silhouette when their x-mirror is mug
+(y43–62, x98–126). Analytic navy/dark-brown fallback only if no
+source exists.</li>
+</ul>
+</li>
+<li>Sprites (RGBA, soft alpha): domino = white core (α=255) + periwinkle
+fringe with α graded by blue value (floor 0.35); grabber = core 255,
+1–2 px dilation halos (180/90), and the joined blur-blob halo graded by
+blue excess (blue wing) or luminance above the wedge baseline (neutral
+wing, α up to ≈140). Grabber layer is padded 10 px upward with its
+topmost pixel extruded off-frame.</li>
+<li>Stamping: bilinear scipy affine compositing; domino about pivot
+(110.5,12.5), grabber about (110.5,22.5) in padded coordinates.</li>
+<li>Submersion: stamped domino pixels are blended toward plate by
+k = WETK·edge inside the surface ellipse, edge = smooth 0.18-D² ramp,
+WETK 0.70→0.97 across f3–f8. The ceramic front lip mask restores the
+lip over the block; at f7/f8 the tile end at the far inner wall is
+hidden outside the surface disk and left as an 82%/92%-dimmed wet
+sliver just inside it.</li>
+<li>Back rim is behind the block (plate only); the front lip is never
+occluded.</li>
+</ul>
+<h2>20-frame event plan (4 fps)</h2>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t(s)</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>exact first frame: tool holding domino at the rim, tip just above liquid</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>held assembly lowered 2 px (numeric check: white mask = f0 shifted exactly +2 y)</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>lowered 4 px (exact +4 y shift); tip touches liquid at back of opening</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>release: grabber rises 1 px; domino tips 3°, pivot shift (0.5,8.5); contact dimple at (114,61), strength .5; first tiny ripple</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>grabber −3 px; θ≈7°, shift (2.5,16.5), half entering; dimple .35; crown begins; droplets launch (5 at t0=4)</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>grabber −5 px; θ≈12° (4.5,24.5); crown rising (6 more drops t0=5)</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>grabber −7 px; θ≈18° (6.5,31.5); crown near max (h=5.8), drops airborne; one last drop t0=6</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>grabber −10 px (thin sliver at the top edge); θ≈24° (8.5,37.5); crown collapsing, far-end sliver at back wall</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>grabber exited frame; θ≈30° (9.5,42.5); central collapsing mound; drops descending</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>domino fully hidden; concentric ripples expand; drops land (tiny rings)</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>secondary landing rings fade; ripples continue</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>ripples continue</td>
+</tr>
+<tr>
+  <td>12–17</td>
+  <td>3.00–4.25</td>
+  <td>ripple amplitude decays .35→.12</td>
+</tr>
+<tr>
+  <td>18–19</td>
+  <td>4.50–4.75</td>
+  <td>nearly calm dark surface with faint residual shimmer (.08/.05)</td>
+</tr>
+</tbody>
+</table>
+<p>Splash detail: two damped circular sine-wave ripple fields (sources
+(119,64) weight 1.0 and (124,68) weight 0.5; frequencies 1.45/1.05 rad/px,
+phase speeds 1.9/1.5 rad per frame, exp radial decay 24/30 px), amplitudes
+f3 .15, f4 .50, f5 .90, f6 1.00 then decaying to .05 at f19; brightened
+crests toward (104,66,40) and darkened troughs toward (5,2,2). A 9-stroke
+splash crown with arc is drawn f4–f8 about (120,65), plus a collapsing
+central mound f7–f8. Twelve parabolic droplets (g = 760 px/s², launch
+f4–f6 from y60–68 with vx ±4..±30, vy −90..−190 px/s) are rendered in tea
+brown with a glint point and gated to the mug silhouette; their landing
+rings fade over 1.1 frames. All in-liquid effects are masked to the inset
+surface ellipse (rx 25.9, ry 14.6).</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0048</h1>
+<p>How the 20-frame animation was actually made. Everything is local pixel
+math on <code>first_frame.png</code> in a single script, <code>generate.py</code> (Python 3,
+numpy/PIL/scipy only; no network, no external assets, models, masks,
+scores, or subagents). Generated frames were evaluated <strong>only</strong> with
+numeric probes (per-pixel comparisons, bbox/color statistics, masks); no
+image Read/View tool was used on any generated output. All subjective
+calls below are stated as such.</p>
+<h2>1. Geometry measured from frame 0</h2>
+<ul>
+<li>Liquid surface ellipse: center (120.5, 70.5), rx 27.5, ry 15.8; every
+in-liquid effect is masked to a slightly inset disk (rx 25.9, ry 14.6)
+so strokes never paint the ceramic edge.</li>
+<li>The analytic outer-rim ellipse is wrong at the tilted/asymmetric far
+rim (it classifies oak as rim and navy as wood), so the mug is instead
+represented by an <strong>empirical silhouette mask</strong> (<code>mugS</code>): inside
+bbox x80–162, y43–132, take non-wood, non-tool-blue, non-sprite pixels,
+label connected components, keep the one seeded at (148, 90), fill
+holes, then for each row y43–92 where mug is seen both sides of x=119
+close the span across the occluded back strip (only for plausible
+spans lo ≥ 84, hi ≤ 156, width ≤ 62), and apply a 1-iteration binary
+closing. Every airborne droplet is gated by this mask.</li>
+<li>Mirror axis for rim reconstruction: x = 119.</li>
+<li>Domino sprite pivot (110.5, 12.5); grabber pivot (110.5, 22.5) in a
+10-px top-padded layer.</li>
+</ul>
+<h2>2. Sprite extraction (frame 0)</h2>
+<ul>
+<li><strong>Domino.</strong> In ROI x94–122, y9–60: core = largest 8-connected
+component of (R&gt;165, G&gt;175, B&gt;185); fringe candidates are bluish
+(B&gt;R+6, B&gt;118, R&gt;88) within a 5-dilation of the core; the support is
+the connected component touching the core. Alpha = 255 on core, else
+clipped (B−118)/70 with floor 0.35. RGB comes straight from frame 0.</li>
+<li><strong>Grabber.</strong> Hard blue = B&gt;95, saturation (B−min)/B &gt; 0.60, B−R&gt;30;
+neutral = channel range &lt;24 and R&lt;72. The top-connected components
+(y&lt;14, x43–127) form <code>grab_core</code>. The motion-blur halo is split from
+the fingers by thin neutral gaps, so the halo candidate is
+&quot;non-oak, non-white-domino&quot; inside the tool region (now extended to
+x≥27, y&lt;21 after measuring the neutral gray wing over the dark
+corner wedge; near-black wedge pixels sum&lt;22 excluded), joined to the
+core by a 3-iteration binary closing, and only components touching the
+core are kept. Alpha: 255 core; 180/90 on the first two dilations;
+halo graded by blue excess for the blue-gray blur and by luminance
+above the near-black wedge baseline for the neutral wing (≤140).
+A padded copy extrudes the topmost sprite pixel up past the frame edge
+so the tool can move a few pixels and later rise out of frame without
+ever revealing an un-filled strip.</li>
+</ul>
+<h2>3. Clean background plate</h2>
+<p>Removal mask = 7-dilation of domino α&gt;25 ∪ 4-dilation of grabber α&gt;16.
+Pixels proven clean are exempted: oak with R&gt;90, and genuine near-black
+wedge pixels (RGB sum &lt;26; the blurred tool wing over the wedge reads
+faint neutral gray sum 30–110 and must not be mistaken for wedge),
+except inside a 1-px dilation of the hard sprite cores. Removal is also
+restricted to y&lt;66 or <code>mugS</code>. Back-band removal pixels y43–62, x98–126
+are routed into the mug mask when their horizontal mirror at x=238−x is
+silhouette (they sit above the occluded far rim).</p>
+<p>Filling, per row y0–61, per connected run of removed pixels:</p>
+<ul>
+<li><strong>Dark wedge portion</strong> (x ≤ measured edge, edge ≈ 44+0.36·min(y,18)):
+median colour of unremoved dark pixels (row sum &lt;120) in the 18 px to
+the left, flat-filled, with a 5-px 0.6-weight ramp toward the fitted
+oak colour at the edge and σ≈1.2 Gaussian noise.</li>
+<li><strong>Oak portion</strong>: linear least-squares per-channel fit across unremoved
+wood samples in x∈[x0−28, x1+140], evaluated at the run, plus the
+measured same-row grain residual (colour minus fit) copied from the
+first available of offsets +46/+58/+74/+90/+106, weight 0.85; seam
+blends at the wedge boundary, and a final 2-px blend against real
+unremoved oak immediately to the right handles the wedge edge curving
+back left near its lower bulge.</li>
+<li><strong>Mug portion</strong> (removal ∩ routed silhouette): horizontal mirror about
+x=119, offsets k ∈ {0,±2,±4,±6,±8,±12,±16,±22} and dy ∈ {0,±1,±2},
+first source that is inside <code>mugS</code>, unremoved, and in the same
+rim-vs-liquid zone; analytic dark navy/tea fallback otherwise.</li>
+</ul>
+<h2>4. Animation</h2>
+<p>For each of frames 1–8, the domino is bilinearly affine-composited
+(scipy <code>affine_transform</code>, prefilter off) about its pivot with a
+clockwise tip angle and downward pivot shift:</p>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th style="text-align:right">angle</th>
+  <th style="text-align:right">pivot shift (x,y)</th>
+  <th style="text-align:right">grabber y</th>
+  <th style="text-align:right">wet k</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td style="text-align:right">0°</td>
+  <td style="text-align:right">(0, 2)</td>
+  <td style="text-align:right">+2</td>
+  <td style="text-align:right">0.90</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td style="text-align:right">0°</td>
+  <td style="text-align:right">(0, 4)</td>
+  <td style="text-align:right">+4</td>
+  <td style="text-align:right">0.85</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td style="text-align:right">3°</td>
+  <td style="text-align:right">(0.5, 8.5)</td>
+  <td style="text-align:right">−1</td>
+  <td style="text-align:right">0.70</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td style="text-align:right">7°</td>
+  <td style="text-align:right">(2.5, 16.5)</td>
+  <td style="text-align:right">−3</td>
+  <td style="text-align:right">0.82</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td style="text-align:right">12°</td>
+  <td style="text-align:right">(4.5, 24.5)</td>
+  <td style="text-align:right">−5</td>
+  <td style="text-align:right">0.86</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td style="text-align:right">18°</td>
+  <td style="text-align:right">(6.5, 31.5)</td>
+  <td style="text-align:right">−7</td>
+  <td style="text-align:right">0.90</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td style="text-align:right">24°</td>
+  <td style="text-align:right">(8.5, 37.5)</td>
+  <td style="text-align:right">−10</td>
+  <td style="text-align:right">0.94</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td style="text-align:right">30°</td>
+  <td style="text-align:right">(9.5, 42.5)</td>
+  <td style="text-align:right">−16</td>
+  <td style="text-align:right">0.97</td>
+</tr>
+</tbody>
+</table>
+<p>(The release happens between f2 and f3: the grabber starts rising while
+the released tile keeps descending and tipping. Verified numerically:
+the f1/f2 near-white masks are exactly the f0 mask shifted +2/+4 rows.)</p>
+<p>Submersion: stamped pixels inside the surface ellipse are blended toward
+plate by k·edge, edge = clip((1.06 − D²)/0.18), i.e. strongest well
+inside the liquid. The ceramic front lip (silhouette ∩ front D² bands)
+is restored over the block. At f7/f8 the tile's top end rests against
+the far inner wall: stamped pixels outside the surface disk (D²&gt;1.02,
+y≤58) are replaced by plate (occluded by the outer rim band), while the
+wet end face just inside the disk is kept as a heavily dimmed sliver
+(82% plate at f7, 92% at f8) — a judgment call to avoid both a
+full-bright &quot;ghost&quot; on the rim and a physically implausible total
+vanish of the end face.</p>
+<h2>5. Liquid effects (all masked)</h2>
+<ul>
+<li><strong>Contact dimple</strong>, f3 (.5) and f4 (.35), centered (114,61), 5×3
+Gaussian darkening toward (4,2,3).</li>
+<li><strong>Ripples</strong>, f3–f19: two damped circular sine fields about (119,64)
+and (124,68) with the parameters listed in OBSERVATION.md; amplitude
+envelope .15/.50/.90/1.00 (f3–f6) decaying to .05 by f19. Crests are
+lightened toward tea-highlight (104,66,40), troughs darkened toward
+(5,2,2). Confirmed to cover essentially the full inset disk with
+mean |Δ| decaying 17.4 (f9) → 10.1 (f12) → 1.4 (f19).</li>
+<li><strong>Crown</strong>, f4–f8: nine 1-px brown strokes on the front semicircle
+about (120,65) with per-frame height/strength envelopes, an arc, glint
+points on alternate strokes (f5–f7), and a collapsing central mound
+ellipse f7–f8. The crown is drawn on an RGB overlay plus identical
+white mask and pasted only where mask ∩ inset disk; the same
+mask-and-paste gating is used for rings.</li>
+<li><strong>Droplets</strong>: 12 parabolas (g = 760 px/s²) launched f4–f6 from the
+impact area with upward velocities 90–190 px/s and small horizontal
+kicks; drawn as 2×2 tea-brown rectangles with a glint corner or 1-px
+points, pasted only inside <code>mugS</code>; landing positions from the same
+trajectories produce fading elliptical rings over a 1.1-frame window,
+pasted only inside the inset disk.</li>
+</ul>
+<h2>6. Outputs and verification</h2>
+<p><code>artifact_io.save</code> writes <code>pixels.npz</code> (shape (144,256,20), uint32
+0xRRGGBB), the 20 PNGs, <code>inspection.png</code>, and <code>index.html</code>; the script
+also writes <code>transition_check.png</code> (six frame-pair/diff triplets). The
+script then re-loads <code>pixels.npz</code> from disk and asserts: tensor shape and
+dtype, every PNG equals its frame, every packed uint32 equals the tensor,
+and <code>frames[0] == first_frame.png</code>; additionally <code>cmp</code> confirms
+<code>frames/00.png</code> is byte-identical to <code>first_frame.png</code>.</p>
+<p>Numeric QA performed (probes in <code>.tmp/</code>, no image viewing):</p>
+<ul>
+<li>f00 byte-exact; f1/f2 white mask is exactly f0 translated +2/+4 px.</li>
+<li>Per-frame change masks vs f0 are confined to the tool corridor
+(x27–130, y≤63 while the tool is present) plus the mug silhouette and
+the block path; zero pixels change outside that union in every frame.</li>
+<li>Temporal changes after f9 (ripple-only phase) are fully inside the mug
+silhouette (0 px outside), and pixel std over f12–f19 is 0 outside the
+analytic mug ellipse.</li>
+<li>Block near-white counts shrink monotonously 541 (f0–f2) → 219 (f6) →
+~0 (f8); no bright block pixels survive at the front lip in f7/f8
+(residual values are tea-dark), and the far-wall sliver peaks around
+(42,41,57) at f7 before fading.</li>
+<li>Droplets are only ever pasted inside the mug silhouette; crown/rings
+only inside the inset liquid disk.</li>
+<li>Wedge/wood plate seam gradients checked row by row; the reconstructed
+corner is near-black wedge up to x≈41 with a smooth ramp to oak over
+≈4 px, and late frames show no residual gray halo.</li>
+</ul>
+<h2>7. Known simplifications</h2>
+<ul>
+<li>The clean table is a per-row linear colour model with copied grain
+residuals, not a full texture model; it is only revealed under the
+small tool footprint and at the wedge boundary.</li>
+<li>Plate rim/liquid under the occluded back strip comes from mirroring
+the visible half; real mugs are not perfectly symmetric.</li>
+<li>The tile is treated as a rigid stamped sprite with global submersion
+darkening (no per-pixel refraction, caustics, or motion blur); motion
+blur is approximated only by the soft fringe alpha the sprite already
+has in frame 0.</li>
+<li>The far-wall end-face treatment at f7/f8 (hard hide outside the disk,
+82%/92% dimmed sliver inside) is a visual-physics judgment call.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-vision-input/0048-9452fe7658c5.png';</script></body></html>

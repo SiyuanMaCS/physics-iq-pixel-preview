@@ -1,0 +1,634 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cut-paper · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · text · Case 0045</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>cut-paper</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>12</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>29</strong><span>generate.py 执行</span></div><div class="stat"><strong>105</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>52</strong><span>文件变更事件</span></div><div class="stat"><strong>77.5m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two blue-black grabber tools pull the piece of green paper from opposite corners, causing it to tear.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>105 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>12 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-24ae4510c924.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T23:39:30.693329+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +408/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 24ae4510c9245955 · code ec18187c674ad788</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,408 @@
++&quot;&quot;&quot;
++PixelWorld-Text case_0045: two blue-black grabbers pull a green paper scrap
++from opposite corners; the paper tears in two along a propagating crack.
++
++Pure local pixel operations (numpy / scipy / opencv / PIL):
++  frame 00 = byte-exact copy of first_frame.png
++  frames 01..19 = composites built from frame-0 sprites:
++      cleaned static table/backdrop  -&gt;  per-piece soft shadows
++      -&gt; warped paper pieces (real frame-0 green pixels) -&gt; stretching
++      connector + fibers at the crack -&gt; rigidly transformed grabber sprites
++(real frame-0 blue/black pixels, including their hard cast shadows).
++&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++from PIL import Image, ImageDraw
++import cv2
++from scipy import ndimage
++
++CASE = Path(__file__).parent
++rng = np.random.default_rng(4501)
++
++# ---------------------------------------------------------------- load
++orig = np.array(Image.open(CASE / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++H, W = orig.shape[:2]
++R = orig[:, :, 0].astype(int); G = orig[:, :, 1].astype(int); B = orig[:, :, 2].astype(int)
++
++green = (G &gt; R + 15) &amp; (G &gt; B + 10)
++blue  = (B &gt; R + 15) &amp; (B &gt; G + 5)
++dark  = (R &lt; 60) &amp; (G &lt; 60) &amp; (B &lt; 70)
++toolish = (blue | dark) &amp; ~green
++
++# connected tool parts (dilated to merge fingers/shanks)
++lbl, n = ndimage.label(ndimage.binary_dilation(toolish, iterations=2))
++parts = []
++for i in range(1, n + 1):
++    ys, xs = np.where(lbl == i)
++    if len(xs) &lt; 20:
++        continue
++    parts.append((len(xs), xs.min(), xs.max(), ys.min(), ys.max(), i))
++left_lbl  = [p for p in parts if p[3] &lt; 70 and p[1] &lt; 130]
++right_lbl = [p for p in parts if p[1] &gt;= 130]
++left_mask  = np.isin(lbl, [p[5] for p in left_lbl])
++right_mask = np.isin(lbl, [p[5] for p in right_lbl])
++# real (un-dilated) tool pixels
++left_px  = left_mask &amp; toolish
++right_px = right_mask &amp; toolish
++
++# ---------------------------------------------------------------- table edge curve
++warm = (R &gt; 80) &amp; (R &lt; 175) &amp; (G &gt; 50) &amp; (G &lt; 140) &amp; (B &lt; 100) &amp; (R &gt; B + 25)
++topmost = np.full(W, np.nan)
++for x in range(W):
++    ys = np.where(warm[:, x])[0]
++    if len(ys):
++        topmost[x] = ys[0]
++# anomaly columns (tool shadow blob x56-63, paper/right jaw x150-176) -&gt; interpolate
++bad = np.zeros(W, bool)
++bad[54:66] = True
++bad[148:178] = True
++xx = np.arange(W)
++good = ~bad &amp; ~np.isnan(topmost)
++edge_col = np.interp(xx, xx[good], topmost[good])
++edge_col = ndimage.gaussian_filter1d(edge_col, 5.0)
++
++def edge_y(x):
++    return np.interp(x, xx, edge_col)
++
++# ---------------------------------------------------------------- background model
++# clean table: columns y&gt;=100 everywhere; also any warm pixel not in removal zone
++removal = (ndimage.binary_dilation(green, iterations=9)
++           | ndimage.binary_dilation(left_px, iterations=7)
++           | ndimage.binary_dilation(right_px, iterations=7))
++
++# column baseline colour (median of clean bottom rows)
++bottom = orig[100:143].astype(float)
++col_base = np.median(bottom, axis=0)                      # (W,3)
++col_base_s = ndimage.gaussian_filter1d(col_base, 1.0, axis=0)
++
++# edge &quot;bounce&quot; term: how much table colour lifts near the back edge
++dist = np.clip(np.arange(H)[:, None] - edge_col[None, :] + 0.5, 0, 60).astype(int)
++bounce = np.zeros((61, 3))
++clean_table = warm &amp; ~removal
++for d in range(61):
++    m = clean_table &amp; (dist == d)
++    if m.sum() &gt;= 12:
++        bounce[d] = np.median(orig[m].astype(float) - col_base_s[np.where(m)[1]], axis=0)
++    else:
++        bounce[d] = bounce[d - 1] if d else 0
+… diff truncated; 321 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-81b87d05be1a.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T23:41:00.301268+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−10</span></div><p class="hashes">pixels 81b87d05be1a6689 · code 70d3491b7c0fc626</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -216,14 +216,10 @@
+     alpha[fr] = np.clip((-dl[fr] - 6) / 38.0, 0.15, 0.9)
+     alpha = cv2.GaussianBlur(alpha, (0, 0), 0.7)
+     alpha[alpha &lt; 0.12] = 0
+-    ys, xs = np.where(alpha &gt; 0)
+-    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+-    pad = 2
+-    y0 = max(0, y0 - pad); x0 = max(0, x0 - pad)
+-    y1 = min(H, y1 + pad); x1 = min(W, x1 + pad)
+-    col = orig[y0:y1, x0:x1].astype(np.float32)
+-    al = alpha[y0:y1, x0:x1].astype(np.float32)
+-    return col, al, (x0, y0, x1, y1)
++    # full-canvas sprite (transparent outside alpha): keeps warp coordinates exact
++    col = np.zeros((H, W, 3), np.float32)
++    col[alpha &gt; 0] = orig[alpha &gt; 0].astype(np.float32)
++    return col, alpha.astype(np.float32), None
+ 
+ left_col, left_al, left_box  = build_sprite(left_px, left_mask)
+ right_col, right_al, right_box = build_sprite(right_px, right_mask)
+@@ -250,8 +246,6 @@
+     return e
+ 
+ def warp_rgba(col, al, box, pivot, dx, dy, theta):
+-    x0, y0, x1, y1 = box
+-    h, w = al.shape
+     M = cv2.getRotationMatrix2D((float(pivot[0]), float(pivot[1])),
+                                 np.rad2deg(theta), 1.0)
+     M[0, 2] += dx; M[1, 2] += dy</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-81b87d05be1a.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T23:41:02.279153+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 81b87d05be1a6689 · code 70d3491b7c0fc626</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-81b87d05be1a.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T23:44:29.568900+00:00</span></div><div class="changes"><span class="change code">代码 +52/−7</span></div><p class="hashes">pixels 81b87d05be1a6689 · code 6346ef558a1adf01</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -109,19 +109,64 @@
+     &quot;&quot;&quot;cyclic donor residual from the same column&#x27;s clean rows&quot;&quot;&quot;
+     return resid[(y - 100) % 43, x]
+ 
++# --- natural rim profile measured from clean edge columns ---
++df_all = (np.arange(H)[:, None] + 0.5) - edge_col[None, :]
++rim_bins = np.full((12, 3), np.nan)
++rim_n = np.zeros(12, int)
++for b in range(12):
++    dlo, dhi = -4 + b, -3 + b
++    m = (df_all &gt;= dlo) &amp; (df_all &lt; dhi) &amp; ~removal
++    if m.sum() &gt;= 20:
++        rim_bins[b] = np.median(orig[m].astype(float), axis=0)
++        rim_n[b] = m.sum()
++# fill missing bins by linear mixing of backdrop/table models
++for b in range(12):
++    if np.isnan(rim_bins[b]).any():
++        d = -3.5 + b
++        a = np.clip((d + 2) / 6, 0, 1)
++        xc = np.clip(np.arange(W), 0, W - 1)
++        rim_bins[b] = (1 - a) * back_model[np.clip(int(round(np.clip(d, 0, 60))), 0, H - 1),
++                        xc].mean(0) + a * (col_base_s.mean(0))
++
++def expected_bg(df, x):
++    &quot;&quot;&quot;noise-free background colour at fractional edge distance df&quot;&quot;&quot;
++    out = np.zeros((len(df), 3))
++    back = back_model[np.clip(np.round(np.arange(H)[np.zeros(len(df), int)]), 0, H - 1),
++                      np.asarray(x)] if False else None
++    return out
++
++# full-grid expected background (noise-free): backdrop / rim / table+edge-bounce
++exp_grid = np.zeros((H, W, 3))
++for y in range(H):
++    df = y + 0.5 - edge_col
++    tb = col_base_s + bounce[np.clip(df.astype(int), 0, 60)]
++    bb = back_model[y]
++    bpos = df + 4 - 0.5                      # bin coordinate into rim_bins
++    rim = np.zeros((W, 3))
++    b0 = np.floor(bpos).astype(int)
++    fr = bpos - b0
++    for x in range(W):
++        i0 = int(np.clip(b0[x], 0, 11)); i1 = min(i0 + 1, 11)
++        rim[x] = rim_bins[i0] * (1 - fr[x]) + rim_bins[i1] * fr[x]
++    zone_up = df &lt;= -2
++    zone_rim = (df &gt; -2) &amp; (df &lt; 4)
++    zone_dn = df &gt;= 4
++    exp_grid[y][zone_up] = bb[zone_up]
++    exp_grid[y][zone_rim] = rim[zone_rim]
++    exp_grid[y][zone_dn] = tb[zone_dn]
++
+ # assemble cleaned background
+ clean_bg = orig.copy().astype(float)
+ fill = removal.copy()
+ yy, xxm = np.where(fill)
+ tgt = np.zeros((len(yy), 3))
+-dval = np.clip(yy - edge_col[xxm] + 0.5, 0, 60).astype(int)
+-table_t = col_base_s[xxm] + bounce[dval]
+ for k, (y, x) in enumerate(zip(yy, xxm)):
+-    table_t[k] += grain_at(y, x)
+-back_t = back_model[yy, xxm] + back_noise[yy, xxm]
+-# 2.5 px AA blend across the edge line
+-a_edge = np.clip((yy - edge_col[xxm] + 1.25) / 2.5, 0, 1)
+-tgt = back_t * (1 - a_edge)[:, None] + table_t * a_edge[:, None]
++    base = exp_grid[y, x]
++    if y + 0.5 - edge_col[x] &gt;= 4:
++        base = base + grain_at(y, x)
++    elif y + 0.5 - edge_col[x] &lt;= -2:
++        base = base + back_noise[y, x]
++    tgt[k] = base
+ clean_bg[yy, xxm] = tgt
+ # feather the fill boundary 2 px
+ hard = ndimage.binary_erosion(fill, iterations=2)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-bf32cd11fcba.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T23:45:34.259117+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +17/−27</span></div><p class="hashes">pixels bf32cd11fcba1c23 · code 0fd4ab88f04c02d5</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -127,13 +127,6 @@
+         xc = np.clip(np.arange(W), 0, W - 1)
+         rim_bins[b] = (1 - a) * back_model[np.clip(int(round(np.clip(d, 0, 60))), 0, H - 1),
+                         xc].mean(0) + a * (col_base_s.mean(0))
+-
+-def expected_bg(df, x):
+-    &quot;&quot;&quot;noise-free background colour at fractional edge distance df&quot;&quot;&quot;
+-    out = np.zeros((len(df), 3))
+-    back = back_model[np.clip(np.round(np.arange(H)[np.zeros(len(df), int)]), 0, H - 1),
+-                      np.asarray(x)] if False else None
+-    return out
+ 
+ # full-grid expected background (noise-free): backdrop / rim / table+edge-bounce
+ exp_grid = np.zeros((H, W, 3))
+@@ -244,30 +237,27 @@
+ m2 &amp;= paper_poly_area
+ 
+ # ---------------------------------------------------------------- tool sprites
+-def build_sprite(px_mask, comp_mask, grow=3):
+-    &quot;&quot;&quot;rgba sprite using real pixels; alpha from hard tool pixels + AA fringe.&quot;&quot;&quot;
+-    zone = ndimage.binary_dilation(comp_mask, iterations=grow)
++def build_sprite(px_mask, grow=14):
++    &quot;&quot;&quot;rgba sprite: real tool colours at hard pixels, black soft cast shadow
++    with coverage inferred from how much the frame-0 pixel darkens the
++    expected static background.&quot;&quot;&quot;
+     lum = orig.mean(2)
+-    alpha = np.zeros((H, W), float)
+-    alpha[px_mask] = 1.0
+-    # expected backdrop/table colour
+-    exp = np.where((dist &gt; 1)[..., None],
+-                   col_base_s[None] + bounce[np.clip(dist, 0, 60)],
+-                   back_model)
+-    cand = zone &amp; ~px_mask
+-    dl = lum - exp.mean(2)
+-    dcol = np.linalg.norm(orig.astype(float) - exp, axis=2)
+-    fr = cand &amp; ((dl &lt; -14) | (dcol &gt; 30))
+-    alpha[fr] = np.clip((-dl[fr] - 6) / 38.0, 0.15, 0.9)
+-    alpha = cv2.GaussianBlur(alpha, (0, 0), 0.7)
+-    alpha[alpha &lt; 0.12] = 0
+-    # full-canvas sprite (transparent outside alpha): keeps warp coordinates exact
++    drop = (exp_grid.mean(2) - lum) / np.maximum(exp_grid.mean(2), 1)
++    zone = ndimage.binary_dilation(px_mask, iterations=grow)
++    zone &amp;= ~green
++    zone &amp;= ~ndimage.binary_dilation(green, iterations=2)
++    soft = np.clip(drop - 0.06, 0, 0.92)
++    soft[~zone] = 0
++    soft = cv2.GaussianBlur(soft.astype(np.float32), (0, 0), 2.0)
++    alpha = np.maximum(soft, px_mask.astype(float))
++    alpha[alpha &lt; 0.05] = 0
+     col = np.zeros((H, W, 3), np.float32)
+-    col[alpha &gt; 0] = orig[alpha &gt; 0].astype(np.float32)
++    col[px_mask] = orig[px_mask].astype(np.float32)   # real blue/black tool
++    # soft shadow pixels composite as black multiply (col stays 0)
+     return col, alpha.astype(np.float32), None
+ 
+-left_col, left_al, left_box  = build_sprite(left_px, left_mask)
+-right_col, right_al, right_box = build_sprite(right_px, right_mask)
++left_col, left_al, left_box  = build_sprite(left_px)
++right_col, right_al, right_box = build_sprite(right_px)
+ 
+ GL = np.array([92.0, 52.0])     # left grip (pivot)
+ GR = np.array([163.0, 70.0])    # right grip (pivot)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-bf32cd11fcba.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T23:45:36.140416+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels bf32cd11fcba1c23 · code 0fd4ab88f04c02d5</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-a4471a141927.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T23:46:48.572569+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−3</span><span class="change">inspection 更新</span></div><p class="hashes">pixels a4471a141927b3fb · code 9e8c41decad39550</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -25,12 +25,15 @@
+ R = orig[:, :, 0].astype(int); G = orig[:, :, 1].astype(int); B = orig[:, :, 2].astype(int)
+ 
+ green = (G &gt; R + 15) &amp; (G &gt; B + 10)
+-blue  = (B &gt; R + 15) &amp; (B &gt; G + 5)
++# hard tool pixels only: saturated blue or near-black. 1px of AA fringe is
++# recovered by morphology below; bluish-gray table-rim pixels are NOT tools.
++strong_blue = (B &gt; R + 28) &amp; (B &gt; 85) &amp; (B &gt; G + 8)
+ dark  = (R &lt; 60) &amp; (G &lt; 60) &amp; (B &lt; 70)
+-toolish = (blue | dark) &amp; ~green
++tool_core = (strong_blue | dark) &amp; ~green
++toolish = ndimage.binary_dilation(tool_core, iterations=1) &amp; ~green
+ 
+ # connected tool parts (dilated to merge fingers/shanks)
+-lbl, n = ndimage.label(ndimage.binary_dilation(toolish, iterations=2))
++lbl, n = ndimage.label(ndimage.binary_dilation(tool_core, iterations=3))
+ parts = []
+ for i in range(1, n + 1):
+     ys, xs = np.where(lbl == i)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-886273476d9a.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-06T00:24:35.674378+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +316/−110</span></div><p class="hashes">pixels 886273476d9a8a4b · code 9c11f916db98457f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -11,6 +11,7 @@
+ (real frame-0 blue/black pixels, including their hard cast shadows).
+ &quot;&quot;&quot;
+ from pathlib import Path
++import os
+ import numpy as np
+ from PIL import Image, ImageDraw
+ import cv2
+@@ -42,11 +43,23 @@
+     parts.append((len(xs), xs.min(), xs.max(), ys.min(), ys.max(), i))
+ left_lbl  = [p for p in parts if p[3] &lt; 70 and p[1] &lt; 130]
+ right_lbl = [p for p in parts if p[1] &gt;= 130]
+-left_mask  = np.isin(lbl, [p[5] for p in left_lbl])
+-right_mask = np.isin(lbl, [p[5] for p in right_lbl])
+-# real (un-dilated) tool pixels
+-left_px  = left_mask &amp; toolish
+-right_px = right_mask &amp; toolish
++left_comp  = np.isin(lbl, [p[5] for p in left_lbl])
++right_comp = np.isin(lbl, [p[5] for p in right_lbl])
++
++# hard tool pixels inside a connected tool: saturated/black core, dark tool
++# body (distinctly below expected background), and 1 px of edge AA
++_lum = orig.mean(2)
++_exp_lum = None  # (filled in after background model is built)
++
++def hard_px(comp):
++    core = tool_core &amp; comp
++    body = comp &amp; (_lum &lt; 105) &amp; (_lum &lt; _exp_lum - 16)
++    aa = ndimage.binary_dilation(core, iterations=1) &amp; comp &amp; (_lum &lt; _exp_lum - 8)
++    return core | body | aa
++
++# placeholders until expected background grid exists; assigned later
++left_px = tool_core &amp; left_comp
++right_px = tool_core &amp; right_comp
+ 
+ # ---------------------------------------------------------------- table edge curve
+ warm = (R &gt; 80) &amp; (R &lt; 175) &amp; (G &gt; 50) &amp; (G &lt; 140) &amp; (B &lt; 100) &amp; (R &gt; B + 25)
+@@ -57,8 +70,8 @@
+         topmost[x] = ys[0]
+ # anomaly columns (tool shadow blob x56-63, paper/right jaw x150-176) -&gt; interpolate
+ bad = np.zeros(W, bool)
+-bad[54:66] = True
+-bad[148:178] = True
++bad[54:66] = True      # left-tool shadow serrations
++bad[140:158] = True    # paper body hides the rim there
+ xx = np.arange(W)
+ good = ~bad &amp; ~np.isnan(topmost)
+ edge_col = np.interp(xx, xx[good], topmost[good])
+@@ -70,8 +83,8 @@
+ # ---------------------------------------------------------------- background model
+ # clean table: columns y&gt;=100 everywhere; also any warm pixel not in removal zone
+ removal = (ndimage.binary_dilation(green, iterations=9)
+-           | ndimage.binary_dilation(left_px, iterations=7)
+-           | ndimage.binary_dilation(right_px, iterations=7))
++           | ndimage.binary_dilation(left_comp, iterations=7)
++           | ndimage.binary_dilation(right_comp, iterations=7))
+ 
+ # column baseline colour (median of clean bottom rows)
+ bottom = orig[100:143].astype(float)
+@@ -96,15 +109,40 @@
+ base_stack = np.repeat(col_base_s[None], 43, axis=0)      # y100..142
+ resid = orig[100:143].astype(float) - base_stack
+ 
+-# backdrop polynomial gradient (fit on clean backdrop pixels)
+-back_good = (np.arange(H)[:, None] &lt; (edge_col[None, :] - 4)) &amp; ~removal
+-yb, xb = np.where(back_good)
+-Xb = np.c_[np.ones_like(xb), xb, yb, xb * yb, xb * xb, yb * yb]
+-coef, *_ = np.linalg.lstsq(Xb, orig[yb, xb].astype(float), rcond=None)
+-gx, gy = np.meshgrid(np.arange(W), np.arange(H))
+-Xall = np.c_[np.ones(H * W), gx.ravel(), gy.ravel(), (gx * gy).ravel(),
+-             (gx * gx).ravel(), (gy * gy).ravel()]
+-back_model = (Xall @ coef).reshape(H, W, 3)
++# backdrop: robust per-column linear colour(y) fit (iterative outlier clip
++# rejects the tools&#x27; dark serrated shadows and a bright metal highlight),
++# then horizontally smoothed; the field is dark in both upper corners and
++# bright (~197) across the middle.
++above = np.arange(H)[:, None] &lt; (edge_col[None, :] - 4)
++cand = above &amp; ~removal
++anchor = np.full((W, 3), np.nan)
++slope = np.zeros((W, 3))
++for x in range(W):
++    ys = np.where(cand[:, x])[0]
++    if len(ys) &lt; 6:
++        continue
++    C = orig[ys, x].astype(float)
++    A = np.c_[np.ones(len(ys)), ys]
++    keep = np.ones(len(ys), bool)
++    for _ in range(3):
+… diff truncated; 436 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-886273476d9a.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-06T00:24:37.513505+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 886273476d9a8a4b · code 9c11f916db98457f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-0a4053dd3978.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-06T00:26:20.558650+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−0</span></div><p class="hashes">pixels 0a4053dd39784108 · code 2a54673e05e6852f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -413,6 +413,8 @@
+     if f &lt; start:
+         return 0.0
+     z = f - start
++    if z &gt;= 4:                 # fully settled: hold a static pose
++        return 0.0
+     e = np.exp(-z / tau) * np.sin(z * omega)
+     return e
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-0a4053dd3978.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-06T00:26:22.334645+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 0a4053dd39784108 · code 2a54673e05e6852f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/candidate-0a4053dd3978.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-06T00:27:14.192867+00:00</span></div><div class="changes"><span class="change code">代码 +3/−1</span></div><p class="hashes">pixels 0a4053dd39784108 · code ae0af592414ceab7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -624,8 +624,10 @@
+ assert np.array_equal(frames[0], orig), &#x27;frame 00 must equal first_frame.png&#x27;
+ 
+ # ---------------------------------------------------------------- save via artifact_io
+-import artifact_io
++import artifact_io, shutil
+ artifact_io.save(frames, CASE)
++# guarantee the required byte-identical first frame file
++shutil.copyfile(CASE / &#x27;first_frame.png&#x27;, CASE / &#x27;frames&#x27; / &#x27;00.png&#x27;)
+ 
+ # ---------------------------------------------------------------- transition sheet
+ sel = [0, 2, 3, 4, 5, 6, 9, 12, 15, 19]</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0045/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0045</h1>
+<p>All measurements below come from numeric RGB inspection of <code>first_frame.png</code>
+(256×144) with local Python only (numpy/PIL/scipy threshold masks, per-row
+extents, connected components, sample-point RGB readout). No image viewing
+tool was used.</p>
+<h2>Scene (top-down, locked camera)</h2>
+<ul>
+<li>Top region: smooth gray backdrop, mean ≈ (187,185,195) with a gentle
+top→bottom gradient (top ~(194,193,204), near edge ~(170,169,180)); almost
+no texture noise (lag-1 residual corr ≈ 0.995).</li>
+<li>Bottom region: warm brown wooden table, clean-zone (y≥100) mean
+(116,87,51), per-channel std (10.7,8.3,6.3). Slight wide-field shading:
+darker at far left (~(96,72,43)), brightest x160–192 (~(128,96,56)).
+Grain is vertically streaky (residual autocorr y-lag1 0.56, x-lag1 0.26).</li>
+<li>Backdrop/table edge is a smooth shallow curve (per-column topmost brown):
+y_edge ≈ 61 at x=0, rising to y≈30 at x≈64–88, descending to y≈54 at
+x=255 (rounded table edge, 2–3 px anti-aliased).</li>
+<li>Lighting from upper-left; shadows fall down-right. Flat paper casts only
+a very faint table shadow; the lifted grabbers cast harder near-black
+shadows offset ~(15–20, +15) px.</li>
+</ul>
+<h2>Green paper</h2>
+<ul>
+<li>Green mask (G&gt;R+15 &amp; G&gt;B+10): 3135 px, one component, bbox x50–181,
+y38–92. Two printed tones: dark green ~(13,112,16) and bright green
+~(19,157,29) (percentiles show a bimodal G around 102 and 154).</li>
+<li>Concave silhouette vertices (pixel-fitted):<ul>
+<li>A  ≈ (150,38)  top corner</li>
+<li>B  ≈ (181,68)  right corner (held by right grabber)</li>
+<li>F  ≈ (179,73)  tiny down-tip of the right corner</li>
+<li>P  ≈ (121,63)  apex of an already-opened V tear</li>
+<li>C  ≈ (60,92)   bottom corner (tip rows narrow to x50–77 at y91–92)</li>
+<li>D  ≈ (85,53)   left corner, hidden under the left jaw (edges would
+meet around x76–101, y51–54)</li>
+</ul>
+</li>
+<li>Edge fits: upper-left edge A–D ≈ x=146−3.0(y−38); left edge C–D ≈
+x=72−0.647(y−57); right edge A–B ≈ +0.9 px/row; V-tear right edge
+P–F: x=121+5.80(y−63); V-tear left edge P–C: x=121−1.62(y−63).</li>
+<li>Frame 0 already shows the onset of tearing: a triangular table-colored
+gap (apex P, widening 3 px at y64 to ~74 px at y73) between the bright
+main body and the dark-green right-corner sliver; the right grabber jaw
+sits inside that V, pulling the sliver.</li>
+</ul>
+<h2>Grabbers (blue/black)</h2>
+<ul>
+<li>LEFT tool (comp, bbox x0–83, y8–59): blue shank enters from upper-left
+(around (18,13)→(77,52)), blue mean ~(96,122,150); black jaw block
+x≈65–92, y≈44–57 pinches corner D; grip point GL ≈ (85,53).
+Hard near-black cast-shadow blob (RGB ~(19,19,19), serrated) around
+x40–118, y33–50, down-right of the shank. Pull axis unit ≈
+uL = (−0.84,−0.54).</li>
+<li>RIGHT tool (comps bbox x133–255, y53–89): two black jaw fingers (upper
+to (172,68), lower thick one x137–157, y68–72) pinch the sliver at
+grip GR ≈ (167,70); saturated blue shank (~(12,82,143)) x176–205,
+y71–81, black handle continues to x255; axis near-horizontal,
+uR ≈ (+1,0).</li>
+</ul>
+<h2>Piece partition (for the tear animation)</h2>
+<ul>
+<li>Piece R (follows right grabber): polygon A–B–F–P–D, dark-green sliver
+plus all paper above the D–P crack line.</li>
+<li>Piece L (follows left grabber): polygon D–P–C with the visible left
+edge (bright body + bottom strip).</li>
+<li>Crack path: jagged D→P (~40 px) completes on frames 5–6; P–F is the
+already-open V in frame 0.</li>
+</ul>
+<h2>20-frame event plan (4 fps, 0.25 s/frame)</h2>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t(s)</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>0.00</td>
+  <td>exact copy of first_frame.png</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>0.25</td>
+  <td>first tug: tools/pieces shift ~1.5 px apart, paper still whole, faint stretch</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>0.50</td>
+  <td>crack opens from P, 25 % toward D; 1–2 light fiber strands</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>0.75</td>
+  <td>crack 55 %, V widens, pieces ~5 px apart at crack front</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>1.00</td>
+  <td>crack 80 %, more fibers bridging</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>1.25</td>
+  <td>crack complete (last fibers snap), rigid separation begins</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>1.50</td>
+  <td>pieces translate/rotate with their tools</td>
+</tr>
+<tr>
+  <td>7–11</td>
+  <td>1.75–2.75</td>
+  <td>steady pull: L piece up-left to (−26,−16), R piece right to (+33,+1); rotations grow to −10° / +7°; torn gap widens revealing table; shadows follow</td>
+</tr>
+<tr>
+  <td>12–14</td>
+  <td>3.00–3.50</td>
+  <td>max separation, slight damped overshoot</td>
+</tr>
+<tr>
+  <td>15–19</td>
+  <td>3.75–5.00</td>
+  <td>held pose, small damped sway/settle (≤1 px, ≤1°)</td>
+</tr>
+</tbody>
+</table>
+<p>Motion curves are smooth (ease-in then damped settle). Frame 00 is the
+untouched input; every later frame is a full local-pixel composite:
+cleaned static table/backdrop → per-piece soft shadows → warped paper
+piece sprites (actual frame-0 green pixels, holes jaw-filled) →
+grabber sprites with their hard shadows (actual frame-0 pixels, rigid
+transformed).</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0045</h1>
+<p>Pure local pixel synthesis. All code is in <code>generate.py</code> (numpy / scipy.ndimage /
+OpenCV / PIL only); no external models, no network, no other cases. Frame 00 is
+the untouched input: it is asserted pixel-equal to <code>first_frame.png</code>, and after
+saving, <code>frames/00.png</code> is replaced by a byte-for-byte copy of
+<code>first_frame.png</code>.</p>
+<h2>1. Reading the input</h2>
+<p>The input was inspected numerically only (no image viewer): channel threshold
+masks, per-row/column extents, connected components and sampled RGB values
+(see <code>OBSERVATION.md</code>). The scene is a gray backdrop above a curved brown table
+edge, a green two-tone paper scrap (3135 green px, bbox x50–181 / y38–92) with
+an already-open V tear below apex P=(121,63), and two blue/black grabbers:
+left shank/jaw gripping the paper at D=GL=(92,52), right jaw at GR=(163,70).</p>
+<h2>2. Static layers measured from frame 0</h2>
+<ul>
+<li><strong>Table-edge curve</strong> <code>edge_col[x]</code>: first warm-brown pixel per column, with
+the columns hidden by the left shadow (x54–65) and paper body (x140–157)
+replaced by linear interpolation, then σ=5 smoothed.</li>
+<li><strong>Backdrop model</strong>: an independent robust linear colour(y) fit per column
+(iterative residual clipping at 18 levels) over pixels above the edge minus
+a margin, rejecting the tools' dark serrated shadows and a bright metal
+highlight; intercept/slope are smoothed across columns (σ=4.5).</li>
+<li><strong>Table model</strong>: per-column median colour from the clean bottom rows plus a
+measured near-edge &quot;bounce&quot; profile; for actual filling, a normalised
+Gaussian field (σx=3.5, σy=10) of clean warm pixels preserves the vertical
+wood streaks, falling back to the parametric colour where no donor reaches.</li>
+<li><strong>Clean plate</strong> (<code>clean_bg</code>): model-filled only inside an exact fill mask —
+the sheet silhouette dilated 5 px on the table side (erases the faint real
+paper-contact shadow so it cannot leave a static ghost) and the actual tool
+sprite coverage — with a 2 px feather; everything else keeps true frame-0
+pixels. The already-open V tear keeps its true table pixels
+(<code>clean_bg = orig</code> there), except pixels belonging to the right jaw sprite.</li>
+</ul>
+<h2>3. Sprites cut from frame 0</h2>
+<ul>
+<li><strong>Paper pieces</strong>: the measured green sheet is cut along the still-intact
+crack D→P (2 px polyline barrier) and the resulting connected components are
+labelled: component above/right of the crack (upper body + the dark sliver
+held in the V) follows the right grabber; the bright body down to C follows
+the left. Remaining footprint pixels (barrier, enclosed jaw holes) go to the
+nearest component. Pure sheet colours are the true frame-0 green pixels,
+with jaw holes filled from a 60 % nearest-green / 40 % Gaussian green-field
+blend plus σ=4 noise.</li>
+<li><strong>Tool sprites</strong>: real frame-0 colours with alpha 1 over the hard tool mask
+(saturated blue/near-black core, dark body below the expected background,
+one AA ring) and over every connected cast-shadow blob (darkening &gt; 18 % of
+expected background) or enclosed bright highlight (metal part of the left
+mechanism; &gt;30 levels brighter than model). Blobs are linked to the tool with
+a 10 px morphological closing; alpha ends in a σ=1.1 feather ring. The
+sprites therefore contain their real shadows/highlights and move rigidly.</li>
+<li>All warps are <strong>premultiplied RGBA</strong> affine warps (INTER_LINEAR), so feather
+edges keep true colours.</li>
+</ul>
+<h2>4. Animation (20 frames, 4 fps)</h2>
+<ul>
+<li>Motion is an ease curve <code>S</code> (0 at f0, 0.04 at f1 … 1 at f14) scaling total
+pull distances 26 px for the left grabber along uL=(−0.84,−0.54) with
+rotation to −10°, and 34 px (almost horizontal) for the right with rotation
+to +7°; pivots are the grip points GL/GR. Each rigid piece transforms with
+its grabber.</li>
+<li>The crack D→P opens on schedule <code>CRACK = 0,0,.25,.55,.80,1</code> (f5 complete):
+while incomplete, a stretching paper-colour band joins the still-connected
+segment and light fibre strands (fixed random jagged crack shape) bridge the
+opened part, fading as their span grows past 13 px. The pre-existing V stays
+open throughout.</li>
+<li>A faint contact shadow (blurred moved mask, offset (+3,+4), 8 % multiply)
+follows each piece; tool shadows are the real ones carried by the sprites.</li>
+<li>Frames 14–16 add a small damped sway (sin/exp, ≤ ~1.4 px / 1.2°); the pose
+is then held static (frames 17/18/19 identical).</li>
+</ul>
+<p>Composite order: clean plate → piece shadows → left/right paper pieces →
+crack connector/fibres → left then right tool sprites.</p>
+<h2>5. Verification</h2>
+<ul>
+<li><code>PW_DEBUG_IDENTITY=1 python generate.py</code> renders the zero-motion composite:
+mean-abs error vs the input <strong>0.33/255</strong>, 95th percentile 1.5, max 45, and
+only 413/36 864 pixels with a channel-max diff &gt; 12 (residual error is
+confined to the ~2 px feather rings of moving sprites and a handful of
+contact-shadow table pixels); every real sheet pixel reconstructs exactly.</li>
+<li><code>.tmp/verify.py</code> round-trips <code>pixels.npz</code> (layout (144,256,20), packed
+0xRRGGBB) back against all <code>frames/*.png</code>, checks frame-00 pixel equality and
+the byte-identical <code>frames/00.png</code> copy — all pass.</li>
+<li>Frame-to-frame changed-pixel counts (max-channel diff &gt;12) rise smoothly
+from 2.1k at the first tug to a peak of ~3.5k while the crack completes
+(f5–f6), ease down to ~0.7–1.7k during the sway, and are exactly 0 on the
+final two holds.</li>
+<li><code>transition_check.png</code> stores the ten key frames with ×4 difference images;
+<code>inspection.png</code> and <code>index.html</code> are emitted by <code>artifact_io.save</code>.</li>
+</ul>
+<h2>Limitations (stated honestly)</h2>
+<ul>
+<li>Tool shadows are carried as rigid alpha blobs instead of being re-projected;
+the faint outer penumbra stays with the table.</li>
+<li>The connector band/fibres are a geometric approximation, not a paper FEM.</li>
+<li>Table revealed by the moving paper is a column/field model of the wood, not
+the exact occluded pixels; its error is bounded by the clean-table grain.</li>
+<li><code>green</code>/<code>strong_blue</code> thresholds were chosen from this single input.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-text/0045-ff89baab3ce3.png';</script></body></html>

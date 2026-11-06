@@ -1,0 +1,655 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>cut-orange · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-text.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · text · Case 0042</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>cut-orange</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>15</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>12</strong><span>generate.py 执行</span></div><div class="stat"><strong>90</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>16</strong><span>文件变更事件</span></div><div class="stat"><strong>76.1m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. One half of a tangerine has been placed on a glass cutting board. The knife slices through the tangerine.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>90 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>15 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-636889bf0f7c.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-05T22:30:25.263385+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +401/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 636889bf0f7c06b7 · code 6f6c41b3fb5ce6c8</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,401 @@
++&quot;&quot;&quot;PixelWorld-Text case_0042 generator.
++
++Scene: a half tangerine on a glass cutting board; a diagonally held chef
++knife presses through it (sawing slice). The knife tip is at the top of the
++fruit in frame 00 (which is copied byte-content-identical from
++first_frame.png); over 19 more frames the cut completes, the two pieces
++part revealing flesh, the blade reaches the glass and is then lifted.
++
++All pixels are produced with local numpy/PIL/OpenCV operations only:
++threshold masks, inpainting, sprite warping, analytic shading and grain.
++&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++import cv2
++from PIL import Image
++import artifact_io
++
++ROOT = Path(__file__).parent
++TMP = ROOT / &quot;.tmp&quot;
++TMP.mkdir(exist_ok=True)
++rng = np.random.default_rng(20261106)
++
++H, W = 144, 256
++
++# ---------------------------------------------------------------- geometry
++# tangerine dome
++C = np.array([114.0, 79.5])
++R = 21.6
++# cut chord (frame 0): top point P1 -&gt; bottom point P0
++P0 = np.array([100.0, 96.0])
++P1 = np.array([114.0, 58.0])
++E = (P1 - P0) / np.linalg.norm(P1 - P0)          # along chord, upward
++M = np.array([-E[1], E[0]])                       # normal, toward body side
++assert abs(M @ np.array([0.0, 1.0]) - 0.346) &lt; 0.02
++
++yy, xx = np.mgrid[0:H, 0:W]
++PX = np.dstack([xx, yy]).astype(np.float64)
++DISK = ((PX - C) ** 2).sum(-1) &lt;= R ** 2
++SVAL = (PX - P0) @ M                              # signed dist to chord
++
++# ---------------------------------------------------------------- frame 0
++f0 = np.array(Image.open(ROOT / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;))
++assert f0.shape == (H, W, 3)
++f0i = f0.astype(np.int16)
++R0, G0, B0 = f0i[..., 0], f0i[..., 1], f0i[..., 2]
++lum0 = (R0 * 30 + G0 * 59 + B0 * 11) / 100.0
++
++# orange peel segmentation (same thresholds as the numeric analysis)
++orange = ((R0 &gt; 125) &amp; (R0 - G0 &gt; 28) &amp; (G0 - B0 &gt; 8) &amp; (R0 - B0 &gt; 45)).astype(np.uint8)
++n_o, lab_o, st_o, _ = cv2.connectedComponentsWithStats(orange, 8)
++order = np.argsort(-st_o[1:, 4]) + 1
++body_org = lab_o == order[0]
++wedge_org = lab_o == order[1]
++
++warm_dark = (R0 &gt; G0 + 8) &amp; (G0 &gt;= B0 - 6) &amp; (R0 &lt; 150) &amp; (lum0 &lt; 118)   # shadowed peel
++coolish = (B0 - R0 &gt; 6)                                                  # steel / board edges
++
++# ---------------------------------------------------------------- knife mask
++blade_poly = np.array([
++    (189, 0), (182, 0), (176, 5), (168, 13), (158, 22), (150, 31),
++    (144, 38), (131, 49), (119, 61), (124, 70), (133, 71), (146, 62),
++    (156, 54), (165, 47), (172, 43), (177, 39), (173, 32), (162, 26),
++    (153, 29), (161, 18), (171, 9), (178, 3),
++], dtype=np.int32)
++poly_img = np.zeros((H, W), np.uint8)
++cv2.fillPoly(poly_img, [blade_poly], 1)
++neutral_steel = (
++    (lum0 &gt; 52) &amp; (lum0 &lt; 208)
++    &amp; ~((R0 - G0 &gt; 18) &amp; (R0 - B0 &gt; 34))          # not warm wall / peel
++    &amp; ~((R0 &gt; 60) &amp; (G0 &lt; 60) &amp; (B0 &lt; 55))        # not deep red-brown shadow
++)
++knife_mask = (poly_img.astype(bool) &amp; neutral_steel)
++knife_mask = cv2.morphologyEx(knife_mask.astype(np.uint8), cv2.MORPH_CLOSE,
++                              np.ones((3, 3), np.uint8))
++# fill interior pinholes that survived the colour test
++inside = cv2.dilate(poly_img, np.ones((5, 5), np.uint8)).astype(bool)
++hole = inside &amp; (lum0 &lt; 190) &amp; ~((R0 - G0 &gt; 20) &amp; (R0 - B0 &gt; 40)) &amp; ~knife_mask.astype(bool)
++hole = cv2.morphologyEx(hole.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
++knife_mask = (knife_mask.astype(bool) | hole.astype(bool))
++knife_mask = cv2.dilate(knife_mask.astype(np.uint8), np.ones((3, 3), np.uint8), iterations=1)
++
++# knife cast-shadow sliver on the glass (moves with the knife)
++shadow_line = np.array([(110, 56), (103, 63), (95, 73), (86, 83), (78, 93), (71, 106)], np.int32)
++ksh_mask = np.zeros((H, W), np.uint8)
++cv2.polylines(ksh_mask, [shadow_line], False, 1, thickness=5, lineType=cv2.LINE_AA)
++ksh_px = (ksh_mask.astype(bool)
++          &amp; ~((R0 - G0 &gt; 16) &amp; (R0 - B0 &gt; 30))     # no warm peel / wall
+… diff truncated; 314 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-b727f4f4b47f.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-05T22:34:12.221246+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +11/−9</span><span class="change">inspection 更新</span></div><p class="hashes">pixels b727f4f4b47fa4f4 · code 12682d6bc033566b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -106,12 +106,9 @@
+ # inpaint tends to smear orange there.
+ board_syn = base.copy()
+ gx, gy = np.meshgrid(np.arange(W), np.arange(H))
+-# gentle vertical board tone sampled from a clean ring
+-ring = ((gx &gt;= 78) &amp; (gx &lt;= 168) &amp; (gy &gt;= 104) &amp; (gy &lt;= 132)
+-        &amp; ~refl_zone.astype(bool) &amp; ~orange.astype(bool)
+-        &amp; (np.abs(R0 - G0) &lt; 22))
+-tone = np.median(f0[ring].reshape(-1, 3), axis=0)            # ~(113,105,95)
+-tone_f = tone.astype(np.float32)
++# board tone measured from clean board patches around the fruit
++tone = np.array([113.0, 105.0, 96.0], np.float32)
++tone_f = tone
+ lowf = cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 9)
+ field = np.zeros((H, W, 3), np.float32)
+ for ch in range(3):
+@@ -119,12 +116,17 @@
+ board_patch = (tone_f + field
+                + np.dstack([np.zeros((H, W)), np.zeros((H, W)),
+                             -4.0 * (gy - 100) / 40.0]))
+-patch_mask = (foot.astype(bool) | refl_zone.astype(bool)) &amp; (gy &gt; 96)
++zone = (foot.astype(bool) | refl_zone.astype(bool)) &amp; (gy &gt; 96)
++# only take over pixels where inpainting smeared warm (fruit) tones in,
++# or that used to be fruit/shadow; leave real board pixels untouched
++inp = base.astype(np.float32)
++smeared = ((inp[..., 0] - inp[..., 1] &gt; 9) | (R0 - G0 &gt; 18))
++patch_mask = zone &amp; smeared &amp; erase.astype(bool)
+ patch_mask = cv2.GaussianBlur(patch_mask.astype(np.float32), (0, 0), 2.0)
+ base = (base.astype(np.float32) * (1 - patch_mask[..., None])
+         + board_patch * patch_mask[..., None])
+ # static baked grain over every erased pixel (board / arm / wall fill)
+-grain_static = rng.normal(0, 3.2, (H, W, 3)).astype(np.float32)
++grain_static = rng.normal(0, 2.4, (H, W, 3)).astype(np.float32)
+ erode_erase = cv2.dilate(erase, np.ones((3, 3), np.uint8)).astype(bool)
+ base[erode_erase] += grain_static[erode_erase]
+ base = np.clip(base, 0, 255)
+@@ -377,7 +379,7 @@
+         cv2.circle(canvas, (tx - 3, ty + 14), 1, (235, 240, 245), -1)
+ 
+     # ---- moving grain on edited pixels
+-    g = rng.normal(0, 3.4, (H, W, 3))
++    g = rng.normal(0, 3.0, (H, W, 3))
+     canvas[edited] += g[edited]
+     out = np.clip(canvas, 0, 255).astype(np.uint8)
+     frames.append(out)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-b6d0ed204cd2.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-05T22:37:18.220758+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +21/−24</span></div><p class="hashes">pixels b6d0ed204cd20552 · code 8d7faa6bc812c19f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -116,13 +116,9 @@
+ board_patch = (tone_f + field
+                + np.dstack([np.zeros((H, W)), np.zeros((H, W)),
+                             -4.0 * (gy - 100) / 40.0]))
+-zone = (foot.astype(bool) | refl_zone.astype(bool)) &amp; (gy &gt; 96)
+-# only take over pixels where inpainting smeared warm (fruit) tones in,
+-# or that used to be fruit/shadow; leave real board pixels untouched
+-inp = base.astype(np.float32)
+-smeared = ((inp[..., 0] - inp[..., 1] &gt; 9) | (R0 - G0 &gt; 18))
+-patch_mask = zone &amp; smeared &amp; erase.astype(bool)
+-patch_mask = cv2.GaussianBlur(patch_mask.astype(np.float32), (0, 0), 2.0)
++zone = ((foot.astype(bool) | refl_zone.astype(bool)) &amp; (gy &gt; 96)
++        &amp; erase.astype(bool))
++patch_mask = cv2.GaussianBlur(zone.astype(np.float32), (0, 0), 2.0)
+ base = (base.astype(np.float32) * (1 - patch_mask[..., None])
+         + board_patch * patch_mask[..., None])
+ # static baked grain over every erased pixel (board / arm / wall fill)
+@@ -215,20 +211,23 @@
+ 
+ def pose(frame):
+     f = frame
+-    press = smooth(f / 12.0)
+-    dx, dy = -26.0 * press, 54.0 * press
++    press = smooth(f / 11.0)
++    dx, dy = -32.0 * press, 68.0 * press
+     saw = 2.2 * np.sin(f * 1.45) * (0.25 + 0.75 * press)
+     dx += E[0] * saw
+     dy += E[1] * saw
+-    if f &gt;= 16:                                   # lift / retract
++    if f &gt;= 12:                                   # rest on the glass, small settle
++        q = smooth((f - 12) / 3.0)
++        dy += 2.0 * q
++    if f &gt;= 16:                                   # tiny lift / easing off
+         q = smooth((f - 15) / 4.0)
+-        dx += 9.0 * q
+-        dy -= 19.0 * q
++        dx += 4.0 * q
++        dy -= 6.0 * q
+         dx += E[0] * 1.4 * np.sin(f * 1.9)
+         dy += E[1] * 1.4 * np.sin(f * 1.9)
+     sep = 6.0 * smooth((f - 1.5) / 8.5)
+     if f &gt; 14:
+-        sep -= 0.5 * smooth((f - 14) / 5.0)
++        sep -= 0.4 * smooth((f - 14) / 5.0)
+     cut = smooth((f - 0.5) / 10.0)
+     tilt = -7.0 * smooth((f - 6) / 6.0)           # degrees, CCW screen
+     return dx, dy, sep, cut, tilt
+@@ -244,8 +243,8 @@
+     dst[sel] = (dst[sel] * (1 - a[sel]) + layer[sel, :3] * a[sel])
+     edited[sel] = True
+ 
+-FLESH_OUT = np.array([231, 137, 44], np.float32)   # near peel
+-FLESH_IN = np.array([249, 194, 114], np.float32)  # inner flesh
++FLESH_OUT = np.array([238, 150, 56], np.float32)   # near peel
++FLESH_IN = np.array([252, 201, 128], np.float32)  # inner flesh
+ MEMBRANE = np.array([253, 226, 182], np.float32)
+ 
+ 
+@@ -258,15 +257,15 @@
+     along = (loc - P0) @ E
+     in_disk = rad &lt; R - 0.6
+     if kind == &quot;wedge&quot;:
+-        band = in_disk &amp; (s &gt; -4.6) &amp; (s &lt; 1.2) &amp; (along &gt; -2)
++        band = in_disk &amp; (s &gt; -5.2) &amp; (s &lt; 1.2) &amp; (along &gt; -2)
+     else:
+-        band = in_disk &amp; (s &lt; 4.6) &amp; (s &gt; -1.2) &amp; (along &gt; -2)
++        band = in_disk &amp; (s &lt; 5.2) &amp; (s &gt; -1.2) &amp; (along &gt; -2)
+     # reveal follows the descending tip along the chord
+     depth = np.clip((cut * 46.0 - along) / 5.0, 0, 1)
+     open_amt = np.clip(sep_pos / 2.2, 0, 1)
+     alpha = band.astype(np.float32) * depth * (0.35 + 0.65 * open_amt)
+     col = np.zeros((H, W, 3), np.float32)
+-    u = np.clip((s + 4.6) / 5.8, 0, 1)
++    u = np.clip((s + 5.2) / 6.4, 0, 1)
+     if kind == &quot;body&quot;:
+         u = 1 - u
+     flesh = FLESH_OUT[None, None, :] * (1 - u[..., None]) + FLESH_IN[None, None, :] * u[..., None]
+@@ -303,16 +302,14 @@
+ 
+     # ---- contact shadows on board
+     sh = np.zeros((H, W), np.float32)
+-    wcx = (C - M * (sep * 0.6 + 1.0))
+-    wcx = wcx + (P0 - wcx) * 0  # placeholder
+-    cv2.ellipse(sh, (int(104 - sep * 0.9), 101), (12, 4), 0, 0, 360, 0.55, -1)
+-    cv2.ellipse(sh, (int(121 + sep * 0.5), 101), (15, 5), 0, 0, 360, 0.5, -1)
++    cv2.ellipse(sh, (int(104 - sep * 0.9), 101), (10, 3), 0, 0, 360, 0.17, -1)
++    cv2.ellipse(sh, (int(121 + sep * 0.5), 101), (13, 3), 0, 0, 360, 0.15, -1)
+     # blade tip contact shadow once it reaches the board
+… diff truncated; 10 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-b6d0ed204cd2.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-05T22:37:20.065290+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels b6d0ed204cd20552 · code 8d7faa6bc812c19f</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-b69bf92a41f8.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-05T22:49:13.738987+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +38/−15</span></div><p class="hashes">pixels b69bf92a41f8e129 · code 347549e7b76f02c6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -209,28 +209,50 @@
+     x = np.clip(x, 0, 1)
+     return x * x * (3 - 2 * x)
+ 
++TIP0 = np.array([125.0, 71.0])                    # blade tip in frame 0
++
++def _rot_about(pivot, deg):
++    &quot;&quot;&quot;Affine rotating visually CCW by deg about pivot (screen y points down).&quot;&quot;&quot;
++    th = np.radians(-deg)
++    c, s = np.cos(th), np.sin(th)
++    px, py = pivot
++    return np.float64([[c, -s, px - c * px + s * py],
++                       [s,  c, py - s * px - c * py]])
++
++def _mul(A, B):
++    return (np.vstack([A, [0.0, 0.0, 1.0]])
++            @ np.vstack([B, [0.0, 0.0, 1.0]]))[:2]
++
++def _trans(tx, ty):
++    return np.float64([[1.0, 0.0, tx], [0.0, 1.0, ty]])
++
+ def pose(frame):
++    &quot;&quot;&quot;Return (knife_affine 2x3, sep, cut, tilt).
++
++    The blade rocks clockwise about its own tip while the tip slides a
++    little down-left along the cut chord, so only the belly descends;
++    after the cut it is withdrawn up-right off the fruit.
++    &quot;&quot;&quot;
+     f = frame
+     press = smooth(f / 11.0)
+-    dx, dy = -32.0 * press, 68.0 * press
++    tx, ty = -21.0 * press, 34.0 * press
+     saw = 2.2 * np.sin(f * 1.45) * (0.25 + 0.75 * press)
+-    dx += E[0] * saw
+-    dy += E[1] * saw
++    tx += E[0] * saw
++    ty += E[1] * saw
+     if f &gt;= 12:                                   # rest on the glass, small settle
+         q = smooth((f - 12) / 3.0)
+-        dy += 2.0 * q
+-    if f &gt;= 16:                                   # tiny lift / easing off
++        ty += 2.0 * q
++    A = _mul(_trans(tx, ty), _rot_about(TIP0, -20.0 * press))
++    if f &gt;= 15:                                   # withdraw up-right, rocking back
+         q = smooth((f - 15) / 4.0)
+-        dx += 4.0 * q
+-        dy -= 6.0 * q
+-        dx += E[0] * 1.4 * np.sin(f * 1.9)
+-        dy += E[1] * 1.4 * np.sin(f * 1.9)
++        W = _mul(_trans(18.0, -30.0), _rot_about(TIP0, 10.0))
++        A = A + q * (W - A)
+     sep = 6.0 * smooth((f - 1.5) / 8.5)
+     if f &gt; 14:
+         sep -= 0.4 * smooth((f - 14) / 5.0)
+     cut = smooth((f - 0.5) / 10.0)
+     tilt = -7.0 * smooth((f - 6) / 6.0)           # degrees, CCW screen
+-    return dx, dy, sep, cut, tilt
++    return A, sep, cut, tilt
+ 
+ # ---------------------------------------------------------------- compositing
+ def warp_layer(src, M, shape=(H, W)):
+@@ -284,7 +306,8 @@
+ 
+ frames = [f0]
+ for f in range(1, 20):
+-    dx, dy, sep, cut, tilt = pose(f)
++    Ak, sep, cut, tilt = pose(f)
++    tip_xy = Ak @ np.array([TIP0[0], TIP0[1], 1.0])
+     canvas = base.copy().astype(np.float32)
+     edited = np.zeros((H, W), bool)
+ 
+@@ -307,7 +330,7 @@
+     # blade tip contact shadow once it reaches the board
+     if f &gt;= 9:
+         grow = smooth((f - 9) / 4.0)
+-        tx, ty = 125 + dx, 71 + dy
++        tx, ty = tip_xy
+         cv2.ellipse(sh, (int(tx - 4), int(ty + 12)), (11, 3), -25, 0, 360,
+                     0.18 * grow, -1)
+     sh = cv2.GaussianBlur(sh, (0, 0), 2.2)
+@@ -319,7 +342,7 @@
+     fade = 1.0 - 0.45 * smooth((f - 10) / 4.0)
+     shl = ksh_img.copy()
+     shl[..., 3] *= fade
+-    paste(canvas, warp_layer(shl, np.float32([[1, 0, dx], [0, 1, dy]])), edited)
++    paste(canvas, warp_layer(shl, Ak.astype(np.float32)), edited)
+ 
+     # ---- warped tangerine pieces
+… diff truncated; 19 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-b69bf92a41f8.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-05T22:49:15.571515+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels b69bf92a41f8e129 · code 347549e7b76f02c6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-ffb485f61975.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-05T22:53:28.566778+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−5</span></div><p class="hashes">pixels ffb485f619752db8 · code 0e80caa947295a2a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -242,11 +242,13 @@
+     if f &gt;= 12:                                   # rest on the glass, small settle
+         q = smooth((f - 12) / 3.0)
+         ty += 2.0 * q
+-    A = _mul(_trans(tx, ty), _rot_about(TIP0, -20.0 * press))
+-    if f &gt;= 15:                                   # withdraw up-right, rocking back
+-        q = smooth((f - 15) / 4.0)
+-        W = _mul(_trans(18.0, -30.0), _rot_about(TIP0, 10.0))
+-        A = A + q * (W - A)
++    ang = -20.0 * press
++    if f &gt;= 14:                                   # withdraw up-right, rocking back
++        q = smooth((f - 14) / 4.0)
++        tx = tx + q * (18.0 - tx)
++        ty = ty + q * (-30.0 - ty)
++        ang = ang + q * (10.0 - ang)
++    A = _mul(_trans(tx, ty), _rot_about(TIP0, ang))
+     sep = 6.0 * smooth((f - 1.5) / 8.5)
+     if f &gt; 14:
+         sep -= 0.4 * smooth((f - 14) / 5.0)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-ffb485f61975.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-05T22:53:30.520191+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels ffb485f619752db8 · code 0e80caa947295a2a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-82ab89ba8e0b.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-05T22:54:29.472090+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +2/−2</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 82ab89ba8e0b2364 · code 38bb9da0de29af83</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -243,8 +243,8 @@
+         q = smooth((f - 12) / 3.0)
+         ty += 2.0 * q
+     ang = -20.0 * press
+-    if f &gt;= 14:                                   # withdraw up-right, rocking back
+-        q = smooth((f - 14) / 4.0)
++    if f &gt;= 13:                                   # withdraw up-right, rocking back
++        q = smooth((f - 13) / 3.0)
+         tx = tx + q * (18.0 - tx)
+         ty = ty + q * (-30.0 - ty)
+         ang = ang + q * (10.0 - ang)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-10a0ed647d0c.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-05T22:58:41.266243+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−2</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 10a0ed647d0cf836 · code 8741279538f52a37</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -321,8 +321,13 @@
+         cv2.ellipse(refl, (int(rx), int(ry)), (rw, rhi), 0, 0, 360,
+                     (205, 112, 36), -1)
+     refl = cv2.GaussianBlur(refl, (0, 0), 4.0)
+-    ram = (refl.sum(-1) &gt; 0) &amp; (gy &gt; 100)
+-    canvas[ram] = canvas[ram] * 0.88 + refl[ram] * 0.12
++    # blend strength follows the (blurred) ellipse intensity, not its halo
++    rsum = refl.sum(-1)
++    rmax = rsum.max()
++    ra = np.clip(rsum / rmax * 0.55, 0, 0.55)
++    ram = (rsum &gt; rmax * 0.05) &amp; (gy &gt; 100)
++    a3 = ra[..., None]
++    canvas[ram] = canvas[ram] * (1 - a3[ram]) + refl[ram] * a3[ram]
+     edited[ram] = True
+ 
+     # ---- contact shadows on board</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-10a0ed647d0c.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-05T23:00:27.383251+00:00</span></div><div class="changes"><span class="change code">代码 +5/−5</span></div><p class="hashes">pixels 10a0ed647d0cf836 · code 6beb447a57823746</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -316,16 +316,16 @@
+     # ---- glass reflections of the two pieces
+     refl = np.zeros((H, W, 3), np.float32)
+     for (rx, ry, rw, rhi, op) in (
+-            (106 - sep * 0.55 * M[0], 112 - sep * 0.5, 15, 7, 0.10),
+-            (122 + sep * 0.45 * M[0], 112 + sep * 0.3, 17, 8, 0.11)):
++            (106 - sep * 0.55 * M[0], 110 - sep * 0.5, 11, 5, 0.10),
++            (122 + sep * 0.45 * M[0], 111 + sep * 0.3, 13, 6, 0.11)):
+         cv2.ellipse(refl, (int(rx), int(ry)), (rw, rhi), 0, 0, 360,
+                     (205, 112, 36), -1)
+-    refl = cv2.GaussianBlur(refl, (0, 0), 4.0)
++    refl = cv2.GaussianBlur(refl, (0, 0), 2.8)
+     # blend strength follows the (blurred) ellipse intensity, not its halo
+     rsum = refl.sum(-1)
+     rmax = rsum.max()
+-    ra = np.clip(rsum / rmax * 0.55, 0, 0.55)
+-    ram = (rsum &gt; rmax * 0.05) &amp; (gy &gt; 100)
++    ra = np.clip(rsum / rmax * 0.28, 0, 0.28)
++    ram = (rsum &gt; rmax * 0.12) &amp; (gy &gt; 100)
+     a3 = ra[..., None]
+     canvas[ram] = canvas[ram] * (1 - a3[ram]) + refl[ram] * a3[ram]
+     edited[ram] = True</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-c5b0f630473c.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-05T23:00:29.255526+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change">inspection 更新</span></div><p class="hashes">pixels c5b0f630473c00a0 · code 6beb447a57823746</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-12e57b9beda3.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-05T23:04:55.527392+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +1/−1</span></div><p class="hashes">pixels 12e57b9beda396dc · code d9510b73ab262b55</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -346,7 +346,7 @@
+     edited[sel] = True
+ 
+     # ---- blade shadow sliver (fades as blade lies on the board)
+-    fade = 1.0 - 0.45 * smooth((f - 10) / 4.0)
++    fade = 1.0 - 0.80 * smooth((f - 8) / 5.0)
+     shl = ksh_img.copy()
+     shl[..., 3] *= fade
+     paste(canvas, warp_layer(shl, Ak.astype(np.float32)), edited)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-12e57b9beda3.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-05T23:04:58.486159+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 12e57b9beda396dc · code d9510b73ab262b55</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/candidate-c93acc76b451.webp" alt="Round 14 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 14</h3><span class="clock">2026-11-05T23:08:28.798794+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +11/−6</span><span class="change">inspection 更新</span></div><p class="hashes">pixels c93acc76b4517396 · code 90cb1124e285b589</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -396,14 +396,19 @@
+         canvas[jam] = canvas[jam] * (1 - jg * 0.5) + juice[jam] * (jg * 0.5)
+         edited[jam] = True
+ 
+-    # ---- board-contact glint on the steel near the tip
++    # ---- cutting-edge glint on the steel just above the tip
+     if 11 &lt;= f &lt;= 16:
+         gl = (1.0 if f &lt;= 14 else 1.0 - smooth((f - 14) / 2.0))
+-        tx, ty = int(tip_xy[0]), int(tip_xy[1])
+-        cv2.line(canvas, (tx - 10, ty + 16), (tx + 4, ty + 12),
+-                 (225, 235, 240), 1, cv2.LINE_AA)
+-        # tiny spec dot
+-        cv2.circle(canvas, (tx - 3, ty + 14), 1, (235, 240, 245), -1)
++        p_a = Ak @ np.array([126.0, 69.0, 1.0])
++        p_b = Ak @ np.array([119.0, 60.0, 1.0])
++        col = int(190 + 45 * gl)
++        cv2.line(canvas, (int(p_a[0]), int(p_a[1])),
++                 (int(p_b[0]), int(p_b[1])),
++                 (col, min(col + 6, 255), 255), 1, cv2.LINE_AA)
++        # tiny spec dot on the edge
++        p_c = Ak @ np.array([123.0, 65.0, 1.0])
++        cv2.circle(canvas, (int(p_c[0]), int(p_c[1])), 1,
++                   (235, 240, 245), -1)
+ 
+     # ---- moving grain on edited pixels
+     g = rng.normal(0, 3.0, (H, W, 3))</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-text/0042/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0042</h1>
+<p>All measurements come from numeric RGB inspection of <code>first_frame.png</code>
+(256×144, RGB, 17,541 unique colors, value range 0–251). No image viewing tools used.</p>
+<h2>Scene layout (locked camera, lab/kitchen counter)</h2>
+<ul>
+<li><strong>Back wall</strong>: warm tan, median RGB ≈ (147,126,112) in the upper-left; darker
+warm recess/cabinet on the right (x≈128–255, y≈0–55).</li>
+<li><strong>Dark foreground mass</strong>: a person in dark clothing, lower-left corner, RGB ≈
+(105,107,114). Cool blue rim light traces its upper edge along the line
+(13,68)→(98,16); its front edge runs (10,70)→(65,143). The dark mass extends
+behind the knife up to x≈175 at y≈55 (the raised arm/hand holding the knife).</li>
+<li><strong>Counter / glass cutting board</strong>: neutral warm gray ≈ (112,104,95), slightly
+noisy (grain σ≈5.4). A glass board sits on the counter; its edges are thin
+cool-gray lines: right edge (180,49)→(255,90), front-right edge
+(255,128)→(220,142), left edge double (85,73)→(31,111), back edge angled
+≈ −15° near y≈54–73. A bright sky-reflection patch sits at x≈32–80, y≈56–90.</li>
+<li><strong>Lighting</strong> comes from upper-right: highlights on the fruit's right/lower
+flank, shadows cast down-left.</li>
+</ul>
+<h2>The tangerine half</h2>
+<ul>
+<li>Dome (cut face down on the board): best-fit disk <strong>C = (114.0, 79.5), R = 21.5</strong>
+(top (114,58), right (135,77), bottom ≈ (111,100)).</li>
+<li>Peel colors: bright (251,156,10) on the right; mid (205,125,30);
+shadowed left (150,85,22) down to (105,68,45). Wedge-side peel is cooler,
+median (195,127,77).</li>
+<li>A dark shadow wedge (≈ (75,49,47)) lies at x≈99–106, y≈83–93 (blade/fruit
+shadow on peel and board).</li>
+<li>Faint orange-tinted reflection on the glass directly below, y≈100–125.</li>
+</ul>
+<h2>The knife</h2>
+<p>A chef knife held diagonally, foreshortened (tip toward camera/fruit):</p>
+<ul>
+<li><strong>Blade tip ≈ (125,71)</strong>; body widest ≈36 px around y≈38–48 (x≈118–173),
+steel color (109,138,168)–(116,149,186) with near-neutral patches and a
+bright blue edge highlight (124,166,205).</li>
+<li><strong>Handle / tang strip</strong> runs from heel (≈152,31) up-right off the frame
+edge (≈189,1), 3–6 px wide, dark steel (86,96,122)–(91,106,139).</li>
+<li>A thin gray <strong>cast shadow</strong> of the raised blade lies on the glass along
+(109,57)→(70,110), neutral ≈ (114,110,105).</li>
+<li>The cutting edge in frame 0 already meets the fruit at its top; the cut
+chord is <strong>(114,58) → (100,96)</strong> (unit e = (0.346,−0.938),
+normal m = (0.938,0.346), chord 7.4 px from disk center), i.e. the slice is
+~30% started. The visible cap left of the blade (orange component
+x92–116,y58–84, ~240 px) is the soon-to-detach wedge; the main body
+(x98–135,y65–100, ~643 px) is the rest of the half.</li>
+</ul>
+<h2>Static / moving classification</h2>
+<ul>
+<li>Static for all frames: wall, cabinet, person, counter, board, board edges,
+sky reflection.</li>
+<li>Moving: knife steel+handle (a short down-left slide plus a clockwise rock
+about the blade tip, then an up-right withdrawal — only the belly descends),
+its cast shadow, and the two tangerine pieces (separate along m; wedge tips
+outward; cut flesh revealed; shadows/reflections on the glass update).</li>
+</ul>
+<h2>20-frame event plan (4 fps, 5 s)</h2>
+<table>
+<thead>
+<tr>
+  <th>frame</th>
+  <th>t (s)</th>
+  <th>event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td><strong>Exact copy of first_frame.png</strong>: tip at fruit top, cut just begun</td>
+</tr>
+<tr>
+  <td>01–03</td>
+  <td>0.25–0.75</td>
+  <td>tip presses in along the chord; kerf opens at top, faint flesh appears</td>
+</tr>
+<tr>
+  <td>04–06</td>
+  <td>1.00–1.50</td>
+  <td>cut 35–55 %; halves separate 1.5–2.5 px; flesh band shows in upper cut</td>
+</tr>
+<tr>
+  <td>07–09</td>
+  <td>1.75–2.25</td>
+  <td>cut 65–88 %; separation 3–4.5 px; wedge starts tipping left (3–5°), juice hint</td>
+</tr>
+<tr>
+  <td>10–12</td>
+  <td>2.50–3.00</td>
+  <td>edge exits fruit, reaches board; full cut; separation 5–6 px, wedge tilt 6–7°</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>knife edge rests at the glass; pieces settle, board contact + juice dots</td>
+</tr>
+<tr>
+  <td>14–16</td>
+  <td>3.50–4.00</td>
+  <td>knife withdrawn up-right (tip ends ≈ (143,41)), rocking back; shadow follows</td>
+</tr>
+<tr>
+  <td>17–19</td>
+  <td>4.25–4.75</td>
+  <td>knife parked above-right off the fruit; both separated halves fully visible</td>
+</tr>
+</tbody>
+</table>
+<p>Knife motion (affine, smoothstep eased): the blade rotates −20° (visual
+clockwise) about its own tip (125,71) while the tip slides to ≈ (103,107)
+by frame 12, with a ±2 px sawing oscillation along the chord; a 2 px settle by
+frame 13. From frame 13 the pose blends over 3 frames to an up-right parked
+pose (tip ≈ (143,41), rotation +10° about the tip), leaving both halves clear
+from frame 15 on.</p>
+<h2>Method outline</h2>
+<p><code>generate.py</code>: build one inpainted static base (remove knife, knife shadow,
+fruit, fruit reflection via <code>cv2.inpaint</code> TELEA); extract knife/shadow sprites
+from frame 0 with polygon+color masks; build two fruit-piece sprites from real
+frame-0 peel pixels plus procedural peel fill for blade-covered pixels and
+procedural pale-orange flesh cut bands; composite per frame with feathered
+alpha, contact shadows, glass reflections, juice, and per-frame grain only on
+edited pixels. Frame 00 is written byte-content-identical from the source PNG.</p>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0042</h1>
+<p>Prompt: <em>&quot;One half of a tangerine has been placed on a glass cutting board.
+The knife slices through the tangerine.&quot;</em></p>
+<p>The animation is a <strong>procedural pixel composite</strong>, not a physical simulation:
+every output pixel is produced locally from <code>first_frame.png</code> with numpy,
+OpenCV and PIL (threshold masks, TELEA inpainting, affine warps, analytic
+shading, Gaussian blur and grain). No external models, images or network
+calls are used. Scene measurements were obtained entirely from numeric RGB
+inspection (class maps, masks, color medians); no image viewing tool was used.</p>
+<h2>Pipeline (<code>generate.py</code>)</h2>
+<ol>
+<li><strong>Frame-0 analysis.</strong> Segmentation thresholds separate orange peel
+(<code>R&gt;125, R−G&gt;28, G−B&gt;8, R−B&gt;45</code>; two connected components = body and
+soon-to-detach wedge), shadowed peel, neutral steel, and the cool board
+edges. Geometry: disk centre C=(114,79.5), R=21.6; cut chord
+P1=(114,58)→P0=(100,96), with along-chord unit e and normal m toward the
+body side.</li>
+<li><strong>Knife sprite.</strong> A 22-point polygon (tip ≈ (125,71), heel/body up to
+x≈189 at the top edge) intersected with a neutral-steel color test,
+morphology-closed, pinhole-filled and dilated 3×1; RGB taken from frame 0
+with a σ≈0.7 feathered alpha. The thin cast-shadow sliver on the glass
+(polyline (110,56)→(71,106)) is a separate dark-pixel sprite.</li>
+<li><strong>Static base.</strong> The fruit footprint (ellipse (114,88), radii 30×34), its
+glass reflection (ellipse (115,113), 30×15), the knife and its shadow are
+erased with a dilated mask and filled by <code>cv2.inpaint</code> (TELEA, radius 7).
+Because inpainting smears orange across the lower footprint, that zone is
+overwritten below y=96 with a procedural board patch: measured tone
+(113,105,96) + a σ≈9 low-frequency field + a slight cool gradient toward
+the front edge, feathered σ≈2. Static grain (σ≈2.4) is baked over every
+erased pixel.</li>
+<li><strong>Fruit-piece sprites.</strong> Analytic peel over the two half-disks: a
+light-direction ramp between shadow/mid/highlight peel colors
+(150,84,20)/(207,127,29)/(249,159,19), rim darkening, a soft top highlight,
+Gaussian mottling (σ≈2.6) and fine noise. Real frame-0 peel pixels then
+replace the analytic field wherever the peel masks are confident (the
+brown blade-shadow patch is excluded so it does not travel with the
+wedge); a darkened rind outline is added at each piece rim. Alphas are
+feathered σ≈0.7.</li>
+<li><strong>Per-frame pose</strong> (smoothstep-eased):<ul>
+<li>blade = rotate −20° (visually clockwise) <strong>about the tip (125,71)</strong> plus
+a translation sliding the tip to ≈ (103,107) by frame 12, with a ±2 px
+sawing oscillation along the chord and a 2 px settle by frame 13;</li>
+<li>from frame 13 the affine blends over 3 frames into an up-right parked
+pose (tip ≈ (143,41), +10° rock-back), so frames 15–19 show the knife
+fully off the fruit;</li>
+<li>piece separation grows to ≈6 px along m (wedge 60%, body 40%) with a
+tiny late settle; the wedge additionally rotates to −7° about P0 after
+frame 6 (tipping outward);</li>
+<li>cut progress <code>smooth((f−0.5)/10)</code> drives flesh reveal down the chord.</li>
+</ul>
+</li>
+<li><strong>Compositing per frame</strong>, onto the static base:
+glass reflections of both pieces (small blurred orange ellipses whose
+alpha follows blur intensity so the halo never darkens the board);
+elliptical contact shadows under the pieces and, from frame 9, the blade
+tip; the knife shadow sliver warped with the blade and faded to 20% once
+the edge lies on the glass; wedge and body sprites (warpAffine); cut-face
+flesh bands (outer (238,150,56) → inner (252,201,128), five radiating
+membrane lines and a bright pith line along the chord, alpha following
+cut depth and separation); the knife sprite; juice dots on the glass from
+frame 9; and a cutting-edge glint on the steel (frames 11–16, drawn along
+the warped edge just above the tip so it never floats on the board).
+Moving grain σ≈3.0 is added only to edited pixels (RNG seed 20261106).</li>
+<li><strong>Frame 00</strong> is asserted equal to <code>first_frame.png</code> and is written from
+the source; <code>artifact_io.save</code> packs the 20 frames as <code>pixels.npz</code>
+(uint32 <code>0xRRGGBB</code>, shape (144,256,20)), the 20 PNGs, the 8-tile
+<code>inspection.png</code>, and <code>index.html</code>. <code>transition_check.png</code> is produced
+separately (frames 0/6/12/19).</li>
+</ol>
+<h2>Verification performed</h2>
+<ul>
+<li><code>frames/00.png</code> is byte-content identical to <code>first_frame.png</code>.</li>
+<li>All 20 PNGs decode to exactly the <code>pixels.npz</code> tensor after
+<code>transpose(2,0,1)</code> (R/G/B channels compared element-wise).</li>
+<li>Numeric checks per frame: changed-pixel counts and bounding boxes vs frame
+0 grow smoothly during the press (≈2.0k at f01 to ≈5.3k at f10), stay
+bounded during the withdrawal sweep, and frames 17–19 differ only by
+residual grain; ASCII RGB class-maps confirm the cut progressing along the
+chord, flesh appearing, the halves parting, and the blade clearing both
+pieces by frame 15 with no steel over the fruit in frames 17–19.</li>
+<li>Probe-pixel traces confirmed the glass below the withdrawn knife returns to
+the neutral board tone (reflections blend by intensity, contact shadows
+stay under the pieces).</li>
+</ul>
+<h2>Honest limitations</h2>
+<ul>
+<li>Physics is stylized: cut depth, separation, tilt and knife motion are
+hand-tuned analytic functions, not driven by contact dynamics.</li>
+<li>Piece interiors reuse frame-0 peel pixels plus analytic fill; flesh is a
+flat-shaded band with membrane lines rather than realistic segments.</li>
+<li>The person/arm never moves; only the blade rocks/slides, implying the grip
+adjusts off-frame.</li>
+<li>Quality was assessed solely through numeric/RGB inspection and class maps,
+not visual viewing.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-text/0042-c27dc5990f2a.png';</script></body></html>

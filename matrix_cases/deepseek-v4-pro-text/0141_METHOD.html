@@ -1,0 +1,935 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>paper-smoke · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0141</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>paper-smoke</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>9</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>8</strong><span>generate.py 执行</span></div><div class="stat"><strong>30</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>11</strong><span>文件变更事件</span></div><div class="stat"><strong>22.5m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The piece of folded paper sits on a glass cutting board. The piece of folded paper is burning while white smoke is emitting from it.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>30 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>9 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-1ebc8101d734.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T05:37:05.855774+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +569/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 1ebc8101d7349846 · code af266d64eb34071b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,569 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;generate.py — PixelWorld-Text frame generator for burning paper on glass board.
++
++Generates 20 RGB frames (256×144) at 4 fps showing a folded paper burning on a
++glass cutting board with white smoke emission. Frame 00 matches first_frame.png
++exactly; frames 01–19 animate fire flicker, smoke advection, and paper consumption.
++
++Methods used:
++  - Frame 0: direct copy of first_frame.png
++  - Flame: region-based brightness/noise perturbation with Gaussian flicker kernel
++  - Smoke: density-field advection with source injection, diffusion, and decay
++  - Paper consumption: progressive darkening burn-front advancing downward
++  - Compositing: alpha blending of smoke over background with flame-on-paper rendering
++&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image, ImageFilter
++from pathlib import Path
++import os, sys
++
++# ── Paths ──────────────────────────────────────────────────────────────────
++CASE_DIR = Path(os.path.dirname(os.path.abspath(__file__)) or &quot;.&quot;)
++FIRST_FRAME = CASE_DIR / &quot;first_frame.png&quot;
++TMP_DIR = CASE_DIR / &quot;.tmp&quot;
++TMP_DIR.mkdir(exist_ok=True)
++
++H, W = 144, 256
++N_FRAMES = 20
++
++# ── Load first frame ───────────────────────────────────────────────────────
++first = np.array(Image.open(FIRST_FRAME)).astype(np.float64)
++assert first.shape == (H, W, 3), f&quot;Expected (144,256,3), got {first.shape}&quot;
++
++
++# ═══════════════════════════════════════════════════════════════════════════
++# SCENE ANALYSIS — Identify regions from frame 0
++# ═══════════════════════════════════════════════════════════════════════════
++
++def analyze_scene(frame):
++    &quot;&quot;&quot;Extract masks and regions from the first frame.&quot;&quot;&quot;
++    r, g, b = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
++    brightness = frame.mean(axis=2)
++
++    # Flame core: very bright, white pixels
++    flame_core = (r &gt; 240) &amp; (g &gt; 240) &amp; (b &gt; 240)
++
++    # Flame glow: bright warm area around the core (slightly yellow/white transition)
++    flame_glow = (brightness &gt; 180) &amp; (r &gt; 170) &amp; (g &gt; 160) &amp; (~flame_core)
++
++    # Smoke: gray-white pixels above the flame
++    # Smoke is lighter than background, not pure white, moderate brightness
++    smoke_mask = (
++        (brightness &gt; 90) &amp; (brightness &lt; 245)
++        &amp; (np.abs(r - g) &lt; 30) &amp; (np.abs(g - b) &lt; 30) &amp; (np.abs(r - b) &lt; 30)
++        &amp; (~flame_core) &amp; (~flame_glow)
++    )
++
++    # Paper body: warm, bright region below the flame
++    # Paper is cream-colored, relatively bright
++    paper_mask = (
++        (brightness &gt; 100) &amp; (brightness &lt; 240)
++        &amp; (r &gt; 100) &amp; (g &gt; 80)
++        &amp; (r &gt; g - 30) &amp; (r &lt; g + 40)
++        &amp; (~flame_core) &amp; (~flame_glow)
++        # Only below flame region
++    )
++
++    # Refine: paper is below y=70
++    y_grid, x_grid = np.mgrid[0:H, 0:W]
++    paper_mask = paper_mask &amp; (y_grid &gt;= 70)
++
++    # Static background: everything not flame, smoke, or paper
++    static_mask = ~(flame_core | flame_glow | smoke_mask | paper_mask)
++
++    return {
++        &quot;flame_core&quot;: flame_core,
++        &quot;flame_glow&quot;: flame_glow,
++        &quot;smoke_mask&quot;: smoke_mask,
++        &quot;paper_mask&quot;: paper_mask,
++        &quot;static_mask&quot;: static_mask,
++    }
++
++
++masks = analyze_scene(first)
++
++# Flame region bounding box from core
++fc_coords = np.argwhere(masks[&quot;flame_core&quot;])
+… diff truncated; 482 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-c16eb1fd9c6b.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T05:41:15.290924+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +322/−467</span></div><p class="hashes">pixels c16eb1fd9c6bc1f1 · code 73c0b9ddda28fa18</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -5,16 +5,17 @@
+ glass cutting board with white smoke emission. Frame 00 matches first_frame.png
+ exactly; frames 01–19 animate fire flicker, smoke advection, and paper consumption.
+ 
+-Methods used:
++Methods:
+   - Frame 0: direct copy of first_frame.png
+-  - Flame: region-based brightness/noise perturbation with Gaussian flicker kernel
+-  - Smoke: density-field advection with source injection, diffusion, and decay
+-  - Paper consumption: progressive darkening burn-front advancing downward
+-  - Compositing: alpha blending of smoke over background with flame-on-paper rendering
++  - Frame-to-frame: incremental modification (not clean-plate re-render)
++  - Flame: direct pixel perturbation in the flame core region with controlled noise
++  - Smoke: density-field advection upward + new smoke injection at flame source
++  - Paper consumption: progressive burn-front darkening advancing downward
++  - Compositing: alpha blending for smoke over frame content
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+-from PIL import Image, ImageFilter
++from PIL import Image
+ from pathlib import Path
+ import os, sys
+ 
+@@ -33,537 +34,391 @@
+ 
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+-# SCENE ANALYSIS — Identify regions from frame 0
++# SCENE ANALYSIS
+ # ═══════════════════════════════════════════════════════════════════════════
+ 
+ def analyze_scene(frame):
+-    &quot;&quot;&quot;Extract masks and regions from the first frame.&quot;&quot;&quot;
++    &quot;&quot;&quot;Extract masks for flame, smoke, and paper regions from frame 0.&quot;&quot;&quot;
+     r, g, b = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
+     brightness = frame.mean(axis=2)
+-
+-    # Flame core: very bright, white pixels
++    y_grid, x_grid = np.mgrid[0:H, 0:W]
++
++    # Flame core: pure white or near-white (the hottest point)
+     flame_core = (r &gt; 240) &amp; (g &gt; 240) &amp; (b &gt; 240)
+ 
+-    # Flame glow: bright warm area around the core (slightly yellow/white transition)
+-    flame_glow = (brightness &gt; 180) &amp; (r &gt; 170) &amp; (g &gt; 160) &amp; (~flame_core)
+-
+-    # Smoke: gray-white pixels above the flame
+-    # Smoke is lighter than background, not pure white, moderate brightness
++    # Flame glow: bright warm transition zone
++    flame_glow = (
++        (brightness &gt; 150) &amp; (brightness &lt;= 245)
++        &amp; (r &gt; 140) &amp; (g &gt; 120)
++        &amp; (~flame_core)
++    )
++
++    # Smoke: gray-white, above the flame
+     smoke_mask = (
+-        (brightness &gt; 90) &amp; (brightness &lt; 245)
+-        &amp; (np.abs(r - g) &lt; 30) &amp; (np.abs(g - b) &lt; 30) &amp; (np.abs(r - b) &lt; 30)
++        (brightness &gt; 45) &amp; (brightness &lt; 220)
++        &amp; (np.abs(r - g) &lt; 50) &amp; (np.abs(g - b) &lt; 50) &amp; (np.abs(r - b) &lt; 50)
+         &amp; (~flame_core) &amp; (~flame_glow)
+     )
+ 
+-    # Paper body: warm, bright region below the flame
+-    # Paper is cream-colored, relatively bright
++    # Paper body: warm tones, relatively bright, below the flame
+     paper_mask = (
+-        (brightness &gt; 100) &amp; (brightness &lt; 240)
+-        &amp; (r &gt; 100) &amp; (g &gt; 80)
+-        &amp; (r &gt; g - 30) &amp; (r &lt; g + 40)
+-        &amp; (~flame_core) &amp; (~flame_glow)
+-        # Only below flame region
++        (brightness &gt; 80) &amp; (brightness &lt; 240)
++        &amp; (r &gt; 90) &amp; (g &gt; 75)
++        &amp; (r &gt; g - 45)
++        &amp; (y_grid &gt;= 70)
+     )
+-
+-    # Refine: paper is below y=70
+-    y_grid, x_grid = np.mgrid[0:H, 0:W]
+-    paper_mask = paper_mask &amp; (y_grid &gt;= 70)
+-
+-    # Static background: everything not flame, smoke, or paper
+-    static_mask = ~(flame_core | flame_glow | smoke_mask | paper_mask)
+ 
+     return {
+… diff truncated; 789 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-c16eb1fd9c6b.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T05:41:17.163833+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels c16eb1fd9c6bc1f1 · code 73c0b9ddda28fa18</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-74e47b989fa9.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T05:42:54.794433+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +219/−261</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 74e47b989fa97edc · code 46566a10eab89c86</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -7,11 +7,13 @@
+ 
+ Methods:
+   - Frame 0: direct copy of first_frame.png
+-  - Frame-to-frame: incremental modification (not clean-plate re-render)
+-  - Flame: direct pixel perturbation in the flame core region with controlled noise
+-  - Smoke: density-field advection upward + new smoke injection at flame source
++  - Clean background: estimate what&#x27;s behind the smoke in frame 0 by sampling
++    non-smoke regions and inpainting
++  - Flame: direct pixel perturbation in the flame core region with noise
++  - Smoke: density-field advection upward + new injection at flame, recomposited
++    over de-smoked background each frame
+   - Paper consumption: progressive burn-front darkening advancing downward
+-  - Compositing: alpha blending for smoke over frame content
++  - Compositing: alpha blending for smoke over cleaned background
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -19,7 +21,6 @@
+ from pathlib import Path
+ import os, sys
+ 
+-# ── Paths ──────────────────────────────────────────────────────────────────
+ CASE_DIR = Path(os.path.dirname(os.path.abspath(__file__)) or &quot;.&quot;)
+ FIRST_FRAME = CASE_DIR / &quot;first_frame.png&quot;
+ TMP_DIR = CASE_DIR / &quot;.tmp&quot;
+@@ -28,85 +29,121 @@
+ H, W = 144, 256
+ N_FRAMES = 20
+ 
+-# ── Load first frame ───────────────────────────────────────────────────────
+ first = np.array(Image.open(FIRST_FRAME)).astype(np.float64)
+-assert first.shape == (H, W, 3), f&quot;Expected (144,256,3), got {first.shape}&quot;
++assert first.shape == (H, W, 3)
+ 
+ 
+ # ═══════════════════════════════════════════════════════════════════════════
+ # SCENE ANALYSIS
+ # ═══════════════════════════════════════════════════════════════════════════
+ 
+-def analyze_scene(frame):
+-    &quot;&quot;&quot;Extract masks for flame, smoke, and paper regions from frame 0.&quot;&quot;&quot;
+-    r, g, b = frame[:, :, 0], frame[:, :, 1], frame[:, :, 2]
+-    brightness = frame.mean(axis=2)
+-    y_grid, x_grid = np.mgrid[0:H, 0:W]
+-
+-    # Flame core: pure white or near-white (the hottest point)
+-    flame_core = (r &gt; 240) &amp; (g &gt; 240) &amp; (b &gt; 240)
+-
+-    # Flame glow: bright warm transition zone
+-    flame_glow = (
+-        (brightness &gt; 150) &amp; (brightness &lt;= 245)
+-        &amp; (r &gt; 140) &amp; (g &gt; 120)
+-        &amp; (~flame_core)
+-    )
+-
+-    # Smoke: gray-white, above the flame
+-    smoke_mask = (
+-        (brightness &gt; 45) &amp; (brightness &lt; 220)
+-        &amp; (np.abs(r - g) &lt; 50) &amp; (np.abs(g - b) &lt; 50) &amp; (np.abs(r - b) &lt; 50)
+-        &amp; (~flame_core) &amp; (~flame_glow)
+-    )
+-
+-    # Paper body: warm tones, relatively bright, below the flame
+-    paper_mask = (
+-        (brightness &gt; 80) &amp; (brightness &lt; 240)
+-        &amp; (r &gt; 90) &amp; (g &gt; 75)
+-        &amp; (r &gt; g - 45)
+-        &amp; (y_grid &gt;= 70)
+-    )
+-
+-    return {
+-        &quot;flame_core&quot;: flame_core,
+-        &quot;flame_glow&quot;: flame_glow,
+-        &quot;smoke_mask&quot;: smoke_mask,
+-        &quot;paper_mask&quot;: paper_mask,
+-    }
+-
+-
+-masks = analyze_scene(first)
+-
+-# Flame CORE center (hottest point)
+-fc = np.argwhere(masks[&quot;flame_core&quot;])
+-if len(fc) &gt; 0:
+-    flame_cy = fc[:, 0].mean()
+-    flame_cx = fc[:, 1].mean()
+-    flame_y_min = fc[:, 0].min()
+-    flame_y_max = fc[:, 0].max()
+… diff truncated; 538 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-0e2e418e5879.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T05:44:31.873285+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +221/−268</span></div><p class="hashes">pixels 0e2e418e58799bd5 · code 018b08a84f64d349</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,19 +1,18 @@
+ #!/usr/bin/env python3
+ &quot;&quot;&quot;generate.py — PixelWorld-Text frame generator for burning paper on glass board.
+ 
+-Generates 20 RGB frames (256×144) at 4 fps showing a folded paper burning on a
+-glass cutting board with white smoke emission. Frame 00 matches first_frame.png
+-exactly; frames 01–19 animate fire flicker, smoke advection, and paper consumption.
+-
+-Methods:
+-  - Frame 0: direct copy of first_frame.png
+-  - Clean background: estimate what&#x27;s behind the smoke in frame 0 by sampling
+-    non-smoke regions and inpainting
+-  - Flame: direct pixel perturbation in the flame core region with noise
+-  - Smoke: density-field advection upward + new injection at flame, recomposited
+-    over de-smoked background each frame
+-  - Paper consumption: progressive burn-front darkening advancing downward
+-  - Compositing: alpha blending for smoke over cleaned background
++Generates 20 RGB frames (256×144) at 4 fps: folded paper burning on a glass
++cutting board with white smoke emission.
++
++Method:
++  - Frame 0 = exact copy of first_frame.png
++  - Each subsequent frame builds on the previous frame (cumulative modification)
++  - Flame: brightness perturbation in flame core/glow region with Gaussian noise
++  - Smoke: new Gaussian smoke puffs injected each frame at flame source, rising
++    upward and composited over the existing scene; older puffs rise, expand, and fade
++  - Paper consumption: progressive burn-front darkening advancing downward with
++    char transition zone
++  - Warm ambient glow from flame illuminating nearby surfaces
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -26,356 +25,310 @@
+ TMP_DIR = CASE_DIR / &quot;.tmp&quot;
+ TMP_DIR.mkdir(exist_ok=True)
+ 
+-H, W = 144, 256
++H, W, CH = 144, 256, 3
+ N_FRAMES = 20
+ 
+ first = np.array(Image.open(FIRST_FRAME)).astype(np.float64)
+-assert first.shape == (H, W, 3)
+-
+-
+-# ═══════════════════════════════════════════════════════════════════════════
+-# SCENE ANALYSIS
+-# ═══════════════════════════════════════════════════════════════════════════
+-
+-r, g, b = first[:, :, 0], first[:, :, 1], first[:, :, 2]
++assert first.shape == (H, W, CH)
++
++# ── Scene analysis ─────────────────────────────────────────────────────────
+ brightness = first.mean(axis=2)
+-
+-# Flame core
+-flame_core = (r &gt; 240) &amp; (g &gt; 240) &amp; (b &gt; 240)
+-fc = np.argwhere(flame_core)
++R, G, B = first[:, :, 0], first[:, :, 1], first[:, :, 2]
++
++# Flame core: pure white pixels
++flame_core_mask = (R &gt; 240) &amp; (G &gt; 240) &amp; (B &gt; 240)
++fc = np.argwhere(flame_core_mask)
+ flame_cy = fc[:, 0].mean()  # ~72
+ flame_cx = fc[:, 1].mean()  # ~123
+-print(f&quot;Flame core center: ({flame_cy:.1f}, {flame_cx:.1f})&quot;)
+-
+-# Flame glow
+-flame_glow = (
++flame_y_min, flame_y_max = fc[:, 0].min(), fc[:, 0].max()
++flame_x_min, flame_x_max = fc[:, 1].min(), fc[:, 1].max()
++print(f&quot;Flame core: center=({flame_cy:.0f},{flame_cx:.0f}), &quot;
++      f&quot;bbox=y[{flame_y_min},{flame_y_max}] x[{flame_x_min},{flame_x_max}]&quot;)
++
++# Flame glow: bright warm area around core
++flame_glow_mask = (
+     (brightness &gt; 150) &amp; (brightness &lt;= 245)
+-    &amp; (r &gt; 140) &amp; (g &gt; 120)
+-    &amp; (~flame_core)
++    &amp; (R &gt; 140) &amp; (G &gt; 120)
++    &amp; (~flame_core_mask)
+ )
+ 
+-# Combined flame region
+-flame_region = flame_core | flame_glow
+-
+-# Paper region (below flame, warm bright)
+-Ygrid, Xgrid = np.mgrid[0:H, 0:W]
++# Paper body: warm bright, below flame
+… diff truncated; 510 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-0e2e418e5879.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-06T05:44:33.723383+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 0e2e418e58799bd5 · code 018b08a84f64d349</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-bf59fd19da7b.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-06T05:46:14.475001+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +126/−156</span><span class="change">inspection 更新</span></div><p class="hashes">pixels bf59fd19da7b4cfa · code 2d29c8a21ddef441</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -4,15 +4,16 @@
+ Generates 20 RGB frames (256×144) at 4 fps: folded paper burning on a glass
+ cutting board with white smoke emission.
+ 
+-Method:
++Methods:
+   - Frame 0 = exact copy of first_frame.png
+-  - Each subsequent frame builds on the previous frame (cumulative modification)
+-  - Flame: brightness perturbation in flame core/glow region with Gaussian noise
+-  - Smoke: new Gaussian smoke puffs injected each frame at flame source, rising
+-    upward and composited over the existing scene; older puffs rise, expand, and fade
+-  - Paper consumption: progressive burn-front darkening advancing downward with
+-    char transition zone
+-  - Warm ambient glow from flame illuminating nearby surfaces
++  - Frame-to-frame cumulative modification
++  - Flame: brightness perturbation in flame region with Gaussian noise,
++    re-referenced to first_frame.png flame colors each frame
++  - Smoke: Gaussian puff particle system — puffs injected at flame, rise
++    upward, expand, and fade. Rendered via alpha compositing.
++  - Paper consumption: burn-front darkening advancing downward from flame
++  - Ambient glow: warm radial illumination from flame
++  - Render order: paper → glow → smoke → flame (flame on top so it stays bright)
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -34,26 +35,23 @@
+ # ── Scene analysis ─────────────────────────────────────────────────────────
+ brightness = first.mean(axis=2)
+ R, G, B = first[:, :, 0], first[:, :, 1], first[:, :, 2]
+-
+-# Flame core: pure white pixels
++Y, X = np.mgrid[0:H, 0:W]
++
++# Flame core
+ flame_core_mask = (R &gt; 240) &amp; (G &gt; 240) &amp; (B &gt; 240)
+ fc = np.argwhere(flame_core_mask)
+-flame_cy = fc[:, 0].mean()  # ~72
+-flame_cx = fc[:, 1].mean()  # ~123
+-flame_y_min, flame_y_max = fc[:, 0].min(), fc[:, 0].max()
+-flame_x_min, flame_x_max = fc[:, 1].min(), fc[:, 1].max()
+-print(f&quot;Flame core: center=({flame_cy:.0f},{flame_cx:.0f}), &quot;
+-      f&quot;bbox=y[{flame_y_min},{flame_y_max}] x[{flame_x_min},{flame_x_max}]&quot;)
+-
+-# Flame glow: bright warm area around core
++flame_cy = fc[:, 0].mean()
++flame_cx = fc[:, 1].mean()
++print(f&quot;Flame core center: ({flame_cy:.0f},{flame_cx:.0f})&quot;)
++
++# Flame glow
+ flame_glow_mask = (
+     (brightness &gt; 150) &amp; (brightness &lt;= 245)
+     &amp; (R &gt; 140) &amp; (G &gt; 120)
+     &amp; (~flame_core_mask)
+ )
+ 
+-# Paper body: warm bright, below flame
+-Y, X = np.mgrid[0:H, 0:W]
++# Paper body
+ paper_mask = (
+     (brightness &gt; 80) &amp; (brightness &lt; 240)
+     &amp; (R &gt; 90) &amp; (G &gt; 75)
+@@ -61,22 +59,12 @@
+     &amp; (Y &gt;= 70)
+ )
+ pc = np.argwhere(paper_mask)
+-print(f&quot;Paper: {len(pc)} px, y=[{pc[:,0].min()},{pc[:,0].max()}], x=[{pc[:,1].min()},{pc[:,1].max()}]&quot;)
+-
+-# Smoke region: gray-white above flame (for advection target)
+-grayness = np.maximum(np.abs(R - G), np.maximum(np.abs(G - B), np.abs(R - B)))
+-smoke_region_mask = (
+-    (brightness &gt; 40) &amp; (brightness &lt; 230)
+-    &amp; (grayness &lt; 60)
+-    &amp; (~flame_core_mask) &amp; (~flame_glow_mask)
+-    &amp; (~paper_mask)  # not on the paper itself
+-)
++print(f&quot;Paper: {len(pc)} px, y=[{pc[:,0].min()},{pc[:,0].max()}]&quot;)
+ 
+ 
+ # ── Intensity curves ──────────────────────────────────────────────────────
+ 
+ def flame_intensity(t):
+-    &quot;&quot;&quot;Flame strength multiplier, peaks mid-animation then fades.&quot;&quot;&quot;
+     if t &lt;= 1:      return 1.0 + 0.03 * t
+     elif t &lt;= 5:    return 1.03 + 0.04 * (t - 1)
+     elif t &lt;= 11:   return 1.19 + 0.015 * (t - 5)
+@@ -84,176 +72,175 @@
+     elif t &lt;= 18:   return 0.88 - 0.20 * (t - 15)
+     else:           return max(0.0, 0.28 - 0.24)
+… diff truncated; 337 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-cd945e591f1d.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-06T05:48:32.812391+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +72/−85</span><span class="change">inspection 更新</span></div><p class="hashes">pixels cd945e591f1d90a8 · code cdb3f45596dfc797</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -6,14 +6,14 @@
+ 
+ Methods:
+   - Frame 0 = exact copy of first_frame.png
+-  - Frame-to-frame cumulative modification
+-  - Flame: brightness perturbation in flame region with Gaussian noise,
+-    re-referenced to first_frame.png flame colors each frame
+-  - Smoke: Gaussian puff particle system — puffs injected at flame, rise
+-    upward, expand, and fade. Rendered via alpha compositing.
+-  - Paper consumption: burn-front darkening advancing downward from flame
+-  - Ambient glow: warm radial illumination from flame
+-  - Render order: paper → glow → smoke → flame (flame on top so it stays bright)
++  - Each frame built from first_frame.png base + cumulative effects
++  - Flame: brightness perturbation in flame region, re-referenced to first_frame
++  - Smoke: Gaussian puff particle system — puffs injected at flame, rise,
++    expand, fade. Alpha-composited.
++  - Paper consumption: cumulative burn-front with monotonic advance,
++    char transition zone with noise texture
++  - Ambient glow: radial warm illumination from flame
++  - Render order: paper → glow → smoke → flame (flame always on top)
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -37,21 +37,19 @@
+ R, G, B = first[:, :, 0], first[:, :, 1], first[:, :, 2]
+ Y, X = np.mgrid[0:H, 0:W]
+ 
+-# Flame core
+ flame_core_mask = (R &gt; 240) &amp; (G &gt; 240) &amp; (B &gt; 240)
+ fc = np.argwhere(flame_core_mask)
+-flame_cy = fc[:, 0].mean()
+-flame_cx = fc[:, 1].mean()
+-print(f&quot;Flame core center: ({flame_cy:.0f},{flame_cx:.0f})&quot;)
+-
+-# Flame glow
++flame_cy = fc[:, 0].mean()  # ~72
++flame_cx = fc[:, 1].mean()  # ~123
++flame_y_min, flame_y_max = fc[:, 0].min(), fc[:, 0].max()
++print(f&quot;Flame core: ({flame_cy:.0f},{flame_cx:.0f}) y=[{flame_y_min},{flame_y_max}]&quot;)
++
+ flame_glow_mask = (
+-    (brightness &gt; 150) &amp; (brightness &lt;= 245)
+-    &amp; (R &gt; 140) &amp; (G &gt; 120)
++    (brightness &gt; 145) &amp; (brightness &lt;= 245)
++    &amp; (R &gt; 135) &amp; (G &gt; 115)
+     &amp; (~flame_core_mask)
+ )
+ 
+-# Paper body
+ paper_mask = (
+     (brightness &gt; 80) &amp; (brightness &lt; 240)
+     &amp; (R &gt; 90) &amp; (G &gt; 75)
+@@ -70,37 +68,40 @@
+     elif t &lt;= 11:   return 1.19 + 0.015 * (t - 5)
+     elif t &lt;= 15:   return 1.28 - 0.10 * (t - 11)
+     elif t &lt;= 18:   return 0.88 - 0.20 * (t - 15)
+-    else:           return max(0.0, 0.28 - 0.24)
++    else:           return max(0.0, 0.28 - 0.26)
++
++
++# Precompute cumulative burn distance
++# Total burn over 19 frames: ~35 px, reaching from y=72 to y=107
++cumulative_burn = np.zeros(N_FRAMES)
++for t in range(1, N_FRAMES):
++    cumulative_burn[t] = cumulative_burn[t-1] + 2.0 * flame_intensity(t)
+ 
+ 
+ # ── Flame animation ───────────────────────────────────────────────────────
+ 
+ def flicker_flame(frame, t, rng):
+-    &quot;&quot;&quot;Replace flame region with flickered version of original flame pixels.&quot;&quot;&quot;
+     fi = flame_intensity(t)
+     if fi &lt; 0.02:
+         return frame
+     result = frame.copy()
+     cy = flame_cy + rng.normal(0, 0.3)
+     cx = flame_cx + rng.normal(0, 0.3)
+-    rad = 32 * fi
++    rad = 30 * fi
+     dist = np.sqrt((Y - cy) ** 2 + (X - cx) ** 2)
+ 
+-    # Core
+     zm = dist &lt; rad * 0.22
+     if zm.sum():
+         f = np.clip(1.0 + rng.normal(0, 0.06, zm.sum()), 0.85, 1.15)
+         for c in range(3):
+             result[zm, c] = np.clip(first[zm, c] * f, 0, 255)
+ 
+… diff truncated; 215 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/candidate-3f3ee7af3b9f.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-06T05:50:37.834484+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +22/−2</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 3f3ee7af3b9f5bf8 · code faf513f5d4d21b61</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -82,9 +82,29 @@
+ 
+ def flicker_flame(frame, t, rng):
+     fi = flame_intensity(t)
+-    if fi &lt; 0.02:
+-        return frame
+     result = frame.copy()
++
++    if fi &lt; 0.05:
++        # Flame is nearly out: progressively dim the flame to charred paper color
++        fade_factor = 1.0 - fi / 0.05  # 1.0 at fi=0, 0.0 at fi=0.05
++        paper_sample = first[paper_mask]
++        char_color = paper_sample.mean(axis=0) * 0.15 if len(paper_sample) &gt; 0 else np.array([15, 12, 9])
++
++        if flame_core_mask.sum() &gt; 0:
++            for c in range(3):
++                result[flame_core_mask, c] = (
++                    result[flame_core_mask, c] * (1 - fade_factor)
++                    + char_color[c] * fade_factor
++                )
++        if flame_glow_mask.sum() &gt; 0:
++            for c in range(3):
++                bg_val = first[flame_glow_mask, c] * 0.3
++                result[flame_glow_mask, c] = (
++                    result[flame_glow_mask, c] * (1 - fade_factor)
++                    + bg_val * fade_factor
++                )
++        return result
++
+     cy = flame_cy + rng.normal(0, 0.3)
+     cx = flame_cx + rng.normal(0, 0.3)
+     rad = 30 * fi</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0141/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION.md — Scene Analysis &amp; Event Plan</h1>
+<h2>Scene Description (from prompt.txt)</h2>
+<blockquote>
+<p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The piece of folded paper sits on a glass cutting board. The piece of folded paper is burning while white smoke is emitting from it.</p>
+</blockquote>
+<h2>Frame Parameters</h2>
+<ul>
+<li>Resolution: 256×144 pixels</li>
+<li>Frame count: 20 frames (0–19)</li>
+<li>Frame rate: 4 fps</li>
+<li>Duration: 5 seconds (0.00s – 4.75s)</li>
+<li>Frame 00 must exactly match <code>first_frame.png</code></li>
+</ul>
+<h2>Scene Measurements (from first_frame.png)</h2>
+<h3>Overall Layout</h3>
+<ul>
+<li><strong>Background</strong>: Dark warm-toned environment (RGB ~84,79,91 in top region). Likely a room wall behind the setup.</li>
+<li><strong>Glass cutting board</strong>: Occupies the lower portion of the frame (approximately y=80–143), visible as a slightly reflective transparent surface on top of a dark counter/surface.</li>
+<li><strong>Folded paper</strong>: Positioned on the glass board, centered roughly at x=100–240, y=70–143. Paper appears cream/off-white with warm tones.</li>
+<li><strong>Flame core</strong>: Pure white (255,255,255) pixels at y=63–74, x=116–133 (35 pixels). The flame is in a hot, bright white state — a small but intense combustion point on the paper.</li>
+<li><strong>White smoke</strong>: Visible as grayish-white pixels rising from the flame area upward (y=50–143, x=103–230). Smoke spreads and diffuses as it rises.</li>
+</ul>
+<h3>Key Region Boundaries</h3>
+<table>
+<thead>
+<tr>
+  <th>Region</th>
+  <th>y-range</th>
+  <th>x-range</th>
+  <th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Background wall</td>
+  <td>0–30</td>
+  <td>all</td>
+  <td>Dark gray/blue tones</td>
+</tr>
+<tr>
+  <td>Mid background</td>
+  <td>30–80</td>
+  <td>all</td>
+  <td>Transition to board area</td>
+</tr>
+<tr>
+  <td>Flame core</td>
+  <td>63–74</td>
+  <td>116–133</td>
+  <td>Pure white, 35 px</td>
+</tr>
+<tr>
+  <td>Smoke column</td>
+  <td>50–143</td>
+  <td>103–230</td>
+  <td>Grayish white, rising</td>
+</tr>
+<tr>
+  <td>Paper body</td>
+  <td>70–143</td>
+  <td>100–240</td>
+  <td>Cream/warm tones</td>
+</tr>
+<tr>
+  <td>Glass board edges</td>
+  <td>80–140</td>
+  <td>0–90 (left), 200–256 (right)</td>
+  <td>Darker reflective surface</td>
+</tr>
+</tbody>
+</table>
+<h3>Brightness Profile</h3>
+<ul>
+<li>Brightness increases from left to right across the frame</li>
+<li>Peak brightness around x=112–127 (flame center), average 133.7</li>
+<li>Row brightness increases sharply from y=112 downward (paper body)</li>
+<li>Top rows (0–31): brightness 75–95 (background)</li>
+<li>Middle rows (32–111): brightness 74–91 (smoke/transition)</li>
+<li>Bottom rows (112–143): brightness 98–126 (paper + board)</li>
+</ul>
+<h2>20-Frame Event Plan</h2>
+<p>The animation depicts a 5-second continuous burn of the folded paper on the glass cutting board, with realistic fire dynamics and smoke emission.</p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Events</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td><strong>Initial state</strong> — Exact copy of <code>first_frame.png</code>. Paper burning with small bright flame core, initial smoke plume rising.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>Flame flickers slightly (core expands ~5%). Smoke plume rises ~6px, slight turbulent spreading.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>Flame continues. Paper edge near flame begins to darken (char). Smoke column rises further, beginning to dissipate at top.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>Flame core shifts slightly (dances). More smoke generated, rising column becomes more turbulent. Paper body slightly consumed near flame.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>Flame intensity increases slightly. Smoke expands laterally. Paper shows visible burning progress at top edge.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>Flame flicker with temporary intensity drop then recovery. Smoke column thickens and rises past frame top. New smoke puffs generated.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>Flame core position drifts ~2px as paper burns unevenly. Smoke becomes more diffused at top. More paper consumed.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>Renewed flame intensity. Multiple smoke puffs visible at different heights. Paper visibly reduced in size.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>Flame steadies. Thick smoke column with visible turbulence patterns. Paper continues burning downward.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>Flame flickers rapidly. Smoke reaches maximum density, some wisps detach and float upward independently.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>Mid-burn. Paper noticeably consumed (~15% mass loss). Flame slightly lower as it follows burning paper surface. Smoke column well-established.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>Intense burning phase. Larger flame area. Smoke output increases. Charred paper edges visible around flame.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>Peak flame intensity. Very active smoke generation. Smoke fills upper portion of frame. Paper body visibly shrinking.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>Flame begins to reduce slightly as fuel (paper) decreases. Smoke still dense but beginning to thin at edges.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>Diminishing burn. Flame core smaller. Smoke production slowing. Paper noticeably smaller and more charred.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>Burn winding down. Small flame remains. Smoke column thinning. Most of visible paper surface charred dark.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>Very small flame remaining. Smoke wisps drifting upward, mostly dissipated. Paper nearly consumed.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>Faint flame, almost extinguished. Residual smoke drifting. Charred paper fragments on glass board.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>Last flickers of flame. Thin smoke trails. Mostly charred remains visible.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td><strong>Final state</strong> — Flame extinguished or barely visible ember. Wispy residual smoke near top of frame. Charred paper remains on glass board, much smaller than initial.</td>
+</tr>
+</tbody>
+</table>
+<h2>Visual Effects Plan</h2>
+<h3>1. Flame Animation</h3>
+<ul>
+<li><strong>Method</strong>: The flame core (pure white region) is perturbed each frame using Gaussian-distributed spatial noise centered on the current flame position. The perturbation amplitude follows a Perlin-like noise pattern for natural flickering.</li>
+<li><strong>Intensity curve</strong>: Flame intensity starts moderate, increases to peak around frames 11–12, then diminishes toward extinction by frame 18–19.</li>
+<li><strong>Color</strong>: Flame transitions from pure white core → gray transition → warm-toned edges (subtle yellow/orange glow on surrounding paper).</li>
+</ul>
+<h3>2. Smoke Animation</h3>
+<ul>
+<li><strong>Method</strong>: Particle-based smoke system. Smoke &quot;puffs&quot; are generated at the flame position each frame. Each puff has position (x,y), velocity (vx,vy), opacity, and size. Puffs rise with upward velocity (~6–8 px/frame) with horizontal sinusoidal drift. Opacity decreases with height. Puffs are composited over the background using alpha blending.</li>
+<li><strong>Rising speed</strong>: ~6–8 px/frame (24–32 px/s).</li>
+<li><strong>Turbulence</strong>: Horizontal sinusoidal displacement plus small random walk.</li>
+<li><strong>Dissipation</strong>: Smoke fades linearly with height above flame, fully dissipated when opacity reaches 0.</li>
+</ul>
+<h3>3. Paper Consumption</h3>
+<ul>
+<li><strong>Method</strong>: The paper region below the flame is progressively darkened (charred) and eroded. A burning front advances downward at ~1–2 px/frame. Pixels above the burning front in the paper region are darkened to simulate charring. The burning front advances faster during peak flame (frames 10–14) and slows during wind-down.</li>
+<li><strong>Char color</strong>: Gradual transition from paper cream → warm brown → dark gray/black.</li>
+<li><strong>Erosion rate</strong>: ~1–2 px/frame downward.</li>
+</ul>
+<h3>4. Background Preservation</h3>
+<ul>
+<li>All non-paper, non-smoke regions remain static throughout the animation (locked-off camera).</li>
+<li>The glass board surface remains unchanged except where covered by smoke or paper consumption.</li>
+</ul>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md — Technical Documentation</h1>
+<h2>Overview</h2>
+<p>This document describes the techniques used in <code>generate.py</code> to produce the 20-frame animation of a folded paper burning on a glass cutting board with white smoke emission.</p>
+<h2>Architecture</h2>
+<p>The generator uses a <strong>frame-to-frame incremental approach</strong>:</p>
+<ul>
+<li>Frame 00 is an exact copy of <code>first_frame.png</code>.</li>
+<li>Each subsequent frame (01–19) is built from <code>first_frame.png</code> as a clean canvas, with cumulative effects reapplied in a consistent layer order.</li>
+<li>This ensures frame 00 is pixel-perfect and all 20 frames share the same static background, avoiding drift artifacts from cumulative rounding errors.</li>
+</ul>
+<h2>Layer Rendering Order</h2>
+<p>For each frame <code>t</code> (1–19), effects are applied in this order:</p>
+<ol>
+<li><strong>Paper consumption</strong> — Darkens the paper region based on cumulative burn progress.</li>
+<li><strong>Ambient glow</strong> — Warm radial light from the flame illuminating nearby surfaces.</li>
+<li><strong>Smoke rendering</strong> — Active smoke puffs alpha-composited over the scene.</li>
+<li><strong>Flame animation</strong> — Flame core/glow rendered on top so it always remains the brightest element.</li>
+</ol>
+<h2>Techniques</h2>
+<h3>1. Flame Animation (Flickering)</h3>
+<p><strong>Method</strong>: Direct pixel brightness perturbation in the flame region.</p>
+<ul>
+<li>The flame core and glow regions are identified from <code>first_frame.png</code> using thresholding:<ul>
+<li><strong>Flame core</strong>: Pixels with R,G,B all &gt; 240 (pure white hot zone).</li>
+<li><strong>Flame glow</strong>: Brightness &gt; 145, with warm R&gt;135, G&gt;115 cutoff.</li>
+</ul>
+</li>
+<li>For each frame, the flame region is re-referenced to <code>first_frame.png</code>'s original pixel values and multiplied by Gaussian-noise perturbation factors.</li>
+<li>Three concentric zones are treated with different noise amplitudes:<ul>
+<li><strong>Core</strong> (inner 22% of flame radius): ±6% flicker, wider stability range [0.85, 1.15]</li>
+<li><strong>Inner glow</strong> (22–52%): ±11% flicker, range [0.78, 1.22]</li>
+<li><strong>Outer glow</strong> (52–100%): ±5% flicker, range [0.88, 1.12]</li>
+</ul>
+</li>
+<li><strong>Flame dimming at low intensity</strong>: When <code>fi &lt; 0.05</code>, the flame core and glow are linearly blended toward charred paper color (dark brown/black) to simulate flame extinction. At frame 19, the flame core is fully charred with 0 pure white pixels remaining.</li>
+</ul>
+<p><strong>Intensity curve</strong>: The flame intensity follows a parabolic-like arc:</p>
+<ul>
+<li>Frames 0–5: Ramping up (1.0 → 1.19)</li>
+<li>Frames 5–11: Sustained peak (~1.19–1.28)</li>
+<li>Frames 11–15: Decaying (1.28 → 0.88)</li>
+<li>Frames 15–19: Rapid extinction (0.88 → 0.02)</li>
+</ul>
+<h3>2. Smoke Animation (Gaussian Puff Particle System)</h3>
+<p><strong>Method</strong>: A particle system of semi-transparent Gaussian blobs (&quot;puffs&quot;) that are generated at the flame source, rise upward, expand, and fade.</p>
+<ul>
+<li><strong>Injection</strong>: 3–11 puffs are spawned per frame at the flame center position, with random offsets, initial upward velocity (5.5–9 px/frame), slight horizontal drift, opacity 0.30–0.70, and radius 2–6 px.</li>
+<li><strong>Update each frame</strong>:<ul>
+<li>Position updated by velocity (vy ~5.5–9 px/frame upward, vx with sinusoidal drift)</li>
+<li>Radius expands by 0.40 px/frame (smoke spreads as it rises)</li>
+<li>Opacity decays by 0.025 per frame (~40 frames to fully disappear)</li>
+<li>Velocity decays by 0.995× per frame (slight deceleration)</li>
+</ul>
+</li>
+<li><strong>Rendering</strong>: Each puff is rendered as a 2D Gaussian with alpha blending. Smoke color is off-white (218, 218, 225). The Gaussian sigma is <code>radius/2.1</code>, alpha capped at <code>opacity × 0.50</code>.</li>
+<li><strong>Cap</strong>: Maximum 100 active puffs to maintain performance and prevent oversaturation.</li>
+</ul>
+<h3>3. Paper Consumption (Cumulative Burn Front)</h3>
+<p><strong>Method</strong>: A burn front advances monotonically downward from the flame center over time.</p>
+<ul>
+<li>The burn front position at frame <code>t</code> is: <code>burn_y = flame_cy + cumulative_burn[t]</code></li>
+<li><code>cumulative_burn[t]</code> is the accumulated sum of <code>2.0 × flame_intensity(t)</code> over all frames 1..t.</li>
+<li>By frame 19, the burn front reaches approximately y=110, consuming ~40 rows of paper.</li>
+<li>Three zones are defined relative to the burn front:<ul>
+<li><strong>Above burn front</strong> (minus char height): Fully charred — pixel values multiplied by ~0.07–0.11, with random dark noise added.</li>
+<li><strong>Char transition zone</strong> (within <code>char_h</code> above burn front): Linear interpolation from charred (0.07×) to original (0.85×).</li>
+<li><strong>Below burn front</strong> (within <code>char_h × 0.35</code>): Slightly scorched — ~0.78–0.84× darkening.</li>
+</ul>
+</li>
+<li>The paper mask is defined from <code>first_frame.png</code> as pixels with brightness 80–240, warm R&gt;90, G&gt;75, and approximately cream-colored (R within 45 of G), below y=70.</li>
+</ul>
+<h3>4. Ambient Glow (Flame Illumination)</h3>
+<p><strong>Method</strong>: A radial Gaussian glow centered on the flame position, adding warm tint to nearby pixels.</p>
+<ul>
+<li>Glow radius: <code>45 × fi</code> pixels.</li>
+<li>Gaussian falloff with sigma <code>radius/2.0</code>.</li>
+<li>Added RGB offsets: +25 red, +12 green, +3 blue (warm yellow/orange cast).</li>
+<li>Capped at 6% of pixel value to maintain subtlety.</li>
+</ul>
+<h2>Technical Verification</h2>
+<ul>
+<li><strong>Frame 00</strong>: Verified pixel-perfect match with <code>first_frame.png</code> via <code>np.array_equal</code>.</li>
+<li><strong>Pixel tensor</strong>: All 20 frames in <code>pixels.npz</code> verified against individual PNGs via uint32 <code>0xRRGGBB</code> unpacking.</li>
+<li><strong>Frame dimensions</strong>: All frames confirmed as 256×144, uint8 RGB.</li>
+<li><strong>Frame-to-frame change</strong>: Smooth progression from ~7.7% (early) to ~17.9% (peak burn) to ~19.6% (flame extinction dimming visible).</li>
+<li><strong>Paper darkening</strong>: Paper region RGB drops from (100,97,90) at frame 00 to (67,64,59) at frame 19, confirming visible charring.</li>
+<li><strong>Flame extinction</strong>: Flame core white pixels drop from 155 to 0 by frame 19, confirming natural flame-out.</li>
+</ul>
+<h2>Artifacts Produced</h2>
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>generate.py</code></td>
+  <td>Main generation script</td>
+</tr>
+<tr>
+  <td><code>pixels.npz</code></td>
+  <td>Compressed uint32 pixel tensor (144×256×20)</td>
+</tr>
+<tr>
+  <td><code>frames/00.png–19.png</code></td>
+  <td>Individual RGB PNG frames</td>
+</tr>
+<tr>
+  <td><code>inspection.png</code></td>
+  <td>8-frame montage inspection sheet</td>
+</tr>
+<tr>
+  <td><code>transition_check.png</code></td>
+  <td>19-row transition grid (prev/next/diff×5)</td>
+</tr>
+<tr>
+  <td><code>index.html</code></td>
+  <td>Standalone HTML player with playback controls</td>
+</tr>
+<tr>
+  <td><code>OBSERVATION.md</code></td>
+  <td>Scene analysis and event plan</td>
+</tr>
+<tr>
+  <td><code>METHOD.md</code></td>
+  <td>This document — technical documentation</td>
+</tr>
+</tbody>
+</table>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0141-6eb58e0b7b03.png';</script></body></html>
