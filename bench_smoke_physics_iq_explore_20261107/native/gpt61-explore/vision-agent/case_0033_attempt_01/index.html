@@ -1,0 +1,505 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld generation trace</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="../../../../index.html">← Smoke 总览</a></p><h1>0033</h1><p class="muted">GPT-6.1-Sol · vision-agent · 256×144 · 20 frames / 4 fps</p><div class="box"><strong>当前任务输入</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A light-colored wooden tabletop with two pipes at the edges. The blue and the yellow tennis ball roll out of the pipes and collide with the same speed.
+</p></div><h2>最终视频</h2><div class="player" data-player="{&quot;asset&quot;: &quot;final/pixels-8d44b29b4cb02d2c.png&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=0d4afe477f58&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="final/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p><a href="final/generate.py">生成代码</a> · <a href="contract.json">输入与输出契约</a></p><div class="box">保存的候选：2 · output tokens：8706 · reasoning output tokens：3436 · 耗时：221s</div><h2>逐轮生成与修改</h2><p class="muted">候选由外部 harness 保存。是否读图，以对应工具事件为依据。</p><article><h3>Candidate 1</h3><p class="muted">2026-11-06T17:50:28.715855+00:00 · RGB hash 65297bad2fe17a45</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_00/pixels-65297bad2fe17a45.png&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=c22fcd24fde5&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_00/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_00/inspection.png?v=c22fcd24fde5"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -0,0 +1,151 @@
++&quot;&quot;&quot;A locked camera, photographed ball textures, and analytic rolling motion.&quot;&quot;&quot;
++from pathlib import Path
++import math
++
++import numpy as np
++from PIL import Image, ImageFilter, ImageDraw
++
++import artifact_io
++
++
++ROOT = Path(__file__).resolve().parent
++SOURCE = np.asarray(Image.open(ROOT / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;))
++H, W = SOURCE.shape[:2]
++Y, X = np.mgrid[:H, :W].astype(float)
++
++
++def smoothstep(a, b, values):
++    z = np.clip((values - a) / (b - a), 0, 1)
++    return z * z * (3 - 2 * z)
++
++
++def ellipse(cx, cy, rx, ry, soft=0.25):
++    d = np.sqrt(((X - cx) / rx) ** 2 + ((Y - cy) / ry) ** 2)
++    return 1 - smoothstep(1 - soft, 1, d)
++
++
++def restore_tabletop():
++    &quot;&quot;&quot;Interpolate the exposed wood grain across the two small moving objects.&quot;&quot;&quot;
++    original = SOURCE.astype(float)
++    cover_blue = np.maximum(ellipse(77, 50, 12, 12), ellipse(84, 48, 22, 10))
++    cover_yellow = np.maximum(ellipse(149, 58, 12, 13), ellipse(140, 57, 13, 12))
++    cover = np.maximum(cover_blue, cover_yellow)
++    filled = original.copy()
++    low = np.asarray(Image.fromarray(SOURCE).filter(ImageFilter.GaussianBlur(1.1))).astype(float)
++    grain = original - low
++    for y in range(H):
++        for left, right in [(56, 109), (126, 166)]:
++            span = np.flatnonzero(cover[y, left:right] &gt; 0.001)
++            if not len(span):
++                continue
++            lo, hi = left + int(span[0]), left + int(span[-1])
++            # Average just beyond the object, retaining the board&#x27;s horizontal bands.
++            lv = original[y, lo - 4:lo - 1].mean(axis=0)
++            rv = original[y, hi + 2:hi + 5].mean(axis=0)
++            xx = np.arange(lo, hi + 1)
++            t = ((xx - lo + 2) / (hi - lo + 4))[:, None]
++            base = lv[None] * (1 - t) + rv[None] * t
++            donor_x = xx + (108 if left == 56 else 45)
++            donor_y = min(H - 1, y + (6 if left == 56 else 4))
++            donor_x = np.clip(donor_x, 0, W - 1)
++            base += grain[donor_y, donor_x] * 0.65
++            filled[y, xx] = base
++    return original * (1 - cover[..., None]) + filled * cover[..., None]
++
++
++def sample(array, xx, yy):
++    ix, iy = np.floor(xx).astype(int), np.floor(yy).astype(int)
++    fx, fy = xx - ix, yy - iy
++    ix0, iy0 = np.clip(ix, 0, W - 1), np.clip(iy, 0, H - 1)
++    ix1, iy1 = np.clip(ix + 1, 0, W - 1), np.clip(iy + 1, 0, H - 1)
++    if array.ndim == 3:
++        fx, fy = fx[..., None], fy[..., None]
++    return ((array[iy0, ix0] * (1 - fx) + array[iy0, ix1] * fx) * (1 - fy)
++            + (array[iy1, ix0] * (1 - fx) + array[iy1, ix1] * fx) * fy)
++
++
++def make_ball(background, cx, cy, radius, name):
++    # Premultiplied photographic pixels preserve camera blur and felt texture.
++    alpha = 1 - smoothstep(radius - 0.85, radius + 1.15,
++                          np.sqrt((X - cx) ** 2 + (Y - cy) ** 2))
++    delta = SOURCE.astype(float) - background
++    window = (ellipse(77, 50, 13, 13) if name == &quot;blue&quot;
++              else ellipse(149, 58, 13, 14))
++    shadow_window = (ellipse(84, 48, 23, 11) if name == &quot;blue&quot;
++                     else ellipse(140, 57, 14, 13))
++    window = np.maximum(window, shadow_window)
++    delta *= window[..., None]
++    return {&quot;cx&quot;: cx, &quot;cy&quot;: cy, &quot;r&quot;: radius, &quot;alpha&quot;: alpha,
++            &quot;delta&quot;: delta, &quot;background&quot;: background, &quot;name&quot;: name}
++
++
++def place_ball(canvas, ball, cx, cy, distance, speed):
++    scale = 1 + (cy - ball[&quot;cy&quot;]) * 0.012
++    # Subframe exposure gives a small amount of camera motion blur during rolling.
++    exposure = 0.014
++    deposits = []
++    for shutter in [-0.5, 0.0, 0.5]:
++        mx = cx + shutter * speed * exposure
++        my = cy + shutter * speed * exposure * 0.113
++        sx = (X - mx) / scale + ball[&quot;cx&quot;]
++        sy = (Y - my) / scale + ball[&quot;cy&quot;]
++        delta = sample(ball[&quot;delta&quot;], sx, sy)
++        alpha = sample(ball[&quot;alpha&quot;], sx, sy)
++        old_ground = sample(ball[&quot;background&quot;], sx, sy)
++        # Correct the opaque ball for the brightness of its new ground location.
++        change = delta - alpha[..., None] * (canvas - old_ground)
++        deposits.append(change)
++    return canvas + np.mean(deposits, axis=0)
++
++
++def motion(t):
++    blue0, yellow0 = 76.5, 149.1
++    axis = np.array([1.0, 0.113])
++    axis /= np.linalg.norm(axis)
++    speed = 28.5
++    separation = (yellow0 - blue0) / axis[0]
++    contact = 15.5
++    hit = (separation - contact) / (2 * speed)
++    if t &lt;= hit:
++        travel = speed * t
++        velocity = speed
++    else:
++        elapsed = t - hit
++        rebound = speed * 0.87
++        friction = 1.55
++        elapsed = min(elapsed, rebound / friction)
++        retreat = rebound * elapsed - 0.5 * friction * elapsed ** 2
++        travel = speed * hit - retreat
++        velocity = -(rebound - friction * elapsed)
++    blue = np.array([blue0, 50.0]) + axis * travel
++    yellow = np.array([yellow0, 58.2]) - axis * travel
++    return blue, yellow, velocity * axis[0]
++
++
++def generate():
++    background = restore_tabletop()
++    Image.fromarray(np.clip(background, 0, 255).astype(np.uint8)).save(ROOT / &quot;.tmp&quot; / &quot;background.png&quot;)
++    blue = make_ball(background, 76.5, 50.0, 7.05, &quot;blue&quot;)
++    yellow = make_ball(background, 149.1, 58.2, 7.75, &quot;yellow&quot;)
++    frames = [SOURCE.copy()]
++    for index in range(1, 20):
++        bp, yp, speed = motion(index / 4)
++        canvas = background.copy()
++        canvas = place_ball(canvas, blue, *bp, bp[0] - blue[&quot;cx&quot;], speed)
++        canvas = place_ball(canvas, yellow, *yp, yp[0] - yellow[&quot;cx&quot;], -speed)
++        frames.append(np.clip(np.rint(canvas), 0, 255).astype(np.uint8))
++    frames = np.stack(frames)
++    candidate = ROOT / &quot;candidates&quot; / &quot;v1&quot;
++    candidate.mkdir(parents=True, exist_ok=True)
++    (candidate / &quot;prompt.txt&quot;).write_text((ROOT / &quot;prompt.txt&quot;).read_text())
++    (candidate / &quot;task_spec.json&quot;).write_text((ROOT / &quot;task_spec.json&quot;).read_text())
++    artifact_io.save(frames, candidate)
++    artifact_io.save(frames, ROOT)
++    assert frames.shape == (20, 144, 256, 3)
++    assert frames.dtype == np.uint8
++    assert np.array_equal(frames[0], SOURCE)
++    print(&quot;Saved 20 RGB frames, 256x144, 4 fps. Frame 00 matches the input exactly.&quot;)
++
++
++if __name__ == &quot;__main__&quot;:
++    generate()</pre></details><a href="candidate_00/generate.py">本轮完整代码</a></article><article><h3>Candidate 2</h3><p class="muted">2026-11-06T17:51:29.637492+00:00 · RGB hash 8d44b29b4cb02d2c</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_01/pixels-8d44b29b4cb02d2c.png&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=0d4afe477f58&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_01/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_01/inspection.png?v=0d4afe477f58"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -27,14 +27,14 @@
+ def restore_tabletop():
+     &quot;&quot;&quot;Interpolate the exposed wood grain across the two small moving objects.&quot;&quot;&quot;
+     original = SOURCE.astype(float)
+-    cover_blue = np.maximum(ellipse(77, 50, 12, 12), ellipse(84, 48, 22, 10))
+-    cover_yellow = np.maximum(ellipse(149, 58, 12, 13), ellipse(140, 57, 13, 12))
++    cover_blue = ellipse(80, 49, 29, 16, soft=0.16)
++    cover_yellow = ellipse(145, 58, 22, 17, soft=0.16)
+     cover = np.maximum(cover_blue, cover_yellow)
+     filled = original.copy()
+     low = np.asarray(Image.fromarray(SOURCE).filter(ImageFilter.GaussianBlur(1.1))).astype(float)
+     grain = original - low
+     for y in range(H):
+-        for left, right in [(56, 109), (126, 166)]:
++        for left, right in [(49, 111), (121, 169)]:
+             span = np.flatnonzero(cover[y, left:right] &gt; 0.001)
+             if not len(span):
+                 continue
+@@ -45,8 +45,8 @@
+             xx = np.arange(lo, hi + 1)
+             t = ((xx - lo + 2) / (hi - lo + 4))[:, None]
+             base = lv[None] * (1 - t) + rv[None] * t
+-            donor_x = xx + (108 if left == 56 else 45)
+-            donor_y = min(H - 1, y + (6 if left == 56 else 4))
++            donor_x = xx + (108 if left == 49 else 45)
++            donor_y = min(H - 1, y + (6 if left == 49 else 4))
+             donor_x = np.clip(donor_x, 0, W - 1)
+             base += grain[donor_y, donor_x] * 0.65
+             filled[y, xx] = base
+@@ -69,12 +69,11 @@
+     alpha = 1 - smoothstep(radius - 0.85, radius + 1.15,
+                           np.sqrt((X - cx) ** 2 + (Y - cy) ** 2))
+     delta = SOURCE.astype(float) - background
+-    window = (ellipse(77, 50, 13, 13) if name == &quot;blue&quot;
+-              else ellipse(149, 58, 13, 14))
+-    shadow_window = (ellipse(84, 48, 23, 11) if name == &quot;blue&quot;
+-                     else ellipse(140, 57, 14, 13))
+-    window = np.maximum(window, shadow_window)
+-    delta *= window[..., None]
++    shadow_window = (ellipse(80, 48, 27, 14, soft=0.2) if name == &quot;blue&quot;
++                     else ellipse(145, 58, 20, 15, soft=0.2))
++    # Carry dark contact/cast shadows without carrying bright background grain.
++    shadow = np.minimum(delta + 1.3, 0) * shadow_window[..., None]
++    delta = delta * alpha[..., None] + shadow * (1 - alpha[..., None])
+     return {&quot;cx&quot;: cx, &quot;cy&quot;: cy, &quot;r&quot;: radius, &quot;alpha&quot;: alpha,
+             &quot;delta&quot;: delta, &quot;background&quot;: background, &quot;name&quot;: name}
+ 
+@@ -95,7 +94,21 @@
+         # Correct the opaque ball for the brightness of its new ground location.
+         change = delta - alpha[..., None] * (canvas - old_ground)
+         deposits.append(change)
+-    return canvas + np.mean(deposits, axis=0)
++    result = canvas + np.mean(deposits, axis=0)
++    # A subdued curved felt seam rotates around the transverse rolling axis.
++    radius = ball[&quot;r&quot;] * scale
++    nx = (X - cx) / radius
++    ny = (Y - cy) / radius
++    nz = np.sqrt(np.clip(1 - nx * nx - ny * ny, 0, 1))
++    angle = -distance / ball[&quot;r&quot;]
++    u = math.cos(angle) * nx - math.sin(angle) * nz
++    w = math.sin(angle) * nx + math.cos(angle) * nz
++    curve = ny - 0.46 * np.cos(2 * np.arctan2(w, u))
++    seam = np.exp(-(curve / 0.082) ** 2)
++    seam *= 1 - smoothstep(0.76, 1.0, np.sqrt(nx * nx + ny * ny))
++    tint = np.array([15, 23, 30]) if ball[&quot;name&quot;] == &quot;blue&quot; else np.array([8, 5, 9])
++    result += seam[..., None] * tint * 0.21
++    return result
+ 
+ 
+ def motion(t):
+@@ -135,10 +148,11 @@
+         canvas = place_ball(canvas, yellow, *yp, yp[0] - yellow[&quot;cx&quot;], -speed)
+         frames.append(np.clip(np.rint(canvas), 0, 255).astype(np.uint8))
+     frames = np.stack(frames)
+-    candidate = ROOT / &quot;candidates&quot; / &quot;v1&quot;
++    candidate = ROOT / &quot;candidates&quot; / &quot;v2&quot;
+     candidate.mkdir(parents=True, exist_ok=True)
+     (candidate / &quot;prompt.txt&quot;).write_text((ROOT / &quot;prompt.txt&quot;).read_text())
+     (candidate / &quot;task_spec.json&quot;).write_text((ROOT / &quot;task_spec.json&quot;).read_text())
++    (candidate / &quot;generate.py&quot;).write_text(Path(__file__).read_text())
+     artifact_io.save(frames, candidate)
+     artifact_io.save(frames, ROOT)
+     assert frames.shape == (20, 144, 256, 3)</pre></details><a href="candidate_01/generate.py">本轮完整代码</a></article><h2>可观测工具时间线</h2><details><summary>:35.320296+00:00 · agent_message · I’ll read the prompt and generation rules, then build and inspect the RGB video using the supplied first frame.</summary><pre>I’ll read the prompt and generation rules, then build and inspect the RGB video using the supplied first frame.
+</pre><pre></pre></details><details><summary>:36.877060+00:00 · command_execution · pwd &amp;&amp; rg --files -g &#x27;!\.git&#x27; -g &#x27;!vendor&#x27; -g &#x27;!data&#x27; -g &#x27;!runs&#x27; | head -80</summary><pre>pwd &amp;&amp; rg --files -g &#x27;!\.git&#x27; -g &#x27;!vendor&#x27; -g &#x27;!data&#x27; -g &#x27;!runs&#x27; | head -80</pre><pre>[workspace path]
+/bin/bash: line 134: rg: command not found
+</pre></details><details><summary>:39.874898+00:00 · command_execution · ls -la &amp;&amp; cat prompt.txt &amp;&amp; cat GENERATION_RULES.md</summary><pre>ls -la &amp;&amp; cat prompt.txt &amp;&amp; cat GENERATION_RULES.md</pre><pre>total 76
+drwxr-xr-x 7 tiger tiger  4096 Nov  7 01:48 .
+drwxr-xr-x 6 tiger tiger  4096 Nov  7 01:48 ..
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 01:48 .agents
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 01:48 .codex
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 01:48 .git
+drwxr-xr-x 2 tiger tiger  4096 Nov  7 01:48 .tmp
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 01:48 .trae
+-rw-r--r-- 1 tiger tiger   786 Nov  7 01:48 GENERATION_RULES.md
+-rw-r--r-- 1 tiger tiger  4026 Nov  6 02:01 artifact_io.py
+-rw-r--r-- 1 tiger tiger 44817 Oct 30 19:21 first_frame.png
+-rw-r--r-- 1 tiger tiger  3262 Nov  6 02:01 player_template.html
+-rw-r--r-- 1 tiger tiger   366 Oct 30 19:21 prompt.txt
+-rw-r--r-- 1 tiger tiger   144 Nov  7 01:48 task_spec.json
+Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A light-colored wooden tabletop with two pipes at the edges. The blue and the yellow tennis ball roll out of the pipes and collide with the same speed.
+# PixelWorld generation contract v2
+
+- Use only `first_frame.png`, `prompt.txt` and `task_spec.json`. Work inside this workspace. No network, other cases, reference continuations, masks, scores, memory, external AI models, learned weights, external simulation/rendering engines, or subagents.
+- Generate 20 RGB frames at 256×144, 4 fps, for 5 seconds. Frame 00 must be pixel-identical to `first_frame.png`.
+- Implement `generate.py` and call `artifact_io.save(frames, case_dir)` with uint8 RGB arrays of shape `(20,144,256,3)`. Local Python/numpy/PIL, mathematical geometry, motion, lighting, copying and warping pixels are allowed.
+- Save intermediate generated results in the workspace when producing candidates for inspection. Choose whether and how to check or revise your output.
+</pre></details><details><summary>:43.777216+00:00 · command_execution · cat task_spec.json &amp;&amp; cat artifact_io.py</summary><pre>cat task_spec.json &amp;&amp; cat artifact_io.py</pre><pre>{
+  &quot;task_type&quot;: &quot;i2v&quot;,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 144,
+  &quot;frames&quot;: 20,
+  &quot;fps&quot;: 4,
+  &quot;audio&quot;: null,
+  &quot;benchmark&quot;: &quot;physics-iq-exploration&quot;
+}
+&quot;&quot;&quot;Output-only helpers. No drawing or generation policy is implemented here.&quot;&quot;&quot;
+from pathlib import Path
+import base64
+import json
+import wave
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+
+def save(frames, case_dir, audio=None):
+    case_dir = Path(case_dir)
+    frames = np.asarray(frames)
+    path = case_dir / &quot;task_spec.json&quot;
+    spec = json.loads(path.read_text()) if path.is_file() else {}
+    n, h, w, fps = (spec.get(&quot;frames&quot;, 20), spec.get(&quot;height&quot;, 144), spec.get(&quot;width&quot;, 256), spec.get(&quot;fps&quot;, 4))
+    assert frames.shape == (n, h, w, 3) and frames.dtype == np.uint8, frames.shape
+    audio_spec = spec.get(&quot;audio&quot;)
+    audio_url = None
+    if audio_spec:
+        samples = round(n / fps * audio_spec[&quot;sample_rate&quot;])
+        pcm = np.asarray(audio)
+        if pcm.ndim == 1:
+            pcm = pcm[:, None]
+        assert pcm.shape == (samples, audio_spec[&quot;channels&quot;]) and pcm.dtype == np.int16, (pcm.shape, pcm.dtype)
+        with wave.open(str(case_dir / &quot;audio.wav&quot;), &quot;wb&quot;) as handle:
+            handle.setnchannels(audio_spec[&quot;channels&quot;])
+            handle.setsampwidth(2)
+            handle.setframerate(audio_spec[&quot;sample_rate&quot;])
+            handle.writeframes(pcm.astype(&quot;&lt;i2&quot;).tobytes())
+        audio_url = &quot;data:audio/wav;base64,&quot; + base64.b64encode((case_dir / &quot;audio.wav&quot;).read_bytes()).decode()
+    values = frames.astype(np.uint32)
+    packed = (values[:, :, :, 0] &lt;&lt; 16) | (values[:, :, :, 1] &lt;&lt; 8) | values[:, :, :, 2]
+    tensor = packed.transpose(1, 2, 0)
+    np.savez_compressed(case_dir / &quot;pixels.npz&quot;, pixels=tensor)
+
+    folder = case_dir / &quot;frames&quot;
+    folder.mkdir(exist_ok=True)
+    for index, frame in enumerate(frames):
+        Image.fromarray(frame).save(folder / f&quot;{index:02d}.png&quot;)
+
+    sheet = Image.new(&quot;RGB&quot;, (w * 4, (h + 21) * 2), (25, 28, 35))
+    draw = ImageDraw.Draw(sheet)
+    for index, frame_index in enumerate(np.linspace(0, n - 1, 8).round().astype(int)):
+        x, y = (index % 4) * w, (index // 4) * (h + 21)
+        draw.text((x + 5, y + 3), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        sheet.paste(Image.fromarray(frames[frame_index]), (x, y + 21))
+    sheet.save(case_dir / &quot;inspection.png&quot;)
+
+    transition = Image.new(&quot;RGB&quot;, (w * 4, h * 2 + 21), (25, 28, 35))
+    draw = ImageDraw.Draw(transition)
+    for index, frame_index in enumerate(min(i, n-1) for i in range(4)):
+        x = index * w
+        draw.text((x + 5, 4), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        transition.paste(Image.fromarray(frames[frame_index]), (x, 21))
+        transition.paste(Image.fromarray(frames[frame_index]).resize((w, h), Image.Resampling.NEAREST), (x, h + 21))
+    transition.save(case_dir / &quot;transition_check.png&quot;)
+
+    encode = lambda array: base64.b64encode(np.asarray(array, dtype=&quot;&lt;u4&quot;).tobytes()).decode()
+    deltas = []
+    for index in range(1, n):
+        current = packed[index].reshape(-1)
+        previous = packed[index - 1].reshape(-1)
+        positions = np.flatnonzero(current != previous)
+        packet = []
+        if len(positions):
+            bounds = np.r_[0, np.flatnonzero(np.diff(positions) &gt; 1) + 1, len(positions)]
+            for start, end in zip(bounds[:-1], bounds[1:]):
+                offset = int(positions[start])
+                count = int(end - start)
+                packet.extend([offset, count])
+                packet.extend(current[offset:offset + count].tolist())
+        deltas.append(encode(packet))
+    data = {
+        &quot;id&quot;: case_dir.name,
+        &quot;width&quot;: w, &quot;height&quot;: h, &quot;frames&quot;: n, &quot;fps&quot;: fps, &quot;audio&quot;: audio_url,
+        &quot;first&quot;: encode(packed[0].reshape(-1)),
+        &quot;deltas&quot;: deltas,
+        &quot;caption&quot;: (case_dir / &quot;prompt.txt&quot;).read_text().strip(),
+    }
+    template = (Path(__file__).parent / &quot;player_template.html&quot;).read_text()
+    payload = json.dumps(data, separators=(&quot;,&quot;, &quot;:&quot;), ensure_ascii=False).replace(&quot;&lt;&quot;, &quot;\\u003c&quot;)
+    (case_dir / &quot;index.html&quot;).write_text(template.replace(&quot;__ID__&quot;, case_dir.name).replace(&quot;__DATA__&quot;, payload))
+</pre></details><details><summary>:00.067494+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,576)).save(&#x27;.tmp/first_zoom.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:17.037977+00:00 · agent_message · The balls are already moving away from the edge pipes in the first frame. I’ll continue them toward each other at equal speed, show the collision and rebound, a</summary><pre>The balls are already moving away from the edge pipes in the first frame. I’ll continue them toward each other at equal speed, show the collision and rebound, and keep the camera and tabletop fixed.
+</pre><pre></pre></details><details><summary>:22.302706+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+for name,box in [(&#x27;blue&#x27;,(59,38,107,63)),(&#x27;yellow&#x27;,(131,46,163,73))]:
+ x0,y0,x1,y1=box
+ # Match the undisturbed perimeter using translations along the wood grain.
+ a=im[y0:y1,x0:x1]
+ yy,xx=np.mgrid[y0:y1,x0:x1]
+ edge=((xx&lt;x0+3)|(xx&gt;x1-4)|(yy&lt;y0+3)|(yy&gt;y1-4))
+ opts=[]
+ for dx in range(-100,101):
+  if abs(dx)&lt;38:continue
+  for dy in range(-12,13):
+   if x0+dx&lt;15 or x1+dx&gt;226 or y0+dy&lt;25 or y1+dy&gt;108:continue
+   # Avoid both balls and their shadows.
+   if not (x1+dx&lt;59 or x0+dx&gt;107 or y1+dy&lt;38 or y0+dy&gt;63):continue
+   if not (x1+dx&lt;131 or x0+dx&gt;163 or y1+dy&lt;46 or y0+dy&gt;73):continue
+   b=im[y0+dy:y1+dy,x0+dx:x1+dx]
+   delta=np.mean((a-b)[edge],axis=0)
+   loss=np.mean(((a-b-delta)[edge])**2)+.06*np.sum(delta**2)
+   opts.append((loss,dx,dy,delta))
+ for v in sorted(opts,key=lambda x:x[0])[:4]:print(name,v)
+PY</pre><pre>yellow (np.float64(30.865218345793284), 44, 4, array([-0.54402516, -0.76100629, -5.86163522]))
+yellow (np.float64(30.87660159803805), 52, 5, array([-0.29559748, -0.4591195 , -6.07861635]))
+yellow (np.float64(30.943210513824614), 52, 4, array([-3.14465409e-03, -1.76100629e-01, -6.06918239e+00]))
+yellow (np.float64(30.947102501219625), 51, 4, array([-0.25157233, -0.38050314, -6.22641509]))
+</pre></details><details><summary>:30.375926+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+x0,y0,x1,y1=59,38,107,63
+a=im[y0:y1,x0:x1];yy,xx=np.mgrid[y0:y1,x0:x1];edge=((xx&lt;x0+3)|(xx&gt;x1-4)|(yy&lt;y0+3)|(yy&gt;y1-4));opts=[]
+for dx in range(105,120):
+ for dy in range(0,13):
+  b=im[y0+dy:y1+dy,x0+dx:x1+dx];delta=np.mean((a-b)[edge],axis=0);loss=np.mean(((a-b-delta)[edge])**2)+.06*np.sum(delta**2);opts.append((loss,dx,dy,delta))
+for v in sorted(opts,key=lambda x:x[0])[:4]:print(v)
+PY</pre><pre>(np.float64(100.42332343258829), 105, 2, array([-8.04975124, -8.81840796, -7.54975124]))
+(np.float64(103.63944823973004), 106, 2, array([-7.97761194, -8.80845771, -7.61442786]))
+(np.float64(103.9447936107192), 105, 11, array([-15.91044776, -17.50248756, -18.85074627]))
+(np.float64(103.98729198122159), 105, 10, array([-15.42039801, -17.01492537, -18.26616915]))
+</pre></details><details><summary>:22.711676+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:27.245098+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>Saved 20 RGB frames, 256x144, 4 fps. Frame 00 matches the input exactly.
+</pre></details><details><summary>:40.211482+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;.tmp/background.png&#x27;);im.resize((1024,576)).save(&#x27;.tmp/bg_zoom.png&#x27;)
+im=Image.open(&#x27;frames/04.png&#x27;);im.resize((1024,576)).save(&#x27;.tmp/hit_zoom.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:13.826194+00:00 · agent_message · The first candidate shows the collision and rebound clearly. Inspection revealed a faint remnant of the blue ball’s original shadow, so I’m refining the backgro</summary><pre>The first candidate shows the collision and rebound clearly. Inspection revealed a faint remnant of the blue ball’s original shadow, so I’m refining the background repair before saving the final video.
+</pre><pre></pre></details><details><summary>:23.354530+00:00 · command_execution · cp generate.py candidates/v1/generate.py</summary><pre>cp generate.py candidates/v1/generate.py</pre><pre></pre></details><details><summary>:24.064555+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:28.317355+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>Saved 20 RGB frames, 256x144, 4 fps. Frame 00 matches the input exactly.
+</pre></details><details><summary>:36.502979+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+from PIL import Image
+root=Path(&#x27;.&#x27;)
+a=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+f0=np.array(Image.open(&#x27;frames/00.png&#x27;).convert(&#x27;RGB&#x27;))
+src=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+assert a.shape==(144,256,20)
+assert np.array_equal(f0,src)
+assert len(list(root.joinpath(&#x27;frames&#x27;).glob(&#x27;*.png&#x27;)))==20
+for i in range(20):
+ f=np.array(Image.open(root/&#x27;frames&#x27;/f&#x27;{i:02d}.png&#x27;))
+ packed=(f[:,:,0].astype(np.uint32)&lt;&lt;16)|(f[:,:,1].astype(np.uint32)&lt;&lt;8)|f[:,:,2].astype(np.uint32)
+ assert np.array_equal(a[:,:,i],packed)
+print(&#x27;Verified all 20 saved RGB frames and the packed tensor; frame 00 is pixel-identical.&#x27;)
+PY</pre><pre>Verified all 20 saved RGB frames and the packed tensor; frame 00 is pixel-identical.
+</pre></details><details><summary>:43.867444+00:00 · agent_message · Generated the 5-second RGB video: 20 frames at 256×144, 4 fps. Frame 00 is verified pixel-identical to the supplied image.</summary><pre>Generated the 5-second RGB video: 20 frames at 256×144, 4 fps. Frame 00 is verified pixel-identical to the supplied image.
+
+- [Play video](./index.html)
+- [RGB data](./pixels.npz)
+- [Generation code](./generate.py)</pre><pre></pre></details><p><a href="observed_trace.json">完整可观测事件 JSON</a></p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    this.button.textContent='载入中…';
+    for(const control of this.root.querySelectorAll('button,input'))control.disabled=true;
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}finally{for(const control of this.root.querySelectorAll('button,input'))control.disabled=false}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+
+// Use one animation clock for selected revisions; independent playback stays available.
+window.__candidateComparisons=[];
+for(const root of document.querySelectorAll('[data-candidate-compare]')){
+  const players=window.__smokePlayers.filter(p=>root.contains(p.root)),seek=root.querySelector('.compare-seek'),clock=root.querySelector('.compare-clock'),button=root.querySelector('.compare-play');
+  if(!players.length)continue;
+  seek.max=players[0].d.frames-1;
+  const group={root,players,playing:false,frame:0,raf:null,
+    selected(){return players.filter(p=>p.root.closest('.candidate-entry').querySelector('.compare-pick').checked)},
+    pause(){this.playing=false;cancelAnimationFrame(this.raf);players.forEach(p=>p.pause());button.textContent='▶ 同步播放勾选版本'},
+    draw(frame){this.frame=frame;seek.value=frame;clock.textContent=`${(frame/players[0].d.fps).toFixed(2)} / ${(players[0].d.frames/players[0].d.fps).toFixed(2)}s`;this.selected().forEach(p=>p.draw(frame))},
+    async ensure(){const selected=this.selected();if(!selected.length)throw Error('请勾选要对比的版本');await Promise.all(selected.map(p=>p.ensure()))},
+    async start(){if(this.playing){this.pause();return}button.disabled=true;button.textContent='载入中…';try{await this.ensure();players.forEach(p=>p.pause());if(this.frame===players[0].d.frames-1)this.draw(0);this.started=performance.now()-this.frame/players[0].d.fps*1000;this.playing=true;this.selected().forEach(p=>{p.playing=true;p.button.textContent='❚❚ 暂停'});button.textContent='❚❚ 暂停同步播放';this.raf=requestAnimationFrame(t=>this.tick(t))}catch(e){this.pause();clock.textContent='Load failed: '+e.message}finally{button.disabled=false}},
+    tick(t){if(!this.playing)return;let elapsed=(t-this.started)/1000;const d=players[0].d;if(elapsed>=d.frames/d.fps){if(root.querySelector('.compare-loop').checked){this.started=t;elapsed=0}else{this.draw(d.frames-1);this.pause();return}}this.draw(Math.min(d.frames-1,Math.floor(elapsed*d.fps)));this.raf=requestAnimationFrame(x=>this.tick(x))}
+  };
+  button.onclick=()=>group.start();root.querySelector('.compare-pause').onclick=()=>group.pause();
+  root.querySelector('.compare-replay').onclick=()=>{group.pause();group.frame=0;group.start()};
+  seek.oninput=async()=>{group.pause();try{await group.ensure();group.draw(+seek.value)}catch(e){clock.textContent=e.message}};
+  root.querySelectorAll('.compare-pick').forEach(c=>c.onchange=()=>group.pause());
+  players.forEach(p=>{const play=p.button.onclick,slide=p.seek.oninput,replay=p.root.querySelector('.replay').onclick;p.button.onclick=()=>{if(group.playing){group.pause();return}play()};p.seek.oninput=()=>{group.pause();slide()};p.root.querySelector('.replay').onclick=()=>{group.pause();replay()}});
+  root.__comparison=group;window.__candidateComparisons.push(group);
+}
+window.__candidateCompareReady=true;
+</script></html>

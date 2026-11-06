@@ -1,0 +1,102 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld CVPR工作方案</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="index.html">← 探索总览</a></p><h1>PixelWorld：工作方案与收敛依据（探索版）</h1>
+<h2>研究定位</h2>
+<p>研究原生 coding agent 如何把真实场景的合法视觉输入转化为生成后续 RGB 的可执行程序，以及生成质量的来源、瓶颈和修订机制。Physics-IQ 是统一数据池；完整官方分数提供定量依据，程序、像素和行为 trace 提供机制证据。生成是主线，自查/判错是解释生成的一环。</p>
+<p>原生基线保留自主工具使用、检查和修订，不预先规定停止于首次有效结果。优化提示或反馈作为分析后的独立干预，不覆盖原生基线。参考 Solve Vision with Code 的原生 CLI 与输入隔离设置；本研究围绕真实物理预测而非其逻辑题视频解答组织分析。</p>
+<h2>已有可靠事实</h2>
+<ul>
+<li>PixelWorld 使用官方 BPP-base；GPT-6.1 已完成 workspace 的 594 条任务文本逐条匹配。官方 Seedance 2.5 PR85 说明也使用 BPP-base 原样输入。</li>
+<li>GPT-6.1 原生多轮记录的完整 198-case 首次有效/最终输出对照：Text 44.0048 -&gt; 44.0760（+0.0712），Vision-Agent 45.3672 -&gt; 45.4469（+0.0796）。这是已有原生 run 的事后候选比较，不是执行过“禁止修订”提示的新实验。</li>
+<li>总分接近不等于每个 case 无收益：Text 66 个场景中25提高、30下降、11不变；Vision-Agent 35提高、24下降、7不变。需要分析改善与退步是否抵消。</li>
+<li>Seed 已完成的186条是部分集合；不同RGB候选减一的修订数中位：Text4、Vision-Input4、Vision-Agent6.5；总耗时中位约58/54/76分钟。它不构成完整 Seed 榜单分数。</li>
+<li>用户本地 Seedance 2.5 v1 为原生 I2V 单轮：197条可用、0055缺失；198条输入文本均与BPP-base相同。v2为既有自修订输出，不能混同官方历史V2V。0001 v1原件5.000秒/24FPS/120帧；v2原件约5.057秒/24FPS/121视频帧。原件保留，展示副本会明确缩放和按秒采样。</li>
+<li>官方 V2V 历史窗口3秒、预测窗口5秒。新探索取得的0001/0033历史来自官方Original公开GCS；两个Original switch图与当前Verified switch图SHA完全一致。不能因此声称整套Verified条件视频已下载；来源及边界单独记录。</li>
+</ul>
+<h2>三条候选主线</h2>
+<h3>A. 输入状态信息是否限制生成</h3>
+<p>同一0033球碰撞case先比较原生Text/多模态I2V和历史条件生成，再补充“同一历史末帧、相同预测边界”的完整历史/最后一帧对照。I2V官方switch和V2V历史末帧时刻、输出首帧约定存在差别，不能把两种设置的所有差异直接归因于帧数。</p>
+<p>观察生成程序如何选择初始位置、速度、碰撞时刻和运动关系。重点区分：从合法历史拟合的参数、仅从文本/单帧猜测的参数、以及按动画方便性设置的关键帧。像素单位的速度不冒充真实3D米/秒。</p>
+<p>可能发现（待验证）：新增历史改善可观测运动状态，而对缺失的弹性、摩擦或后续控制时机仍无法消除不确定性。</p>
+<h3>B. 修订效果小的原因是什么</h3>
+<p>先从原生修改里区分动力学/状态、几何/分割、背景、阴影/纹理、格式和清理操作。再在0036骨牌同一初版代码/候选上比较GPT-6.1自主修复、明确局部反馈和误导反馈。输入候选来自Seed原生run，因此这三条新的GPT-6.1修复之间可以控变量比较，不能将它与Seed原生耗时差完全归因于反馈。</p>
+<p>正确反馈依据初版可见的硬黑阴影/擦除痕迹，不使用未来参考轨迹；误导反馈错误声称初始右侧紫色块是红色。检查模型是否核实反馈、修改是否命中问题、是否破坏已正确内容。</p>
+<p>可能发现（待验证）：瓶颈可能是诊断目标、初始状态、修复执行或指标敏感性，而不只是“没看图”。判错需定义目标检查项，模糊3D接触或不可观测动力不能强标为确定错误。</p>
+<h3>C. 程序化生成与视频模型的错误结构</h3>
+<p>在相同case和BPP输入下比较PixelWorld与本地Seedance v1/v2：物体身份、事件次序、时间一致性、接触/遮挡、背景稳定性与像素呈现。原生帧率/分辨率和输入图像信息量不同，统一展示分辨率/FPS仅用于可视化，不能假称计算预算与信息条件完全相同。</p>
+<p>检查是否出现“视觉更真实但时空匹配弱”或“运动状态合理但像素呈现粗糙”的分离。代码的显式状态可直接观察，Seedance没有公开对应内部trace，不能对其隐藏识别/推理过程作断言。</p>
+<h2>下一步最小实验与证据标准</h2>
+<ol>
+<li>先完成已启动生成对照并验证每条的配置、合法输入、首/末时刻、工具日志与RGB保存一致性。</li>
+<li>先在既有case上形成可确定/不确定/指标匹配三层标签，再选择少数最有信息量的模块探测。只复用现有场景，不增加人工场景或新benchmark。</li>
+<li>由观察指导后续对照：提供合法输入导出的场景信息、给出明确错误定位、温和要求减少无效检查，或对已有程序进行时间采样可扩展性检查。不能同时改变多个因素后声称因果。</li>
+<li>完整官方分数与案例分析分开报告；统计置信度以66个物理场景为分组单位，避免将3个视角当完全独立样本。</li>
+</ol>
+<h2>本轮实际探索结果（2026-11-07）</h2>
+<p>完成11条生成/修复run和2条只使用合法历史的状态reader，网页同时提供输入历史、独立播放、版本同步和代码证据。</p>
+<p>已复用完整两track首次/最终官方场景分数计算配对场景bootstrap（66个场景、20,000次重采样）：Text增益+0.0712分，95%区间[-0.1107,+0.2661]；Vision-Agent +0.0796分，区间[-0.2247,+0.3887]。两者区间均覆盖零，当前数据未显示稳定的平均增益。这个区间仅描述当前单次原生运行的场景重采样，不包含重新调用模型的随机性，也不证明修订总体没有效果。</p>
+<p>变化绝对值≤1分的场景为Text56/66、Vision-Agent51/66（1分是描述阈值）。Text超过1分的提高/下降各5个，Vision-Agent为7/8个。新增网页按每track最大提高/下降场景选固定中央视角，共4个诊断示例，并显示初版/最终同步播放和真实代码diff；明确这是结果导向选例，不用它估计错误类别频率。</p>
+<p>中央视角的真实代码差异进一步提供了修订目标证据：0035骨牌同时修改初始倾角/高度与接触模拟、色素掩码及渲染采样；0110火柴主要修补墙桌交界、清除随物体搬运的邻近玻璃高光，并保留未修改背景；0089液体溢出改成仅降采样效果差量并添加播放器验证，未修改液体演化公式；0164虹吸修改被画面上沿截断的火焰和作用区域，并添加数值/播放检查。这里能区分状态/动力学修改、呈现修改和输出验证；它们尚不能单独解释场景分数，因为分数聚合三个视角，也没有逐组件因果评测。</p>
+<table>
+<thead>
+<tr>
+  <th>问题</th>
+  <th>已观察的证据</th>
+  <th>能支持什么</th>
+  <th>不能推出什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>历史为什么未必提高生成？</td>
+  <td>0033稀疏12帧历史里球只在最后一帧显露；reader不编造速度，返回null。90帧历史保留末尾多次定位。</td>
+  <td>输入采样可能删除动态信息；需统计有效动态观测数。</td>
+  <td>不足以声称V2V必定优于I2V，也不是纯Text/视觉track比较。</td>
+</tr>
+<tr>
+  <td>原生生成是否利用了历史？</td>
+  <td>密集历史原生代码对82–89帧定位并线性拟合速度；额外reader得到相近blue速度。</td>
+  <td>此case原生生成器确实落实了历史状态估计。</td>
+  <td>不能把额外reader的成功归为原生agent缺乏该能力。</td>
+</tr>
+<tr>
+  <td>状态估计误差与未知动力学是否可拆？</td>
+  <td>native blue约[194.94,15.62]px/s，reader[195.63,15.97]；yellow线性平均与局部加速度估计约[-263.82,-42.17]和[-241.20,-38.52]。</td>
+  <td>代码暴露估计器和动力学参数，可以分析误差来源。</td>
+  <td>没有真实3D状态标签，不能将某一估计直接标为真值或把差异归于物理推理错误。</td>
+</tr>
+<tr>
+  <td>程序表达能否支持独立干预？</td>
+  <td>原生程序精确重放；仅替换合法历史reader速度，20帧中4帧RGB变化，新增LLM调用0。已有6个任意时间查询可重复、无查询顺序依赖。</td>
+  <td>可执行状态表示支持固定渲染下的局部干预、重放和时间查询。</td>
+  <td>模块替换是外部实验，不是agent自主修订；程序一致性不是长时真实预测正确性。</td>
+</tr>
+<tr>
+  <td>错误反馈是否必定引起空修改？</td>
+  <td>0036误导反馈声称紫色块为红色，GPT-6.1实际测量RGB约[74,43,87]并拒绝颜色主张，再处理其他问题。</td>
+  <td>需要保留模型核实并拒绝假反馈的反例。</td>
+  <td>不能概括成模型总被误导或总能正确拒绝。</td>
+</tr>
+</tbody>
+</table>
+<h2>建议的CVPR主结构</h2>
+<p>以“通用coding agent能由真实视觉输入构建可执行的像素世界表示”为主张，用完整Physics-IQ定量结果建立能力范围；用程序状态、像素产物与工具trace解释能力如何产生及在哪里失效。论文的贡献应是可复現harness、可执行生成范式的系统分析、以及证据指导的机制实验，不以benchmark数量或全面SOTA为目标。</p>
+<p>保留三个互相衔接的问题：</p>
+<ol>
+<li><strong>生成链路的瓶颈在哪里？</strong> 输入状态、后续事件/动力学、代码落实和像素呈现分别分析。先统计全量真实trace里的估计/生成策略，再用现有case验证可观测状态缺失和程序局部干预。</li>
+<li><strong>自主修订为何整体收益小？</strong> 按场景统计首次/最终分数和成本，以真实候选标注修改目标、是否命中、改善/副作用、指标是否敏感。不能用少数gif或模型自述代替全量收益分析。</li>
+<li><strong>程序表示与视频生成模型表现有何差异？</strong> 复用现有Seedance同case输出，比较事件、对象持久性、遮挡、轨迹和呈现；报告输入信息量、帧率和分辨率差异，不对Seedance隐含推理作猜测。</li>
+</ol>
+<p>实验依次收敛：先复用198-case两track的已有分数与候选，按66场景分组估计不确定性；对改善/下降/不变三类case做盲于最终分数的版本问题检查；再从明确机制挑选少量干预。模块分析的case选择规则和未能确定的标签公开，不把探索案例分数当官方完整榜单。</p>
+<p>减少检查/一次完成提示仅作为最后的质量—成本干预。如果确认大量晚期修改没有收益，再比较原生流程与温和节省检查策略；若部分接触、遮挡或背景修订有用，要报告其适用条件。主协议维持自主生成和修订。</p>
+<h2>论文图表建议</h2>
+<ul>
+<li>图1：真实输入 -&gt; 原生agent程序 -&gt; RGB预测，附同case Seedance 对照和真实修改过程。</li>
+<li>表1：完整官方Physics-IQ结果及可比的公开基线，标明prompt、输入模式、原生FPS/分辨率、单run/四run统计。</li>
+<li>图2：原生生成与修订的质量/成本及修改类型；展示收益和退步，不只给整体均值。</li>
+<li>图3：合法历史与末帧对照的生成及程序状态；以可观察事件/状态验证信息影响。</li>
+<li>图4：同一候选上不同反馈的修复及副作用，配合真实代码和像素证据。</li>
+<li>附录：harness、输入哈希、全部分析case选择方式、可播放版本、无法确定的标签和负结果。</li>
+</ul>
+<h2>当前谨慎边界</h2>
+<p>暂不把小案例观察升级成“LLM全面具有世界模型能力”，不把参考轨迹匹配唯一等同于物理正确性，不把自述视觉review当工具证据，不因总分变化小断言所有修订都无用。</p>
+<p>这份探索要收敛到2–3条由数据支持的结论。没有稳定信号的方向应停止，若新证据显示部分修订有效，应保留其条件和反例。</p>
+</main><script></script></html>

@@ -1,0 +1,1808 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld generation trace</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="../../index.html">← Smoke 总览</a></p><h1>self</h1><p class="muted">GPT-6.1-Sol · vision-agent · 256×144 · 20 frames / 4 fps</p><div class="box"><strong>当前任务输入</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A row of colorful wooden blocks has been lined up on a wooden table next to a black platform. The wooden stick attached to the black platform rotates clockwise and hits the first block.
+</p></div><h2>最终视频</h2><div class="player" data-player="{&quot;asset&quot;: &quot;final/pixels-04e8e3884c269952.png&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=49f22b1d6608&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="final/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p><a href="final/generate.py">生成代码</a> · <a href="contract.json">输入与输出契约</a></p><div class="box">保存的候选：7 · output tokens：18060 · reasoning output tokens：7902 · 耗时：461s</div><h2>逐轮生成与修改</h2><p class="muted">候选由外部 harness 保存。是否读图，以对应工具事件为依据。</p><article><h3>Candidate 1</h3><p class="muted">2026-11-06T18:07:06.657542+00:00 · RGB hash 218e239f894759c3</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_00/pixels-218e239f894759c3.png&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=b5b12c2b1fca&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_00/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_00/inspection.png?v=b5b12c2b1fca"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -0,0 +1,271 @@
++&quot;&quot;&quot;Render a clockwise striking arm and a domino cascade from supplied RGB.
++
++Only local image operations and analytic cuboid geometry are used. The camera
++is fixed; the original first frame is retained verbatim. Source face textures
++are projected onto rotating cuboids whose ground contact corners stay fixed.
++&quot;&quot;&quot;
++from pathlib import Path
++import json
++import shutil
++import numpy as np
++import cv2
++from PIL import Image, ImageDraw
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++SS = 4
++FRAME0 = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++H, W = FRAME0.shape[:2]
++ORDER = [&#x27;Y&#x27;, &#x27;R&#x27;, &#x27;K&#x27;, &#x27;G&#x27;, &#x27;B&#x27;, &#x27;P&#x27;]
++# Front-left, front-right, back-right, back-left top corners, plus the
++# front-left and front-right ground corners. Coordinates are from frame 0.
++CORNERS = {
++ &#x27;Y&#x27;: [[49.5,52.5],[56.5,54],[65,49],[58,47.5],[56,91],[63,92.5]],
++ &#x27;R&#x27;: [[67,55],[75,56],[82,51.5],[74,50.5],[73,95],[80.5,97]],
++ &#x27;K&#x27;: [[84,59],[92.5,60],[101,54.5],[92.5,53],[88.5,99],[97,101]],
++ &#x27;G&#x27;: [[104,60],[112.5,62],[120,56],[111.5,54.5],[110,104],[118.5,106]],
++ &#x27;B&#x27;: [[124,63],[132.5,64.5],[139.5,59],[131,57.5],[128,106],[136.5,108]],
++ &#x27;P&#x27;: [[136,65],[144,65.5],[150,60],[142.5,59],[143,109.5],[150.5,111]],
++}
++CORNERS = {k: np.asarray(v, dtype=np.float64) for k,v in CORNERS.items()}
++ROW = np.array([0.98, 0.20])
++# Strike begins at 0.5 sec, each collision launches its immediate neighbour.
++START = {&#x27;P&#x27;: .52, &#x27;B&#x27;: .69, &#x27;G&#x27;: .85, &#x27;K&#x27;: 1.01, &#x27;R&#x27;: 1.17, &#x27;Y&#x27;: 1.33}
++REST = {&#x27;Y&#x27;: 89.8, &#x27;R&#x27;: 83.0, &#x27;K&#x27;: 78.0, &#x27;G&#x27;: 74.0, &#x27;B&#x27;: 70.5, &#x27;P&#x27;: 67.5}
++DURATION = .62
++
++
++def poly_mask(points, scale=1):
++    mask = np.zeros((H*scale, W*scale), np.uint8)
++    cv2.fillConvexPoly(mask, np.round(points*scale).astype(np.int32), 255)
++    return mask
++
++
++def vertices(name, angle):
++    p = CORNERS[name]
++    origin, right = p[4], p[5]
++    up = p[0] - origin
++    across = right - origin
++    depth = .5 * ((p[3]-p[0]) + (p[2]-p[1]))
++    height = abs(up[1])
++    width = np.linalg.norm(across)
++    a = np.deg2rad(angle)
++    # Rotate in the vertical plane of the row, about the lower left edge.
++    rise = up*np.cos(a) - ROW*height*np.sin(a)
++    edge = across*np.cos(a) + (up/height)*width*np.sin(a)
++    bottom = np.array([origin, origin+edge, origin+edge+depth, origin+depth])
++    top = bottom + rise
++    if angle == 0:
++        top = p[:4].copy()
++        bottom[1] = right
++    return bottom, top
++
++
++# Erase the photographed objects while retaining all static scene pixels.
++yy, xx = np.mgrid[:H, :W]
++block_masks = {}
++object_union = np.zeros((H,W), np.uint8)
++for name in ORDER:
++    bottom, top = vertices(name,0)
++    hull = cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
++    m = poly_mask(hull)
++    m = cv2.dilate(m,np.ones((3,3),np.uint8))
++    block_masks[name] = m
++    object_union = np.maximum(object_union,m)
++
++# Original block shadows occupy the narrow strip below the bases.
++shadow_erase = np.zeros((H,W),np.uint8)
++cv2.fillConvexPoly(shadow_erase,np.array([[53,85],[153,102],[165,116],[64,101]],np.int32),255)
++table_erase = np.maximum(object_union,shadow_erase)
++# Fit the broad tabletop colour gradient using the surrounding valid table.
++valid = (xx&lt;169)&amp;(yy&gt;44)&amp;(table_erase==0)
++xn,yn=xx/W,yy/H
++basis=np.stack([np.ones_like(xn),xn,yn,xn*yn,xn*xn,yn*yn],axis=-1)
++coef=np.linalg.lstsq(basis[valid],FRAME0[valid].astype(float),rcond=None)[0]
++wood_base=basis@coef
++# Reuse grain from the unobstructed lower table at the same grain angle.
++low=cv2.GaussianBlur(FRAME0.astype(np.float32),(0,0),8)
++residual=FRAME0.astype(np.float32)-low
++source_y=118+(yy-47)*.35
++source_x=xx-.65*(source_y-yy)
++source_x=np.clip(source_x,2,168).astype(np.float32)
++source_y=np.clip(source_y,118,142).astype(np.float32)
++grain=cv2.remap(residual,source_x,source_y,cv2.INTER_LINEAR)
++wood=np.clip(wood_base+grain,0,255)
++# A soft transition at the outside edge avoids rectangular clone boundaries.
++alpha=cv2.GaussianBlur((table_erase&gt;0).astype(np.float32),(0,0),.65)
++alpha[table_erase&gt;0]=1
++plate=FRAME0.astype(np.float32)*(1-alpha[...,None])+wood*alpha[...,None]
++
++PIVOT=np.array([208.,57.])
++TIP0=np.array([152.,80.5])
++# A circle in the tabletop plane is an ellipse in this fixed camera view.
++# These projection scales match the arm&#x27;s initial endpoint exactly.
++AX=75.
++AY=35.
++PHASE=np.arctan2((TIP0-PIVOT)[1]/AY,(TIP0-PIVOT)[0]/AX)
++AX=(TIP0-PIVOT)[0]/np.cos(PHASE)
++AY=(TIP0-PIVOT)[1]/np.sin(PHASE)
++
++arm_erase=np.zeros((H,W),np.uint8)
++cv2.line(arm_erase,tuple(TIP0.astype(int)),(201,60),255,5)
++cv2.fillConvexPoly(arm_erase,np.array([[185,61],[198,54],[209,55],[207,60],[193,68]],np.int32),255)
++# Do not erase the fixed little hub at the right-hand end of the black linkage.
++arm_erase[((xx-208)**2+(yy-57)**2)&lt;3.5**2]=0
++arm_clean=cv2.inpaint(FRAME0,arm_erase,4,cv2.INPAINT_TELEA).astype(np.float32)
++# Outside the platform, the arm reveals the same tabletop texture.
++arm_table=(arm_erase&gt;0)&amp;(xx&lt;172)
++arm_clean[arm_table]=wood[arm_table]
++plate[arm_erase&gt;0]=arm_clean[arm_erase&gt;0]
++plate=np.clip(plate,0,255).astype(np.uint8)
++
++SOURCE_BIG=cv2.resize(FRAME0,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC)
++# Each source face&#x27;s original texture is warped onto its changing quadrilateral.
++FACE_SOURCE={}
++for name in ORDER:
++    bottom,top=vertices(name,0)
++    FACE_SOURCE[name]={
++      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
++      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
++      &#x27;top&#x27;:top,
++    }
++
++
++def render_face(canvas,src,dst,light=1.):
++    if abs(cv2.contourArea(dst.astype(np.float32)))&lt;.1:
++        return
++    transform=cv2.getPerspectiveTransform((src*SS).astype(np.float32),(dst*SS).astype(np.float32))
++    rgb=cv2.warpPerspective(SOURCE_BIG,transform,(W*SS,H*SS),flags=cv2.INTER_LINEAR)
++    m=poly_mask(dst,SS).astype(np.float32)/255
++    canvas[:]=canvas*(1-m[...,None])+np.clip(rgb.astype(np.float32)*light,0,255)*m[...,None]
++
++
++def render_block(canvas,name,angle):
++    bottom,top=vertices(name,angle)
++    if angle &lt; .01:
++        # Restore photographed stationary blocks, including their natural edges.
++        m=cv2.resize(block_masks[name],(W*SS,H*SS),interpolation=cv2.INTER_NEAREST)&gt;0
++        canvas[m]=SOURCE_BIG[m]
++        return
++    faces={
++      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
++      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
++      &#x27;top&#x27;:top,
++    }
++    # The broad front remains visible as it tips; keep its photographed grain.
++    for face in (&#x27;side&#x27;,&#x27;top&#x27;,&#x27;front&#x27;):
++        light=1.+(.055 if face==&#x27;front&#x27; else -.025)*np.sin(np.deg2rad(angle))
++        render_face(canvas,FACE_SOURCE[name][face],faces[face],light)
++
++
++def fall_angle(t,name):
++    q=np.clip((t-START[name])/DURATION,0,1)
++    # Accelerating fall, followed by a small damped settling motion.
++    progress=(1-np.cos(q*np.pi*.5))**.8
++    a=REST[name]*progress
++    after=t-(START[name]+DURATION)
++    if after&gt;0:
++        a-=1.3*np.exp(-after*7)*abs(np.sin(after*19))
++    return float(a)
++
++
++def arm_angle(t):
++    # Constant clockwise motion through contact, then a gentle motor stop.
++    if t&lt;=2.5:
++        return 22*t
++    q=np.clip((t-2.5)/.6,0,1)
++    return 55+13.2*(q-.5*q*q)
++
++
++def draw_arm(canvas,angle):
++    phase=PHASE+np.deg2rad(angle)
++    tip=PIVOT+np.array([AX*np.cos(phase),AY*np.sin(phase)])
++    v=tip-PIVOT
++    norm=v/np.linalg.norm(v)
++    n=np.array([-norm[1],norm[0]])
++    # The black chuck occupies the first quarter of the radius.
++    wood_start=PIVOT+v*.26
++    im=Image.fromarray(np.clip(canvas,0,255).astype(np.uint8))
++    dr=ImageDraw.Draw(im)
++    def line(a,b,color,width):
++        dr.line([tuple(a*SS),tuple(b*SS)],fill=color,width=max(1,round(width*SS)))
++    line(PIVOT+v*.05,PIVOT+v*.27,(23,22,20),4.0)
++    line(PIVOT+v*.05-n*.55,PIVOT+v*.27-n*.55,(43,41,37),1.)
++    # A thin wooden dowel, with a lit edge and a small rounded end.
++    line(wood_start,tip,(115,88,54),2.35)
++    line(wood_start-n*.38,tip-n*.38,(189,161,115),1.6)
++    line(wood_start-n*.7,tip-n*.7,(215,188,142),.45)
++    r=.8*SS
++    tx,ty=tip*SS
++    dr.ellipse((tx-r,ty-r,tx+r,ty+r),fill=(183,153,104))
++    return np.asarray(im).astype(np.float32)
++
++
++def add_shadows(canvas,angles):
++    shadow=np.zeros((H*SS,W*SS),np.float32)
++    contact=np.zeros_like(shadow)
++    for name in ORDER:
++        bottom,top=vertices(name,angles[name])
++        # Project each vertex onto the table away from the broad light source.
++        p=CORNERS[name]
++        origin=p[4]
++        height=abs((p[0]-origin)[1])
++        width=np.linalg.norm(p[5]-origin)
++        up=(p[0]-origin)/height
++        a=np.deg2rad(angles[name])
++        top_h=height*np.cos(a)+np.array([0,width,width,0])*np.sin(a)
++        bot_h=np.array([0,width,width,0])*np.sin(a)
++        shift=np.array([.28,.13])-up
++        projected=np.vstack([bottom+bot_h[:,None]*shift,top+top_h[:,None]*shift])
++        hull=cv2.convexHull(projected.astype(np.float32))[:,0]
++        temp=poly_mask(hull,SS).astype(np.float32)/255
++        shadow=np.maximum(shadow,temp*.17)
++        # Soft contact darkness only near the actual footprint and resting faces.
++        ground=cv2.convexHull(np.vstack([bottom,top if angles[name]&gt;60 else bottom]).astype(np.float32))[:,0]
++        temp=poly_mask(ground,SS).astype(np.float32)/255
++        contact=np.maximum(contact,temp*(.12 if angles[name]&gt;60 else .05))
++    shadow=cv2.GaussianBlur(shadow,(0,0),1.9*SS)
++    contact=cv2.GaussianBlur(contact,(0,0),.6*SS)
++    strength=np.clip(shadow+contact,0,.28)
++    return canvas*(1-strength[...,None])
++
++
++def render(t):
++    angles={name:fall_angle(t,name) for name in ORDER}
++    canvas=cv2.resize(plate,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC).astype(np.float32)
++    # Keep the photographed contact shadows until their associated block moves.
++    unmoved=np.zeros((H,W),np.uint8)
++    for name in ORDER:
++        if angles[name]&lt;.01:
++            bottom,_=vertices(name,0)
++            m=np.zeros((H,W),np.uint8)
++            p=bottom.mean(axis=0)
++            cv2.ellipse(m,(round(p[0]+6),round(p[1]+2)),(10,4),8,0,360,255,-1)
++            unmoved=np.maximum(unmoved,m)
++    m=cv2.resize(unmoved,(W*SS,H*SS),interpolation=cv2.INTER_LINEAR)/255.
++    canvas=canvas*(1-m[...,None])+SOURCE_BIG*m[...,None]
++    canvas=add_shadows(canvas,angles)
++    canvas=draw_arm(canvas,arm_angle(t))
++    for name in ORDER:
++        render_block(canvas,name,angles[name])
++    frame=cv2.resize(np.clip(canvas,0,255).astype(np.uint8),(W,H),interpolation=cv2.INTER_AREA)
++    # Preserve every background pixel outside the region occupied by any moving
++    # object, its original location, and its soft shadow.
++    return frame
++
++
++def main():
++    frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
++    assert frames.shape==(20,144,256,3)
++    assert np.array_equal(frames[0],FRAME0)
++    revision=ROOT/&#x27;.tmp/revisions/01&#x27;
++    revision.mkdir(parents=True,exist_ok=True)
++    for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
++        shutil.copy2(ROOT/filename,revision/filename)
++    artifact_io.save(frames,revision)
++    artifact_io.save(frames,ROOT)
++    np.save(ROOT/&#x27;.tmp/rendered_frames.npy&#x27;,frames)
++    print(&#x27;Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.&#x27;)
++
++if __name__==&#x27;__main__&#x27;:
++    main()</pre></details><a href="candidate_00/generate.py">本轮完整代码</a></article><article><h3>Candidate 2</h3><p class="muted">2026-11-06T18:08:26.149233+00:00 · RGB hash dc78a3a845c41f1f</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_01/pixels-dc78a3a845c41f1f.png&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=8a07839fe2a4&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_01/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_01/inspection.png?v=8a07839fe2a4"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -65,10 +65,21 @@
+ yy, xx = np.mgrid[:H, :W]
+ block_masks = {}
+ object_union = np.zeros((H,W), np.uint8)
++rr,gg,bb=FRAME0.astype(np.int16).transpose(2,0,1)
++color_masks={
++ &#x27;Y&#x27;: (rr&gt;160)&amp;(gg&gt;105)&amp;(bb&lt;95)&amp;(rr-bb&gt;80),
++ &#x27;R&#x27;: (rr&gt;70)&amp;(gg&lt;80)&amp;(bb&lt;70)&amp;(rr-gg&gt;35),
++ &#x27;K&#x27;: (rr&gt;150)&amp;(gg&gt;85)&amp;(gg&lt;150)&amp;(bb&gt;80)&amp;(bb&lt;140)&amp;(rr-gg&gt;40),
++ &#x27;G&#x27;: (gg&gt;40)&amp;(gg&gt;rr+12)&amp;(gg&gt;bb+12),
++ &#x27;B&#x27;: (bb&gt;80)&amp;(bb&gt;rr+45),
++ &#x27;P&#x27;: (rr&gt;50)&amp;(bb&gt;55)&amp;(gg&lt;rr-12)&amp;(gg&lt;bb-15),
++}
+ for name in ORDER:
+     bottom, top = vertices(name,0)
+     hull = cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
+     m = poly_mask(hull)
++    zone=(xx&gt;45)&amp;(xx&lt;162)&amp;(yy&gt;44)&amp;(yy&lt;115)
++    m[color_masks[name]&amp;zone]=255
+     m = cv2.dilate(m,np.ones((3,3),np.uint8))
+     block_masks[name] = m
+     object_union = np.maximum(object_union,m)
+@@ -77,6 +88,7 @@
+ shadow_erase = np.zeros((H,W),np.uint8)
+ cv2.fillConvexPoly(shadow_erase,np.array([[53,85],[153,102],[165,116],[64,101]],np.int32),255)
+ table_erase = np.maximum(object_union,shadow_erase)
++table_erase=cv2.dilate(table_erase,np.ones((5,5),np.uint8))
+ # Fit the broad tabletop colour gradient using the surrounding valid table.
+ valid = (xx&lt;169)&amp;(yy&gt;44)&amp;(table_erase==0)
+ xn,yn=xx/W,yy/H
+@@ -92,10 +104,13 @@
+ source_y=np.clip(source_y,118,142).astype(np.float32)
+ grain=cv2.remap(residual,source_x,source_y,cv2.INTER_LINEAR)
+ wood=np.clip(wood_base+grain,0,255)
+-# A soft transition at the outside edge avoids rectangular clone boundaries.
+-alpha=cv2.GaussianBlur((table_erase&gt;0).astype(np.float32),(0,0),.65)
+-alpha[table_erase&gt;0]=1
+-plate=FRAME0.astype(np.float32)*(1-alpha[...,None])+wood*alpha[...,None]
++# Match the surrounding illumination by solving the classical Poisson image
++# blending problem, using only the local table grain and photographed border.
++bx,by,bw,bh=cv2.boundingRect(table_erase)
++plate=cv2.seamlessClone(
++ wood[by:by+bh,bx:bx+bw].astype(np.uint8),FRAME0,
++ table_erase[by:by+bh,bx:bx+bw],(bx+bw//2,by+bh//2),cv2.NORMAL_CLONE
++).astype(np.float32)
+ 
+ PIVOT=np.array([208.,57.])
+ TIP0=np.array([152.,80.5])
+@@ -251,6 +266,18 @@
+     frame=cv2.resize(np.clip(canvas,0,255).astype(np.uint8),(W,H),interpolation=cv2.INTER_AREA)
+     # Preserve every background pixel outside the region occupied by any moving
+     # object, its original location, and its soft shadow.
++    active=np.maximum(table_erase,arm_erase)
++    for name in ORDER:
++        bottom,top=vertices(name,angles[name])
++        hull=cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
++        active=np.maximum(active,poly_mask(hull))
++    phase=PHASE+np.deg2rad(arm_angle(t))
++    tip=PIVOT+np.array([AX*np.cos(phase),AY*np.sin(phase)])
++    cv2.line(active,tuple(PIVOT.astype(int)),tuple(tip.astype(int)),255,7)
++    # Include the soft cast-shadow region; restore all other source RGB values.
++    cv2.fillConvexPoly(active,np.array([[45,89],[165,108],[182,121],[35,104]],np.int32),255)
++    active=cv2.dilate(active,np.ones((13,13),np.uint8))
++    frame[active==0]=FRAME0[active==0]
+     return frame
+ 
+ 
+@@ -258,7 +285,7 @@
+     frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
+     assert frames.shape==(20,144,256,3)
+     assert np.array_equal(frames[0],FRAME0)
+-    revision=ROOT/&#x27;.tmp/revisions/01&#x27;
++    revision=ROOT/&#x27;.tmp/revisions/02&#x27;
+     revision.mkdir(parents=True,exist_ok=True)
+     for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
+         shutil.copy2(ROOT/filename,revision/filename)</pre></details><a href="candidate_01/generate.py">本轮完整代码</a></article><article><h3>Candidate 3</h3><p class="muted">2026-11-06T18:09:35.642993+00:00 · RGB hash bfba92199f96fb04</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_02/pixels-bfba92199f96fb04.png&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=8a07839fe2a4&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_02/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_02/inspection.png?v=8a07839fe2a4"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -9,6 +9,8 @@
+ import shutil
+ import numpy as np
+ import cv2
++from scipy import sparse
++from scipy.sparse.linalg import spsolve
+ from PIL import Image, ImageDraw
+ import artifact_io
+ 
+@@ -106,11 +108,28 @@
+ wood=np.clip(wood_base+grain,0,255)
+ # Match the surrounding illumination by solving the classical Poisson image
+ # blending problem, using only the local table grain and photographed border.
+-bx,by,bw,bh=cv2.boundingRect(table_erase)
+-plate=cv2.seamlessClone(
+- wood[by:by+bh,bx:bx+bw].astype(np.uint8),FRAME0,
+- table_erase[by:by+bh,bx:bx+bw],(bx+bw//2,by+bh//2),cv2.NORMAL_CLONE
+-).astype(np.float32)
++inside=table_erase&gt;0
++ys,xs=np.where(inside)
++count=len(ys)
++indices=np.full((H,W),-1,dtype=np.int32)
++indices[inside]=np.arange(count)
++row_ids=[np.arange(count)]
++col_ids=[np.arange(count)]
++coeffs=[np.full(count,4.)]
++rhs=4.*wood[ys,xs].astype(np.float64)
++for dy,dx in ((-1,0),(1,0),(0,-1),(0,1)):
++    ny,nx=ys+dy,xs+dx
++    rhs-=wood[ny,nx]
++    neighbour=indices[ny,nx]
++    connected=neighbour&gt;=0
++    row_ids.append(np.flatnonzero(connected))
++    col_ids.append(neighbour[connected])
++    coeffs.append(np.full(connected.sum(),-1.))
++    rhs[~connected]+=FRAME0[ny[~connected],nx[~connected]]
++matrix=sparse.coo_matrix((np.concatenate(coeffs),
++ (np.concatenate(row_ids),np.concatenate(col_ids))),shape=(count,count)).tocsc()
++plate=FRAME0.astype(np.float32).copy()
++plate[inside]=np.clip(spsolve(matrix,rhs),0,255)
+ 
+ PIVOT=np.array([208.,57.])
+ TIP0=np.array([152.,80.5])
+@@ -130,7 +149,8 @@
+ arm_clean=cv2.inpaint(FRAME0,arm_erase,4,cv2.INPAINT_TELEA).astype(np.float32)
+ # Outside the platform, the arm reveals the same tabletop texture.
+ arm_table=(arm_erase&gt;0)&amp;(xx&lt;172)
+-arm_clean[arm_table]=wood[arm_table]
++arm_clean[arm_table]=plate[arm_table]
++arm_clean[arm_table&amp;(table_erase==0)]=wood[arm_table&amp;(table_erase==0)]
+ plate[arm_erase&gt;0]=arm_clean[arm_erase&gt;0]
+ plate=np.clip(plate,0,255).astype(np.uint8)
+ 
+@@ -285,7 +305,7 @@
+     frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
+     assert frames.shape==(20,144,256,3)
+     assert np.array_equal(frames[0],FRAME0)
+-    revision=ROOT/&#x27;.tmp/revisions/02&#x27;
++    revision=ROOT/&#x27;.tmp/revisions/03&#x27;
+     revision.mkdir(parents=True,exist_ok=True)
+     for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
+         shutil.copy2(ROOT/filename,revision/filename)</pre></details><a href="candidate_02/generate.py">本轮完整代码</a></article><article><h3>Candidate 4</h3><p class="muted">2026-11-06T18:09:37.458460+00:00 · RGB hash bfba92199f96fb04</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_03/pixels-bfba92199f96fb04.png&quot;, &quot;poster&quot;: &quot;candidate_03/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=2ebfb74ba17a&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_03/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_03/inspection.png?v=2ebfb74ba17a"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_03/generate.py">本轮完整代码</a></article><article><h3>Candidate 5</h3><p class="muted">2026-11-06T18:10:05.929480+00:00 · RGB hash bfba92199f96fb04</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_04/pixels-bfba92199f96fb04.png&quot;, &quot;poster&quot;: &quot;candidate_04/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=2ebfb74ba17a&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_04/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_04/inspection.png?v=2ebfb74ba17a"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -7,6 +7,7 @@
+ from pathlib import Path
+ import json
+ import shutil
++import subprocess
+ import numpy as np
+ import cv2
+ from scipy import sparse
+@@ -286,16 +287,31 @@
+     frame=cv2.resize(np.clip(canvas,0,255).astype(np.uint8),(W,H),interpolation=cv2.INTER_AREA)
+     # Preserve every background pixel outside the region occupied by any moving
+     # object, its original location, and its soft shadow.
+-    active=np.maximum(table_erase,arm_erase)
++    active=arm_erase.copy()
+     for name in ORDER:
++        if angles[name]&lt;.01:
++            continue
++        active=np.maximum(active,cv2.dilate(block_masks[name],np.ones((5,5),np.uint8)))
+         bottom,top=vertices(name,angles[name])
+         hull=cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
+         active=np.maximum(active,poly_mask(hull))
++        p=CORNERS[name]
++        origin=p[4]
++        height=abs((p[0]-origin)[1])
++        width=np.linalg.norm(p[5]-origin)
++        a=np.deg2rad(angles[name])
++        top_h=height*np.cos(a)+np.array([0,width,width,0])*np.sin(a)
++        bot_h=np.array([0,width,width,0])*np.sin(a)
++        shift=np.array([.28,.13])-(p[0]-origin)/height
++        projected=np.vstack([bottom+bot_h[:,None]*shift,top+top_h[:,None]*shift])
++        hull=cv2.convexHull(projected.astype(np.float32))[:,0]
++        active=np.maximum(active,poly_mask(hull))
++        center=vertices(name,0)[0].mean(axis=0)+[8,3]
++        cv2.ellipse(active,tuple(np.round(center).astype(int)),(16,5),8,0,360,255,-1)
+     phase=PHASE+np.deg2rad(arm_angle(t))
+     tip=PIVOT+np.array([AX*np.cos(phase),AY*np.sin(phase)])
+     cv2.line(active,tuple(PIVOT.astype(int)),tuple(tip.astype(int)),255,7)
+     # Include the soft cast-shadow region; restore all other source RGB values.
+-    cv2.fillConvexPoly(active,np.array([[45,89],[165,108],[182,121],[35,104]],np.int32),255)
+     active=cv2.dilate(active,np.ones((13,13),np.uint8))
+     frame[active==0]=FRAME0[active==0]
+     return frame
+@@ -305,13 +321,21 @@
+     frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
+     assert frames.shape==(20,144,256,3)
+     assert np.array_equal(frames[0],FRAME0)
+-    revision=ROOT/&#x27;.tmp/revisions/03&#x27;
++    revision=ROOT/&#x27;.tmp/revisions/04&#x27;
+     revision.mkdir(parents=True,exist_ok=True)
+     for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
+         shutil.copy2(ROOT/filename,revision/filename)
+     artifact_io.save(frames,revision)
+     artifact_io.save(frames,ROOT)
+     np.save(ROOT/&#x27;.tmp/rendered_frames.npy&#x27;,frames)
++    # Lossless RGB H.264 keeps even the encoded video&#x27;s first frame exact.
++    import imageio_ffmpeg
++    command=[imageio_ffmpeg.get_ffmpeg_exe(),&#x27;-y&#x27;,&#x27;-f&#x27;,&#x27;rawvideo&#x27;,
++      &#x27;-pixel_format&#x27;,&#x27;rgb24&#x27;,&#x27;-video_size&#x27;,f&#x27;{W}x{H}&#x27;,&#x27;-framerate&#x27;,&#x27;4&#x27;,
++      &#x27;-i&#x27;,&#x27;pipe:0&#x27;,&#x27;-an&#x27;,&#x27;-c:v&#x27;,&#x27;libx264rgb&#x27;,&#x27;-crf&#x27;,&#x27;0&#x27;,&#x27;-preset&#x27;,&#x27;medium&#x27;,
++      &#x27;-pix_fmt&#x27;,&#x27;rgb24&#x27;,&#x27;-movflags&#x27;,&#x27;+faststart&#x27;,str(ROOT/&#x27;video.mp4&#x27;)]
++    subprocess.run(command,input=frames.tobytes(),stdout=subprocess.PIPE,
++      stderr=subprocess.PIPE,check=True)
+     print(&#x27;Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.&#x27;)
+ 
+ if __name__==&#x27;__main__&#x27;:</pre></details><a href="candidate_04/generate.py">本轮完整代码</a></article><article><h3>Candidate 6</h3><p class="muted">2026-11-06T18:10:16.929143+00:00 · RGB hash 04e8e3884c269952</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_05/pixels-04e8e3884c269952.png&quot;, &quot;poster&quot;: &quot;candidate_05/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=49f22b1d6608&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_05/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_05/inspection.png?v=49f22b1d6608"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_05/generate.py">本轮完整代码</a></article><article><h3>Candidate 7</h3><p class="muted">2026-11-06T18:10:18.744544+00:00 · RGB hash 04e8e3884c269952</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_06/pixels-04e8e3884c269952.png&quot;, &quot;poster&quot;: &quot;candidate_06/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=49f22b1d6608&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="candidate_06/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_06/inspection.png?v=49f22b1d6608"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_06/generate.py">本轮完整代码</a></article><h2>可观测工具时间线</h2><details><summary>:39.633762+00:00 · agent_message · I’ll read the task and inspect the existing program and candidate, then make any needed improvements and render the video with the supplied first frame preserve</summary><pre>I’ll read the task and inspect the existing program and candidate, then make any needed improvements and render the video with the supplied first frame preserved.
+</pre><pre></pre></details><details><summary>:40.780825+00:00 · command_execution · pwd</summary><pre>pwd</pre><pre>[workspace path]
+</pre></details><details><summary>:40.972237+00:00 · command_execution · rg --files -g &#x27;!*.mp4&#x27; -g &#x27;!*.avi&#x27; -g &#x27;!*.mov&#x27; -g &#x27;!*.npy&#x27; -g &#x27;!*.npz&#x27; -g &#x27;!*.png&#x27; -g &#x27;!*.jpg&#x27; -g &#x27;!*.jpeg&#x27; -g &#x27;!*.webp&#x27; -g &#x27;!*.gif&#x27;</summary><pre>rg --files -g &#x27;!*.mp4&#x27; -g &#x27;!*.avi&#x27; -g &#x27;!*.mov&#x27; -g &#x27;!*.npy&#x27; -g &#x27;!*.npz&#x27; -g &#x27;!*.png&#x27; -g &#x27;!*.jpg&#x27; -g &#x27;!*.jpeg&#x27; -g &#x27;!*.webp&#x27; -g &#x27;!*.gif&#x27;</pre><pre>/bin/bash: line 134: rg: command not found
+</pre></details><details><summary>:44.229394+00:00 · command_execution · ls -la</summary><pre>ls -la</pre><pre>total 96
+drwxr-xr-x 8 tiger tiger  4096 Nov  7 02:03 .
+drwxr-xr-x 6 tiger tiger  4096 Nov  7 02:03 ..
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 02:03 .agents
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 02:03 .codex
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 02:03 .git
+drwxr-xr-x 2 tiger tiger  4096 Nov  7 02:03 .tmp
+dr-xr-xr-x 2 tiger tiger    40 Nov  7 02:03 .trae
+-rw-r--r-- 1 tiger tiger   545 Nov  7 01:48 GENERATION_RULES.md
+-rw-r--r-- 1 tiger tiger  4026 Nov  6 02:01 artifact_io.py
+drwxr-xr-x 3 tiger tiger  4096 Nov  7 01:48 candidate
+-rw-r--r-- 1 tiger tiger 43661 Oct 30 19:21 first_frame.png
+-rw-r--r-- 1 tiger tiger 13055 Nov  6 01:58 generate.py
+-rw-r--r-- 1 tiger tiger  3262 Nov  6 02:01 player_template.html
+-rw-r--r-- 1 tiger tiger   400 Oct 30 19:21 prompt.txt
+-rw-r--r-- 1 tiger tiger   151 Nov  7 02:03 task_spec.json
+</pre></details><details><summary>:44.434975+00:00 · command_execution · cat prompt.txt</summary><pre>cat prompt.txt</pre><pre>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A row of colorful wooden blocks has been lined up on a wooden table next to a black platform. The wooden stick attached to the black platform rotates clockwise and hits the first block.
+</pre></details><details><summary>:44.644563+00:00 · command_execution · sed -n &#x27;1,260p&#x27; generate.py</summary><pre>sed -n &#x27;1,260p&#x27; generate.py</pre><pre>&quot;&quot;&quot;
+PixelWorld-Text case_0036 generation.
+
+Scene: six colored wooden cuboids lined up diagonally on a wooden table
+beside a black platform. A wooden stick attached to a black hub on the
+platform rotates clockwise (screen sense), strikes the purple (nearest)
+block, and the row topples as a domino cascade.
+
+Method (see METHOD.md for details):
+  * numeric RGB analysis -&gt; exact masks for 6 blocks + stick + hub;
+  * a clean background plate is built by 2-D membrane inpainting of the
+    erased object pixels (plus matched grain);
+  * block sprites cut from the original are rotated about their
+    left-bottom ground-contact pivot;
+  * the wood stick + black neck are rendered analytically (3x
+    supersampled segment shading) behind the block layer; the static
+    hub disc is never touched;
+  * frame 0 is the untouched first_frame.png.
+&quot;&quot;&quot;
+from pathlib import Path
+import numpy as np
+from PIL import Image, ImageDraw
+from scipy import ndimage
+from scipy.ndimage import distance_transform_edt, uniform_filter
+import artifact_io
+
+ROOT = Path(__file__).parent
+SS = 3  # stick supersampling
+
+# ---------------------------------------------------------------- geometry
+PIVOT = np.array([208.0, 57.0])
+ANG0 = np.array([-0.925, 0.390])          # frame-0 stick unit dir (x,y)
+STICK_L = 60.0
+BLOCK_ORDER = [&#x27;Y&#x27;, &#x27;R&#x27;, &#x27;K&#x27;, &#x27;G&#x27;, &#x27;B&#x27;, &#x27;P&#x27;]          # far -&gt; near
+PIVOTS = {&#x27;Y&#x27;: (55, 92), &#x27;R&#x27;: (68, 95), &#x27;K&#x27;: (88, 95),
+          &#x27;G&#x27;: (107, 102), &#x27;B&#x27;: (125, 106), &#x27;P&#x27;: (137, 109)}
+T0 = {&#x27;P&#x27;: 4, &#x27;B&#x27;: 6, &#x27;G&#x27;: 8, &#x27;K&#x27;: 10, &#x27;R&#x27;: 12, &#x27;Y&#x27;: 14}
+PHI_MAX = {&#x27;P&#x27;: 78, &#x27;B&#x27;: 75, &#x27;G&#x27;: 70, &#x27;K&#x27;: 66, &#x27;R&#x27;: 62, &#x27;Y&#x27;: 58}
+FALL_DUR = 5.2
+
+# ---------------------------------------------------------------- load
+frame0 = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+H, W, _ = frame0.shape
+imf = frame0.astype(int)
+r, g, b = imf[..., 0], imf[..., 1], imf[..., 2]
+MX = imf.max(axis=2)
+yy, xx = np.mgrid[0:H, 0:W]
+
+
+def biggest(mask, minsz=25):
+    lab, n = ndimage.label(mask)
+    out = np.zeros_like(mask)
+    for i in range(1, n + 1):
+        c = lab == i
+        if c.sum() &gt;= minsz:
+            out |= c
+    return out
+
+
+# ------------------------------------------------------- block color cores
+mY = (r &gt; 160) &amp; (g &gt; 105) &amp; (b &lt; 95) &amp; (r - b &gt; 80)
+mR = (((r &gt; 95) &amp; (g &lt; 80) &amp; (b &lt; 70) &amp; (r - g &gt; 45)) |
+      ((r &gt; 60) &amp; (r &lt; 110) &amp; (g &lt; 55) &amp; (b &lt; 50) &amp; (r &gt; g + 25)))
+mK = ((r &gt; 150) &amp; (g &gt; 85) &amp; (g &lt; 150) &amp; (b &gt; 80) &amp; (b &lt; 140) &amp;
+      (r - g &gt; 40) &amp; (abs(g - b) &lt; 38))
+mG = (g &gt; 40) &amp; (g &gt; r + 12) &amp; (g &gt; b + 12)
+mB = (b &gt; 80) &amp; (b &gt; r + 45)
+mP = (r &gt; 50) &amp; (b &gt; 55) &amp; (g &lt; r - 12) &amp; (g &lt; b - 15)
+cores = {&#x27;Y&#x27;: biggest(mY), &#x27;R&#x27;: biggest(mR), &#x27;K&#x27;: biggest(mK),
+         &#x27;G&#x27;: biggest(mG), &#x27;B&#x27;: biggest(mB), &#x27;P&#x27;: biggest(mP)}
+
+# ground-front line across the block zone
+gx0, gx1 = 45, 160
+ground_y = np.zeros(W, float)
+col_bottom = {}
+for j in BLOCK_ORDER:
+    ys, xs = np.where(cores[j])
+    for x in range(xs.min(), xs.max() + 1):
+        yycol = np.where(cores[j][:, x])[0]
+        if len(yycol):
+            col_bottom[x] = max(col_bottom.get(x, 0), yycol.max())
+cols = np.array(sorted(col_bottom))
+vals = np.array([col_bottom[x] for x in cols])
+ground_y[:] = np.interp(np.arange(W), cols, ndimage.uniform_filter1d(vals, 5))
+
+# assign very-dark rim pixels to nearest block core (distance &lt;= 3)
+union_core = np.zeros((H, W), bool)
+for mk in cores.values():
+    union_core |= mk
+above_ground = yy &lt;= ground_y[None, :] + 3
+candidate = (ndimage.binary_dilation(union_core, iterations=2) &amp;
+            (MX &lt; 100) &amp; above_ground &amp; (xx &lt; 172) &amp; ~union_core)
+dists = {j: distance_transform_edt(~cores[j]) for j in BLOCK_ORDER}
+dstack = np.stack([dists[j] for j in BLOCK_ORDER])
+nearest = dstack.argmin(axis=0)
+nearest_d = dstack.min(axis=0)
+sprite_mask = {j: cores[j].copy() for j in BLOCK_ORDER}
+rim = candidate &amp; (nearest_d &lt;= 3.0)
+for k, j in enumerate(BLOCK_ORDER):
+    sprite_mask[j] |= rim &amp; (nearest == k)
+    sprite_mask[j] = biggest(sprite_mask[j], minsz=20)
+
+# ---------------------------------------------------------------- stick mask
+rel = np.dstack([xx - PIVOT[0], yy - PIVOT[1]])
+along0 = rel[..., 0] * ANG0[0] + rel[..., 1] * ANG0[1]
+perp0 = rel[..., 0] * (-ANG0[1]) + rel[..., 1] * ANG0[0]
+hub = ((xx - PIVOT[0]) ** 2 + (yy - PIVOT[1]) ** 2) &lt;= 8.5 ** 2
+stick_band = (along0 &gt;= 6) &amp; (along0 &lt;= STICK_L) &amp; (np.abs(perp0) &lt;= 4.6)
+neck_wedge = (MX &lt; 55) &amp; (xx &gt;= 186) &amp; (xx &lt;= 220) &amp; (yy &gt;= 49) &amp; (yy &lt;= 72) &amp; \
+             ~hub &amp; (perp0 &gt; 1) &amp; (along0 &gt; 2) &amp; (along0 &lt; 22)
+neck_wedge = biggest(neck_wedge, minsz=8)
+
+# ---------------------------------------------------------------- erase/plate
+gap_shadow = (ndimage.binary_dilation(union_core, iterations=4) &amp; (MX &lt; 95) &amp;
+              above_ground &amp; (xx &lt; 175))
+erase_blocks = ndimage.binary_closing(
+    union_core | rim | gap_shadow, iterations=2)
+erase = erase_blocks | ((stick_band | neck_wedge) &amp; ~union_core)
+
+plate = frame0.copy().astype(float)
+good = ~erase
+# per-row linear initialisation across erased runs
+for y in range(H):
+    bx = np.where(erase[y])[0]
+    if len(bx):
+        gx = np.where(good[y])[0]
+        for c in range(3):
+            plate[y, bx, c] = np.interp(bx, gx, frame0[y, gx, c].astype(float))
+# 2-D membrane smoothing of erased pixels from good neighbours
+for _ in range(45):
+    flt = uniform_filter(plate, size=(9, 9, 1), mode=&#x27;nearest&#x27;)
+    plate[erase] = flt[erase]
+
+# grain matched to local table/platform residuals
+blur = uniform_filter(frame0.astype(float), size=(1, 5, 1), mode=&#x27;nearest&#x27;)
+resid = frame0.astype(float) - blur
+table_zone = (xx &lt; 172)
+sig_t = resid[table_zone &amp; good &amp; (yy &gt; 44) &amp; (yy &lt; 130)].std()
+sig_p = resid[~table_zone &amp; good &amp; (yy &gt; 40) &amp; (yy &lt; 100)].std()
+rng = np.random.default_rng(36036)
+noise = rng.normal(0, 1.0, (H, W, 3))
+noise = uniform_filter(noise, size=(1, 3, 1))
+noise_t = rng.normal(0, 1.0, (H, W))
+sig = np.where(table_zone, sig_t, sig_p)
+plate += (erase &amp; ~hub)[..., None] * noise * sig[..., None]
+plate = np.clip(plate, 0, 255).astype(np.uint8)
+
+# ---------------------------------------------------------------- sprites
+def cut_sprite(name):
+    mk = sprite_mask[name]
+    ys, xs = np.where(mk)
+    x0, x1, y0, y1 = xs.min() - 2, xs.max() + 3, ys.min() - 2, ys.max() + 3
+    crop = frame0[y0:y1, x0:x1].copy()
+    a = mk[y0:y1, x0:x1].astype(np.uint8) * 255
+    # darken ground-contact edge of the sprite (underside line)
+    bottom = np.where(mk.any(axis=1))[0].max()
+    rgba = np.dstack([crop, a])
+    return rgba, (x0, y0), bottom
+
+
+SPRITES = {j: cut_sprite(j) for j in BLOCK_ORDER}
+
+
+def paste_sprite(canvas, name, phi_deg):
+    rgba, (x0, y0), bottom = SPRITES[name]
+    px, py = PIVOTS[name]
+    if phi_deg &lt; 0.05:
+        layer = Image.fromarray(rgba, &#x27;RGBA&#x27;)
+        ox, oy = x0, y0
+    else:
+        img = Image.fromarray(rgba, &#x27;RGBA&#x27;)
+        rot = img.rotate(phi_deg, resample=Image.BILINEAR, expand=True)
+        # original pivot in crop coords
+        lpx, lpy = px - x0, py - y0
+        w0, h0 = img.size
+        # pivot maps to center of expanded canvas
+        cx0, cy0 = (w0 - 1) / 2.0, (h0 - 1) / 2.0
+        w1, h1 = rot.size
+        cx1, cy1 = (w1 - 1) / 2.0, (h1 - 1) / 2.0
+        ox = px - lpx + (cx0 - cx1)
+        oy = py - lpy + (cy0 - cy1)
+        layer = rot
+        ox, oy = int(round(ox)), int(round(oy))
+    base = Image.fromarray(canvas, &#x27;RGB&#x27;).convert(&#x27;RGBA&#x27;)
+    base.alpha_composite(layer, (ox, oy))
+    return np.array(base.convert(&#x27;RGB&#x27;))
+
+
+# ---------------------------------------------------------------- stick draw
+def cw(theta_deg):
+    &quot;&quot;&quot;Rotate frame-0 direction clockwise (screen sense).&quot;&quot;&quot;
+    t = np.deg2rad(theta_deg)
+    c, s = np.cos(t), np.sin(t)
+    return np.array([ANG0[0] * c - ANG0[1] * s,
+                     ANG0[0] * s + ANG0[1] * c])
+
+
+def stick_layer(theta_deg):
+    u = cw(theta_deg)
+    nrm = np.array([-u[1], u[0]])
+    Hs, Ws = H * SS, W * SS
+    P = PIVOT * SS
+    us = u[SS] if False else u
+    yyi, xxi = np.mgrid[0:Hs, 0:Ws]
+    d = np.dstack([xxi - P[0], yyi - P[1]]).astype(float)
+    along = d[..., 0] * u[0] + d[..., 1] * u[1]
+    perp = d[..., 0] * nrm[0] + d[..., 1] * nrm[1]
+
+    def band(r0, r1, hw):
+        return (along &gt;= r0 * SS) &amp; (along &lt;= r1 * SS) &amp; (np.abs(perp) &lt;= hw * SS)
+
+    rgba = np.zeros((Hs, Ws, 4), np.float64)
+    def paint(mask, color, alpha, soft=0.0):
+        m = mask.astype(float)
+        if soft:
+            edge = np.clip((soft * SS - np.abs(np.abs(perp) - 0)) / (soft * SS), 0, 1)
+            m *= np.maximum(np.clip((soft * SS - np.abs(np.abs(perp) -
+                  (np.clip(np.abs(perp)/(hw_s*SS),0,1)*0)))/(soft*SS),0,1), 0)
+        cover = m * alpha
+        for k, v in enumerate(color):
+            rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+        rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+
+    # soft neck halo
+    hw_s = 9.0
+    m = band(6, 20, 9.0)
+    cover = m * 0.5
+    for k, v in enumerate((10, 8, 6)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    # black neck
+    m = band(7, 18, 3.6)
+    cover = m * 0.95
+    for k, v in enumerate((14, 11, 8)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    # wood stick: shade body
+    m = band(14, STICK_L, 3.4)
+    cover = m * 0.97
+    for k, v in enumerate((116, 84, 52)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    # bright core, offset toward lower-left (-normal) side
+    mc = (along &gt;= 15 * SS) &amp; (along &lt;= (STICK_L - 1) * SS) &amp; \
+         (perp &gt;= -3.2 * SS) &amp; (perp &lt;= 1.6 * SS)
+    cover = mc * 0.9
+    for k, v in enumerate((184, 156, 122)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    # lit rim
+    ml = (along &gt;= 16 * SS) &amp; (along &lt;= (STICK_L - 2) * SS) &amp; \
+         (perp &gt;= -3.0 * SS) &amp; (perp &lt;= -1.9 * SS)
+    cover = ml * 0.8
+    for k, v in enumerate((206, 184, 152)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    # rounded tip cap
+    tip = P + u * STICK_L * SS
+    mcap = ((xxi - tip[0]) ** 2 + (yyi - tip[1]) ** 2) &lt;= (3.4 * SS) ** 2
+    cover = mcap * 0.95
+</pre></details><details><summary>:52.961050+00:00 · command_execution · sed -n &#x27;261,520p&#x27; generate.py</summary><pre>sed -n &#x27;261,520p&#x27; generate.py</pre><pre>    for k, v in enumerate((120, 88, 55)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+    mcap2 = ((xxi - tip[0]) ** 2 + (yyi - tip[1]) ** 2) &lt;= (1.8 * SS) ** 2
+    cover = mcap2 * 0.9
+    for k, v in enumerate((184, 156, 122)):
+        rgba[..., k] = cover * v + (1 - cover) * rgba[..., k]
+    rgba[..., 3] = np.maximum(rgba[..., 3], cover * 255)
+
+    small = Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), &#x27;RGBA&#x27;)
+    return small.resize((W, H), Image.LANCZOS)
+
+
+def ground_shadow(canvas, phi_by_name):
+    img = Image.fromarray(canvas, &#x27;RGB&#x27;).convert(&#x27;RGBA&#x27;)
+    dr = ImageDraw.Draw(img)
+    for j in BLOCK_ORDER:
+        phi = np.deg2rad(phi_by_name[j])
+        px, py = PIVOTS[j]
+        ext = 13 * abs(np.sin(phi))
+        rx = 8 + ext
+        x0 = px - rx - ext * 0.9
+        x1 = px + 5
+        dy = 2.2
+        if phi_by_name[j] &lt; 1.5:
+            continue
+        dr.ellipse([x0, py - dy, x1, py + dy + 1], fill=(18, 13, 9, 60))
+    return np.array(img.convert(&#x27;RGB&#x27;))
+
+
+# ---------------------------------------------------------------- timeline
+def smooth(q):
+    q = np.clip(q, 0, 1)
+    return q * q * (3 - 2 * q)
+
+
+def stick_angle(t):
+    return 26.0 * np.clip(t / 13.0, 0, 1) ** 1.7
+
+
+def lean(t, name):
+    q = (t - T0[name]) / FALL_DUR
+    return PHI_MAX[name] * smooth(q)
+
+
+frames = [frame0]
+for t in range(1, 20):
+    canvas = plate.copy()
+    phi = {j: lean(t, j) for j in BLOCK_ORDER}
+    canvas = ground_shadow(canvas, phi)
+    base = Image.fromarray(canvas, &#x27;RGB&#x27;).convert(&#x27;RGBA&#x27;)
+    base.alpha_composite(stick_layer(stick_angle(t)))
+    canvas = np.array(base.convert(&#x27;RGB&#x27;))
+    for j in BLOCK_ORDER:                       # far -&gt; near
+        canvas = paste_sprite(canvas, j, phi[j])
+    frames.append(canvas)
+
+frames = np.stack(frames).astype(np.uint8)
+assert frames.shape == (20, 144, 256, 3)
+assert np.array_equal(frames[0], frame0)
+artifact_io.save(frames, ROOT)
+
+# transition check sheet: selected frames + amplified predecessor diffs
+sel = [0, 3, 6, 9, 12, 15, 18, 19]
+sheet = Image.new(&#x27;RGB&#x27;, (4 * 256, 2 * (144 + 18)), (25, 28, 35))
+dr = ImageDraw.Draw(sheet)
+for i, t in enumerate(sel):
+    x, y = (i % 4) * 256, (i // 4) * (144 + 18)
+    dr.text((x + 5, y + 3), f&#x27;frame {t+1}/20  {(t+1)/4:.2f}s&#x27;, fill=&#x27;white&#x27;)
+    sheet.paste(Image.fromarray(frames[t]), (x, y + 18))
+    if t &gt; 0:
+        d = np.abs(frames[t].astype(int) - frames[t - 1].astype(int)).sum(2)
+        heat = np.clip(d * 3, 0, 255).astype(np.uint8)
+        diff = np.zeros_like(frames[t])
+        diff[..., 0] = heat
+        diff[..., 1] = (heat // 3)
+        sheet.paste(Image.fromarray(diff), (x, y + 18 + (144 + 18)))
+sheet.save(ROOT / &#x27;transition_check.png&#x27;)
+print(&#x27;done&#x27;)
+</pre></details><details><summary>:52.974897+00:00 · command_execution · find candidate -maxdepth 3 -type f</summary><pre>find candidate -maxdepth 3 -type f</pre><pre>candidate/frames/00.png
+candidate/frames/01.png
+candidate/frames/02.png
+candidate/frames/03.png
+candidate/frames/04.png
+candidate/frames/05.png
+candidate/frames/06.png
+candidate/frames/07.png
+candidate/frames/08.png
+candidate/frames/09.png
+candidate/frames/10.png
+candidate/frames/11.png
+candidate/frames/12.png
+candidate/frames/13.png
+candidate/frames/14.png
+candidate/frames/15.png
+candidate/frames/16.png
+candidate/frames/17.png
+candidate/frames/18.png
+candidate/frames/19.png
+candidate/inspection.png
+candidate/pixels.npz
+candidate/transition_check.png
+</pre></details><details><summary>:53.007042+00:00 · command_execution · cat GENERATION_RULES.md task_spec.json artifact_io.py</summary><pre>cat GENERATION_RULES.md task_spec.json artifact_io.py</pre><pre>Use only the supplied initial image, prompt, candidate/ and generate.py in this workspace. No network, other cases, future reference videos, evaluation masks/scores, memory, external AI models, learned renderers or physics engines. Local Python drawing, image operations and mathematical dynamics are allowed. Generate 20 RGB frames at 256x144, 4 fps (5 seconds); frame 00 must exactly match first_frame.png. Keep generate.py and use artifact_io.save to save the video. Choose whether and how to inspect or revise; save intermediate candidates.
+{
+  &quot;task_type&quot;: &quot;i2v&quot;,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 144,
+  &quot;frames&quot;: 20,
+  &quot;fps&quot;: 4,
+  &quot;audio&quot;: null,
+  &quot;benchmark&quot;: &quot;physics-iq-repair-exploration&quot;
+}
+&quot;&quot;&quot;Output-only helpers. No drawing or generation policy is implemented here.&quot;&quot;&quot;
+from pathlib import Path
+import base64
+import json
+import wave
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+
+def save(frames, case_dir, audio=None):
+    case_dir = Path(case_dir)
+    frames = np.asarray(frames)
+    path = case_dir / &quot;task_spec.json&quot;
+    spec = json.loads(path.read_text()) if path.is_file() else {}
+    n, h, w, fps = (spec.get(&quot;frames&quot;, 20), spec.get(&quot;height&quot;, 144), spec.get(&quot;width&quot;, 256), spec.get(&quot;fps&quot;, 4))
+    assert frames.shape == (n, h, w, 3) and frames.dtype == np.uint8, frames.shape
+    audio_spec = spec.get(&quot;audio&quot;)
+    audio_url = None
+    if audio_spec:
+        samples = round(n / fps * audio_spec[&quot;sample_rate&quot;])
+        pcm = np.asarray(audio)
+        if pcm.ndim == 1:
+            pcm = pcm[:, None]
+        assert pcm.shape == (samples, audio_spec[&quot;channels&quot;]) and pcm.dtype == np.int16, (pcm.shape, pcm.dtype)
+        with wave.open(str(case_dir / &quot;audio.wav&quot;), &quot;wb&quot;) as handle:
+            handle.setnchannels(audio_spec[&quot;channels&quot;])
+            handle.setsampwidth(2)
+            handle.setframerate(audio_spec[&quot;sample_rate&quot;])
+            handle.writeframes(pcm.astype(&quot;&lt;i2&quot;).tobytes())
+        audio_url = &quot;data:audio/wav;base64,&quot; + base64.b64encode((case_dir / &quot;audio.wav&quot;).read_bytes()).decode()
+    values = frames.astype(np.uint32)
+    packed = (values[:, :, :, 0] &lt;&lt; 16) | (values[:, :, :, 1] &lt;&lt; 8) | values[:, :, :, 2]
+    tensor = packed.transpose(1, 2, 0)
+    np.savez_compressed(case_dir / &quot;pixels.npz&quot;, pixels=tensor)
+
+    folder = case_dir / &quot;frames&quot;
+    folder.mkdir(exist_ok=True)
+    for index, frame in enumerate(frames):
+        Image.fromarray(frame).save(folder / f&quot;{index:02d}.png&quot;)
+
+    sheet = Image.new(&quot;RGB&quot;, (w * 4, (h + 21) * 2), (25, 28, 35))
+    draw = ImageDraw.Draw(sheet)
+    for index, frame_index in enumerate(np.linspace(0, n - 1, 8).round().astype(int)):
+        x, y = (index % 4) * w, (index // 4) * (h + 21)
+        draw.text((x + 5, y + 3), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        sheet.paste(Image.fromarray(frames[frame_index]), (x, y + 21))
+    sheet.save(case_dir / &quot;inspection.png&quot;)
+
+    transition = Image.new(&quot;RGB&quot;, (w * 4, h * 2 + 21), (25, 28, 35))
+    draw = ImageDraw.Draw(transition)
+    for index, frame_index in enumerate(min(i, n-1) for i in range(4)):
+        x = index * w
+        draw.text((x + 5, 4), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        transition.paste(Image.fromarray(frames[frame_index]), (x, 21))
+        transition.paste(Image.fromarray(frames[frame_index]).resize((w, h), Image.Resampling.NEAREST), (x, h + 21))
+    transition.save(case_dir / &quot;transition_check.png&quot;)
+
+    encode = lambda array: base64.b64encode(np.asarray(array, dtype=&quot;&lt;u4&quot;).tobytes()).decode()
+    deltas = []
+    for index in range(1, n):
+        current = packed[index].reshape(-1)
+        previous = packed[index - 1].reshape(-1)
+        positions = np.flatnonzero(current != previous)
+        packet = []
+        if len(positions):
+            bounds = np.r_[0, np.flatnonzero(np.diff(positions) &gt; 1) + 1, len(positions)]
+            for start, end in zip(bounds[:-1], bounds[1:]):
+                offset = int(positions[start])
+                count = int(end - start)
+                packet.extend([offset, count])
+                packet.extend(current[offset:offset + count].tolist())
+        deltas.append(encode(packet))
+    data = {
+        &quot;id&quot;: case_dir.name,
+        &quot;width&quot;: w, &quot;height&quot;: h, &quot;frames&quot;: n, &quot;fps&quot;: fps, &quot;audio&quot;: audio_url,
+        &quot;first&quot;: encode(packed[0].reshape(-1)),
+        &quot;deltas&quot;: deltas,
+        &quot;caption&quot;: (case_dir / &quot;prompt.txt&quot;).read_text().strip(),
+    }
+    template = (Path(__file__).parent / &quot;player_template.html&quot;).read_text()
+    payload = json.dumps(data, separators=(&quot;,&quot;, &quot;:&quot;), ensure_ascii=False).replace(&quot;&lt;&quot;, &quot;\\u003c&quot;)
+    (case_dir / &quot;index.html&quot;).write_text(template.replace(&quot;__ID__&quot;, case_dir.name).replace(&quot;__DATA__&quot;, payload))
+</pre></details><details><summary>:58.808084+00:00 · command_execution · python -c &quot;import PIL, scipy, numpy; print(&#x27;Pillow&#x27;,PIL.__version__,&#x27;scipy&#x27;,scipy.__version__,&#x27;numpy&#x27;,numpy.__version__)&quot;</summary><pre>python -c &quot;import PIL, scipy, numpy; print(&#x27;Pillow&#x27;,PIL.__version__,&#x27;scipy&#x27;,scipy.__version__,&#x27;numpy&#x27;,numpy.__version__)&quot;</pre><pre>Pillow 11.3.0 scipy 1.17.1 numpy 2.4.6
+</pre></details><details><summary>:10.813792+00:00 · agent_message · The existing animation moves the blocks away from their contact points and creates hard black patches underneath them. I’ll revise the block motion so each fall</summary><pre>The existing animation moves the blocks away from their contact points and creates hard black patches underneath them. I’ll revise the block motion so each falls from its base along the row, and improve the shadows and table surface exposed as they fall.
+</pre><pre></pre></details><details><summary>:12.658755+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,576)).save(&#x27;.tmp/first_frame_large.png&#x27;)
+im.crop((44,43,162,118)).resize((944,600)).save(&#x27;.tmp/blocks_large.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:08.552934+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for name in (&#x27;cv2&#x27;,&#x27;imageio&#x27;,&#x27;imageio_ffmpeg&#x27;):
+ print(name, bool(importlib.util.find_spec(name)))
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.crop((165,43,227,89)).resize((744,552)).save(&#x27;.tmp/stick_large.png&#x27;)
+PY</pre><pre>cv2 True
+imageio True
+imageio_ffmpeg True
+</pre></details><details><summary>:23.176303+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image,ImageDraw
+im=Image.open(&#x27;first_frame.png&#x27;).resize((1536,864))
+d=ImageDraw.Draw(im)
+for x in range(45,161,5):
+ d.line((x*6,43*6,x*6,117*6),fill=(255,255,255,90),width=1)
+ d.text((x*6+1,40*6),str(x),fill=&#x27;white&#x27;)
+for y in range(45,116,5):
+ d.line((45*6,y*6,160*6,y*6),fill=(255,255,255,90),width=1)
+ d.text((41*6,y*6),str(y),fill=&#x27;white&#x27;)
+im.crop((40*6,38*6,163*6,119*6)).save(&#x27;.tmp/grid.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:53.472421+00:00 · command_execution · mkdir -p .tmp/revisions/01</summary><pre>mkdir -p .tmp/revisions/01</pre><pre></pre></details><details><summary>:53.921531+00:00 · command_execution · cp generate.py .tmp/revisions/00_generate.py</summary><pre>cp generate.py .tmp/revisions/00_generate.py</pre><pre></pre></details><details><summary>:04.110465+00:00 · command_execution · cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;</summary><pre>cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+&quot;&quot;&quot;Render a clockwise striking arm and a domino cascade from supplied RGB.
+
+Only local image operations and analytic cuboid geometry are used. The camera
+is fixed; the original first frame is retained verbatim. Source face textures
+are projected onto rotating cuboids whose ground contact corners stay fixed.
+&quot;&quot;&quot;
+from pathlib import Path
+import json
+import shutil
+import numpy as np
+import cv2
+from PIL import Image, ImageDraw
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+SS = 4
+FRAME0 = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+H, W = FRAME0.shape[:2]
+ORDER = [&#x27;Y&#x27;, &#x27;R&#x27;, &#x27;K&#x27;, &#x27;G&#x27;, &#x27;B&#x27;, &#x27;P&#x27;]
+# Front-left, front-right, back-right, back-left top corners, plus the
+# front-left and front-right ground corners. Coordinates are from frame 0.
+CORNERS = {
+ &#x27;Y&#x27;: [[49.5,52.5],[56.5,54],[65,49],[58,47.5],[56,91],[63,92.5]],
+ &#x27;R&#x27;: [[67,55],[75,56],[82,51.5],[74,50.5],[73,95],[80.5,97]],
+ &#x27;K&#x27;: [[84,59],[92.5,60],[101,54.5],[92.5,53],[88.5,99],[97,101]],
+ &#x27;G&#x27;: [[104,60],[112.5,62],[120,56],[111.5,54.5],[110,104],[118.5,106]],
+ &#x27;B&#x27;: [[124,63],[132.5,64.5],[139.5,59],[131,57.5],[128,106],[136.5,108]],
+ &#x27;P&#x27;: [[136,65],[144,65.5],[150,60],[142.5,59],[143,109.5],[150.5,111]],
+}
+CORNERS = {k: np.asarray(v, dtype=np.float64) for k,v in CORNERS.items()}
+ROW = np.array([0.98, 0.20])
+# Strike begins at 0.5 sec, each collision launches its immediate neighbour.
+START = {&#x27;P&#x27;: .52, &#x27;B&#x27;: .69, &#x27;G&#x27;: .85, &#x27;K&#x27;: 1.01, &#x27;R&#x27;: 1.17, &#x27;Y&#x27;: 1.33}
+REST = {&#x27;Y&#x27;: 89.8, &#x27;R&#x27;: 83.0, &#x27;K&#x27;: 78.0, &#x27;G&#x27;: 74.0, &#x27;B&#x27;: 70.5, &#x27;P&#x27;: 67.5}
+DURATION = .62
+
+
+def poly_mask(points, scale=1):
+    mask = np.zeros((H*scale, W*scale), np.uint8)
+    cv2.fillConvexPoly(mask, np.round(points*scale).astype(np.int32), 255)
+    return mask
+
+
+def vertices(name, angle):
+    p = CORNERS[name]
+    origin, right = p[4], p[5]
+    up = p[0] - origin
+    across = right - origin
+    depth = .5 * ((p[3]-p[0]) + (p[2]-p[1]))
+    height = abs(up[1])
+    width = np.linalg.norm(across)
+    a = np.deg2rad(angle)
+    # Rotate in the vertical plane of the row, about the lower left edge.
+    rise = up*np.cos(a) - ROW*height*np.sin(a)
+    edge = across*np.cos(a) + (up/height)*width*np.sin(a)
+    bottom = np.array([origin, origin+edge, origin+edge+depth, origin+depth])
+    top = bottom + rise
+    if angle == 0:
+        top = p[:4].copy()
+        bottom[1] = right
+    return bottom, top
+
+
+# Erase the photographed objects while retaining all static scene pixels.
+yy, xx = np.mgrid[:H, :W]
+block_masks = {}
+object_union = np.zeros((H,W), np.uint8)
+for name in ORDER:
+    bottom, top = vertices(name,0)
+    hull = cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
+    m = poly_mask(hull)
+    m = cv2.dilate(m,np.ones((3,3),np.uint8))
+    block_masks[name] = m
+    object_union = np.maximum(object_union,m)
+
+# Original block shadows occupy the narrow strip below the bases.
+shadow_erase = np.zeros((H,W),np.uint8)
+cv2.fillConvexPoly(shadow_erase,np.array([[53,85],[153,102],[165,116],[64,101]],np.int32),255)
+table_erase = np.maximum(object_union,shadow_erase)
+# Fit the broad tabletop colour gradient using the surrounding valid table.
+valid = (xx&lt;169)&amp;(yy&gt;44)&amp;(table_erase==0)
+xn,yn=xx/W,yy/H
+basis=np.stack([np.ones_like(xn),xn,yn,xn*yn,xn*xn,yn*yn],axis=-1)
+coef=np.linalg.lstsq(basis[valid],FRAME0[valid].astype(float),rcond=None)[0]
+wood_base=basis@coef
+# Reuse grain from the unobstructed lower table at the same grain angle.
+low=cv2.GaussianBlur(FRAME0.astype(np.float32),(0,0),8)
+residual=FRAME0.astype(np.float32)-low
+source_y=118+(yy-47)*.35
+source_x=xx-.65*(source_y-yy)
+source_x=np.clip(source_x,2,168).astype(np.float32)
+source_y=np.clip(source_y,118,142).astype(np.float32)
+grain=cv2.remap(residual,source_x,source_y,cv2.INTER_LINEAR)
+wood=np.clip(wood_base+grain,0,255)
+# A soft transition at the outside edge avoids rectangular clone boundaries.
+alpha=cv2.GaussianBlur((table_erase&gt;0).astype(np.float32),(0,0),.65)
+alpha[table_erase&gt;0]=1
+plate=FRAME0.astype(np.float32)*(1-alpha[...,None])+wood*alpha[...,None]
+
+PIVOT=np.array([208.,57.])
+TIP0=np.array([152.,80.5])
+# A circle in the tabletop plane is an ellipse in this fixed camera view.
+# These projection scales match the arm&#x27;s initial endpoint exactly.
+AX=75.
+AY=35.
+PHASE=np.arctan2((TIP0-PIVOT)[1]/AY,(TIP0-PIVOT)[0]/AX)
+AX=(TIP0-PIVOT)[0]/np.cos(PHASE)
+AY=(TIP0-PIVOT)[1]/np.sin(PHASE)
+
+arm_erase=np.zeros((H,W),np.uint8)
+cv2.line(arm_erase,tuple(TIP0.astype(int)),(201,60),255,5)
+cv2.fillConvexPoly(arm_erase,np.array([[185,61],[198,54],[209,55],[207,60],[193,68]],np.int32),255)
+# Do not erase the fixed little hub at the right-hand end of the black linkage.
+arm_erase[((xx-208)**2+(yy-57)**2)&lt;3.5**2]=0
+arm_clean=cv2.inpaint(FRAME0,arm_erase,4,cv2.INPAINT_TELEA).astype(np.float32)
+# Outside the platform, the arm reveals the same tabletop texture.
+arm_table=(arm_erase&gt;0)&amp;(xx&lt;172)
+arm_clean[arm_table]=wood[arm_table]
+plate[arm_erase&gt;0]=arm_clean[arm_erase&gt;0]
+plate=np.clip(plate,0,255).astype(np.uint8)
+
+SOURCE_BIG=cv2.resize(FRAME0,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC)
+# Each source face&#x27;s original texture is warped onto its changing quadrilateral.
+FACE_SOURCE={}
+for name in ORDER:
+    bottom,top=vertices(name,0)
+    FACE_SOURCE[name]={
+      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
+      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
+      &#x27;top&#x27;:top,
+    }
+
+
+def render_face(canvas,src,dst,light=1.):
+    if abs(cv2.contourArea(dst.astype(np.float32)))&lt;.1:
+        return
+    transform=cv2.getPerspectiveTransform((src*SS).astype(np.float32),(dst*SS).astype(np.float32))
+    rgb=cv2.warpPerspective(SOURCE_BIG,transform,(W*SS,H*SS),flags=cv2.INTER_LINEAR)
+    m=poly_mask(dst,SS).astype(np.float32)/255
+    canvas[:]=canvas*(1-m[...,None])+np.clip(rgb.astype(np.float32)*light,0,255)*m[...,None]
+
+
+def render_block(canvas,name,angle):
+    bottom,top=vertices(name,angle)
+    if angle &lt; .01:
+        # Restore photographed stationary blocks, including their natural edges.
+        m=cv2.resize(block_masks[name],(W*SS,H*SS),interpolation=cv2.INTER_NEAREST)&gt;0
+        canvas[m]=SOURCE_BIG[m]
+        return
+    faces={
+      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
+      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
+      &#x27;top&#x27;:top,
+    }
+    # The broad front remains visible as it tips; keep its photographed grain.
+    for face in (&#x27;side&#x27;,&#x27;top&#x27;,&#x27;front&#x27;):
+        light=1.+(.055 if face==&#x27;front&#x27; else -.025)*np.sin(np.deg2rad(angle))
+        render_face(canvas,FACE_SOURCE[name][face],faces[face],light)
+
+
+def fall_angle(t,name):
+    q=np.clip((t-START[name])/DURATION,0,1)
+    # Accelerating fall, followed by a small damped settling motion.
+    progress=(1-np.cos(q*np.pi*.5))**.8
+    a=REST[name]*progress
+    after=t-(START[name]+DURATION)
+    if after&gt;0:
+        a-=1.3*np.exp(-after*7)*abs(np.sin(after*19))
+    return float(a)
+
+
+def arm_angle(t):
+    # Constant clockwise motion through contact, then a gentle motor stop.
+    if t&lt;=2.5:
+        return 22*t
+    q=np.clip((t-2.5)/.6,0,1)
+    return 55+13.2*(q-.5*q*q)
+
+
+def draw_arm(canvas,angle):
+    phase=PHASE+np.deg2rad(angle)
+    tip=PIVOT+np.array([AX*np.cos(phase),AY*np.sin(phase)])
+    v=tip-PIVOT
+    norm=v/np.linalg.norm(v)
+    n=np.array([-norm[1],norm[0]])
+    # The black chuck occupies the first quarter of the radius.
+    wood_start=PIVOT+v*.26
+    im=Image.fromarray(np.clip(canvas,0,255).astype(np.uint8))
+    dr=ImageDraw.Draw(im)
+    def line(a,b,color,width):
+        dr.line([tuple(a*SS),tuple(b*SS)],fill=color,width=max(1,round(width*SS)))
+    line(PIVOT+v*.05,PIVOT+v*.27,(23,22,20),4.0)
+    line(PIVOT+v*.05-n*.55,PIVOT+v*.27-n*.55,(43,41,37),1.)
+    # A thin wooden dowel, with a lit edge and a small rounded end.
+    line(wood_start,tip,(115,88,54),2.35)
+    line(wood_start-n*.38,tip-n*.38,(189,161,115),1.6)
+    line(wood_start-n*.7,tip-n*.7,(215,188,142),.45)
+    r=.8*SS
+    tx,ty=tip*SS
+    dr.ellipse((tx-r,ty-r,tx+r,ty+r),fill=(183,153,104))
+    return np.asarray(im).astype(np.float32)
+
+
+def add_shadows(canvas,angles):
+    shadow=np.zeros((H*SS,W*SS),np.float32)
+    contact=np.zeros_like(shadow)
+    for name in ORDER:
+        bottom,top=vertices(name,angles[name])
+        # Project each vertex onto the table away from the broad light source.
+        p=CORNERS[name]
+        origin=p[4]
+        height=abs((p[0]-origin)[1])
+        width=np.linalg.norm(p[5]-origin)
+        up=(p[0]-origin)/height
+        a=np.deg2rad(angles[name])
+        top_h=height*np.cos(a)+np.array([0,width,width,0])*np.sin(a)
+        bot_h=np.array([0,width,width,0])*np.sin(a)
+        shift=np.array([.28,.13])-up
+        projected=np.vstack([bottom+bot_h[:,None]*shift,top+top_h[:,None]*shift])
+        hull=cv2.convexHull(projected.astype(np.float32))[:,0]
+        temp=poly_mask(hull,SS).astype(np.float32)/255
+        shadow=np.maximum(shadow,temp*.17)
+        # Soft contact darkness only near the actual footprint and resting faces.
+        ground=cv2.convexHull(np.vstack([bottom,top if angles[name]&gt;60 else bottom]).astype(np.float32))[:,0]
+        temp=poly_mask(ground,SS).astype(np.float32)/255
+        contact=np.maximum(contact,temp*(.12 if angles[name]&gt;60 else .05))
+    shadow=cv2.GaussianBlur(shadow,(0,0),1.9*SS)
+    contact=cv2.GaussianBlur(contact,(0,0),.6*SS)
+    strength=np.clip(shadow+contact,0,.28)
+    return canvas*(1-strength[...,None])
+
+
+def render(t):
+    angles={name:fall_angle(t,name) for name in ORDER}
+    canvas=cv2.resize(plate,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC).astype(np.float32)
+    # Keep the photographed contact shadows until their associated block moves.
+    unmoved=np.zeros((H,W),np.uint8)
+    for name in ORDER:
+        if angles[name]&lt;.01:
+            bottom,_=vertices(name,0)
+            m=np.zeros((H,W),np.uint8)
+            p=bottom.mean(axis=0)
+            cv2.ellipse(m,(round(p[0]+6),round(p[1]+2)),(10,4),8,0,360,255,-1)
+            unmoved=np.maximum(unmoved,m)
+    m=cv2.resize(unmoved,(W*SS,H*SS),interpolation=cv2.INTER_LINEAR)/255.
+    canvas=canvas*(1-m[...,None])+SOURCE_BIG*m[...,None]
+    canvas=add_shadows(canvas,angles)
+    canvas=draw_arm(canvas,arm_angle(t))
+    for name in ORDER:
+        render_block(canvas,name,angles[name])
+    frame=cv2.resize(np.clip(canvas,0,255).astype(np.uint8),(W,H),interpolation=cv2.INTER_AREA)
+    # Preserve every background pixel outside the region occupied by any moving
+    # object, its original location, and its soft shadow.
+    return frame
+
+
+def main():
+    frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
+    assert frames.shape==(20,144,256,3)
+    assert np.array_equal(frames[0],FRAME0)
+    revision=ROOT/&#x27;.tmp/revisions/01&#x27;
+    revision.mkdir(parents=True,exist_ok=True)
+    for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
+        shutil.copy2(ROOT/filename,revision/filename)
+    artifact_io.save(frames,revision)
+    artifact_io.save(frames,ROOT)
+    np.save(ROOT/&#x27;.tmp/rendered_frames.npy&#x27;,frames)
+    print(&#x27;Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.&#x27;)
+
+if __name__==&#x27;__main__&#x27;:
+    main()
+PY
+python generate.py</pre><pre></pre></details><details><summary>:05.448365+00:00 · command_execution · cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;</summary><pre>cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+&quot;&quot;&quot;Render a clockwise striking arm and a domino cascade from supplied RGB.
+
+Only local image operations and analytic cuboid geometry are used. The camera
+is fixed; the original first frame is retained verbatim. Source face textures
+are projected onto rotating cuboids whose ground contact corners stay fixed.
+&quot;&quot;&quot;
+from pathlib import Path
+import json
+import shutil
+import numpy as np
+import cv2
+from PIL import Image, ImageDraw
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+SS = 4
+FRAME0 = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+H, W = FRAME0.shape[:2]
+ORDER = [&#x27;Y&#x27;, &#x27;R&#x27;, &#x27;K&#x27;, &#x27;G&#x27;, &#x27;B&#x27;, &#x27;P&#x27;]
+# Front-left, front-right, back-right, back-left top corners, plus the
+# front-left and front-right ground corners. Coordinates are from frame 0.
+CORNERS = {
+ &#x27;Y&#x27;: [[49.5,52.5],[56.5,54],[65,49],[58,47.5],[56,91],[63,92.5]],
+ &#x27;R&#x27;: [[67,55],[75,56],[82,51.5],[74,50.5],[73,95],[80.5,97]],
+ &#x27;K&#x27;: [[84,59],[92.5,60],[101,54.5],[92.5,53],[88.5,99],[97,101]],
+ &#x27;G&#x27;: [[104,60],[112.5,62],[120,56],[111.5,54.5],[110,104],[118.5,106]],
+ &#x27;B&#x27;: [[124,63],[132.5,64.5],[139.5,59],[131,57.5],[128,106],[136.5,108]],
+ &#x27;P&#x27;: [[136,65],[144,65.5],[150,60],[142.5,59],[143,109.5],[150.5,111]],
+}
+CORNERS = {k: np.asarray(v, dtype=np.float64) for k,v in CORNERS.items()}
+ROW = np.array([0.98, 0.20])
+# Strike begins at 0.5 sec, each collision launches its immediate neighbour.
+START = {&#x27;P&#x27;: .52, &#x27;B&#x27;: .69, &#x27;G&#x27;: .85, &#x27;K&#x27;: 1.01, &#x27;R&#x27;: 1.17, &#x27;Y&#x27;: 1.33}
+REST = {&#x27;Y&#x27;: 89.8, &#x27;R&#x27;: 83.0, &#x27;K&#x27;: 78.0, &#x27;G&#x27;: 74.0, &#x27;B&#x27;: 70.5, &#x27;P&#x27;: 67.5}
+DURATION = .62
+
+
+def poly_mask(points, scale=1):
+    mask = np.zeros((H*scale, W*scale), np.uint8)
+    cv2.fillConvexPoly(mask, np.round(points*scale).astype(np.int32), 255)
+    return mask
+
+
+def vertices(name, angle):
+    p = CORNERS[name]
+    origin, right = p[4], p[5]
+    up = p[0] - origin
+    across = right - origin
+    depth = .5 * ((p[3]-p[0]) + (p[2]-p[1]))
+    height = abs(up[1])
+    width = np.linalg.norm(across)
+    a = np.deg2rad(angle)
+    # Rotate in the vertical plane of the row, about the lower left edge.
+    rise = up*np.cos(a) - ROW*height*np.sin(a)
+    edge = across*np.cos(a) + (up/height)*width*np.sin(a)
+    bottom = np.array([origin, origin+edge, origin+edge+depth, origin+depth])
+    top = bottom + rise
+    if angle == 0:
+        top = p[:4].copy()
+        bottom[1] = right
+    return bottom, top
+
+
+# Erase the photographed objects while retaining all static scene pixels.
+yy, xx = np.mgrid[:H, :W]
+block_masks = {}
+object_union = np.zeros((H,W), np.uint8)
+for name in ORDER:
+    bottom, top = vertices(name,0)
+    hull = cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
+    m = poly_mask(hull)
+    m = cv2.dilate(m,np.ones((3,3),np.uint8))
+    block_masks[name] = m
+    object_union = np.maximum(object_union,m)
+
+# Original block shadows occupy the narrow strip below the bases.
+shadow_erase = np.zeros((H,W),np.uint8)
+cv2.fillConvexPoly(shadow_erase,np.array([[53,85],[153,102],[165,116],[64,101]],np.int32),255)
+table_erase = np.maximum(object_union,shadow_erase)
+# Fit the broad tabletop colour gradient using the surrounding valid table.
+valid = (xx&lt;169)&amp;(yy&gt;44)&amp;(table_erase==0)
+xn,yn=xx/W,yy/H
+basis=np.stack([np.ones_like(xn),xn,yn,xn*yn,xn*xn,yn*yn],axis=-1)
+coef=np.linalg.lstsq(basis[valid],FRAME0[valid].astype(float),rcond=None)[0]
+wood_base=basis@coef
+# Reuse grain from the unobstructed lower table at the same grain angle.
+low=cv2.GaussianBlur(FRAME0.astype(np.float32),(0,0),8)
+residual=FRAME0.astype(np.float32)-low
+source_y=118+(yy-47)*.35
+source_x=xx-.65*(source_y-yy)
+source_x=np.clip(source_x,2,168).astype(np.float32)
+source_y=np.clip(source_y,118,142).astype(np.float32)
+grain=cv2.remap(residual,source_x,source_y,cv2.INTER_LINEAR)
+wood=np.clip(wood_base+grain,0,255)
+# A soft transition at the outside edge avoids rectangular clone boundaries.
+alpha=cv2.GaussianBlur((table_erase&gt;0).astype(np.float32),(0,0),.65)
+alpha[table_erase&gt;0]=1
+plate=FRAME0.astype(np.float32)*(1-alpha[...,None])+wood*alpha[...,None]
+
+PIVOT=np.array([208.,57.])
+TIP0=np.array([152.,80.5])
+# A circle in the tabletop plane is an ellipse in this fixed camera view.
+# These projection scales match the arm&#x27;s initial endpoint exactly.
+AX=75.
+AY=35.
+PHASE=np.arctan2((TIP0-PIVOT)[1]/AY,(TIP0-PIVOT)[0]/AX)
+AX=(TIP0-PIVOT)[0]/np.cos(PHASE)
+AY=(TIP0-PIVOT)[1]/np.sin(PHASE)
+
+arm_erase=np.zeros((H,W),np.uint8)
+cv2.line(arm_erase,tuple(TIP0.astype(int)),(201,60),255,5)
+cv2.fillConvexPoly(arm_erase,np.array([[185,61],[198,54],[209,55],[207,60],[193,68]],np.int32),255)
+# Do not erase the fixed little hub at the right-hand end of the black linkage.
+arm_erase[((xx-208)**2+(yy-57)**2)&lt;3.5**2]=0
+arm_clean=cv2.inpaint(FRAME0,arm_erase,4,cv2.INPAINT_TELEA).astype(np.float32)
+# Outside the platform, the arm reveals the same tabletop texture.
+arm_table=(arm_erase&gt;0)&amp;(xx&lt;172)
+arm_clean[arm_table]=wood[arm_table]
+plate[arm_erase&gt;0]=arm_clean[arm_erase&gt;0]
+plate=np.clip(plate,0,255).astype(np.uint8)
+
+SOURCE_BIG=cv2.resize(FRAME0,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC)
+# Each source face&#x27;s original texture is warped onto its changing quadrilateral.
+FACE_SOURCE={}
+for name in ORDER:
+    bottom,top=vertices(name,0)
+    FACE_SOURCE[name]={
+      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
+      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
+      &#x27;top&#x27;:top,
+    }
+
+
+def render_face(canvas,src,dst,light=1.):
+    if abs(cv2.contourArea(dst.astype(np.float32)))&lt;.1:
+        return
+    transform=cv2.getPerspectiveTransform((src*SS).astype(np.float32),(dst*SS).astype(np.float32))
+    rgb=cv2.warpPerspective(SOURCE_BIG,transform,(W*SS,H*SS),flags=cv2.INTER_LINEAR)
+    m=poly_mask(dst,SS).astype(np.float32)/255
+    canvas[:]=canvas*(1-m[...,None])+np.clip(rgb.astype(np.float32)*light,0,255)*m[...,None]
+
+
+def render_block(canvas,name,angle):
+    bottom,top=vertices(name,angle)
+    if angle &lt; .01:
+        # Restore photographed stationary blocks, including their natural edges.
+        m=cv2.resize(block_masks[name],(W*SS,H*SS),interpolation=cv2.INTER_NEAREST)&gt;0
+        canvas[m]=SOURCE_BIG[m]
+        return
+    faces={
+      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
+      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
+      &#x27;top&#x27;:top,
+    }
+    # The broad front remains visible as it tips; keep its photographed grain.
+    for face in (&#x27;side&#x27;,&#x27;top&#x27;,&#x27;front&#x27;):
+        light=1.+(.055 if face==&#x27;front&#x27; else -.025)*np.sin(np.deg2rad(angle))
+        render_face(canvas,FACE_SOURCE[name][face],faces[face],light)
+
+
+def fall_angle(t,name):
+    q=np.clip((t-START[name])/DURATION,0,1)
+    # Accelerating fall, followed by a small damped settling motion.
+    progress=(1-np.cos(q*np.pi*.5))**.8
+    a=REST[name]*progress
+    after=t-(START[name]+DURATION)
+    if after&gt;0:
+        a-=1.3*np.exp(-after*7)*abs(np.sin(after*19))
+    return float(a)
+
+
+def arm_angle(t):
+    # Constant clockwise motion through contact, then a gentle motor stop.
+    if t&lt;=2.5:
+        return 22*t
+    q=np.clip((t-2.5)/.6,0,1)
+    return 55+13.2*(q-.5*q*q)
+
+
+def draw_arm(canvas,angle):
+    phase=PHASE+np.deg2rad(angle)
+    tip=PIVOT+np.array([AX*np.cos(phase),AY*np.sin(phase)])
+    v=tip-PIVOT
+    norm=v/np.linalg.norm(v)
+    n=np.array([-norm[1],norm[0]])
+    # The black chuck occupies the first quarter of the radius.
+    wood_start=PIVOT+v*.26
+    im=Image.fromarray(np.clip(canvas,0,255).astype(np.uint8))
+    dr=ImageDraw.Draw(im)
+    def line(a,b,color,width):
+        dr.line([tuple(a*SS),tuple(b*SS)],fill=color,width=max(1,round(width*SS)))
+    line(PIVOT+v*.05,PIVOT+v*.27,(23,22,20),4.0)
+    line(PIVOT+v*.05-n*.55,PIVOT+v*.27-n*.55,(43,41,37),1.)
+    # A thin wooden dowel, with a lit edge and a small rounded end.
+    line(wood_start,tip,(115,88,54),2.35)
+    line(wood_start-n*.38,tip-n*.38,(189,161,115),1.6)
+    line(wood_start-n*.7,tip-n*.7,(215,188,142),.45)
+    r=.8*SS
+    tx,ty=tip*SS
+    dr.ellipse((tx-r,ty-r,tx+r,ty+r),fill=(183,153,104))
+    return np.asarray(im).astype(np.float32)
+
+
+def add_shadows(canvas,angles):
+    shadow=np.zeros((H*SS,W*SS),np.float32)
+    contact=np.zeros_like(shadow)
+    for name in ORDER:
+        bottom,top=vertices(name,angles[name])
+        # Project each vertex onto the table away from the broad light source.
+        p=CORNERS[name]
+        origin=p[4]
+        height=abs((p[0]-origin)[1])
+        width=np.linalg.norm(p[5]-origin)
+        up=(p[0]-origin)/height
+        a=np.deg2rad(angles[name])
+        top_h=height*np.cos(a)+np.array([0,width,width,0])*np.sin(a)
+        bot_h=np.array([0,width,width,0])*np.sin(a)
+        shift=np.array([.28,.13])-up
+        projected=np.vstack([bottom+bot_h[:,None]*shift,top+top_h[:,None]*shift])
+        hull=cv2.convexHull(projected.astype(np.float32))[:,0]
+        temp=poly_mask(hull,SS).astype(np.float32)/255
+        shadow=np.maximum(shadow,temp*.17)
+        # Soft contact darkness only near the actual footprint and resting faces.
+        ground=cv2.convexHull(np.vstack([bottom,top if angles[name]&gt;60 else bottom]).astype(np.float32))[:,0]
+        temp=poly_mask(ground,SS).astype(np.float32)/255
+        contact=np.maximum(contact,temp*(.12 if angles[name]&gt;60 else .05))
+    shadow=cv2.GaussianBlur(shadow,(0,0),1.9*SS)
+    contact=cv2.GaussianBlur(contact,(0,0),.6*SS)
+    strength=np.clip(shadow+contact,0,.28)
+    return canvas*(1-strength[...,None])
+
+
+def render(t):
+    angles={name:fall_angle(t,name) for name in ORDER}
+    canvas=cv2.resize(plate,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC).astype(np.float32)
+    # Keep the photographed contact shadows until their associated block moves.
+    unmoved=np.zeros((H,W),np.uint8)
+    for name in ORDER:
+        if angles[name]&lt;.01:
+            bottom,_=vertices(name,0)
+            m=np.zeros((H,W),np.uint8)
+            p=bottom.mean(axis=0)
+            cv2.ellipse(m,(round(p[0]+6),round(p[1]+2)),(10,4),8,0,360,255,-1)
+            unmoved=np.maximum(unmoved,m)
+    m=cv2.resize(unmoved,(W*SS,H*SS),interpolation=cv2.INTER_LINEAR)/255.
+    canvas=canvas*(1-m[...,None])+SOURCE_BIG*m[...,None]
+    canvas=add_shadows(canvas,angles)
+    canvas=draw_arm(canvas,arm_angle(t))
+    for name in ORDER:
+        render_block(canvas,name,angles[name])
+    frame=cv2.resize(np.clip(canvas,0,255).astype(np.uint8),(W,H),interpolation=cv2.INTER_AREA)
+    # Preserve every background pixel outside the region occupied by any moving
+    # object, its original location, and its soft shadow.
+    return frame
+
+
+def main():
+    frames=np.stack([FRAME0]+[render(i/4) for i in range(1,20)]).astype(np.uint8)
+    assert frames.shape==(20,144,256,3)
+    assert np.array_equal(frames[0],FRAME0)
+    revision=ROOT/&#x27;.tmp/revisions/01&#x27;
+    revision.mkdir(parents=True,exist_ok=True)
+    for filename in (&#x27;prompt.txt&#x27;,&#x27;task_spec.json&#x27;,&#x27;generate.py&#x27;):
+        shutil.copy2(ROOT/filename,revision/filename)
+    artifact_io.save(frames,revision)
+    artifact_io.save(frames,ROOT)
+    np.save(ROOT/&#x27;.tmp/rendered_frames.npy&#x27;,frames)
+    print(&#x27;Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.&#x27;)
+
+if __name__==&#x27;__main__&#x27;:
+    main()
+PY
+python generate.py</pre><pre>Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.
+</pre></details><details><summary>:24.910527+00:00 · agent_message · The revised blocks fall from their bases into a compact pile, and the stick keeps its original thin shape as it turns. I’ll check for leftover edges, preserve p</summary><pre>The revised blocks fall from their bases into a compact pile, and the stick keeps its original thin shape as it turns. I’ll check for leftover edges, preserve pixels outside the moving setup, and verify the frame count, timing, and exact first frame.
+</pre><pre></pre></details><details><summary>:26.941626+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import generate
+from PIL import Image
+Image.fromarray(generate.plate).resize((1024,576)).save(&#x27;.tmp/plate_large.png&#x27;)
+Image.open(&#x27;frames/19.png&#x27;).resize((1024,576)).save(&#x27;.tmp/final_large.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:13.092575+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:14.283672+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre></pre></details><details><summary>:21.868898+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import generate
+from PIL import Image
+Image.fromarray(generate.plate).resize((1024,576)).save(&#x27;.tmp/plate_02_large.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:22.069861+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import imageio_ffmpeg
+print(imageio_ffmpeg.get_ffmpeg_exe())
+PY</pre><pre>[workspace path]
+</pre></details><details><summary>:24.649181+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.
+</pre></details><details><summary>:44.476107+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np,cv2
+from PIL import Image
+Image.fromarray(g.wood.astype(np.uint8)).resize((1024,576)).save(&#x27;.tmp/wood_02.png&#x27;)
+Image.fromarray(g.table_erase).resize((1024,576)).save(&#x27;.tmp/mask_02.png&#x27;)
+bound=(cv2.dilate(g.table_erase,np.ones((3,3),np.uint8))&gt;0)&amp;(g.table_erase==0)
+for name,m in g.color_masks.items():
+ y,x=np.where(m&amp;bound)
+ print(name,list(zip(x.tolist(),y.tolist()))[:15])
+PY</pre><pre>Y [(56, 48), (57, 48), (58, 48), (59, 48), (60, 48), (61, 48), (62, 48), (63, 48), (64, 48), (54, 49), (55, 49), (56, 49), (64, 49), (65, 49), (52, 50)]
+R [(76, 51), (77, 51), (78, 51), (79, 51), (80, 51), (81, 51), (82, 51), (82, 52), (82, 53), (82, 54), (83, 54), (83, 55), (117, 111)]
+K [(92, 53), (93, 53), (94, 53), (95, 53), (96, 53), (97, 53), (91, 54), (92, 54), (97, 54), (98, 54), (99, 54), (100, 54), (89, 55), (90, 55), (91, 55)]
+G [(110, 55), (111, 55), (112, 55), (114, 55), (115, 55), (116, 55), (117, 55), (109, 56), (110, 56), (118, 56), (108, 57), (109, 57)]
+B [(129, 57), (130, 57), (131, 57), (128, 58), (129, 58), (131, 58), (132, 58), (133, 58), (134, 58), (135, 58), (136, 58), (137, 58), (127, 59), (128, 59), (137, 59)]
+P [(141, 59), (142, 59), (143, 59), (144, 59), (145, 59), (146, 59), (147, 59), (148, 59), (149, 59), (149, 60), (150, 61), (150, 62), (150, 63), (150, 64), (151, 69)]
+</pre></details><details><summary>:57.971444+00:00 · command_execution · sed -n &#x27;55,155p&#x27; generate.py</summary><pre>sed -n &#x27;55,155p&#x27; generate.py</pre><pre>    edge = across*np.cos(a) + (up/height)*width*np.sin(a)
+    bottom = np.array([origin, origin+edge, origin+edge+depth, origin+depth])
+    top = bottom + rise
+    if angle == 0:
+        top = p[:4].copy()
+        bottom[1] = right
+    return bottom, top
+
+
+# Erase the photographed objects while retaining all static scene pixels.
+yy, xx = np.mgrid[:H, :W]
+block_masks = {}
+object_union = np.zeros((H,W), np.uint8)
+rr,gg,bb=FRAME0.astype(np.int16).transpose(2,0,1)
+color_masks={
+ &#x27;Y&#x27;: (rr&gt;160)&amp;(gg&gt;105)&amp;(bb&lt;95)&amp;(rr-bb&gt;80),
+ &#x27;R&#x27;: (rr&gt;70)&amp;(gg&lt;80)&amp;(bb&lt;70)&amp;(rr-gg&gt;35),
+ &#x27;K&#x27;: (rr&gt;150)&amp;(gg&gt;85)&amp;(gg&lt;150)&amp;(bb&gt;80)&amp;(bb&lt;140)&amp;(rr-gg&gt;40),
+ &#x27;G&#x27;: (gg&gt;40)&amp;(gg&gt;rr+12)&amp;(gg&gt;bb+12),
+ &#x27;B&#x27;: (bb&gt;80)&amp;(bb&gt;rr+45),
+ &#x27;P&#x27;: (rr&gt;50)&amp;(bb&gt;55)&amp;(gg&lt;rr-12)&amp;(gg&lt;bb-15),
+}
+for name in ORDER:
+    bottom, top = vertices(name,0)
+    hull = cv2.convexHull(np.vstack([bottom,top]).astype(np.float32))[:,0]
+    m = poly_mask(hull)
+    zone=(xx&gt;45)&amp;(xx&lt;162)&amp;(yy&gt;44)&amp;(yy&lt;115)
+    m[color_masks[name]&amp;zone]=255
+    m = cv2.dilate(m,np.ones((3,3),np.uint8))
+    block_masks[name] = m
+    object_union = np.maximum(object_union,m)
+
+# Original block shadows occupy the narrow strip below the bases.
+shadow_erase = np.zeros((H,W),np.uint8)
+cv2.fillConvexPoly(shadow_erase,np.array([[53,85],[153,102],[165,116],[64,101]],np.int32),255)
+table_erase = np.maximum(object_union,shadow_erase)
+table_erase=cv2.dilate(table_erase,np.ones((5,5),np.uint8))
+# Fit the broad tabletop colour gradient using the surrounding valid table.
+valid = (xx&lt;169)&amp;(yy&gt;44)&amp;(table_erase==0)
+xn,yn=xx/W,yy/H
+basis=np.stack([np.ones_like(xn),xn,yn,xn*yn,xn*xn,yn*yn],axis=-1)
+coef=np.linalg.lstsq(basis[valid],FRAME0[valid].astype(float),rcond=None)[0]
+wood_base=basis@coef
+# Reuse grain from the unobstructed lower table at the same grain angle.
+low=cv2.GaussianBlur(FRAME0.astype(np.float32),(0,0),8)
+residual=FRAME0.astype(np.float32)-low
+source_y=118+(yy-47)*.35
+source_x=xx-.65*(source_y-yy)
+source_x=np.clip(source_x,2,168).astype(np.float32)
+source_y=np.clip(source_y,118,142).astype(np.float32)
+grain=cv2.remap(residual,source_x,source_y,cv2.INTER_LINEAR)
+wood=np.clip(wood_base+grain,0,255)
+# Match the surrounding illumination by solving the classical Poisson image
+# blending problem, using only the local table grain and photographed border.
+bx,by,bw,bh=cv2.boundingRect(table_erase)
+plate=cv2.seamlessClone(
+ wood[by:by+bh,bx:bx+bw].astype(np.uint8),FRAME0,
+ table_erase[by:by+bh,bx:bx+bw],(bx+bw//2,by+bh//2),cv2.NORMAL_CLONE
+).astype(np.float32)
+
+PIVOT=np.array([208.,57.])
+TIP0=np.array([152.,80.5])
+# A circle in the tabletop plane is an ellipse in this fixed camera view.
+# These projection scales match the arm&#x27;s initial endpoint exactly.
+AX=75.
+AY=35.
+PHASE=np.arctan2((TIP0-PIVOT)[1]/AY,(TIP0-PIVOT)[0]/AX)
+AX=(TIP0-PIVOT)[0]/np.cos(PHASE)
+AY=(TIP0-PIVOT)[1]/np.sin(PHASE)
+
+arm_erase=np.zeros((H,W),np.uint8)
+cv2.line(arm_erase,tuple(TIP0.astype(int)),(201,60),255,5)
+cv2.fillConvexPoly(arm_erase,np.array([[185,61],[198,54],[209,55],[207,60],[193,68]],np.int32),255)
+# Do not erase the fixed little hub at the right-hand end of the black linkage.
+arm_erase[((xx-208)**2+(yy-57)**2)&lt;3.5**2]=0
+arm_clean=cv2.inpaint(FRAME0,arm_erase,4,cv2.INPAINT_TELEA).astype(np.float32)
+# Outside the platform, the arm reveals the same tabletop texture.
+arm_table=(arm_erase&gt;0)&amp;(xx&lt;172)
+arm_clean[arm_table]=wood[arm_table]
+plate[arm_erase&gt;0]=arm_clean[arm_erase&gt;0]
+plate=np.clip(plate,0,255).astype(np.uint8)
+
+SOURCE_BIG=cv2.resize(FRAME0,(W*SS,H*SS),interpolation=cv2.INTER_CUBIC)
+# Each source face&#x27;s original texture is warped onto its changing quadrilateral.
+FACE_SOURCE={}
+for name in ORDER:
+    bottom,top=vertices(name,0)
+    FACE_SOURCE[name]={
+      &#x27;front&#x27;:np.array([bottom[0],bottom[1],top[1],top[0]]),
+      &#x27;side&#x27;:np.array([bottom[1],bottom[2],top[2],top[1]]),
+      &#x27;top&#x27;:top,
+    }
+
+
+def render_face(canvas,src,dst,light=1.):
+    if abs(cv2.contourArea(dst.astype(np.float32)))&lt;.1:
+        return
+    transform=cv2.getPerspectiveTransform((src*SS).astype(np.float32),(dst*SS).astype(np.float32))
+    rgb=cv2.warpPerspective(SOURCE_BIG,transform,(W*SS,H*SS),flags=cv2.INTER_LINEAR)
+    m=poly_mask(dst,SS).astype(np.float32)/255
+    canvas[:]=canvas*(1-m[...,None])+np.clip(rgb.astype(np.float32)*light,0,255)*m[...,None]
+</pre></details><details><summary>:14.839550+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:16.029257+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import generate
+from PIL import Image
+Image.fromarray(generate.plate).resize((1024,576)).save(&#x27;.tmp/plate_03_large.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:16.092372+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import generate
+from PIL import Image
+Image.fromarray(generate.plate).resize((1024,576)).save(&#x27;.tmp/plate_03_large.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:24.683750+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre></pre></details><details><summary>:35.181462+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.
+</pre></details><details><summary>:04.423751+00:00 · file_change · file_change</summary><pre>file_change</pre><pre></pre></details><details><summary>:05.612987+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre></pre></details><details><summary>:11.971318+00:00 · agent_message · The table repair now removes the leftover colored edges and blends into the surrounding wood. The final render is running; I’ll also save a lossless RGB MP4 and</summary><pre>The table repair now removes the leftover colored edges and blends into the surrounding wood. The final render is running; I’ll also save a lossless RGB MP4 and check that every decoded frame matches the saved RGB output.
+</pre><pre></pre></details><details><summary>:16.062385+00:00 · command_execution · python generate.py</summary><pre>python generate.py</pre><pre>Saved 20 RGB frames at 256x144, 4 fps; frame 00 matches exactly.
+</pre></details><details><summary>:16.265178+00:00 · command_execution · ls -lh video.mp4 pixels.npz generate.py</summary><pre>ls -lh video.mp4 pixels.npz generate.py</pre><pre>-rw-r--r-- 1 tiger tiger  14K Nov  7 02:10 generate.py
+-rw-r--r-- 1 tiger tiger 177K Nov  7 02:10 pixels.npz
+-rw-r--r-- 1 tiger tiger  96K Nov  7 02:10 video.mp4
+</pre></details><details><summary>:30.438203+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+from PIL import Image
+import imageio_ffmpeg,subprocess,json
+root=Path(&#x27;.&#x27;)
+original=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+frames=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+assert frames.shape==(20,144,256,3) and frames.dtype==np.uint8
+assert np.array_equal(frames[0],original)
+pixels=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+assert pixels.shape==(144,256,20)
+rgb=np.stack([(pixels&gt;&gt;16)&amp;255,(pixels&gt;&gt;8)&amp;255,pixels&amp;255],axis=-1).transpose(2,0,1,3).astype(np.uint8)
+assert np.array_equal(frames,rgb)
+ffmpeg=imageio_ffmpeg.get_ffmpeg_exe()
+decoded=subprocess.run([ffmpeg,&#x27;-v&#x27;,&#x27;error&#x27;,&#x27;-i&#x27;,&#x27;video.mp4&#x27;,&#x27;-f&#x27;,&#x27;rawvideo&#x27;,&#x27;-pix_fmt&#x27;,&#x27;rgb24&#x27;,&#x27;pipe:1&#x27;],stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
+video=np.frombuffer(decoded.stdout,np.uint8).reshape((-1,144,256,3))
+assert np.array_equal(video,frames)
+reader=imageio_ffmpeg.read_frames(&#x27;video.mp4&#x27;,pix_fmt=&#x27;rgb24&#x27;)
+meta=next(reader)
+reader.close()
+assert meta[&#x27;fps&#x27;]==4 and meta[&#x27;size&#x27;]==(256,144) and meta[&#x27;duration&#x27;]==5.0
+# Locked camera: the wall, front table edge, and distant background are exact.
+assert np.all(frames[:, :35]==original[:35])
+assert np.all(frames[:, 132:]==original[132:])
+result={&#x27;frames&#x27;:20,&#x27;width&#x27;:256,&#x27;height&#x27;:144,&#x27;fps&#x27;:4,&#x27;duration_seconds&#x27;:5,
+ &#x27;dtype&#x27;:&#x27;uint8&#x27;,&#x27;first_frame_exact&#x27;:True,&#x27;packed_RGB_matches_PNGs&#x27;:True,
+ &#x27;all_decoded_MP4_frames_exact&#x27;:True,&#x27;static_outer_background_exact&#x27;:True,
+ &#x27;original_candidate_preserved&#x27;:Path(&#x27;candidate/pixels.npz&#x27;).is_file(),
+ &#x27;intermediate_revisions&#x27;:[p.name for p in Path(&#x27;.tmp/revisions&#x27;).iterdir() if p.is_dir()]}
+Path(&#x27;.tmp/validation.json&#x27;).write_text(json.dumps(result,indent=2)+&#x27;\n&#x27;)
+print(json.dumps(result,indent=2))
+PY</pre><pre>{
+  &quot;frames&quot;: 20,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 144,
+  &quot;fps&quot;: 4,
+  &quot;duration_seconds&quot;: 5,
+  &quot;dtype&quot;: &quot;uint8&quot;,
+  &quot;first_frame_exact&quot;: true,
+  &quot;packed_RGB_matches_PNGs&quot;: true,
+  &quot;all_decoded_MP4_frames_exact&quot;: true,
+  &quot;static_outer_background_exact&quot;: true,
+  &quot;original_candidate_preserved&quot;: true,
+  &quot;intermediate_revisions&quot;: [
+    &quot;01&quot;,
+    &quot;02&quot;,
+    &quot;03&quot;,
+    &quot;04&quot;
+  ]
+}
+</pre></details><details><summary>:41.923101+00:00 · agent_message · Generated the improved video with corrected block pivots, clockwise stick motion, and softer shadows.</summary><pre>Generated the improved video with corrected block pivots, clockwise stick motion, and softer shadows.
+
+[Video]( [workspace path] · [RGB frames]([workspace path] · [Updated program]([workspace path]
+
+Verified 20 frames at 256×144, 4 fps, for 5 seconds. The first frame matches exactly, and every decoded MP4 frame matches the saved RGB output. Original and intermediate candidates are preserved.</pre><pre></pre></details><p><a href="observed_trace.json">完整可观测事件 JSON</a></p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    this.button.textContent='载入中…';
+    for(const control of this.root.querySelectorAll('button,input'))control.disabled=true;
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}finally{for(const control of this.root.querySelectorAll('button,input'))control.disabled=false}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+
+// Use one animation clock for selected revisions; independent playback stays available.
+window.__candidateComparisons=[];
+for(const root of document.querySelectorAll('[data-candidate-compare]')){
+  const players=window.__smokePlayers.filter(p=>root.contains(p.root)),seek=root.querySelector('.compare-seek'),clock=root.querySelector('.compare-clock'),button=root.querySelector('.compare-play');
+  if(!players.length)continue;
+  seek.max=players[0].d.frames-1;
+  const group={root,players,playing:false,frame:0,raf:null,
+    selected(){return players.filter(p=>p.root.closest('.candidate-entry').querySelector('.compare-pick').checked)},
+    pause(){this.playing=false;cancelAnimationFrame(this.raf);players.forEach(p=>p.pause());button.textContent='▶ 同步播放勾选版本'},
+    draw(frame){this.frame=frame;seek.value=frame;clock.textContent=`${(frame/players[0].d.fps).toFixed(2)} / ${(players[0].d.frames/players[0].d.fps).toFixed(2)}s`;this.selected().forEach(p=>p.draw(frame))},
+    async ensure(){const selected=this.selected();if(!selected.length)throw Error('请勾选要对比的版本');await Promise.all(selected.map(p=>p.ensure()))},
+    async start(){if(this.playing){this.pause();return}button.disabled=true;button.textContent='载入中…';try{await this.ensure();players.forEach(p=>p.pause());if(this.frame===players[0].d.frames-1)this.draw(0);this.started=performance.now()-this.frame/players[0].d.fps*1000;this.playing=true;this.selected().forEach(p=>{p.playing=true;p.button.textContent='❚❚ 暂停'});button.textContent='❚❚ 暂停同步播放';this.raf=requestAnimationFrame(t=>this.tick(t))}catch(e){this.pause();clock.textContent='Load failed: '+e.message}finally{button.disabled=false}},
+    tick(t){if(!this.playing)return;let elapsed=(t-this.started)/1000;const d=players[0].d;if(elapsed>=d.frames/d.fps){if(root.querySelector('.compare-loop').checked){this.started=t;elapsed=0}else{this.draw(d.frames-1);this.pause();return}}this.draw(Math.min(d.frames-1,Math.floor(elapsed*d.fps)));this.raf=requestAnimationFrame(x=>this.tick(x))}
+  };
+  button.onclick=()=>group.start();root.querySelector('.compare-pause').onclick=()=>group.pause();
+  root.querySelector('.compare-replay').onclick=()=>{group.pause();group.frame=0;group.start()};
+  seek.oninput=async()=>{group.pause();try{await group.ensure();group.draw(+seek.value)}catch(e){clock.textContent=e.message}};
+  root.querySelectorAll('.compare-pick').forEach(c=>c.onchange=()=>group.pause());
+  players.forEach(p=>{const play=p.button.onclick,slide=p.seek.oninput,replay=p.root.querySelector('.replay').onclick;p.button.onclick=()=>{if(group.playing){group.pause();return}play()};p.seek.oninput=()=>{group.pause();slide()};p.root.querySelector('.replay').onclick=()=>{group.pause();replay()}});
+  root.__comparison=group;window.__candidateComparisons.push(group);
+}
+window.__candidateCompareReady=true;
+</script></html>

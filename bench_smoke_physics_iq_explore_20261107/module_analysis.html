@@ -1,0 +1,1498 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld模块探索</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><style>.candidate-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.candidate-entry{border:1px solid #344257;border-radius:12px;padding:12px;background:#11161b}.candidate-entry h3{margin:0 0 6px}.candidate-entry .screen{position:relative;aspect-ratio:var(--aspect);background:#080c12}.candidate-entry canvas,.candidate-entry .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.candidate-entry .controls,.compare-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.candidate-entry button,.compare-controls button{background:#a5ef83;color:#142110;border:0;border-radius:7px;padding:8px 11px;cursor:pointer}.candidate-entry .seek,.compare-seek{flex:1;min-width:90px}.candidate-entry .clock,.candidate-meta{color:#a6b3c5;font-size:11px}.compare-controls{margin:12px 0 18px}.candidate-entry .controls label{white-space:nowrap}.candidate-entry .controls input[type=checkbox]{flex:0}.candidate-warning{color:#ffc478;font-size:12px}@media(max-width:760px){.candidate-grid{grid-template-columns:1fr}}</style><p><a href="index.html">← 探索总览</a></p><h1>拆开输入状态、动力学与像素生成</h1><div class="box"><p><strong>4 FPS历史里球只有一个可见时间点，无法从位移估计速度；30 FPS历史保留了短段连续运动。</strong>这里比较的是输入信息及估计器，不是纯track消融。状态reader不给未来视频，也不承担生成任务。</p><p>原生30 FPS生成代码自身已拟合历史速度。blue的原生速度约[194.94,15.62]，reader约[195.63,15.97]像素/秒；yellow约[-263.82,-42.17]与[-241.20,-38.52]。yellow的差异涉及线性窗口平均速度与局部加速度拟合，不足以认定哪条预测更真实。</p></div><div class="table"><table><thead><tr><th>输入/Track</th><th>球</th><th>最后时刻</th><th>中心xy</th><th>速度xy px/s</th></tr></thead><tbody><tr><td>0033 / text</td><td>blue</td><td>2.7500s</td><td>[37.1, 46.7]</td><td>[None, None]</td></tr><tr><td>0033 / text</td><td>yellow</td><td>2.7500s</td><td>[200.9, 65.6]</td><td>[None, None]</td></tr><tr><td>0033_dense30 / vision-agent</td><td>blue</td><td>2.9667s</td><td>[76.16, 49.81]</td><td>[195.63, 15.97]</td></tr><tr><td>0033_dense30 / vision-agent</td><td>yellow</td><td>2.9667s</td><td>[148.92, 58.09]</td><td>[-241.2, -38.52]</td></tr></tbody></table></div><article class="card"><h2>0033 · text 状态提取</h2><div class="player" data-player="{&quot;asset&quot;: &quot;module_assets/0033/video-1dd958b0912993c4f688.png&quot;, &quot;poster&quot;: &quot;data:image/webp;base64,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&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 12, &quot;fps&quot;: 4, &quot;audio&quot;: null, &quot;rgb_sha256&quot;: &quot;1dd958b0912993c4f68871e65fe632cf4a0203a04076eb960bd51efea42970a9&quot;}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="data:image/webp;base64,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"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p>143.2秒 · output tokens 6384 · 完成命令 10 · 显式 view_image 0 次。Vision-Agent 初始附有合法历史检查图；附件和工具事件分别记录。</p><details><summary>状态与不确定性</summary><pre>[
+  {
+    &quot;name&quot;: &quot;blue&quot;,
+    &quot;last_time_seconds&quot;: 2.75,
+    &quot;centre_xy&quot;: [
+      37.1,
+      46.7
+    ],
+    &quot;velocity_xy_pixels_per_second&quot;: [
+      null,
+      null
+    ],
+    &quot;confidence&quot;: {
+      &quot;centre&quot;: &quot;high&quot;,
+      &quot;velocity&quot;: &quot;not_estimable&quot;,
+      &quot;acceleration&quot;: &quot;not_estimable&quot;,
+      &quot;interpretation&quot;: &quot;Qualitative evidence assessment, not calibrated probabilities.&quot;
+    },
+    &quot;evidence&quot;: {
+      &quot;sources&quot;: [
+        &quot;conditioning_info.json&quot;,
+        &quot;conditioning.mp4&quot;,
+        &quot;conditioning_frames/00.png through conditioning_frames/11.png&quot;
+      ],
+      &quot;frame_size_pixels&quot;: [
+        256,
+        144
+      ],
+      &quot;coordinate_convention&quot;: &quot;Pixel centres: origin at upper left, x increases rightward, y increases downward; all coordinates refer to an individual frame.&quot;,
+      &quot;timing&quot;: {
+        &quot;fps&quot;: 4.0,
+        &quot;observed_frame_count&quot;: 12,
+        &quot;final_frame_index&quot;: 11,
+        &quot;final_frame_time_seconds&quot;: 2.75,
+        &quot;method&quot;: &quot;Use decoded 4 fps video timestamps and metadata last_frame_time_seconds. All twelve decoded frames exactly match the PNGs. The three-second clip duration is not the timestamp of its final frame. Native source indices describe sampling and are not additional observations.&quot;
+      },
+      &quot;usable_ball_observations&quot;: [
+        {
+          &quot;frame&quot;: &quot;conditioning_frames/11.png&quot;,
+          &quot;time_seconds&quot;: 2.75,
+          &quot;centre_xy&quot;: [
+            37.1,
+            46.7
+          ]
+        }
+      ],
+      &quot;centre_estimation&quot;: {
+        &quot;method&quot;: &quot;Convert final frame to OpenCV HSV; isolate the visually identified ball in the stated ROI, select its largest connected colour component, and take the coordinate-wise median of pixel centroids across five saturation thresholds. Contour ellipse fits provide a consistency check. Shadows are excluded by colour segmentation.&quot;,
+        &quot;roi_xyxy&quot;: [
+          17,
+          30,
+          59,
+          72
+        ],
+        &quot;opencv_hue_range&quot;: [
+          90,
+          135
+        ],
+        &quot;saturation_thresholds&quot;: [
+          70,
+          90,
+          110,
+          130,
+          150
+        ],
+        &quot;minimum_value&quot;: 35,
+        &quot;centroid_threshold_spread_xy_pixels&quot;: [
+          0.163,
+          0.12
+        ],
+        &quot;rounding_pixels&quot;: 0.1
+      },
+      &quot;previous_frames&quot;: &quot;No distinct blue ball is visible in frames 00 through 10. The persistent blue component near (246.7, 70.4) is the fixed right-hand launcher, not this ball.&quot;,
+      &quot;velocity_estimation&quot;: &quot;A recent image-plane velocity would require at least two time-separated ball centres and would be computed as their displacement divided by elapsed seconds. Only one centre is available, so neither velocity component is identifiable. Null means unknown, not zero.&quot;,
+      &quot;reproduction&quot;: &quot;Run python estimate_state.py; detailed component measurements are saved in .tmp/state_measurements.json.&quot;
+    },
+    &quot;uncertainty&quot;: {
+      &quot;centre_approximate_tolerance_xy_pixels&quot;: [
+        1.0,
+        1.0
+      ],
+      &quot;centre_tolerance_interpretation&quot;: &quot;Conservative localization tolerance based on low resolution, colour-boundary choice, shading and blur; not a statistical confidence interval. Threshold spread alone understates these effects.&quot;,
+      &quot;velocity_reason&quot;: &quot;Only one usable observation; no measured displacement or finite data-derived velocity bounds.&quot;,
+      &quot;velocity_component_bounds_pixels_per_second&quot;: [
+        null,
+        null
+      ],
+      &quot;acceleration_xy_pixels_per_second_squared&quot;: [
+        null,
+        null
+      ],
+      &quot;acceleration_reason&quot;: &quot;At least three time-separated centres are needed to compare successive measured velocities. There is no evidence to establish acceleration, deceleration, or constant velocity.&quot;,
+      &quot;blur&quot;: &quot;The final image contains blur and cast shadows. Exposure duration is unspecified, and a cast shadow is not a temporal track; these do not supply a defensible speed measurement.&quot;,
+      &quot;occlusion&quot;: &quot;Earlier positions may be hidden within or behind a launcher; absence of a visible ball does not establish its position or that it was stationary.&quot;
+    }
+  },
+  {
+    &quot;name&quot;: &quot;yellow&quot;,
+    &quot;last_time_seconds&quot;: 2.75,
+    &quot;centre_xy&quot;: [
+      200.9,
+      65.6
+    ],
+    &quot;velocity_xy_pixels_per_second&quot;: [
+      null,
+      null
+    ],
+    &quot;confidence&quot;: {
+      &quot;centre&quot;: &quot;high&quot;,
+      &quot;velocity&quot;: &quot;not_estimable&quot;,
+      &quot;acceleration&quot;: &quot;not_estimable&quot;,
+      &quot;interpretation&quot;: &quot;Qualitative evidence assessment, not calibrated probabilities.&quot;
+    },
+    &quot;evidence&quot;: {
+      &quot;sources&quot;: [
+        &quot;conditioning_info.json&quot;,
+        &quot;conditioning.mp4&quot;,
+        &quot;conditioning_frames/00.png through conditioning_frames/11.png&quot;
+      ],
+      &quot;frame_size_pixels&quot;: [
+        256,
+        144
+      ],
+      &quot;coordinate_convention&quot;: &quot;Pixel centres: origin at upper left, x increases rightward, y increases downward; all coordinates refer to an individual frame.&quot;,
+      &quot;timing&quot;: {
+        &quot;fps&quot;: 4.0,
+        &quot;observed_frame_count&quot;: 12,
+        &quot;final_frame_index&quot;: 11,
+        &quot;final_frame_time_seconds&quot;: 2.75,
+        &quot;method&quot;: &quot;Use decoded 4 fps video timestamps and metadata last_frame_time_seconds. All twelve decoded frames exactly match the PNGs. The three-second clip duration is not the timestamp of its final frame. Native source indices describe sampling and are not additional observations.&quot;
+      },
+      &quot;usable_ball_observations&quot;: [
+        {
+          &quot;frame&quot;: &quot;conditioning_frames/11.png&quot;,
+          &quot;time_seconds&quot;: 2.75,
+          &quot;centre_xy&quot;: [
+            200.9,
+            65.6
+          ]
+        }
+      ],
+      &quot;centre_estimation&quot;: {
+        &quot;method&quot;: &quot;Convert final frame to OpenCV HSV; isolate the visually identified ball in the stated ROI, select its largest connected colour component, and take the coordinate-wise median of pixel centroids across five saturation thresholds. Contour ellipse fits provide a consistency check. Shadows are excluded by colour segmentation.&quot;,
+        &quot;roi_xyxy&quot;: [
+          182,
+          48,
+          224,
+          90
+        ],
+        &quot;opencv_hue_range&quot;: [
+          22,
+          45
+        ],
+        &quot;saturation_thresholds&quot;: [
+          70,
+          90,
+          110,
+          130,
+          150
+        ],
+        &quot;minimum_value&quot;: 80,
+        &quot;centroid_threshold_spread_xy_pixels&quot;: [
+          0.1,
+          0.325
+        ],
+        &quot;rounding_pixels&quot;: 0.1
+      },
+      &quot;previous_frames&quot;: &quot;No distinct yellow ball is visible in frames 00 through 10; no qualifying yellow colour component was detected.&quot;,
+      &quot;velocity_estimation&quot;: &quot;A recent image-plane velocity would require at least two time-separated ball centres and would be computed as their displacement divided by elapsed seconds. Only one centre is available, so neither velocity component is identifiable. Null means unknown, not zero.&quot;,
+      &quot;reproduction&quot;: &quot;Run python estimate_state.py; detailed component measurements are saved in .tmp/state_measurements.json.&quot;
+    },
+    &quot;uncertainty&quot;: {
+      &quot;centre_approximate_tolerance_xy_pixels&quot;: [
+        2.0,
+        1.5
+      ],
+      &quot;centre_tolerance_interpretation&quot;: &quot;Conservative localization tolerance based on low resolution, colour-boundary choice, shading and blur; not a statistical confidence interval. Threshold spread alone understates these effects.&quot;,
+      &quot;velocity_reason&quot;: &quot;Only one usable observation; no measured displacement or finite data-derived velocity bounds.&quot;,
+      &quot;velocity_component_bounds_pixels_per_second&quot;: [
+        null,
+        null
+      ],
+      &quot;acceleration_xy_pixels_per_second_squared&quot;: [
+        null,
+        null
+      ],
+      &quot;acceleration_reason&quot;: &quot;At least three time-separated centres are needed to compare successive measured velocities. There is no evidence to establish acceleration, deceleration, or constant velocity.&quot;,
+      &quot;blur&quot;: &quot;The final image contains blur and cast shadows. Exposure duration is unspecified, and a cast shadow is not a temporal track; these do not supply a defensible speed measurement.&quot;,
+      &quot;occlusion&quot;: &quot;Earlier positions may be hidden within or behind a launcher; absence of a visible ball does not establish its position or that it was stationary.&quot;
+    }
+  }
+]</pre></details><details><summary>实际执行的命令</summary><pre>pwd &amp;&amp; rg --files -g &#x27;AGENTS.md&#x27; -g &#x27;conditioning*&#x27; -g &#x27;*state*&#x27; -g &#x27;*.py&#x27; -g &#x27;*.png&#x27; -g &#x27;*.jpg&#x27; -g &#x27;*.json&#x27; -g &#x27;*.mp4&#x27;
+
+ls -la; find . -maxdepth 3 -type f \( -name &#x27;AGENTS.md&#x27; -o -name &#x27;conditioning*&#x27; -o -name &#x27;*.png&#x27; -o -name &#x27;*.jpg&#x27; -o -name &#x27;*.json&#x27; -o -name &#x27;*.py&#x27; \)
+
+cat conditioning_info.json; python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+from PIL import Image
+for p in [&#x27;cv2&#x27;,&#x27;numpy&#x27;,&#x27;scipy&#x27;,&#x27;PIL&#x27;,&#x27;matplotlib&#x27;]:
+ print(p, bool(importlib.util.find_spec(p)))
+for f in [&#x27;conditioning_frames/00.png&#x27;,&#x27;conditioning_frames/11.png&#x27;]:
+ im=Image.open(f)
+ print(f, im.size)
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import base64,io
+from PIL import Image,ImageDraw
+files=[&#x27;conditioning_frames/00.png&#x27;,&#x27;conditioning_frames/07.png&#x27;,&#x27;conditioning_frames/09.png&#x27;,&#x27;conditioning_frames/11.png&#x27;]
+canvas=Image.new(&#x27;RGB&#x27;,(512,328),&#x27;white&#x27;)
+d=ImageDraw.Draw(canvas)
+for k,f in enumerate(files):
+ x=(k%2)*256;y=(k//2)*164
+ canvas.paste(Image.open(f),(x,y+20))
+ d.text((x+5,y+3),f,fill=&#x27;black&#x27;)
+b=io.BytesIO();canvas.save(b,format=&#x27;PNG&#x27;);print(base64.b64encode(b.getvalue()).decode())
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from pathlib import Path
+v=cv2.VideoCapture(&#x27;conditioning.mp4&#x27;)
+print(&#x27;video&#x27;, {&#x27;fps&#x27;:v.get(cv2.CAP_PROP_FPS),&#x27;frames&#x27;:v.get(cv2.CAP_PROP_FRAME_COUNT),&#x27;width&#x27;:v.get(cv2.CAP_PROP_FRAME_WIDTH),&#x27;height&#x27;:v.get(cv2.CAP_PROP_FRAME_HEIGHT)})
+for f in sorted(Path(&#x27;conditioning_frames&#x27;).glob(&#x27;*.png&#x27;)):
+ a=cv2.imread(str(f));hsv=cv2.cvtColor(a,cv2.COLOR_BGR2HSV)
+ print(f.name,end=&#x27; &#x27;)
+ for name,lo,hi in [(&#x27;blue&#x27;,(90,90,35),(135,255,255)),(&#x27;yellow&#x27;,(22,100,80),(45,255,255))]:
+  mask=cv2.inRange(hsv,np.array(lo),np.array(hi));n,labels,stats,cents=cv2.connectedComponentsWithStats(mask)
+  inds=[i for i in range(1,n) if stats[i,4]&gt;=5]
+  print(name,[(stats[i].tolist(),cents[i].round(2).tolist()) for i in inds],end=&#x27; &#x27;)
+ print()
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from pathlib import Path
+cap=cv2.VideoCapture(&#x27;conditioning.mp4&#x27;)
+for i,p in enumerate(sorted(Path(&#x27;conditioning_frames&#x27;).glob(&#x27;*.png&#x27;))):
+ ok,b=cap.read();a=cv2.imread(str(p))
+ print(p.name,&#x27;video_decode_match_mean_absolute_difference&#x27;,round(float(np.abs(a.astype(float)-b.astype(float)).mean()),3) if ok else &#x27;missing&#x27;)
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import base64,io
+from PIL import Image,ImageDraw
+canvas=Image.new(&#x27;RGB&#x27;,(768,656),&#x27;white&#x27;);d=ImageDraw.Draw(canvas)
+for k in range(12):
+ x=(k%3)*256;y=(k//3)*164
+ canvas.paste(Image.open(f&#x27;conditioning_frames/{k:02}.png&#x27;),(x,y+20))
+ d.text((x+5,y+3),f&#x27;frame {k:02}: {k/4:.2f}s&#x27;,fill=&#x27;black&#x27;)
+b=io.BytesIO();canvas.save(b,format=&#x27;PNG&#x27;);print(base64.b64encode(b.getvalue()).decode())
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import base64,io
+from PIL import Image,ImageDraw
+c=Image.new(&#x27;RGB&#x27;,(512,328),&#x27;white&#x27;);d=ImageDraw.Draw(c)
+for j,k in enumerate([10,11]):
+ im=Image.open(f&#x27;conditioning_frames/{k:02}.png&#x27;).resize((512,288))
+ if j==0: im.save(&#x27;.tmp/frame10_enlarged.png&#x27;)
+ else: c.paste(im,(0,40));d.text((6,6),&#x27;Final observed frame 11 (display enlarged 2x)&#x27;,fill=&#x27;black&#x27;)
+# two final ball crops displayed 4x, separate image
+im=Image.open(&#x27;conditioning_frames/11.png&#x27;)
+c=Image.new(&#x27;RGB&#x27;,(336,188),&#x27;white&#x27;);d=ImageDraw.Draw(c)
+c.paste(im.crop((17,30,59,72)).resize((168,168)),(0,20))
+c.paste(im.crop((182,48,224,90)).resize((168,168)),(168,20))
+d.text((3,3),&#x27;Blue: crop x17,y30&#x27;,fill=&#x27;black&#x27;);d.text((171,3),&#x27;Yellow: x182,y48&#x27;,fill=&#x27;black&#x27;)
+b=io.BytesIO();c.save(b,format=&#x27;PNG&#x27;);print(base64.b64encode(b.getvalue()).decode())
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;conditioning_frames/11.png&#x27;);hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for name,hr,roi in [(&#x27;blue&#x27;,(90,135),(17,30,59,72)),(&#x27;yellow&#x27;,(22,45),(182,48,224,90))]:
+ x0,y0,x1,y1=roi
+ print(name)
+ for s in [70,90,110,130,150,170]:
+  mask=cv2.inRange(hsv[y0:y1,x0:x1],np.array([hr[0],s,35 if name==&#x27;blue&#x27; else 80]),np.array([hr[1],255,255]))
+  n,l,stats,cents=cv2.connectedComponentsWithStats(mask)
+  j=1+np.argmax(stats[1:,4]);m=np.uint8(l==j)*255
+  contours,_=cv2.findContours(m,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+  cnt=max(contours,key=cv2.contourArea);ell=cv2.fitEllipse(cnt) if len(cnt)&gt;=5 else None
+  if ell: ell=([round(ell[0][0]+x0,3),round(ell[0][1]+y0,3)],[round(z,3) for z in ell[1]],round(ell[2],3))
+  print({&#x27;sat_threshold&#x27;:s,&#x27;pixels&#x27;:int(stats[j,4]),&#x27;centroid&#x27;:(cents[j]+[x0,y0]).round(3).tolist(),&#x27;ellipse&#x27;:ell,&#x27;bbox&#x27;:[int(stats[j,0]+x0),int(stats[j,1]+y0),int(stats[j,2]),int(stats[j,3])]})
+PY
+
+python estimate_state.py; python - &lt;&lt;&#x27;PY&#x27;
+import json
+from pathlib import Path
+state=json.loads(Path(&#x27;state.json&#x27;).read_text())
+assert len(state)==2
+for ball in state:
+ assert set([&#x27;name&#x27;,&#x27;last_time_seconds&#x27;,&#x27;centre_xy&#x27;,&#x27;velocity_xy_pixels_per_second&#x27;,&#x27;confidence&#x27;,&#x27;evidence&#x27;,&#x27;uncertainty&#x27;]).issubset(ball)
+ assert ball[&#x27;last_time_seconds&#x27;]==2.75
+ assert len(ball[&#x27;centre_xy&#x27;])==2
+ assert ball[&#x27;velocity_xy_pixels_per_second&#x27;]==[None,None]
+ assert 0&lt;=ball[&#x27;centre_xy&#x27;][0]&lt;256 and 0&lt;=ball[&#x27;centre_xy&#x27;][1]&lt;144
+ print(ball[&#x27;name&#x27;], &#x27;centre&#x27;, ball[&#x27;centre_xy&#x27;], &#x27;threshold spread&#x27;,ball[&#x27;evidence&#x27;][&#x27;centre_estimation&#x27;][&#x27;centroid_threshold_spread_xy_pixels&#x27;])
+print(&#x27;Validated state.json schema, coordinates, and unknown velocities.&#x27;)
+PY</pre></details><details><summary>模型生成的测量代码</summary><pre>&quot;&quot;&quot;Measure only the supplied historical frames; never extrapolate motion.&quot;&quot;&quot;
+import json
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+
+ROOT = Path(__file__).resolve().parent
+info = json.loads((ROOT / &quot;conditioning_info.json&quot;).read_text())
+paths = sorted((ROOT / &quot;conditioning_frames&quot;).glob(&quot;*.png&quot;))
+frames = [cv2.imread(str(path)) for path in paths]
+assert len(frames) == info[&quot;history_frames&quot;] == 12
+assert all(frame.shape[:2] == (144, 256) for frame in frames)
+video = cv2.VideoCapture(str(ROOT / &quot;conditioning.mp4&quot;))
+fps = video.get(cv2.CAP_PROP_FPS)
+assert fps == info[&quot;history_fps&quot;] == 4
+assert int(video.get(cv2.CAP_PROP_FRAME_COUNT)) == len(frames)
+for frame in frames:
+    ok, decoded = video.read()
+    assert ok and np.array_equal(frame, decoded)
+video.release()
+last_time = (len(frames) - 1) / fps + info[&quot;history_start_seconds&quot;]
+assert last_time == info[&quot;last_frame_time_seconds&quot;] == 2.75
+
+
+def components(frame, hue, saturation, minimum_value, roi=None):
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    x0, y0, x1, y1 = roi or (0, 0, 256, 144)
+    mask = cv2.inRange(
+        hsv[y0:y1, x0:x1],
+        np.array([hue[0], saturation, minimum_value]),
+        np.array([hue[1], 255, 255]),
+    )
+    count, labels, stats, centres = cv2.connectedComponentsWithStats(mask)
+    result = []
+    for j in range(1, count):
+        if stats[j, cv2.CC_STAT_AREA] &lt; 5:
+            continue
+        contour, _ = cv2.findContours(
+            np.uint8(labels == j) * 255,
+            cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_NONE,
+        )
+        contour = max(contour, key=cv2.contourArea)
+        ellipse_centre = None
+        if len(contour) &gt;= 5:
+            ellipse_centre = (
+                np.array(cv2.fitEllipse(contour)[0]) + [x0, y0]
+            ).tolist()
+        result.append({
+            &quot;area_pixels&quot;: int(stats[j, cv2.CC_STAT_AREA]),
+            &quot;centre_xy&quot;: (centres[j] + [x0, y0]).tolist(),
+            &quot;bounding_box_xywh&quot;: [
+                int(stats[j, 0] + x0), int(stats[j, 1] + y0),
+                int(stats[j, 2]), int(stats[j, 3]),
+            ],
+            &quot;ellipse_centre_xy&quot;: ellipse_centre,
+        })
+    return sorted(result, key=lambda item: item[&quot;area_pixels&quot;], reverse=True)
+
+
+settings = {
+    &quot;blue&quot;: {&quot;hue&quot;: (90, 135), &quot;value&quot;: 35, &quot;roi&quot;: (17, 30, 59, 72)},
+    &quot;yellow&quot;: {&quot;hue&quot;: (22, 45), &quot;value&quot;: 80, &quot;roi&quot;: (182, 48, 224, 90)},
+}
+states = []
+details = {}
+for name, setting in settings.items():
+    baseline_saturation = 90 if name == &quot;blue&quot; else 100
+    history = []
+    for index, frame in enumerate(frames):
+        found = components(
+            frame, setting[&quot;hue&quot;], baseline_saturation, setting[&quot;value&quot;]
+        )
+        history.append({
+            &quot;frame_index&quot;: index,
+            &quot;time_seconds&quot;: index / fps,
+            &quot;colour_components&quot;: found,
+        })
+    sensitivity = []
+    for saturation in (70, 90, 110, 130, 150):
+        found = components(
+            frames[-1], setting[&quot;hue&quot;], saturation,
+            setting[&quot;value&quot;], setting[&quot;roi&quot;],
+        )
+        sensitivity.append({&quot;saturation_threshold&quot;: saturation, **found[0]})
+    centroids = np.array([item[&quot;centre_xy&quot;] for item in sensitivity])
+    centre = np.median(centroids, axis=0).round(1).tolist()
+    spread = np.ptp(centroids, axis=0).round(3).tolist()
+    details[name] = {&quot;history&quot;: history, &quot;threshold_sensitivity&quot;: sensitivity}
+    states.append({
+        &quot;name&quot;: name,
+        &quot;last_time_seconds&quot;: last_time,
+        &quot;centre_xy&quot;: centre,
+        &quot;velocity_xy_pixels_per_second&quot;: [None, None],
+        &quot;confidence&quot;: {
+            &quot;centre&quot;: &quot;high&quot;,
+            &quot;velocity&quot;: &quot;not_estimable&quot;,
+            &quot;acceleration&quot;: &quot;not_estimable&quot;,
+            &quot;interpretation&quot;: &quot;Qualitative evidence assessment, not calibrated probabilities.&quot;,
+        },
+        &quot;evidence&quot;: {
+            &quot;sources&quot;: [&quot;conditioning_info.json&quot;, &quot;conditioning.mp4&quot;, &quot;conditioning_frames/00.png through conditioning_frames/11.png&quot;],
+            &quot;frame_size_pixels&quot;: [256, 144],
+            &quot;coordinate_convention&quot;: &quot;Pixel centres: origin at upper left, x increases rightward, y increases downward; all coordinates refer to an individual frame.&quot;,
+            &quot;timing&quot;: {
+                &quot;fps&quot;: fps,
+                &quot;observed_frame_count&quot;: len(frames),
+                &quot;final_frame_index&quot;: 11,
+                &quot;final_frame_time_seconds&quot;: last_time,
+                &quot;method&quot;: &quot;Use decoded 4 fps video timestamps and metadata last_frame_time_seconds. All twelve decoded frames exactly match the PNGs. The three-second clip duration is not the timestamp of its final frame. Native source indices describe sampling and are not additional observations.&quot;,
+            },
+            &quot;usable_ball_observations&quot;: [{
+                &quot;frame&quot;: &quot;conditioning_frames/11.png&quot;,
+                &quot;time_seconds&quot;: last_time,
+                &quot;centre_xy&quot;: centre,
+            }],
+            &quot;centre_estimation&quot;: {
+                &quot;method&quot;: &quot;Convert final frame to OpenCV HSV; isolate the visually identified ball in the stated ROI, select its largest connected colour component, and take the coordinate-wise median of pixel centroids across five saturation thresholds. Contour ellipse fits provide a consistency check. Shadows are excluded by colour segmentation.&quot;,
+                &quot;roi_xyxy&quot;: list(setting[&quot;roi&quot;]),
+                &quot;opencv_hue_range&quot;: list(setting[&quot;hue&quot;]),
+                &quot;saturation_thresholds&quot;: [70, 90, 110, 130, 150],
+                &quot;minimum_value&quot;: setting[&quot;value&quot;],
+                &quot;centroid_threshold_spread_xy_pixels&quot;: spread,
+                &quot;rounding_pixels&quot;: 0.1,
+            },
+            &quot;previous_frames&quot;: (
+                &quot;No distinct blue ball is visible in frames 00 through 10. The persistent blue component near (246.7, 70.4) is the fixed right-hand launcher, not this ball.&quot;
+                if name == &quot;blue&quot; else
+                &quot;No distinct yellow ball is visible in frames 00 through 10; no qualifying yellow colour component was detected.&quot;
+            ),
+            &quot;velocity_estimation&quot;: &quot;A recent image-plane velocity would require at least two time-separated ball centres and would be computed as their displacement divided by elapsed seconds. Only one centre is available, so neither velocity component is identifiable. Null means unknown, not zero.&quot;,
+            &quot;reproduction&quot;: &quot;Run python estimate_state.py; detailed component measurements are saved in .tmp/state_measurements.json.&quot;,
+        },
+        &quot;uncertainty&quot;: {
+            &quot;centre_approximate_tolerance_xy_pixels&quot;: [1.0, 1.0] if name == &quot;blue&quot; else [2.0, 1.5],
+            &quot;centre_tolerance_interpretation&quot;: &quot;Conservative localization tolerance based on low resolution, colour-boundary choice, shading and blur; not a statistical confidence interval. Threshold spread alone understates these effects.&quot;,
+            &quot;velocity_reason&quot;: &quot;Only one usable observation; no measured displacement or finite data-derived velocity bounds.&quot;,
+            &quot;velocity_component_bounds_pixels_per_second&quot;: [None, None],
+            &quot;acceleration_xy_pixels_per_second_squared&quot;: [None, None],
+            &quot;acceleration_reason&quot;: &quot;At least three time-separated centres are needed to compare successive measured velocities. There is no evidence to establish acceleration, deceleration, or constant velocity.&quot;,
+            &quot;blur&quot;: &quot;The final image contains blur and cast shadows. Exposure duration is unspecified, and a cast shadow is not a temporal track; these do not supply a defensible speed measurement.&quot;,
+            &quot;occlusion&quot;: &quot;Earlier positions may be hidden within or behind a launcher; absence of a visible ball does not establish its position or that it was stationary.&quot;,
+        },
+    })
+
+(ROOT / &quot;.tmp&quot;).mkdir(exist_ok=True)
+(ROOT / &quot;.tmp/state_measurements.json&quot;).write_text(json.dumps(details, indent=2) + &quot;\n&quot;)
+(ROOT / &quot;state.json&quot;).write_text(json.dumps(states, indent=2) + &quot;\n&quot;)
+for state in states:
+    print(state[&quot;name&quot;], state[&quot;last_time_seconds&quot;], state[&quot;centre_xy&quot;], state[&quot;velocity_xy_pixels_per_second&quot;])
+</pre></details></article><article class="card"><h2>0033_dense30 · vision-agent 状态提取</h2><div class="player" data-player="{&quot;asset&quot;: &quot;module_assets/0033_dense30/video-f3b522052a384f2d1de2.png&quot;, &quot;poster&quot;: &quot;data:image/webp;base64,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&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 90, &quot;fps&quot;: 30, &quot;audio&quot;: null, &quot;rgb_sha256&quot;: &quot;f3b522052a384f2d1de2cfd2bf1f18ad22a0c745da6b9bf51c9427cda1841af3&quot;}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="data:image/webp;base64,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"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p>163.6秒 · output tokens 6629 · 完成命令 12 · 显式 view_image 0 次。Vision-Agent 初始附有合法历史检查图；附件和工具事件分别记录。</p><details><summary>状态与不确定性</summary><pre>[
+  {
+    &quot;name&quot;: &quot;blue&quot;,
+    &quot;last_time_seconds&quot;: 2.966666666666667,
+    &quot;centre_xy&quot;: [
+      76.16,
+      49.81
+    ],
+    &quot;velocity_xy_pixels_per_second&quot;: [
+      195.63,
+      15.97
+    ],
+    &quot;confidence&quot;: {
+      &quot;overall&quot;: 0.94,
+      &quot;centre&quot;: 0.98,
+      &quot;velocity&quot;: 0.92,
+      &quot;interpretation&quot;: &quot;Subjective reliability scores from 0 to 1; not calibrated probabilities.&quot;
+    },
+    &quot;evidence&quot;: {
+      &quot;sources&quot;: [
+        &quot;conditioning_info.json&quot;,
+        &quot;conditioning_frames/79.png through 89.png&quot;,
+        &quot;conditioning.mp4 metadata only&quot;
+      ],
+      &quot;image_size_wh&quot;: [
+        256,
+        144
+      ],
+      &quot;coordinate_convention&quot;: &quot;Origin at upper-left pixel centre; x increases right, y increases down. Measurements use original frames, not contact-sheet coordinates.&quot;,
+      &quot;timing_method&quot;: &quot;Frame time = history_start_seconds + frame_index/history_fps; 30 fps, 90 frames. Frame 89 is the last observation at 89/30 seconds, not 3.0 seconds.&quot;,
+      &quot;centre_method&quot;: &quot;OpenCV HSV color threshold, exclude static top strip (y&lt;15) and right tube (x&gt;=240), choose largest remaining connected color component, then use its unweighted pixel centroid. Shadows are not part of the color mask. Visual inspection confirms both final balls are fully visible.&quot;,
+      &quot;hsv_threshold_lower_upper&quot;: [
+        [
+          90,
+          80,
+          35
+        ],
+        [
+          130,
+          255,
+          255
+        ]
+      ],
+      &quot;last_frame&quot;: &quot;conditioning_frames/89.png&quot;,
+      &quot;last_component_area_pixels&quot;: 181,
+      &quot;last_contour_ellipse_centre_xy&quot;: [
+        76.14889526367188,
+        49.8140983581543
+      ],
+      &quot;velocity_method&quot;: &quot;Unweighted least-squares line independently fitted to x and y over frames 83-89 (2.7667-2.9667 s). Report these recent slopes as the velocity at the final observation; possible small acceleration is included in uncertainty.&quot;,
+      &quot;primary_fit&quot;: {
+        &quot;first_frame_index&quot;: 83,
+        &quot;last_frame_index&quot;: 89,
+        &quot;time_window_seconds&quot;: [
+          2.7666666666666666,
+          2.966666666666667
+        ],
+        &quot;number_of_observations&quot;: 7,
+        &quot;linear_velocity_xy_pixels_per_second&quot;: [
+          195.63085720840746,
+          15.9673534825118
+        ],
+        &quot;linear_residual_rms_xy_pixels&quot;: [
+          0.08886184407171102,
+          0.10689679364223592
+        ],
+        &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+          199.0017053245387,
+          16.09624255229053
+        ],
+        &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+          33.7084811613122,
+          1.2888906977874022
+        ],
+        &quot;quadratic_acceleration_standard_error_xy&quot;: [
+          15.777940909622094,
+          27.765123686635096
+        ],
+        &quot;quadratic_residual_rms_xy_pixels&quot;: [
+          0.060729322876189415,
+          0.10686801089708121
+        ]
+      },
+      &quot;recent_observations&quot;: [
+        {
+          &quot;frame_index&quot;: 83,
+          &quot;time_seconds&quot;: 2.7666666666666666,
+          &quot;centre_xy&quot;: [
+            37.0625,
+            46.67613636363637
+          ],
+          &quot;area_pixels&quot;: 176,
+          &quot;ellipse_centre_xy&quot;: [
+            37.049659729003906,
+            46.659542083740234
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 84,
+          &quot;time_seconds&quot;: 2.8,
+          &quot;centre_xy&quot;: [
+            43.443820224719104,
+            47.07303370786517
+          ],
+          &quot;area_pixels&quot;: 178,
+          &quot;ellipse_centre_xy&quot;: [
+            43.44074630737305,
+            47.07365036010742
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 85,
+          &quot;time_seconds&quot;: 2.8333333333333335,
+          &quot;centre_xy&quot;: [
+            50.056179775280896,
+            47.87640449438202
+          ],
+          &quot;area_pixels&quot;: 178,
+          &quot;ellipse_centre_xy&quot;: [
+            50.04557418823242,
+            47.87534713745117
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 86,
+          &quot;time_seconds&quot;: 2.8666666666666667,
+          &quot;centre_xy&quot;: [
+            56.36871508379888,
+            48.201117318435756
+          ],
+          &quot;area_pixels&quot;: 179,
+          &quot;ellipse_centre_xy&quot;: [
+            56.34584045410156,
+            48.18324661254883
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 87,
+          &quot;time_seconds&quot;: 2.9,
+          &quot;centre_xy&quot;: [
+            62.965714285714284,
+            48.64
+          ],
+          &quot;area_pixels&quot;: 175,
+          &quot;ellipse_centre_xy&quot;: [
+            62.960697174072266,
+            48.63631057739258
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 88,
+          &quot;time_seconds&quot;: 2.933333333333333,
+          &quot;centre_xy&quot;: [
+            69.63687150837988,
+            49.44692737430167
+          ],
+          &quot;area_pixels&quot;: 179,
+          &quot;ellipse_centre_xy&quot;: [
+            69.62798309326172,
+            49.44086456298828
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 89,
+          &quot;time_seconds&quot;: 2.966666666666667,
+          &quot;centre_xy&quot;: [
+            76.16022099447514,
+            49.806629834254146
+          ],
+          &quot;area_pixels&quot;: 181,
+          &quot;ellipse_centre_xy&quot;: [
+            76.14889526367188,
+            49.8140983581543
+          ]
+        }
+      ],
+      &quot;alternative_window_fits&quot;: [
+        {
+          &quot;first_frame_index&quot;: 81,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.7,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 9,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            195.32351585053704,
+            16.13023220933423
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.09422083824654268,
+            0.13527546374673663
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            196.98440446568742,
+            14.892112268966386
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            12.456664613626927,
+            -9.285899552758963
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            10.68736001196523,
+            16.564412370105458
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.08508003557025332,
+            0.1318661289664714
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 82,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.7333333333333334,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 8,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            195.16165270761476,
+            15.491120573120394
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.097354116452581,
+            0.11244791272467729
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            198.77019652813263,
+            17.233121046694514
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            30.930375604437582,
+            14.931432630635358
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            10.055890902154315,
+            18.58990660039975
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.057245677212353456,
+            0.10582769871004635
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 84,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.8,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 6,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            196.21806707142173,
+            16.1300845313725
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.07894689468417865,
+            0.1144664158205092
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            198.86834564532737,
+            15.354682481827869
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            31.803342886868332,
+            -9.304824594535953
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            27.28832217150177,
+            47.385337371233845
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.06549945929189498,
+            0.11373780904057075
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 85,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.8333333333333335,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 5,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            196.4287165889088,
+            15.318782206830587
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.08514136043912802,
+            0.11095099864566049
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            200.67831409666172,
+            19.073273331415102
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            63.74396261629336,
+            56.3173668687678
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            46.50212421795313,
+            74.4074134826928
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.06113561710155988,
+            0.09782226547059833
+          ]
+        }
+      ],
+      &quot;acceleration_assessment&quot;: &quot;No robust acceleration estimate. The primary quadratic fit hints at a small positive horizontal acceleration, but short-window estimates are sensitive to window length and centroid noise. Use the recent linear velocity; vertical acceleration is unresolved.&quot;
+    },
+    &quot;uncertainty&quot;: {
+      &quot;centre_xy_approximate_plus_minus_pixels&quot;: [
+        0.8,
+        0.8
+      ],
+      &quot;velocity_xy_approximate_plus_minus_pixels_per_second&quot;: [
+        6.0,
+        5.0
+      ],
+      &quot;bounds_interpretation&quot;: &quot;Practical approximate error allowances, not formal confidence intervals. Include segmentation, small ball size, temporal sampling, fit-window sensitivity and model choice; fit residuals alone understate these errors.&quot;,
+      &quot;last_centroid_threshold_sensitivity_min_xy&quot;: [
+        76.04938271604938,
+        49.62643678160919
+      ],
+      &quot;last_centroid_threshold_sensitivity_max_xy&quot;: [
+        76.16022099447514,
+        49.883597883597886
+      ],
+      &quot;acceleration_xy_pixels_per_second_squared&quot;: null,
+      &quot;acceleration_assessment&quot;: &quot;No robust acceleration estimate. The primary quadratic fit hints at a small positive horizontal acceleration, but short-window estimates are sensitive to window length and centroid noise. Use the recent linear velocity; vertical acceleration is unresolved.&quot;,
+      &quot;limitations&quot;: &quot;Only 0.2 seconds (7 fully visible observations) enter the primary fit. Earlier entry frames can be clipped or occluded by launch tubes and are excluded from the primary fit. No depth, world-unit velocity or future trajectory is inferred. Only the supplied conditioning history is read.&quot;
+    }
+  },
+  {
+    &quot;name&quot;: &quot;yellow&quot;,
+    &quot;last_time_seconds&quot;: 2.966666666666667,
+    &quot;centre_xy&quot;: [
+      148.92,
+      58.09
+    ],
+    &quot;velocity_xy_pixels_per_second&quot;: [
+      -241.2,
+      -38.52
+    ],
+    &quot;confidence&quot;: {
+      &quot;overall&quot;: 0.88,
+      &quot;centre&quot;: 0.97,
+      &quot;velocity&quot;: 0.85,
+      &quot;interpretation&quot;: &quot;Subjective reliability scores from 0 to 1; not calibrated probabilities.&quot;
+    },
+    &quot;evidence&quot;: {
+      &quot;sources&quot;: [
+        &quot;conditioning_info.json&quot;,
+        &quot;conditioning_frames/79.png through 89.png&quot;,
+        &quot;conditioning.mp4 metadata only&quot;
+      ],
+      &quot;image_size_wh&quot;: [
+        256,
+        144
+      ],
+      &quot;coordinate_convention&quot;: &quot;Origin at upper-left pixel centre; x increases right, y increases down. Measurements use original frames, not contact-sheet coordinates.&quot;,
+      &quot;timing_method&quot;: &quot;Frame time = history_start_seconds + frame_index/history_fps; 30 fps, 90 frames. Frame 89 is the last observation at 89/30 seconds, not 3.0 seconds.&quot;,
+      &quot;centre_method&quot;: &quot;OpenCV HSV color threshold, exclude static top strip (y&lt;15) and right tube (x&gt;=240), choose largest remaining connected color component, then use its unweighted pixel centroid. Shadows are not part of the color mask. Visual inspection confirms both final balls are fully visible.&quot;,
+      &quot;hsv_threshold_lower_upper&quot;: [
+        [
+          25,
+          70,
+          75
+        ],
+        [
+          50,
+          255,
+          255
+        ]
+      ],
+      &quot;last_frame&quot;: &quot;conditioning_frames/89.png&quot;,
+      &quot;last_component_area_pixels&quot;: 253,
+      &quot;last_contour_ellipse_centre_xy&quot;: [
+        148.93048095703125,
+        58.087196350097656
+      ],
+      &quot;velocity_method&quot;: &quot;Unweighted least-squares quadratic x(t)=x_last+vx_last*(t-t_last)+0.5*ax*(t-t_last)^2 over frames 83-89. Report its derivative at the last time for vx; report the same window&#x27;s linear y slope for vy because vertical acceleration is unstable.&quot;,
+      &quot;primary_fit&quot;: {
+        &quot;first_frame_index&quot;: 83,
+        &quot;last_frame_index&quot;: 89,
+        &quot;time_window_seconds&quot;: [
+          2.7666666666666666,
+          2.966666666666667
+        ],
+        &quot;number_of_observations&quot;: 7,
+        &quot;linear_velocity_xy_pixels_per_second&quot;: [
+          -260.61540964600005,
+          -38.51664095095727
+        ],
+        &quot;linear_residual_rms_xy_pixels&quot;: [
+          0.3830368325805206,
+          0.3478416285893067
+        ],
+        &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+          -241.20357042929416,
+          -46.804939554748906
+        ],
+        &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+          194.11839216705764,
+          -82.88298603791631
+        ],
+        &quot;quadratic_acceleration_standard_error_xy&quot;: [
+          21.97554267289115,
+          80.30992504346305
+        ],
+        &quot;quadratic_residual_rms_xy_pixels&quot;: [
+          0.0845839031852129,
+          0.30911304561628333
+        ]
+      },
+      &quot;recent_observations&quot;: [
+        {
+          &quot;frame_index&quot;: 83,
+          &quot;time_seconds&quot;: 2.7666666666666666,
+          &quot;centre_xy&quot;: [
+            200.98993288590603,
+            65.76174496644295
+          ],
+          &quot;area_pixels&quot;: 298,
+          &quot;ellipse_centre_xy&quot;: [
+            200.9909210205078,
+            65.75421142578125
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 84,
+          &quot;time_seconds&quot;: 2.8,
+          &quot;centre_xy&quot;: [
+            191.88541666666666,
+            64.22222222222223
+          ],
+          &quot;area_pixels&quot;: 288,
+          &quot;ellipse_centre_xy&quot;: [
+            191.8988037109375,
+            64.20939636230469
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 85,
+          &quot;time_seconds&quot;: 2.8333333333333335,
+          &quot;centre_xy&quot;: [
+            182.66064981949458,
+            64.05776173285199
+          ],
+          &quot;area_pixels&quot;: 277,
+          &quot;ellipse_centre_xy&quot;: [
+            182.65402221679688,
+            64.05521392822266
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 86,
+          &quot;time_seconds&quot;: 2.8666666666666667,
+          &quot;centre_xy&quot;: [
+            174.12867647058823,
+            61.955882352941174
+          ],
+          &quot;area_pixels&quot;: 272,
+          &quot;ellipse_centre_xy&quot;: [
+            174.13818359375,
+            61.94943618774414
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 87,
+          &quot;time_seconds&quot;: 2.9,
+          &quot;centre_xy&quot;: [
+            165.33955223880596,
+            61.04477611940298
+          ],
+          &quot;area_pixels&quot;: 268,
+          &quot;ellipse_centre_xy&quot;: [
+            165.34228515625,
+            61.04103088378906
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 88,
+          &quot;time_seconds&quot;: 2.933333333333333,
+          &quot;centre_xy&quot;: [
+            157.02298850574712,
+            59.26053639846743
+          ],
+          &quot;area_pixels&quot;: 261,
+          &quot;ellipse_centre_xy&quot;: [
+            157.03085327148438,
+            59.24211502075195
+          ]
+        },
+        {
+          &quot;frame_index&quot;: 89,
+          &quot;time_seconds&quot;: 2.966666666666667,
+          &quot;centre_xy&quot;: [
+            148.92490118577075,
+            58.09090909090909
+          ],
+          &quot;area_pixels&quot;: 253,
+          &quot;ellipse_centre_xy&quot;: [
+            148.93048095703125,
+            58.087196350097656
+          ]
+        }
+      ],
+      &quot;alternative_window_fits&quot;: [
+        {
+          &quot;first_frame_index&quot;: 81,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.7,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 9,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            -266.90631165686244,
+            -40.84851139312089
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.6924244896511059,
+            0.519910665795483
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            -239.80495202209238,
+            -40.7866852111281
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            203.26019726077624,
+            0.4636963649460376
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            26.06893137799775,
+            65.3084954642769
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.20752979280527642,
+            0.519908481694224
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 82,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.7333333333333334,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 8,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            -262.56343972842814,
+            -42.23173690529833
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.41551230697539043,
+            0.5166160887674913
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            -244.42176156351837,
+            -34.063741917316534
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            155.50009855636978,
+            70.0113856112726
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            22.16854326714875,
+            85.17752873026392
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.1261999841175101,
+            0.4848944129250682
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 84,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.8,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 6,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            -257.57544478071793,
+            -39.39372676564929
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.30216924291976505,
+            0.3667578724502736
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            -240.17802665740902,
+            -49.45250030593314
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            208.76901747971533,
+            -120.70528248340972
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            36.33165195904798,
+            135.98064758050813
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.08720593166347818,
+            0.32639085813735264
+          ]
+        },
+        {
+          &quot;first_frame_index&quot;: 85,
+          &quot;last_frame_index&quot;: 89,
+          &quot;time_window_seconds&quot;: [
+            2.8333333333333335,
+            2.966666666666667
+          ],
+          &quot;number_of_observations&quot;: 5,
+          &quot;linear_velocity_xy_pixels_per_second&quot;: [
+            -253.73155569686634,
+            -43.8871537150785
+          ],
+          &quot;linear_residual_rms_xy_pixels&quot;: [
+            0.1815320483722401,
+            0.23815986802812267
+          ],
+          &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: [
+            -242.24299092615072,
+            -35.389690938156384
+          ],
+          &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: [
+            172.3284715607379,
+            127.46194165383267
+          ],
+          &quot;quadratic_acceleration_standard_error_xy&quot;: [
+            64.94324465866582,
+            157.14123951676874
+          ],
+          &quot;quadratic_residual_rms_xy_pixels&quot;: [
+            0.08537987039422773,
+            0.20659113559919326
+          ]
+        }
+      ],
+      &quot;acceleration_assessment&quot;: &quot;The negative horizontal velocity becomes less negative during the observed history. Quadratic fits starting at frames 81 through 85 give horizontal acceleration about +155 to +209 pixels/s^2 and final horizontal velocity about -240 to -244 pixels/s. The primary estimate is +194 pixels/s^2, with an approximate practical uncertainty of +/-80 pixels/s^2. Vertical acceleration is unresolved: fitted values change sign with the window and vertical residuals are larger. Acceleration describes image-plane motion only; it does not identify physical force or distinguish perspective from physical deceleration.&quot;
+    },
+    &quot;uncertainty&quot;: {
+      &quot;centre_xy_approximate_plus_minus_pixels&quot;: [
+        1.0,
+        1.0
+      ],
+      &quot;velocity_xy_approximate_plus_minus_pixels_per_second&quot;: [
+        15.0,
+        12.0
+      ],
+      &quot;bounds_interpretation&quot;: &quot;Practical approximate error allowances, not formal confidence intervals. Include segmentation, small ball size, temporal sampling, fit-window sensitivity and model choice; fit residuals alone understate these errors.&quot;,
+      &quot;last_centroid_threshold_sensitivity_min_xy&quot;: [
+        148.6150442477876,
+        58.0
+      ],
+      &quot;last_centroid_threshold_sensitivity_max_xy&quot;: [
+        149.58297872340427,
+        58.327659574468086
+      ],
+      &quot;acceleration_xy_pixels_per_second_squared&quot;: [
+        194.1,
+        null
+      ],
+      &quot;acceleration_assessment&quot;: &quot;The negative horizontal velocity becomes less negative during the observed history. Quadratic fits starting at frames 81 through 85 give horizontal acceleration about +155 to +209 pixels/s^2 and final horizontal velocity about -240 to -244 pixels/s. The primary estimate is +194 pixels/s^2, with an approximate practical uncertainty of +/-80 pixels/s^2. Vertical acceleration is unresolved: fitted values change sign with the window and vertical residuals are larger. Acceleration describes image-plane motion only; it does not identify physical force or distinguish perspective from physical deceleration.&quot;,
+      &quot;limitations&quot;: &quot;Only 0.2 seconds (7 fully visible observations) enter the primary fit. Earlier entry frames can be clipped or occluded by launch tubes and are excluded from the primary fit. No depth, world-unit velocity or future trajectory is inferred. Only the supplied conditioning history is read.&quot;
+    }
+  }
+]</pre></details><details><summary>实际执行的命令</summary><pre>pwd
+
+rg --files -g &#x27;AGENTS.md&#x27; -g &#x27;conditioning*&#x27; -g &#x27;*.png&#x27; -g &#x27;*.jpg&#x27; -g &#x27;*.json&#x27; -g &#x27;*.py&#x27;
+
+ls -la
+
+find . -name AGENTS.md -o -name &#x27;conditioning*&#x27; -o -name &#x27;*.py&#x27;
+
+ls conditioning_frames
+
+cat conditioning_info.json
+
+python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for m in [&#x27;cv2&#x27;,&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;]:
+ print(m, bool(importlib.util.find_spec(m)))
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from pathlib import Path
+for p in sorted(Path(&#x27;conditioning_frames&#x27;).glob(&#x27;*.png&#x27;)):
+ im=cv2.imread(str(p));hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+ vals=[]
+ for name,lo,hi in [(&#x27;blue&#x27;,(90,80,35),(130,255,255)),(&#x27;yellow&#x27;,(25,70,75),(50,255,255))]:
+  mask=cv2.inRange(hsv,np.array(lo),np.array(hi))
+  n,lab,stats,cents=cv2.connectedComponentsWithStats(mask)
+  components=[(int(s[4]),np.round(c,2).tolist(),s[:4].tolist()) for s,c in zip(stats[1:],cents[1:]) if s[4]&gt;=8]
+  vals.append((name,components))
+ if any(v[1] for v in vals): print(p.name,im.shape,vals)
+thumbs=[]
+for i in range(75,90):
+ im=cv2.imread(f&#x27;conditioning_frames/{i:02d}.png&#x27;)
+ im=cv2.resize(im,(768,432),interpolation=cv2.INTER_NEAREST)
+ cv2.putText(im,f&#x27;{i} t={i/30:.3f}&#x27;,(5,25),cv2.FONT_HERSHEY_SIMPLEX,.7,(255,255,255),2)
+ thumbs.append(im)
+out=np.vstack([np.hstack(thumbs[i:i+3]) for i in range(0,15,3)])
+cv2.imwrite(&#x27;.tmp/recent_frames.png&#x27;,out)
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from pathlib import Path
+ranges={&#x27;blue&#x27;:((90,80,35),(130,255,255)),&#x27;yellow&#x27;:((25,70,75),(50,255,255))}
+for name,(lo,hi) in ranges.items():
+ data=[]
+ for i in range(79,90):
+  hsv=cv2.cvtColor(cv2.imread(f&#x27;conditioning_frames/{i:02d}.png&#x27;),cv2.COLOR_BGR2HSV)
+  mask=cv2.inRange(hsv,np.array(lo),np.array(hi));mask[:15,:]=0;mask[:,240:]=0
+  n,l,s,c=cv2.connectedComponentsWithStats(mask)
+  j=1+np.argmax(s[1:,4]);cx,cy=c[j]
+  contour=cv2.findContours((l==j).astype(&#x27;uint8&#x27;),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)[0][0]
+  ell=cv2.fitEllipse(contour)
+  data.append([i/30,cx,cy,*ell[0]])
+ d=np.array(data)
+ print(&#x27;\n&#x27;,name)
+ print(&#x27;frame centroid ellipse&#x27;)
+ for i,row in enumerate(d):print(i+79,np.round(row[1:],3).tolist())
+ for start in [79,81,82,83,84,85,86]:
+  z=d[start-79:];t=z[:,0]-89/30;y=z[:,1:3]
+  lin=np.linalg.lstsq(np.column_stack([np.ones(len(t)),t]),y,rcond=None)[0]
+  quad=np.linalg.lstsq(np.column_stack([np.ones(len(t)),t,t*t/2]),y,rcond=None)[0]
+  err=y-np.column_stack([np.ones(len(t)),t,t*t/2])@quad
+  rms=np.sqrt(np.mean(err**2,axis=0))
+  se=np.sqrt(np.diag(np.linalg.inv(np.column_stack([np.ones(len(t)),t,t*t/2]).T@np.column_stack([np.ones(len(t)),t,t*t/2]))))[:,None]*np.sqrt(np.sum(err**2,axis=0)/(len(t)-3))
+  print(&#x27;start&#x27;,start,&#x27;OLS v&#x27;,np.round(lin[1],2),&#x27;quadratic final v&#x27;,np.round(quad[1],2),&#x27;accel&#x27;,np.round(quad[2],2),&#x27;accel SE&#x27;,np.round(se[2],2),&#x27;rms&#x27;,np.round(rms,2))
+ print(&#x27;threshold sensitivities final&#x27;)
+ for slo in [60,80,100,120]:
+  for vlo in ([25,35,50,70] if name==&#x27;blue&#x27; else [60,75,100,120]):
+   im=cv2.imread(&#x27;conditioning_frames/89.png&#x27;);hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+   mask=cv2.inRange(hsv,np.array([lo[0],slo,vlo]),np.array(hi));mask[:15,:]=0;mask[:,240:]=0
+   n,l,s,c=cv2.connectedComponentsWithStats(mask);j=1+np.argmax(s[1:,4])
+   print(slo,vlo,np.round(c[j],3).tolist())
+PY
+
+python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+for name,lo,hi in [(&#x27;blue&#x27;,(90,80,35),(130,255,255)),(&#x27;yellow&#x27;,(25,70,75),(50,255,255))]:
+ d=[]
+ for i in range(83,90):
+  hsv=cv2.cvtColor(cv2.imread(f&#x27;conditioning_frames/{i:02d}.png&#x27;),cv2.COLOR_BGR2HSV)
+  mask=cv2.inRange(hsv,np.array(lo),np.array(hi));mask[:15]=0;mask[:,240:]=0
+  n,l,s,c=cv2.connectedComponentsWithStats(mask);j=np.argmax(s[1:,4])+1;d.append(c[j])
+ d=np.array(d); t=(np.arange(83,90)-89)/30
+ X=np.column_stack([np.ones(7),t]); q=np.column_stack([np.ones(7),t,t*t/2])
+ b=np.linalg.lstsq(X,d,rcond=None)[0]; bq=np.linalg.lstsq(q,d,rcond=None)[0]
+ print(name,&#x27;linear intercept&#x27;,b[0], &#x27;linear rms&#x27;,np.sqrt(np.mean((d-X@b)**2,axis=0)),&#x27;quad intercept&#x27;,bq[0])
+cap=cv2.VideoCapture(&#x27;conditioning.mp4&#x27;)
+print(&#x27;conditioning video&#x27;, {key:cap.get(prop) for key,prop in [(&#x27;width&#x27;,cv2.CAP_PROP_FRAME_WIDTH),(&#x27;height&#x27;,cv2.CAP_PROP_FRAME_HEIGHT),(&#x27;fps&#x27;,cv2.CAP_PROP_FPS),(&#x27;frame_count&#x27;,cv2.CAP_PROP_FRAME_COUNT)]})
+cap.release()
+PY
+
+python estimate_state.py
+
+python - &lt;&lt;&#x27;PY&#x27;
+import json, math
+from pathlib import Path
+states=json.loads(Path(&#x27;state.json&#x27;).read_text())
+assert len(states)==2 and {s[&#x27;name&#x27;] for s in states}=={&#x27;blue&#x27;,&#x27;yellow&#x27;}
+required={&#x27;name&#x27;,&#x27;last_time_seconds&#x27;,&#x27;centre_xy&#x27;,&#x27;velocity_xy_pixels_per_second&#x27;,&#x27;confidence&#x27;,&#x27;evidence&#x27;,&#x27;uncertainty&#x27;}
+for s in states:
+ assert required &lt;= s.keys()
+ assert math.isclose(s[&#x27;last_time_seconds&#x27;],89/30)
+ assert 0&lt;=s[&#x27;centre_xy&#x27;][0]&lt;256 and 0&lt;=s[&#x27;centre_xy&#x27;][1]&lt;144
+ assert all(math.isfinite(v) for v in s[&#x27;velocity_xy_pixels_per_second&#x27;])
+ assert s[&#x27;evidence&#x27;][&#x27;primary_fit&#x27;][&#x27;number_of_observations&#x27;]==7
+ print(s[&#x27;name&#x27;], &#x27;validated; position&#x27;, s[&#x27;centre_xy&#x27;], &#x27;velocity&#x27;, s[&#x27;velocity_xy_pixels_per_second&#x27;])
+print(&#x27;state.json contains exactly two ball items; all required fields and coordinate bounds are valid.&#x27;)
+PY</pre></details><details><summary>模型生成的测量代码</summary><pre>&quot;&quot;&quot;Measure only the supplied conditioning history and write state.json.
+
+Run with local OpenCV and NumPy: python estimate_state.py
+Coordinates are original-frame pixel coordinates, x right and y down.
+&quot;&quot;&quot;
+import csv
+import json
+from pathlib import Path
+
+import cv2
+import numpy as np
+
+
+ROOT = Path(__file__).resolve().parent
+INFO = json.loads((ROOT / &quot;conditioning_info.json&quot;).read_text())
+FPS = float(INFO[&quot;history_fps&quot;])
+LAST = int(INFO[&quot;history_frames&quot;]) - 1
+LAST_TIME = float(INFO[&quot;last_frame_time_seconds&quot;])
+THRESHOLDS = {
+    &quot;blue&quot;: ((90, 80, 35), (130, 255, 255)),
+    &quot;yellow&quot;: ((25, 70, 75), (50, 255, 255)),
+}
+
+
+def measure(frame_index, name, saturation=None, value=None):
+    im = cv2.imread(str(ROOT / &quot;conditioning_frames&quot; / f&quot;{frame_index:02d}.png&quot;))
+    assert im is not None and im.shape[:2] == (144, 256)
+    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
+    lower, upper = THRESHOLDS[name]
+    lower = list(lower)
+    if saturation is not None:
+        lower[1] = saturation
+    if value is not None:
+        lower[2] = value
+    mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
+    # Visually identified static background: upper yellow strip and right tube.
+    # All frames used for fitting contain fully visible balls outside these ROIs.
+    mask[:15, :] = 0
+    mask[:, 240:] = 0
+    count, labels, stats, centres = cv2.connectedComponentsWithStats(mask)
+    if count &lt; 2:
+        return None
+    component = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
+    if stats[component, cv2.CC_STAT_AREA] &lt; 10:
+        return None
+    contour = cv2.findContours(
+        (labels == component).astype(np.uint8),
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_NONE,
+    )[0][0]
+    ellipse_centre = cv2.fitEllipse(contour)[0] if len(contour) &gt;= 5 else centres[component]
+    return {
+        &quot;frame_index&quot;: frame_index,
+        &quot;time_seconds&quot;: float(INFO[&quot;history_start_seconds&quot;]) + frame_index / FPS,
+        &quot;centre_xy&quot;: centres[component].tolist(),
+        &quot;area_pixels&quot;: int(stats[component, cv2.CC_STAT_AREA]),
+        &quot;ellipse_centre_xy&quot;: list(ellipse_centre),
+    }
+
+
+def fit(rows):
+    t = np.array([r[&quot;time_seconds&quot;] - LAST_TIME for r in rows])
+    xy = np.array([r[&quot;centre_xy&quot;] for r in rows])
+    linear_design = np.column_stack([np.ones(len(t)), t])
+    quadratic_design = np.column_stack([np.ones(len(t)), t, t * t / 2])
+    linear = np.linalg.lstsq(linear_design, xy, rcond=None)[0]
+    quadratic = np.linalg.lstsq(quadratic_design, xy, rcond=None)[0]
+    quadratic_error = xy - quadratic_design @ quadratic
+    standard_errors = (
+        np.sqrt(np.diag(np.linalg.inv(quadratic_design.T @ quadratic_design)))[:, None]
+        * np.sqrt(np.sum(quadratic_error ** 2, axis=0) / (len(t) - 3))
+    )
+    return {
+        &quot;first_frame_index&quot;: rows[0][&quot;frame_index&quot;],
+        &quot;last_frame_index&quot;: rows[-1][&quot;frame_index&quot;],
+        &quot;time_window_seconds&quot;: [rows[0][&quot;time_seconds&quot;], rows[-1][&quot;time_seconds&quot;]],
+        &quot;number_of_observations&quot;: len(rows),
+        &quot;linear_velocity_xy_pixels_per_second&quot;: linear[1].tolist(),
+        &quot;linear_residual_rms_xy_pixels&quot;: np.sqrt(
+            np.mean((xy - linear_design @ linear) ** 2, axis=0)
+        ).tolist(),
+        &quot;quadratic_final_velocity_xy_pixels_per_second&quot;: quadratic[1].tolist(),
+        &quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;: quadratic[2].tolist(),
+        &quot;quadratic_acceleration_standard_error_xy&quot;: standard_errors[2].tolist(),
+        &quot;quadratic_residual_rms_xy_pixels&quot;: np.sqrt(
+            np.mean(quadratic_error ** 2, axis=0)
+        ).tolist(),
+    }
+
+
+states = []
+csv_rows = []
+for name in THRESHOLDS:
+    observations = [measure(i, name) for i in range(79, LAST + 1)]
+    assert all(row is not None for row in observations)
+    recent = [row for row in observations if row[&quot;frame_index&quot;] &gt;= 83]
+    primary = fit(recent)
+    comparison_starts = [81, 82, 84, 85]
+    comparisons = [fit([r for r in observations if r[&quot;frame_index&quot;] &gt;= start])
+                   for start in comparison_starts]
+    final = observations[-1]
+    velocity = primary[&quot;linear_velocity_xy_pixels_per_second&quot;].copy()
+    if name == &quot;yellow&quot;:
+        # Horizontal slowing is stable under different windows; vertical
+        # acceleration changes sign and is therefore not used in the estimate.
+        velocity[0] = primary[&quot;quadratic_final_velocity_xy_pixels_per_second&quot;][0]
+    sensitivity = []
+    values = [25, 35, 50, 70] if name == &quot;blue&quot; else [60, 75, 100, 120]
+    for saturation in [60, 80, 100, 120]:
+        for value in values:
+            sensitivity.append(measure(LAST, name, saturation, value)[&quot;centre_xy&quot;])
+    sensitivity = np.array(sensitivity)
+    if name == &quot;blue&quot;:
+        assessment = (
+            &quot;No robust acceleration estimate. The primary quadratic fit hints at &quot;
+            &quot;a small positive horizontal acceleration, but short-window estimates &quot;
+            &quot;are sensitive to window length and centroid noise. Use the recent &quot;
+            &quot;linear velocity; vertical acceleration is unresolved.&quot;
+        )
+        accel_estimate = None
+        centre_error = [0.8, 0.8]
+        velocity_error = [6.0, 5.0]
+        confidence = {&quot;overall&quot;: 0.94, &quot;centre&quot;: 0.98, &quot;velocity&quot;: 0.92}
+    else:
+        assessment = (
+            &quot;The negative horizontal velocity becomes less negative during the &quot;
+            &quot;observed history. Quadratic fits starting at frames 81 through 85 &quot;
+            &quot;give horizontal acceleration about +155 to +209 pixels/s^2 and &quot;
+            &quot;final horizontal velocity about -240 to -244 pixels/s. The primary &quot;
+            &quot;estimate is +194 pixels/s^2, with an approximate practical uncertainty &quot;
+            &quot;of +/-80 pixels/s^2. Vertical acceleration is unresolved: fitted &quot;
+            &quot;values change sign with the window and vertical residuals are larger. &quot;
+            &quot;Acceleration describes image-plane motion only; it does not identify &quot;
+            &quot;physical force or distinguish perspective from physical deceleration.&quot;
+        )
+        accel_estimate = [round(primary[&quot;quadratic_acceleration_xy_pixels_per_second_squared&quot;][0], 1), None]
+        centre_error = [1.0, 1.0]
+        velocity_error = [15.0, 12.0]
+        confidence = {&quot;overall&quot;: 0.88, &quot;centre&quot;: 0.97, &quot;velocity&quot;: 0.85}
+    states.append({
+        &quot;name&quot;: name,
+        &quot;last_time_seconds&quot;: LAST_TIME,
+        &quot;centre_xy&quot;: [round(x, 2) for x in final[&quot;centre_xy&quot;]],
+        &quot;velocity_xy_pixels_per_second&quot;: [round(x, 2) for x in velocity],
+        &quot;confidence&quot;: {
+            **confidence,
+            &quot;interpretation&quot;: &quot;Subjective reliability scores from 0 to 1; not calibrated probabilities.&quot;,
+        },
+        &quot;evidence&quot;: {
+            &quot;sources&quot;: [&quot;conditioning_info.json&quot;, &quot;conditioning_frames/79.png through 89.png&quot;, &quot;conditioning.mp4 metadata only&quot;],
+            &quot;image_size_wh&quot;: [256, 144],
+            &quot;coordinate_convention&quot;: &quot;Origin at upper-left pixel centre; x increases right, y increases down. Measurements use original frames, not contact-sheet coordinates.&quot;,
+            &quot;timing_method&quot;: &quot;Frame time = history_start_seconds + frame_index/history_fps; 30 fps, 90 frames. Frame 89 is the last observation at 89/30 seconds, not 3.0 seconds.&quot;,
+            &quot;centre_method&quot;: &quot;OpenCV HSV color threshold, exclude static top strip (y&lt;15) and right tube (x&gt;=240), choose largest remaining connected color component, then use its unweighted pixel centroid. Shadows are not part of the color mask. Visual inspection confirms both final balls are fully visible.&quot;,
+            &quot;hsv_threshold_lower_upper&quot;: [list(x) for x in THRESHOLDS[name]],
+            &quot;last_frame&quot;: &quot;conditioning_frames/89.png&quot;,
+            &quot;last_component_area_pixels&quot;: final[&quot;area_pixels&quot;],
+            &quot;last_contour_ellipse_centre_xy&quot;: final[&quot;ellipse_centre_xy&quot;],
+            &quot;velocity_method&quot;: (
+                &quot;Unweighted least-squares line independently fitted to x and y over frames 83-89 (2.7667-2.9667 s). Report these recent slopes as the velocity at the final observation; possible small acceleration is included in uncertainty.&quot;
+                if name == &quot;blue&quot; else
+                &quot;Unweighted least-squares quadratic x(t)=x_last+vx_last*(t-t_last)+0.5*ax*(t-t_last)^2 over frames 83-89. Report its derivative at the last time for vx; report the same window&#x27;s linear y slope for vy because vertical acceleration is unstable.&quot;
+            ),
+            &quot;primary_fit&quot;: primary,
+            &quot;recent_observations&quot;: recent,
+            &quot;alternative_window_fits&quot;: comparisons,
+            &quot;acceleration_assessment&quot;: assessment,
+        },
+        &quot;uncertainty&quot;: {
+            &quot;centre_xy_approximate_plus_minus_pixels&quot;: centre_error,
+            &quot;velocity_xy_approximate_plus_minus_pixels_per_second&quot;: velocity_error,
+            &quot;bounds_interpretation&quot;: &quot;Practical approximate error allowances, not formal confidence intervals. Include segmentation, small ball size, temporal sampling, fit-window sensitivity and model choice; fit residuals alone understate these errors.&quot;,
+            &quot;last_centroid_threshold_sensitivity_min_xy&quot;: sensitivity.min(axis=0).tolist(),
+            &quot;last_centroid_threshold_sensitivity_max_xy&quot;: sensitivity.max(axis=0).tolist(),
+            &quot;acceleration_xy_pixels_per_second_squared&quot;: accel_estimate,
+            &quot;acceleration_assessment&quot;: assessment,
+            &quot;limitations&quot;: &quot;Only 0.2 seconds (7 fully visible observations) enter the primary fit. Earlier entry frames can be clipped or occluded by launch tubes and are excluded from the primary fit. No depth, world-unit velocity or future trajectory is inferred. Only the supplied conditioning history is read.&quot;,
+        },
+    })
+    for row in observations:
+        csv_rows.append([name, row[&quot;frame_index&quot;], row[&quot;time_seconds&quot;], *row[&quot;centre_xy&quot;], row[&quot;area_pixels&quot;]])
+
+(ROOT / &quot;state.json&quot;).write_text(json.dumps(states, indent=2, allow_nan=False) + &quot;\n&quot;)
+(ROOT / &quot;.tmp&quot;).mkdir(exist_ok=True)
+with (ROOT / &quot;.tmp&quot; / &quot;ball_measurements.csv&quot;).open(&quot;w&quot;, newline=&quot;&quot;) as output:
+    writer = csv.writer(output)
+    writer.writerow([&quot;name&quot;, &quot;frame_index&quot;, &quot;time_seconds&quot;, &quot;x_pixels&quot;, &quot;y_pixels&quot;, &quot;area_pixels&quot;])
+    writer.writerows(csv_rows)
+for state in states:
+    print(state[&quot;name&quot;], state[&quot;last_time_seconds&quot;], state[&quot;centre_xy&quot;], state[&quot;velocity_xy_pixels_per_second&quot;])
+</pre></details></article><section data-candidate-compare><h2>代码模块干预：只替换速度</h2><p>这是外部实验程序的模块替换，不是新的agent生成或自主修订。原生重放与原提交RGB逐像素一致；无需新的LLM调用。背景、球贴图、中心定位、渲染和动力学算法保持相同。是否提高物理质量尚未验证。</p><div class="compare-controls"><button class="compare-play">▶ 同步播放勾选版本</button><button class="compare-pause">❚❚ 暂停</button><button class="compare-replay">↻ 同步重播</button><input class="compare-seek" type="range" min="0" value="0"><label><input class="compare-loop" type="checkbox" checked>循环</label><span class="compare-clock">0.00s</span></div><div class="candidate-grid"><article class="candidate-entry"><h3>原生代码精确重放</h3><label><input class="compare-pick" type="checkbox" checked> 同步对比</label><div class="player" data-player="{&quot;asset&quot;: &quot;module_assets/native_replay/video-873eaaa0dcdee27d19b8.png&quot;, &quot;poster&quot;: &quot;data:image/webp;base64,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&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;audio&quot;: null, &quot;rgb_sha256&quot;: &quot;873eaaa0dcdee27d19b87fc3b8e81d4ffed4b57780771f939e40e540159a4d58&quot;}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="data:image/webp;base64,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"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div></article><article class="candidate-entry"><h3>仅换入reader速度</h3><label><input class="compare-pick" type="checkbox" checked> 同步对比</label><div class="player" data-player="{&quot;asset&quot;: &quot;module_assets/reader_velocity/video-c7fbc2fc3ae23da2ecc2.png&quot;, &quot;poster&quot;: &quot;data:image/webp;base64,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&quot;, &quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;audio&quot;: null, &quot;rgb_sha256&quot;: &quot;c7fbc2fc3ae23da2ecc20bde50210265c8897192c64be9e5eb06e87d65ff073e&quot;}"><div class="screen" style="--aspect:256/144"><canvas></canvas><img class="poster" src="data:image/webp;base64,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"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div></article></div></section><img class="inspection" src="module_assets/velocity_comparison.png" alt="速度替换前后的四个时间点"><h2>后续可检验的机制</h2><p>先区分输入采样丢失状态、状态估计器差异、未知接触参数和像素呈现，再分析修改是否命中这些问题。程序可控和可重复不等于真实动力学正确。</p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    this.button.textContent='载入中…';
+    for(const control of this.root.querySelectorAll('button,input'))control.disabled=true;
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}finally{for(const control of this.root.querySelectorAll('button,input'))control.disabled=false}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+
+// Use one animation clock for selected revisions; independent playback stays available.
+window.__candidateComparisons=[];
+for(const root of document.querySelectorAll('[data-candidate-compare]')){
+  const players=window.__smokePlayers.filter(p=>root.contains(p.root)),seek=root.querySelector('.compare-seek'),clock=root.querySelector('.compare-clock'),button=root.querySelector('.compare-play');
+  if(!players.length)continue;
+  seek.max=players[0].d.frames-1;
+  const group={root,players,playing:false,frame:0,raf:null,
+    selected(){return players.filter(p=>p.root.closest('.candidate-entry').querySelector('.compare-pick').checked)},
+    pause(){this.playing=false;cancelAnimationFrame(this.raf);players.forEach(p=>p.pause());button.textContent='▶ 同步播放勾选版本'},
+    draw(frame){this.frame=frame;seek.value=frame;clock.textContent=`${(frame/players[0].d.fps).toFixed(2)} / ${(players[0].d.frames/players[0].d.fps).toFixed(2)}s`;this.selected().forEach(p=>p.draw(frame))},
+    async ensure(){const selected=this.selected();if(!selected.length)throw Error('请勾选要对比的版本');await Promise.all(selected.map(p=>p.ensure()))},
+    async start(){if(this.playing){this.pause();return}button.disabled=true;button.textContent='载入中…';try{await this.ensure();players.forEach(p=>p.pause());if(this.frame===players[0].d.frames-1)this.draw(0);this.started=performance.now()-this.frame/players[0].d.fps*1000;this.playing=true;this.selected().forEach(p=>{p.playing=true;p.button.textContent='❚❚ 暂停'});button.textContent='❚❚ 暂停同步播放';this.raf=requestAnimationFrame(t=>this.tick(t))}catch(e){this.pause();clock.textContent='Load failed: '+e.message}finally{button.disabled=false}},
+    tick(t){if(!this.playing)return;let elapsed=(t-this.started)/1000;const d=players[0].d;if(elapsed>=d.frames/d.fps){if(root.querySelector('.compare-loop').checked){this.started=t;elapsed=0}else{this.draw(d.frames-1);this.pause();return}}this.draw(Math.min(d.frames-1,Math.floor(elapsed*d.fps)));this.raf=requestAnimationFrame(x=>this.tick(x))}
+  };
+  button.onclick=()=>group.start();root.querySelector('.compare-pause').onclick=()=>group.pause();
+  root.querySelector('.compare-replay').onclick=()=>{group.pause();group.frame=0;group.start()};
+  seek.oninput=async()=>{group.pause();try{await group.ensure();group.draw(+seek.value)}catch(e){clock.textContent=e.message}};
+  root.querySelectorAll('.compare-pick').forEach(c=>c.onchange=()=>group.pause());
+  players.forEach(p=>{const play=p.button.onclick,slide=p.seek.oninput,replay=p.root.querySelector('.replay').onclick;p.button.onclick=()=>{if(group.playing){group.pause();return}play()};p.seek.oninput=()=>{group.pause();slide()};p.root.querySelector('.replay').onclick=()=>{group.pause();replay()}});
+  root.__comparison=group;window.__candidateComparisons.push(group);
+}
+window.__candidateCompareReady=true;
+</script></html>
