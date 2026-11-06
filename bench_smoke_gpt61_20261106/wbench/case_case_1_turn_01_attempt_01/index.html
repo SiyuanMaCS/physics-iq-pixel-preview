@@ -1,0 +1,747 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelWorld generation trace</title><style>*{box-sizing:border-box}:root{color-scheme:dark}body{margin:0;background:#10141c;color:#edf1f7;font:15px/1.65 system-ui}main{max-width:1180px;padding:24px 18px 70px;margin:auto}h1{font-size:36px;margin:8px 0}h2{margin-top:30px}a{color:#9ad0ff;text-decoration:none}.muted{color:#a6b3c5}.card,article,.box{background:#19212d;border:1px solid #344257;border-radius:12px;padding:16px;margin:14px 0}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #344257;padding:10px;text-align:left;vertical-align:top}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid>.card{margin:0}.screen{position:relative;background:#080c12;aspect-ratio:var(--aspect)}canvas,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 0}button{font:inherit;background:#b9eb92;color:#19250f;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}.seek{flex:1;min-width:100px}.clock{font-size:12px;color:#adbed4}.inspection{width:100%;height:auto;image-rendering:pixelated}pre{background:#0a1018;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-word;font:12px/1.6 monospace}details{margin:10px 0}summary{cursor:pointer}.badge{display:inline-block;border:1px solid #56704b;padding:2px 9px;border-radius:20px;color:#c4efa9}.wave{width:100%;max-height:120px}@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:28px}}</style><main><p><a href="../../index.html">← Smoke 总览</a></p><h1>case_1_turn_01</h1><p class="muted">GPT-6.1-Sol · vision-agent · 256×143 · 20 frames / 4 fps</p><div class="box"><strong>当前任务输入</strong><p>The subject moves forward. The camera follows, maintaining distance and framing.</p></div><h2>最终视频</h2><div class="player" data-player="{&quot;asset&quot;: &quot;final/pixels-7c68d14aab1a1cf3.png&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=9e58f11cdfa1&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="final/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><p><a href="final/generate.py">生成代码</a> · <a href="contract.json">输入与输出契约</a></p><div class="box">保存的候选：3 · output tokens：7715 · reasoning output tokens：3218 · 耗时：231s</div><h2>逐轮生成与修改</h2><p class="muted">候选由外部 harness 保存。是否读图，以对应工具事件为依据。</p><article><h3>Candidate 1</h3><p class="muted">2026-11-06T12:26:46.957950+00:00 · RGB hash e720dacd52511f89</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_00/pixels-e720dacd52511f89.png&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=2ccdfc350063&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_00/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_00/inspection.png?v=2ccdfc350063"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -0,0 +1,143 @@
++&quot;&quot;&quot;Render a following shot using source RGB pixels and hand-written warps.&quot;&quot;&quot;
++from pathlib import Path
++import json
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++S = 4
++W, H = 256, 143
++source = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++
++def mask_polygon(points, holes=()):
++    m = Image.new(&#x27;L&#x27;, (W*S,H*S))
++    d = ImageDraw.Draw(m)
++    d.polygon([(round(x*S),round(y*S)) for x,y in points],fill=255)
++    for hole in holes:
++        d.polygon([(round(x*S),round(y*S)) for x,y in hole],fill=0)
++    return np.asarray(m,dtype=np.float32)/255
++
++def sample(a,x,y):
++    x=np.clip(x,0,a.shape[1]-1.001)
++    y=np.clip(y,0,a.shape[0]-1.001)
++    x0=x.astype(np.int32); y0=y.astype(np.int32)
++    fx=(x-x0)[...,None]; fy=(y-y0)[...,None]
++    if a.ndim==2:
++        a=a[...,None]
++    return ((1-fy)*((1-fx)*a[y0,x0]+fx*a[y0,x0+1])+
++            fy*((1-fx)*a[y0+1,x0]+fx*a[y0+1,x0+1]))
++
++# The contours are geometric annotations made from the supplied first image.
++outline=[(120.6,73.2),(122.5,72.7),(124.6,76.0),(130.8,76.1),
++         (133.3,73.1),(134.8,73.4),(135.1,77.8),(136.2,81.5),
++         (135.5,85.1),(134.8,88.1),(137.0,92.5),(138.2,98.3),
++         (138.7,105.1),(137.7,111.7),(136.4,116.0),(136.3,122.0),
++         (137.0,126.8),(137.2,129.2),(133.7,130.2),(132.0,129.1),
++         (132.5,126.9),(131.5,118.3),(131.3,114.2),(129.5,110.6),
++         (127.9,108.5),(126.0,110.3),(124.4,115.5),(124.0,122.7),
++         (123.0,128.5),(123.0,130.3),(119.4,130.8),(118.9,129.4),
++         (120.0,124.9),(120.2,118.3),(118.4,112.2),(117.8,106.0),
++         (118.1,99.0),(119.4,93.0),(120.9,88.7),(120.0,86.0),
++         (119.0,82.3),(119.6,78.2)]
++dog_alpha=mask_polygon(outline)
++hi_rgb=np.asarray(Image.fromarray(source).resize((W*S,H*S),Image.Resampling.BICUBIC),dtype=np.float32)
++dog_rgba=np.concatenate([hi_rgb*dog_alpha[...,None],dog_alpha[...,None]],axis=2)
++
++# Reconstruct only the small exposed road area, using other road pixels from
++# this same frame. Feathering keeps the grain and lighting continuous.
++erase_points=[(118,71),(137,71),(141,94),(142,108),(155,110),
++              (156,116),(152,128),(139,134),(117,134),(115,108),(116,87)]
++erase=Image.fromarray((mask_polygon(erase_points)*255).astype(np.uint8))
++erase=erase.filter(ImageFilter.GaussianBlur(1.4*S))
++erase=np.asarray(erase,dtype=np.float32)/255
++Y,X=np.mgrid[0:H*S,0:W*S].astype(np.float32)
++# A slight slant avoids repeated vertical columns in the repaired road.
++texture=sample(hi_rgb,X-36*S+(Y-103*S)*0.12,Y)
++plate=hi_rgb*(1-erase[...,None])+texture*erase[...,None]
++Image.fromarray(np.uint8(np.clip(plate,0,255))).resize((W,H),Image.Resampling.LANCZOS).save(ROOT/&#x27;.tmp/clean_plate.png&#x27;)
++Image.fromarray(np.uint8(dog_alpha*255)).save(ROOT/&#x27;.tmp/source_contour.png&#x27;)
++
++# Build a soft cast shadow with an irregular silhouette, on the street to
++# the right of the feet, matching the sunlight in the supplied image.
++shadow=mask_polygon([(120,129.0),(131,130),(142,126.2),(150,122.0),
++                     (150,118),(152.5,113),(155,112),(151,110.5),
++                     (143,110.1),(138,112.4),(130,123)])
++shadow=np.asarray(Image.fromarray(np.uint8(shadow*255)).filter(ImageFilter.GaussianBlur(.65*S)),dtype=np.float32)/255
++
++xp=X/S; yp=Y/S
++
++def street(t):
++    travel=0.30*t/4.75
++    # The ground is a perspective plane; street facades use their bases to
++    # estimate distance. This yields greater parallax on nearby asphalt.
++    vx,vy=130.,58.
++    camx=.25*np.sin(2*np.pi*.85*t)
++    camy=.24*np.sin(4*np.pi*.85*t)
++    dx=xp-vx-camx; dy=yp-vy-camy
++    sx=vx+dx; sy=vy+dy
++    for _ in range(10):
++        side=np.where(sx&lt;vx,.25,.32)*np.abs(sx-vx)
++        road=np.maximum(sy-vy,0)
++        depth=np.maximum(side,road)/85.
++        shrink=1-travel*depth
++        sx=vx+dx*shrink; sy=vy+dy*shrink
++    return sample(plate,sx*S,sy*S)
++
++def dog_displacement(x,y,t):
++    phase=2*np.pi*.85*t
++    sway=.65*np.sin(phase)
++    bob=-.75*(1-np.cos(2*phase))
++    low=np.clip((y-105)/24,0,1)
++    left=1/(1+np.exp(np.clip((x-128)*1.1,-40,40)))
++    a=np.sin(phase); b=-a
++    # Hind feet alternate between ground contact and a lifted forward swing.
++    lift_l=-5.3*max(0,a)-1.3*a
++    lift_r=-5.3*max(0,b)-1.3*b
++    dy=bob+low**1.2*(left*lift_l+(1-left)*lift_r)
++    dx=sway+low**1.25*(left*1.8*a+(1-left)*1.8*b)
++    # Slight tail wag and shoulder rotation, with continuous texture warps.
++    tail=np.exp(-((x-128.1)/4.0)**2-((y-91)/8.5)**2)
++    dx+=1.15*np.sin(phase)*tail
++    dx+=.32*np.sin(phase)*(np.clip((100-y)/26,0,1))
++    return dx,dy
++
++def render(t):
++    bg=street(t)
++    phase=2*np.pi*.85*t
++    # The shadow follows the dog&#x27;s slight gait motion while the tracking
++    # camera preserves the subject&#x27;s distance and footprint.
++    sh=sample(shadow,X-.55*np.sin(phase)*S,Y+.4*(1-np.cos(2*phase))*S)[...,0]
++    bg=bg*(1-.46*sh[...,None])+np.array([16,29,36],np.float32)*(.46*sh[...,None])
++    # Inverse deformation of the original textured silhouette.
++    qx=xp.copy(); qy=yp.copy()
++    for _ in range(7):
++        dx,dy=dog_displacement(qx,qy,t)
++        qx=xp-dx; qy=yp-dy
++    rgba=sample(dog_rgba,qx*S,qy*S)
++    out=bg*(1-rgba[...,3:])+rgba[...,:3]
++    return np.asarray(Image.fromarray(np.uint8(np.clip(out,0,255))).resize((W,H),Image.Resampling.LANCZOS))
++
++frames=[source.copy()]
++for i in range(1,20):
++    frames.append(render(i/4))
++frames=np.stack(frames).astype(np.uint8)
++assert frames.shape==(20,143,256,3)
++assert np.array_equal(frames[0],source)
++# Keep the candidate tensor as well as the output artifacts for inspection.
++np.save(ROOT/&#x27;.tmp/candidate_01.npy&#x27;,frames)
++artifact_io.save(frames,ROOT)
++
++# An ordinary codec packages the rendered RGB sequence for convenient viewing.
++try:
++    import imageio_ffmpeg
++    writer=imageio_ffmpeg.write_frames(str(ROOT/&#x27;video.mp4&#x27;),(W,H),fps=4,
++        codec=&#x27;libx264&#x27;,pix_fmt_in=&#x27;rgb24&#x27;,pix_fmt_out=&#x27;yuv444p&#x27;,
++        macro_block_size=1,quality=9,ffmpeg_log_level=&#x27;error&#x27;)
++    writer.send(None)
++    for frame in frames:
++        writer.send(frame)
++    writer.close()
++except ImportError:
++    pass
++print(&#x27;Saved 20 RGB frames, pixels.npz, index.html, and video.mp4.&#x27;)</pre></details><a href="candidate_00/generate.py">本轮完整代码</a></article><article><h3>Candidate 2</h3><p class="muted">2026-11-06T12:27:35.934470+00:00 · RGB hash 7c68d14aab1a1cf3</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_01/pixels-7c68d14aab1a1cf3.png&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=2ccdfc350063&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_01/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_01/inspection.png?v=2ccdfc350063"><details><summary>本轮代码修改</summary><pre>--- previous
++++ current
+@@ -53,7 +53,7 @@
+ erase=np.asarray(erase,dtype=np.float32)/255
+ Y,X=np.mgrid[0:H*S,0:W*S].astype(np.float32)
+ # A slight slant avoids repeated vertical columns in the repaired road.
+-texture=sample(hi_rgb,X-36*S+(Y-103*S)*0.12,Y)
++texture=sample(hi_rgb,X-48*S+(Y-103*S)*0.12,Y)
+ plate=hi_rgb*(1-erase[...,None])+texture*erase[...,None]
+ Image.fromarray(np.uint8(np.clip(plate,0,255))).resize((W,H),Image.Resampling.LANCZOS).save(ROOT/&#x27;.tmp/clean_plate.png&#x27;)
+ Image.fromarray(np.uint8(dog_alpha*255)).save(ROOT/&#x27;.tmp/source_contour.png&#x27;)
+@@ -108,7 +108,7 @@
+     # The shadow follows the dog&#x27;s slight gait motion while the tracking
+     # camera preserves the subject&#x27;s distance and footprint.
+     sh=sample(shadow,X-.55*np.sin(phase)*S,Y+.4*(1-np.cos(2*phase))*S)[...,0]
+-    bg=bg*(1-.46*sh[...,None])+np.array([16,29,36],np.float32)*(.46*sh[...,None])
++    bg=bg*(1-.63*sh[...,None])+np.array([16,29,36],np.float32)*(.63*sh[...,None])
+     # Inverse deformation of the original textured silhouette.
+     qx=xp.copy(); qy=yp.copy()
+     for _ in range(7):
+@@ -125,7 +125,7 @@
+ assert frames.shape==(20,143,256,3)
+ assert np.array_equal(frames[0],source)
+ # Keep the candidate tensor as well as the output artifacts for inspection.
+-np.save(ROOT/&#x27;.tmp/candidate_01.npy&#x27;,frames)
++np.save(ROOT/&#x27;.tmp/candidate_02.npy&#x27;,frames)
+ artifact_io.save(frames,ROOT)
+ 
+ # An ordinary codec packages the rendered RGB sequence for convenient viewing.</pre></details><a href="candidate_01/generate.py">本轮完整代码</a></article><article><h3>Candidate 3</h3><p class="muted">2026-11-06T12:27:38.096264+00:00 · RGB hash 7c68d14aab1a1cf3</p><div class="player" data-player="{&quot;asset&quot;: &quot;candidate_02/pixels-7c68d14aab1a1cf3.png&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;, &quot;width&quot;: 256, &quot;height&quot;: 143, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;inspection_derived&quot;: false, &quot;inspection&quot;: &quot;inspection.png?v=9e58f11cdfa1&quot;, &quot;audio&quot;: null}"><div class="screen" style="--aspect:256/143"><canvas></canvas><img class="poster" src="candidate_02/poster.png"></div><div class="controls"><button class="play">▶ 播放</button><button class="replay">↻ 重播</button><input class="seek" type="range" min="0" value="0"><label><input class="loop" type="checkbox" checked>循环</label><span class="clock"></span></div></div><img class="inspection" src="candidate_02/inspection.png?v=9e58f11cdfa1"><details><summary>本轮代码修改</summary><pre></pre></details><a href="candidate_02/generate.py">本轮完整代码</a></article><h2>可观测工具时间线</h2><details><summary>:35.389245+00:00 · agent_message · I’ll read the prompt and generation rules, then write a pixel-rendering program to create the video and inspect a few frames.</summary><pre>I’ll read the prompt and generation rules, then write a pixel-rendering program to create the video and inspect a few frames.
+</pre><pre></pre></details><details><summary>:36.371389+00:00 · command_execution · pwd</summary><pre>pwd</pre><pre>[workspace path]
+</pre></details><details><summary>:36.569623+00:00 · command_execution · rg --files -g &#x27;!*.mp4&#x27; -g &#x27;!*.mov&#x27; -g &#x27;!*.npy&#x27; -g &#x27;!*.npz&#x27;</summary><pre>rg --files -g &#x27;!*.mp4&#x27; -g &#x27;!*.mov&#x27; -g &#x27;!*.npy&#x27; -g &#x27;!*.npz&#x27;</pre><pre>/bin/bash: line 134: rg: command not found
+</pre></details><details><summary>:36.784347+00:00 · command_execution · cat prompt.txt GENERATION_RULES.md</summary><pre>cat prompt.txt GENERATION_RULES.md</pre><pre>The subject moves forward. The camera follows, maintaining distance and framing.# PixelWorld generation contract v2
+
+- Use only `first_frame.png`, `prompt.txt` and `task_spec.json`. Work inside this workspace. No network, other cases, reference continuations, masks, scores, memory, external AI models, learned weights, external simulation/rendering engines, or subagents.
+- Generate 20 RGB frames at 256×143, 4 fps, for 5 seconds. Frame 00 must be pixel-identical to `first_frame.png`.
+- Implement `generate.py` and call `artifact_io.save(frames, case_dir)` with uint8 RGB arrays of shape `(20,143,256,3)`. Local Python/numpy/PIL, mathematical geometry, motion, lighting, copying and warping pixels are allowed.
+- Save intermediate generated results in the workspace when producing candidates for inspection. Choose whether and how to check or revise your output.
+</pre></details><details><summary>:40.083756+00:00 · command_execution · ls -la</summary><pre>ls -la</pre><pre>total 108
+drwxr-xr-x 7 tiger tiger  4096 Nov  6 20:24 .
+drwxr-xr-x 6 tiger tiger  4096 Nov  6 20:24 ..
+dr-xr-xr-x 2 tiger tiger    40 Nov  6 20:24 .agents
+dr-xr-xr-x 2 tiger tiger    40 Nov  6 20:24 .codex
+dr-xr-xr-x 2 tiger tiger    40 Nov  6 20:24 .git
+drwxr-xr-x 2 tiger tiger  4096 Nov  6 20:24 .tmp
+dr-xr-xr-x 2 tiger tiger    40 Nov  6 20:24 .trae
+-rw-r--r-- 1 tiger tiger   786 Nov  6 20:24 GENERATION_RULES.md
+-rw-r--r-- 1 tiger tiger  4026 Nov  6 02:01 artifact_io.py
+-rw-r--r-- 1 tiger tiger 74394 Nov  6 02:05 first_frame.png
+-rw-r--r-- 1 tiger tiger  3262 Nov  6 02:01 player_template.html
+-rw-r--r-- 1 tiger tiger    80 Nov  6 20:24 prompt.txt
+-rw-r--r-- 1 tiger tiger   158 Nov  6 20:24 task_spec.json
+</pre></details><details><summary>:40.290925+00:00 · command_execution · cat task_spec.json</summary><pre>cat task_spec.json</pre><pre>{
+  &quot;task_type&quot;: &quot;i2v&quot;,
+  &quot;width&quot;: 256,
+  &quot;height&quot;: 143,
+  &quot;frames&quot;: 20,
+  &quot;fps&quot;: 4,
+  &quot;audio&quot;: null,
+  &quot;benchmark&quot;: &quot;wbench&quot;,
+  &quot;turn&quot;: 1,
+  &quot;action&quot;: &quot;W&quot;
+}
+</pre></details><details><summary>:40.837914+00:00 · command_execution · python -c &#x27;import artifact_io,inspect; print(inspect.getsource(artifact_io))&#x27;</summary><pre>python -c &#x27;import artifact_io,inspect; print(inspect.getsource(artifact_io))&#x27;</pre><pre>&quot;&quot;&quot;Output-only helpers. No drawing or generation policy is implemented here.&quot;&quot;&quot;
+from pathlib import Path
+import base64
+import json
+import wave
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+
+def save(frames, case_dir, audio=None):
+    case_dir = Path(case_dir)
+    frames = np.asarray(frames)
+    path = case_dir / &quot;task_spec.json&quot;
+    spec = json.loads(path.read_text()) if path.is_file() else {}
+    n, h, w, fps = (spec.get(&quot;frames&quot;, 20), spec.get(&quot;height&quot;, 144), spec.get(&quot;width&quot;, 256), spec.get(&quot;fps&quot;, 4))
+    assert frames.shape == (n, h, w, 3) and frames.dtype == np.uint8, frames.shape
+    audio_spec = spec.get(&quot;audio&quot;)
+    audio_url = None
+    if audio_spec:
+        samples = round(n / fps * audio_spec[&quot;sample_rate&quot;])
+        pcm = np.asarray(audio)
+        if pcm.ndim == 1:
+            pcm = pcm[:, None]
+        assert pcm.shape == (samples, audio_spec[&quot;channels&quot;]) and pcm.dtype == np.int16, (pcm.shape, pcm.dtype)
+        with wave.open(str(case_dir / &quot;audio.wav&quot;), &quot;wb&quot;) as handle:
+            handle.setnchannels(audio_spec[&quot;channels&quot;])
+            handle.setsampwidth(2)
+            handle.setframerate(audio_spec[&quot;sample_rate&quot;])
+            handle.writeframes(pcm.astype(&quot;&lt;i2&quot;).tobytes())
+        audio_url = &quot;data:audio/wav;base64,&quot; + base64.b64encode((case_dir / &quot;audio.wav&quot;).read_bytes()).decode()
+    values = frames.astype(np.uint32)
+    packed = (values[:, :, :, 0] &lt;&lt; 16) | (values[:, :, :, 1] &lt;&lt; 8) | values[:, :, :, 2]
+    tensor = packed.transpose(1, 2, 0)
+    np.savez_compressed(case_dir / &quot;pixels.npz&quot;, pixels=tensor)
+
+    folder = case_dir / &quot;frames&quot;
+    folder.mkdir(exist_ok=True)
+    for index, frame in enumerate(frames):
+        Image.fromarray(frame).save(folder / f&quot;{index:02d}.png&quot;)
+
+    sheet = Image.new(&quot;RGB&quot;, (w * 4, (h + 21) * 2), (25, 28, 35))
+    draw = ImageDraw.Draw(sheet)
+    for index, frame_index in enumerate(np.linspace(0, n - 1, 8).round().astype(int)):
+        x, y = (index % 4) * w, (index // 4) * (h + 21)
+        draw.text((x + 5, y + 3), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        sheet.paste(Image.fromarray(frames[frame_index]), (x, y + 21))
+    sheet.save(case_dir / &quot;inspection.png&quot;)
+
+    transition = Image.new(&quot;RGB&quot;, (w * 4, h * 2 + 21), (25, 28, 35))
+    draw = ImageDraw.Draw(transition)
+    for index, frame_index in enumerate(min(i, n-1) for i in range(4)):
+        x = index * w
+        draw.text((x + 5, 4), f&quot;frame {frame_index:02d} · {frame_index / fps:.2f}s&quot;, fill=&quot;white&quot;)
+        transition.paste(Image.fromarray(frames[frame_index]), (x, 21))
+        transition.paste(Image.fromarray(frames[frame_index]).resize((w, h), Image.Resampling.NEAREST), (x, h + 21))
+    transition.save(case_dir / &quot;transition_check.png&quot;)
+
+    encode = lambda array: base64.b64encode(np.asarray(array, dtype=&quot;&lt;u4&quot;).tobytes()).decode()
+    deltas = []
+    for index in range(1, n):
+        current = packed[index].reshape(-1)
+        previous = packed[index - 1].reshape(-1)
+        positions = np.flatnonzero(current != previous)
+        packet = []
+        if len(positions):
+            bounds = np.r_[0, np.flatnonzero(np.diff(positions) &gt; 1) + 1, len(positions)]
+            for start, end in zip(bounds[:-1], bounds[1:]):
+                offset = int(positions[start])
+                count = int(end - start)
+                packet.extend([offset, count])
+                packet.extend(current[offset:offset + count].tolist())
+        deltas.append(encode(packet))
+    data = {
+        &quot;id&quot;: case_dir.name,
+        &quot;width&quot;: w, &quot;height&quot;: h, &quot;frames&quot;: n, &quot;fps&quot;: fps, &quot;audio&quot;: audio_url,
+        &quot;first&quot;: encode(packed[0].reshape(-1)),
+        &quot;deltas&quot;: deltas,
+        &quot;caption&quot;: (case_dir / &quot;prompt.txt&quot;).read_text().strip(),
+    }
+    template = (Path(__file__).parent / &quot;player_template.html&quot;).read_text()
+    payload = json.dumps(data, separators=(&quot;,&quot;, &quot;:&quot;), ensure_ascii=False).replace(&quot;&lt;&quot;, &quot;\\u003c&quot;)
+    (case_dir / &quot;index.html&quot;).write_text(template.replace(&quot;__ID__&quot;, case_dir.name).replace(&quot;__DATA__&quot;, payload))
+
+</pre></details><details><summary>:45.981915+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,572)).save(&#x27;.tmp/first_large.png&#x27;)
+im.crop((108,66,149,136)).resize((328,560)).save(&#x27;.tmp/dog_crop.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:55.850695+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for m in [&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;,&#x27;imageio&#x27;,&#x27;imageio_ffmpeg&#x27;]:
+ print(m, bool(importlib.util.find_spec(m)))
+PY</pre><pre>numpy True
+PIL True
+scipy True
+imageio True
+imageio_ffmpeg True
+</pre></details><details><summary>:35.151856+00:00 · agent_message · The prompt calls for the dog to walk forward while the camera keeps it at a steady size and position. I’ll animate its legs and body from the source pixels, and</summary><pre>The prompt calls for the dog to walk forward while the camera keeps it at a steady size and position. I’ll animate its legs and body from the source pixels, and move the street outward from the vanishing point to show the camera advancing.
+</pre><pre></pre></details><details><summary>:36.874208+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image,ImageDraw
+im=Image.open(&#x27;first_frame.png&#x27;)
+c=im.crop((114,70,144,134)).resize((300,640),Image.Resampling.NEAREST)
+d=ImageDraw.Draw(c)
+for x in range(115,144,5):
+ d.line(((x-114)*10,0,(x-114)*10,640),fill=(230,70,60),width=1)
+ d.text(((x-114)*10,2),str(x),fill=(255,30,30))
+for y in range(70,134,5):
+ d.line((0,(y-70)*10,300,(y-70)*10),fill=(230,70,60),width=1)
+ d.text((1,(y-70)*10+1),str(y),fill=(255,20,20))
+c.save(&#x27;.tmp/grid.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:40.551038+00:00 · command_execution · cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;</summary><pre>cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+&quot;&quot;&quot;Render a following shot using source RGB pixels and hand-written warps.&quot;&quot;&quot;
+from pathlib import Path
+import json
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+S = 4
+W, H = 256, 143
+source = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+
+def mask_polygon(points, holes=()):
+    m = Image.new(&#x27;L&#x27;, (W*S,H*S))
+    d = ImageDraw.Draw(m)
+    d.polygon([(round(x*S),round(y*S)) for x,y in points],fill=255)
+    for hole in holes:
+        d.polygon([(round(x*S),round(y*S)) for x,y in hole],fill=0)
+    return np.asarray(m,dtype=np.float32)/255
+
+def sample(a,x,y):
+    x=np.clip(x,0,a.shape[1]-1.001)
+    y=np.clip(y,0,a.shape[0]-1.001)
+    x0=x.astype(np.int32); y0=y.astype(np.int32)
+    fx=(x-x0)[...,None]; fy=(y-y0)[...,None]
+    if a.ndim==2:
+        a=a[...,None]
+    return ((1-fy)*((1-fx)*a[y0,x0]+fx*a[y0,x0+1])+
+            fy*((1-fx)*a[y0+1,x0]+fx*a[y0+1,x0+1]))
+
+# The contours are geometric annotations made from the supplied first image.
+outline=[(120.6,73.2),(122.5,72.7),(124.6,76.0),(130.8,76.1),
+         (133.3,73.1),(134.8,73.4),(135.1,77.8),(136.2,81.5),
+         (135.5,85.1),(134.8,88.1),(137.0,92.5),(138.2,98.3),
+         (138.7,105.1),(137.7,111.7),(136.4,116.0),(136.3,122.0),
+         (137.0,126.8),(137.2,129.2),(133.7,130.2),(132.0,129.1),
+         (132.5,126.9),(131.5,118.3),(131.3,114.2),(129.5,110.6),
+         (127.9,108.5),(126.0,110.3),(124.4,115.5),(124.0,122.7),
+         (123.0,128.5),(123.0,130.3),(119.4,130.8),(118.9,129.4),
+         (120.0,124.9),(120.2,118.3),(118.4,112.2),(117.8,106.0),
+         (118.1,99.0),(119.4,93.0),(120.9,88.7),(120.0,86.0),
+         (119.0,82.3),(119.6,78.2)]
+dog_alpha=mask_polygon(outline)
+hi_rgb=np.asarray(Image.fromarray(source).resize((W*S,H*S),Image.Resampling.BICUBIC),dtype=np.float32)
+dog_rgba=np.concatenate([hi_rgb*dog_alpha[...,None],dog_alpha[...,None]],axis=2)
+
+# Reconstruct only the small exposed road area, using other road pixels from
+# this same frame. Feathering keeps the grain and lighting continuous.
+erase_points=[(118,71),(137,71),(141,94),(142,108),(155,110),
+              (156,116),(152,128),(139,134),(117,134),(115,108),(116,87)]
+erase=Image.fromarray((mask_polygon(erase_points)*255).astype(np.uint8))
+erase=erase.filter(ImageFilter.GaussianBlur(1.4*S))
+erase=np.asarray(erase,dtype=np.float32)/255
+Y,X=np.mgrid[0:H*S,0:W*S].astype(np.float32)
+# A slight slant avoids repeated vertical columns in the repaired road.
+texture=sample(hi_rgb,X-36*S+(Y-103*S)*0.12,Y)
+plate=hi_rgb*(1-erase[...,None])+texture*erase[...,None]
+Image.fromarray(np.uint8(np.clip(plate,0,255))).resize((W,H),Image.Resampling.LANCZOS).save(ROOT/&#x27;.tmp/clean_plate.png&#x27;)
+Image.fromarray(np.uint8(dog_alpha*255)).save(ROOT/&#x27;.tmp/source_contour.png&#x27;)
+
+# Build a soft cast shadow with an irregular silhouette, on the street to
+# the right of the feet, matching the sunlight in the supplied image.
+shadow=mask_polygon([(120,129.0),(131,130),(142,126.2),(150,122.0),
+                     (150,118),(152.5,113),(155,112),(151,110.5),
+                     (143,110.1),(138,112.4),(130,123)])
+shadow=np.asarray(Image.fromarray(np.uint8(shadow*255)).filter(ImageFilter.GaussianBlur(.65*S)),dtype=np.float32)/255
+
+xp=X/S; yp=Y/S
+
+def street(t):
+    travel=0.30*t/4.75
+    # The ground is a perspective plane; street facades use their bases to
+    # estimate distance. This yields greater parallax on nearby asphalt.
+    vx,vy=130.,58.
+    camx=.25*np.sin(2*np.pi*.85*t)
+    camy=.24*np.sin(4*np.pi*.85*t)
+    dx=xp-vx-camx; dy=yp-vy-camy
+    sx=vx+dx; sy=vy+dy
+    for _ in range(10):
+        side=np.where(sx&lt;vx,.25,.32)*np.abs(sx-vx)
+        road=np.maximum(sy-vy,0)
+        depth=np.maximum(side,road)/85.
+        shrink=1-travel*depth
+        sx=vx+dx*shrink; sy=vy+dy*shrink
+    return sample(plate,sx*S,sy*S)
+
+def dog_displacement(x,y,t):
+    phase=2*np.pi*.85*t
+    sway=.65*np.sin(phase)
+    bob=-.75*(1-np.cos(2*phase))
+    low=np.clip((y-105)/24,0,1)
+    left=1/(1+np.exp(np.clip((x-128)*1.1,-40,40)))
+    a=np.sin(phase); b=-a
+    # Hind feet alternate between ground contact and a lifted forward swing.
+    lift_l=-5.3*max(0,a)-1.3*a
+    lift_r=-5.3*max(0,b)-1.3*b
+    dy=bob+low**1.2*(left*lift_l+(1-left)*lift_r)
+    dx=sway+low**1.25*(left*1.8*a+(1-left)*1.8*b)
+    # Slight tail wag and shoulder rotation, with continuous texture warps.
+    tail=np.exp(-((x-128.1)/4.0)**2-((y-91)/8.5)**2)
+    dx+=1.15*np.sin(phase)*tail
+    dx+=.32*np.sin(phase)*(np.clip((100-y)/26,0,1))
+    return dx,dy
+
+def render(t):
+    bg=street(t)
+    phase=2*np.pi*.85*t
+    # The shadow follows the dog&#x27;s slight gait motion while the tracking
+    # camera preserves the subject&#x27;s distance and footprint.
+    sh=sample(shadow,X-.55*np.sin(phase)*S,Y+.4*(1-np.cos(2*phase))*S)[...,0]
+    bg=bg*(1-.46*sh[...,None])+np.array([16,29,36],np.float32)*(.46*sh[...,None])
+    # Inverse deformation of the original textured silhouette.
+    qx=xp.copy(); qy=yp.copy()
+    for _ in range(7):
+        dx,dy=dog_displacement(qx,qy,t)
+        qx=xp-dx; qy=yp-dy
+    rgba=sample(dog_rgba,qx*S,qy*S)
+    out=bg*(1-rgba[...,3:])+rgba[...,:3]
+    return np.asarray(Image.fromarray(np.uint8(np.clip(out,0,255))).resize((W,H),Image.Resampling.LANCZOS))
+
+frames=[source.copy()]
+for i in range(1,20):
+    frames.append(render(i/4))
+frames=np.stack(frames).astype(np.uint8)
+assert frames.shape==(20,143,256,3)
+assert np.array_equal(frames[0],source)
+# Keep the candidate tensor as well as the output artifacts for inspection.
+np.save(ROOT/&#x27;.tmp/candidate_01.npy&#x27;,frames)
+artifact_io.save(frames,ROOT)
+
+# An ordinary codec packages the rendered RGB sequence for convenient viewing.
+try:
+    import imageio_ffmpeg
+    writer=imageio_ffmpeg.write_frames(str(ROOT/&#x27;video.mp4&#x27;),(W,H),fps=4,
+        codec=&#x27;libx264&#x27;,pix_fmt_in=&#x27;rgb24&#x27;,pix_fmt_out=&#x27;yuv444p&#x27;,
+        macro_block_size=1,quality=9,ffmpeg_log_level=&#x27;error&#x27;)
+    writer.send(None)
+    for frame in frames:
+        writer.send(frame)
+    writer.close()
+except ImportError:
+    pass
+print(&#x27;Saved 20 RGB frames, pixels.npz, index.html, and video.mp4.&#x27;)
+PY
+python generate.py</pre><pre></pre></details><details><summary>:45.775833+00:00 · command_execution · cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;</summary><pre>cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+&quot;&quot;&quot;Render a following shot using source RGB pixels and hand-written warps.&quot;&quot;&quot;
+from pathlib import Path
+import json
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+S = 4
+W, H = 256, 143
+source = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+
+def mask_polygon(points, holes=()):
+    m = Image.new(&#x27;L&#x27;, (W*S,H*S))
+    d = ImageDraw.Draw(m)
+    d.polygon([(round(x*S),round(y*S)) for x,y in points],fill=255)
+    for hole in holes:
+        d.polygon([(round(x*S),round(y*S)) for x,y in hole],fill=0)
+    return np.asarray(m,dtype=np.float32)/255
+
+def sample(a,x,y):
+    x=np.clip(x,0,a.shape[1]-1.001)
+    y=np.clip(y,0,a.shape[0]-1.001)
+    x0=x.astype(np.int32); y0=y.astype(np.int32)
+    fx=(x-x0)[...,None]; fy=(y-y0)[...,None]
+    if a.ndim==2:
+        a=a[...,None]
+    return ((1-fy)*((1-fx)*a[y0,x0]+fx*a[y0,x0+1])+
+            fy*((1-fx)*a[y0+1,x0]+fx*a[y0+1,x0+1]))
+
+# The contours are geometric annotations made from the supplied first image.
+outline=[(120.6,73.2),(122.5,72.7),(124.6,76.0),(130.8,76.1),
+         (133.3,73.1),(134.8,73.4),(135.1,77.8),(136.2,81.5),
+         (135.5,85.1),(134.8,88.1),(137.0,92.5),(138.2,98.3),
+         (138.7,105.1),(137.7,111.7),(136.4,116.0),(136.3,122.0),
+         (137.0,126.8),(137.2,129.2),(133.7,130.2),(132.0,129.1),
+         (132.5,126.9),(131.5,118.3),(131.3,114.2),(129.5,110.6),
+         (127.9,108.5),(126.0,110.3),(124.4,115.5),(124.0,122.7),
+         (123.0,128.5),(123.0,130.3),(119.4,130.8),(118.9,129.4),
+         (120.0,124.9),(120.2,118.3),(118.4,112.2),(117.8,106.0),
+         (118.1,99.0),(119.4,93.0),(120.9,88.7),(120.0,86.0),
+         (119.0,82.3),(119.6,78.2)]
+dog_alpha=mask_polygon(outline)
+hi_rgb=np.asarray(Image.fromarray(source).resize((W*S,H*S),Image.Resampling.BICUBIC),dtype=np.float32)
+dog_rgba=np.concatenate([hi_rgb*dog_alpha[...,None],dog_alpha[...,None]],axis=2)
+
+# Reconstruct only the small exposed road area, using other road pixels from
+# this same frame. Feathering keeps the grain and lighting continuous.
+erase_points=[(118,71),(137,71),(141,94),(142,108),(155,110),
+              (156,116),(152,128),(139,134),(117,134),(115,108),(116,87)]
+erase=Image.fromarray((mask_polygon(erase_points)*255).astype(np.uint8))
+erase=erase.filter(ImageFilter.GaussianBlur(1.4*S))
+erase=np.asarray(erase,dtype=np.float32)/255
+Y,X=np.mgrid[0:H*S,0:W*S].astype(np.float32)
+# A slight slant avoids repeated vertical columns in the repaired road.
+texture=sample(hi_rgb,X-36*S+(Y-103*S)*0.12,Y)
+plate=hi_rgb*(1-erase[...,None])+texture*erase[...,None]
+Image.fromarray(np.uint8(np.clip(plate,0,255))).resize((W,H),Image.Resampling.LANCZOS).save(ROOT/&#x27;.tmp/clean_plate.png&#x27;)
+Image.fromarray(np.uint8(dog_alpha*255)).save(ROOT/&#x27;.tmp/source_contour.png&#x27;)
+
+# Build a soft cast shadow with an irregular silhouette, on the street to
+# the right of the feet, matching the sunlight in the supplied image.
+shadow=mask_polygon([(120,129.0),(131,130),(142,126.2),(150,122.0),
+                     (150,118),(152.5,113),(155,112),(151,110.5),
+                     (143,110.1),(138,112.4),(130,123)])
+shadow=np.asarray(Image.fromarray(np.uint8(shadow*255)).filter(ImageFilter.GaussianBlur(.65*S)),dtype=np.float32)/255
+
+xp=X/S; yp=Y/S
+
+def street(t):
+    travel=0.30*t/4.75
+    # The ground is a perspective plane; street facades use their bases to
+    # estimate distance. This yields greater parallax on nearby asphalt.
+    vx,vy=130.,58.
+    camx=.25*np.sin(2*np.pi*.85*t)
+    camy=.24*np.sin(4*np.pi*.85*t)
+    dx=xp-vx-camx; dy=yp-vy-camy
+    sx=vx+dx; sy=vy+dy
+    for _ in range(10):
+        side=np.where(sx&lt;vx,.25,.32)*np.abs(sx-vx)
+        road=np.maximum(sy-vy,0)
+        depth=np.maximum(side,road)/85.
+        shrink=1-travel*depth
+        sx=vx+dx*shrink; sy=vy+dy*shrink
+    return sample(plate,sx*S,sy*S)
+
+def dog_displacement(x,y,t):
+    phase=2*np.pi*.85*t
+    sway=.65*np.sin(phase)
+    bob=-.75*(1-np.cos(2*phase))
+    low=np.clip((y-105)/24,0,1)
+    left=1/(1+np.exp(np.clip((x-128)*1.1,-40,40)))
+    a=np.sin(phase); b=-a
+    # Hind feet alternate between ground contact and a lifted forward swing.
+    lift_l=-5.3*max(0,a)-1.3*a
+    lift_r=-5.3*max(0,b)-1.3*b
+    dy=bob+low**1.2*(left*lift_l+(1-left)*lift_r)
+    dx=sway+low**1.25*(left*1.8*a+(1-left)*1.8*b)
+    # Slight tail wag and shoulder rotation, with continuous texture warps.
+    tail=np.exp(-((x-128.1)/4.0)**2-((y-91)/8.5)**2)
+    dx+=1.15*np.sin(phase)*tail
+    dx+=.32*np.sin(phase)*(np.clip((100-y)/26,0,1))
+    return dx,dy
+
+def render(t):
+    bg=street(t)
+    phase=2*np.pi*.85*t
+    # The shadow follows the dog&#x27;s slight gait motion while the tracking
+    # camera preserves the subject&#x27;s distance and footprint.
+    sh=sample(shadow,X-.55*np.sin(phase)*S,Y+.4*(1-np.cos(2*phase))*S)[...,0]
+    bg=bg*(1-.46*sh[...,None])+np.array([16,29,36],np.float32)*(.46*sh[...,None])
+    # Inverse deformation of the original textured silhouette.
+    qx=xp.copy(); qy=yp.copy()
+    for _ in range(7):
+        dx,dy=dog_displacement(qx,qy,t)
+        qx=xp-dx; qy=yp-dy
+    rgba=sample(dog_rgba,qx*S,qy*S)
+    out=bg*(1-rgba[...,3:])+rgba[...,:3]
+    return np.asarray(Image.fromarray(np.uint8(np.clip(out,0,255))).resize((W,H),Image.Resampling.LANCZOS))
+
+frames=[source.copy()]
+for i in range(1,20):
+    frames.append(render(i/4))
+frames=np.stack(frames).astype(np.uint8)
+assert frames.shape==(20,143,256,3)
+assert np.array_equal(frames[0],source)
+# Keep the candidate tensor as well as the output artifacts for inspection.
+np.save(ROOT/&#x27;.tmp/candidate_01.npy&#x27;,frames)
+artifact_io.save(frames,ROOT)
+
+# An ordinary codec packages the rendered RGB sequence for convenient viewing.
+try:
+    import imageio_ffmpeg
+    writer=imageio_ffmpeg.write_frames(str(ROOT/&#x27;video.mp4&#x27;),(W,H),fps=4,
+        codec=&#x27;libx264&#x27;,pix_fmt_in=&#x27;rgb24&#x27;,pix_fmt_out=&#x27;yuv444p&#x27;,
+        macro_block_size=1,quality=9,ffmpeg_log_level=&#x27;error&#x27;)
+    writer.send(None)
+    for frame in frames:
+        writer.send(frame)
+    writer.close()
+except ImportError:
+    pass
+print(&#x27;Saved 20 RGB frames, pixels.npz, index.html, and video.mp4.&#x27;)
+PY
+python generate.py</pre><pre>Saved 20 RGB frames, pixels.npz, index.html, and video.mp4.
+</pre></details><details><summary>:06.603816+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image,ImageDraw
+im=Image.new(&#x27;RGB&#x27;,(720,384))
+for j,i in enumerate([0,1,2,3,4,5]):
+ f=Image.open(f&#x27;frames/{i:02}.png&#x27;).crop((114,70,144,134)).resize((120,256))
+ im.paste(f,(j*120,0))
+ImageDraw.Draw(im).text((3,270),&#x27;Frames 0 to 5&#x27;,fill=&#x27;white&#x27;)
+im.save(&#x27;.tmp/gait.png&#x27;)
+PY</pre><pre></pre></details><details><summary>:18.424152+00:00 · agent_message · The first candidate keeps the dog’s framing steady and shows alternating steps. Inspection revealed a small copied fur fragment in the repaired road; I’ll corre</summary><pre>The first candidate keeps the dog’s framing steady and shows alternating steps. Inspection revealed a small copied fur fragment in the repaired road; I’ll correct that and adjust the shadow before checking the final frames.
+</pre><pre></pre></details><details><summary>:30.206938+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+p=Path(&#x27;generate.py&#x27;)
+text=p.read_text()
+Path(&#x27;.tmp/generate_candidate_01.py&#x27;).write_text(text)
+text=text.replace(&#x27;X-36*S+(Y-103*S)*0.12&#x27;,&#x27;X-48*S+(Y-103*S)*0.12&#x27;)
+text=text.replace(&#x27;1-.46*sh[...,None]&#x27;,&#x27;1-.63*sh[...,None]&#x27;).replace(&#x27;(.46*sh[...,None])&#x27;,&#x27;(.63*sh[...,None])&#x27;)
+text=text.replace(&quot;candidate_01.npy&quot;,&quot;candidate_02.npy&quot;)
+p.write_text(text)
+PY
+python generate.py</pre><pre></pre></details><details><summary>:35.329254+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+p=Path(&#x27;generate.py&#x27;)
+text=p.read_text()
+Path(&#x27;.tmp/generate_candidate_01.py&#x27;).write_text(text)
+text=text.replace(&#x27;X-36*S+(Y-103*S)*0.12&#x27;,&#x27;X-48*S+(Y-103*S)*0.12&#x27;)
+text=text.replace(&#x27;1-.46*sh[...,None]&#x27;,&#x27;1-.63*sh[...,None]&#x27;).replace(&#x27;(.46*sh[...,None])&#x27;,&#x27;(.63*sh[...,None])&#x27;)
+text=text.replace(&quot;candidate_01.npy&quot;,&quot;candidate_02.npy&quot;)
+p.write_text(text)
+PY
+python generate.py</pre><pre>Saved 20 RGB frames, pixels.npz, index.html, and video.mp4.
+</pre></details><details><summary>:47.138124+00:00 · command_execution · python - &lt;&lt;&#x27;PY&#x27;</summary><pre>python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+from PIL import Image
+import imageio_ffmpeg
+frames=np.load(&#x27;.tmp/candidate_02.npy&#x27;)
+original=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+assert frames.dtype==np.uint8
+assert frames.shape==(20,143,256,3)
+assert np.array_equal(frames[0],original)
+packed=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+assert packed.shape==(143,256,20)
+recovered=np.stack([(packed&gt;&gt;16)&amp;255,(packed&gt;&gt;8)&amp;255,packed&amp;255],axis=-1).transpose(2,0,1,3).astype(np.uint8)
+assert np.array_equal(recovered,frames)
+for i in range(20):
+ assert np.array_equal(np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;)),frames[i])
+reader=imageio_ffmpeg.read_frames(&#x27;video.mp4&#x27;,pix_fmt=&#x27;rgb24&#x27;)
+meta=next(reader)
+count=sum(1 for _ in reader)
+assert count==20
+assert meta[&#x27;size&#x27;]==(256,143) and meta[&#x27;fps&#x27;]==4
+print(&#x27;Verified: 20 RGB uint8 frames at 256 x 143; first frame exact; packed output and PNG frames match; video has 20 frames at 4 fps.&#x27;)
+print(&#x27;Video duration:&#x27;,meta[&#x27;duration&#x27;])
+print(&#x27;Artifacts:&#x27;, &#x27;, &#x27;.join(p.name for p in Path(&#x27;.&#x27;).iterdir() if p.is_file() and p.name in [&#x27;generate.py&#x27;,&#x27;video.mp4&#x27;,&#x27;pixels.npz&#x27;,&#x27;index.html&#x27;,&#x27;inspection.png&#x27;]))
+PY</pre><pre>Verified: 20 RGB uint8 frames at 256 x 143; first frame exact; packed output and PNG frames match; video has 20 frames at 4 fps.
+Video duration: 5.0
+Artifacts: generate.py, index.html, inspection.png, pixels.npz, video.mp4
+</pre></details><details><summary>:53.746212+00:00 · agent_message · Generated the 5-second video: 20 frames at 256×143 and 4 fps. The first RGB frame is pixel-identical to the supplied image.</summary><pre>Generated the 5-second video: 20 frames at 256×143 and 4 fps. The first RGB frame is pixel-identical to the supplied image.
+
+- [Video](video.mp4)
+- [RGB playback](index.html)
+- [Generation code](generate.py)</pre><pre></pre></details><p><a href="observed_trace.json">完整可观测事件 JSON</a></p></main><script>'use strict';
+class PixelPlayer {
+  constructor(root, data) {
+    this.root=root; this.d=data; this.frame=0; this.playing=false; this.frames=null;
+    this.canvas=root.querySelector('canvas'); this.canvas.width=data.width; this.canvas.height=data.height;
+    this.ctx=this.canvas.getContext('2d'); this.image=this.ctx.createImageData(data.width,data.height);
+    this.button=root.querySelector('.play'); this.seek=root.querySelector('.seek'); this.clock=root.querySelector('.clock');
+    this.seek.max=data.frames-1; this.audio=data.audio?new Audio(data.audio):null;
+    this.button.onclick=()=>this.playing?this.pause():this.start();
+    root.querySelector('.replay').onclick=async()=>{this.pause();await this.ensure();this.draw(0);this.start()};
+    this.seek.oninput=async()=>{this.pause();try{await this.ensure();this.draw(+this.seek.value)}catch(e){this.error(e)}};
+    this.updateClock(); window.__smokePlayers.push(this);
+  }
+  updateClock(){this.clock.textContent=`${this.frame+1}/${this.d.frames} · ${(this.frame/this.d.fps).toFixed(2)} / ${(this.d.frames/this.d.fps).toFixed(2)}s`}
+  error(e){this.pause();this.clock.textContent='Load failed: '+e.message;this.root.dataset.error=e.message}
+  async ensure(){
+    if(this.frames)return;
+    if(this.loading)return this.loading;
+    this.loading=(async()=>{
+      const response=await fetch(this.d.asset);if(!response.ok)throw Error('HTTP '+response.status);
+      const blob=await response.blob(),url=URL.createObjectURL(blob);
+      const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=()=>no(Error('Invalid pixel sprite'));x.src=url});
+      const w=this.d.width,h=this.d.height,n=this.d.frames,c=document.createElement('canvas');c.width=w;c.height=h*n;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(im,0,0);URL.revokeObjectURL(url);
+      if(im.width!==w||im.height!==h*n)throw Error('Pixel sprite dimensions');
+      const raw=ctx.getImageData(0,0,w,h*n).data,size=w*h*4;this.frames=[];
+      for(let i=0;i<n;i++){const a=new Uint8ClampedArray(size),off=i*size,prev=i?this.frames[i-1]:null;
+        for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}this.frames.push(a)}
+      this.draw(this.frame);
+    })();try{await this.loading}catch(e){this.loading=null;throw e}
+  }
+  draw(n){this.frame=Math.max(0,Math.min(this.d.frames-1,n));this.seek.value=this.frame;this.updateClock();if(this.frames){this.image.data.set(this.frames[this.frame]);this.ctx.putImageData(this.image,0,0);this.root.querySelector('.poster').hidden=true}}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);if(this.audio)this.audio.pause();this.button.textContent='▶ 播放'}
+  async start(){
+    this.button.textContent='载入中…';
+    for(const control of this.root.querySelectorAll('button,input'))control.disabled=true;
+    try{await this.ensure();if(this.frame===this.d.frames-1)this.draw(0);this.started=performance.now()-this.frame/this.d.fps*1000;
+      if(this.audio){this.audio.currentTime=this.frame/this.d.fps;await this.audio.play()}
+      this.playing=true;this.button.textContent='❚❚ 暂停';this.raf=requestAnimationFrame(t=>this.tick(t));
+    }catch(e){this.error(e)}finally{for(const control of this.root.querySelectorAll('button,input'))control.disabled=false}
+  }
+  tick(t){
+    if(!this.playing)return;let elapsed=this.audio?this.audio.currentTime:(t-this.started)/1000;
+    if(elapsed>=this.d.frames/this.d.fps||(this.audio&&this.audio.ended)){
+      if(this.root.querySelector('.loop').checked){this.started=t;elapsed=0;if(this.audio){this.audio.currentTime=0;this.audio.play().catch(e=>this.error(e))}}
+      else{this.draw(this.d.frames-1);this.pause();return}
+    }
+    this.draw(Math.floor(elapsed*this.d.fps));this.raf=requestAnimationFrame(x=>this.tick(x));
+  }
+}
+window.__smokePlayers=[];
+for(const root of document.querySelectorAll('.player'))new PixelPlayer(root,JSON.parse(root.dataset.player));
+window.__smokeReady=true;
+
+// Use one animation clock for selected revisions; independent playback stays available.
+window.__candidateComparisons=[];
+for(const root of document.querySelectorAll('[data-candidate-compare]')){
+  const players=window.__smokePlayers.filter(p=>root.contains(p.root)),seek=root.querySelector('.compare-seek'),clock=root.querySelector('.compare-clock'),button=root.querySelector('.compare-play');
+  if(!players.length)continue;
+  seek.max=players[0].d.frames-1;
+  const group={root,players,playing:false,frame:0,raf:null,
+    selected(){return players.filter(p=>p.root.closest('.candidate-entry').querySelector('.compare-pick').checked)},
+    pause(){this.playing=false;cancelAnimationFrame(this.raf);players.forEach(p=>p.pause());button.textContent='▶ 同步播放勾选版本'},
+    draw(frame){this.frame=frame;seek.value=frame;clock.textContent=`${(frame/players[0].d.fps).toFixed(2)} / ${(players[0].d.frames/players[0].d.fps).toFixed(2)}s`;this.selected().forEach(p=>p.draw(frame))},
+    async ensure(){const selected=this.selected();if(!selected.length)throw Error('请勾选要对比的版本');await Promise.all(selected.map(p=>p.ensure()))},
+    async start(){if(this.playing){this.pause();return}button.disabled=true;button.textContent='载入中…';try{await this.ensure();players.forEach(p=>p.pause());if(this.frame===players[0].d.frames-1)this.draw(0);this.started=performance.now()-this.frame/players[0].d.fps*1000;this.playing=true;this.selected().forEach(p=>{p.playing=true;p.button.textContent='❚❚ 暂停'});button.textContent='❚❚ 暂停同步播放';this.raf=requestAnimationFrame(t=>this.tick(t))}catch(e){this.pause();clock.textContent='Load failed: '+e.message}finally{button.disabled=false}},
+    tick(t){if(!this.playing)return;let elapsed=(t-this.started)/1000;const d=players[0].d;if(elapsed>=d.frames/d.fps){if(root.querySelector('.compare-loop').checked){this.started=t;elapsed=0}else{this.draw(d.frames-1);this.pause();return}}this.draw(Math.min(d.frames-1,Math.floor(elapsed*d.fps)));this.raf=requestAnimationFrame(x=>this.tick(x))}
+  };
+  button.onclick=()=>group.start();root.querySelector('.compare-pause').onclick=()=>group.pause();
+  root.querySelector('.compare-replay').onclick=()=>{group.pause();group.frame=0;group.start()};
+  seek.oninput=async()=>{group.pause();try{await group.ensure();group.draw(+seek.value)}catch(e){clock.textContent=e.message}};
+  root.querySelectorAll('.compare-pick').forEach(c=>c.onchange=()=>group.pause());
+  players.forEach(p=>{const play=p.button.onclick,slide=p.seek.oninput,replay=p.root.querySelector('.replay').onclick;p.button.onclick=()=>{if(group.playing){group.pause();return}play()};p.seek.oninput=()=>{group.pause();slide()};p.root.querySelector('.replay').onclick=()=>{group.pause();replay()}});
+  root.__comparison=group;window.__candidateComparisons.push(group);
+}
+window.__candidateCompareReady=true;
+</script></html>
