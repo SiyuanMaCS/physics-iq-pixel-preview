@@ -1,0 +1,615 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>siphon · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0163</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>siphon</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>5</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>4</strong><span>generate.py 执行</span></div><div class="stat"><strong>25</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>6</strong><span>文件变更事件</span></div><div class="stat"><strong>20.5m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. A glass jar gets lowered to cover a bundle of lit matchsticks that are placed in a bowl filled with red liquid.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>25 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>5 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/candidate-79c3864f9015.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T09:23:23.662286+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +250/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 79c3864f901525ed · code 47b0d2d14da56a51</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,250 @@
++&quot;&quot;&quot;PixelWorld-Text: Glass jar lowered over lit matchsticks in a bowl of red liquid.
++
++Animation: 20 frames, 256×144, 4 fps, 5 seconds.
++Frame 00 == first_frame.png (unaltered).
++Frames 01–19: glass jar descends, covers matchsticks, flames extinguish.
++&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++import artifact_io
++
++H, W = 144, 256
++N_FRAMES = 20
++
++# ── Load first frame ──────────────────────────────────────────────
++case_dir = Path(__file__).parent
++frame00 = np.array(Image.open(case_dir / &quot;first_frame.png&quot;)).astype(np.float32)
++assert frame00.shape == (H, W, 3), frame00.shape
++
++# ── Jar parameters ────────────────────────────────────────────────
++JAR_CENTER_X = 143          # horizontal center of jar
++JAR_HALF_W = 14             # half-width (jar spans 129–157)
++JAR_HEIGHT = 100            # total jar height in pixels
++JAR_RIM = 3                 # rim thickness in pixels
++JAR_EDGE = 2                # edge thickness
++JAR_TINT = np.array([25, 38, 58], dtype=np.float32)  # dark blue-gray glass
++
++# In frame 00, jar bottom is at row 43 (jar spans rows 43-100 = -57 to 43)
++JAR_BOTTOM_FRAME0 = 43
++
++# Animation: jar moves from bottom=43 to bottom=123 over 10 frames (0.25s each)
++# Total descent: 80 px over 10 frames = 8 px/frame
++DESCENT_RATE = 8.0
++DESCENT_FRAMES = 10          # frames 0–10 for descent
++SETTLE_BOTTOM = 123          # final bottom position
++
++# Flame region
++FLAME_Y_MIN = 0
++FLAME_Y_MAX = 12             # flame + glow extends to about row 12
++FLAME_X_MIN = 140
++FLAME_X_MAX = 157
++
++# Matchstick body region (for smoke dimming)
++MATCH_Y_MIN = 0
++MATCH_Y_MAX = 84
++MATCH_X_MIN = 128
++MATCH_X_MAX = 160
++
++# Bowl red liquid region
++BOWL_Y_MIN = 82
++BOWL_Y_MAX = 112
++BOWL_X_MIN = 83
++BOWL_X_MAX = 194
++
++
++# ── Helper: inpaint the original jar region from frame 00 ─────────
++def inpaint_original_jar(img):
++    &quot;&quot;&quot;Linearly interpolate across the jar region (rows 34–43, cols ~129–157)
++    to remove the jar from frame 00 so we can place it at a new position.&quot;&quot;&quot;
++    result = img.copy()
++    x0 = JAR_CENTER_X - JAR_HALF_W - 1  # 128
++    x1 = JAR_CENTER_X + JAR_HALF_W + 1  # 158
++
++    for c in range(x0, x1 + 1):
++        # Interpolate between row 33 (above jar) and row 44 (below jar)
++        for r in range(34, 44):
++            t = (r - 33) / 11.0  # 0 at row 33, 1 at row 44
++            above = img[33, c]
++            below = img[44, c]
++            result[r, c] = (1 - t) * above + t * below
++    return result
++
++
++# ── Helper: compute jar alpha mask at a given position ────────────
++def jar_alpha_mask(jar_top_y, jar_bottom_y):
++    &quot;&quot;&quot;Return alpha mask (0=fully transparent, 1=fully opaque) for jar region.&quot;&quot;&quot;
++    alpha = np.zeros((H, W), dtype=np.float32)
++
++    # Jar spans from jar_top_y to jar_bottom_y
++    y0 = max(0, int(jar_top_y))
++    y1 = min(H, int(jar_bottom_y) + 1)
++
++    if y1 &lt;= y0:
++        return alpha
++
++    x0 = max(0, JAR_CENTER_X - JAR_HALF_W)
+… diff truncated; 163 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/candidate-090a3daa616f.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T09:27:14.970802+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +167/−164</span></div><p class="hashes">pixels 090a3daa616f49dc · code d49ab963cb926777</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -3,6 +3,12 @@
+ Animation: 20 frames, 256×144, 4 fps, 5 seconds.
+ Frame 00 == first_frame.png (unaltered).
+ Frames 01–19: glass jar descends, covers matchsticks, flames extinguish.
++
++Method: Pure pixel compositing. The glass jar is rendered as a semi‑transparent
++overlay with a dark blue‑gray tint matching the original jar glass visible in
++frame 00 (rows 34‑43).  Flame dimming is driven by oxygen‑depletion timing, not
++jar opacity.  The original jar region in frame 00 is inpainted via column‑wise
++linear interpolation so the scene can be re‑composited at the new jar position.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -18,233 +24,230 @@
+ frame00 = np.array(Image.open(case_dir / &quot;first_frame.png&quot;)).astype(np.float32)
+ assert frame00.shape == (H, W, 3), frame00.shape
+ 
+-# ── Jar parameters ────────────────────────────────────────────────
+-JAR_CENTER_X = 143          # horizontal center of jar
+-JAR_HALF_W = 14             # half-width (jar spans 129–157)
+-JAR_HEIGHT = 100            # total jar height in pixels
+-JAR_RIM = 3                 # rim thickness in pixels
+-JAR_EDGE = 2                # edge thickness
+-JAR_TINT = np.array([25, 38, 58], dtype=np.float32)  # dark blue-gray glass
+-
+-# In frame 00, jar bottom is at row 43 (jar spans rows 43-100 = -57 to 43)
++# ── Jar geometry ──────────────────────────────────────────────────
++JAR_CENTER_X  = 143          # horizontal centre
++JAR_HALF_W    = 14           # half‑width  →  jar columns 129–157
++JAR_HEIGHT    = 100          # full jar height in pixels
++JAR_RIM_H     = 4            # rim thickness at top / bottom
++JAR_EDGE_FADE = 3            # edge fade width
++
++# Glass tint derived from the actual jar pixels in frame 00
++JAR_TINT = np.array([25.0, 38.0, 58.0], dtype=np.float32)
++
++# Position in frame 00  (bottom edge at row 43, top above frame)
+ JAR_BOTTOM_FRAME0 = 43
+ 
+-# Animation: jar moves from bottom=43 to bottom=123 over 10 frames (0.25s each)
+-# Total descent: 80 px over 10 frames = 8 px/frame
+-DESCENT_RATE = 8.0
+-DESCENT_FRAMES = 10          # frames 0–10 for descent
+-SETTLE_BOTTOM = 123          # final bottom position
+-
+-# Flame region
+-FLAME_Y_MIN = 0
+-FLAME_Y_MAX = 12             # flame + glow extends to about row 12
+-FLAME_X_MIN = 140
+-FLAME_X_MAX = 157
+-
+-# Matchstick body region (for smoke dimming)
+-MATCH_Y_MIN = 0
+-MATCH_Y_MAX = 84
+-MATCH_X_MIN = 128
+-MATCH_X_MAX = 160
+-
+-# Bowl red liquid region
+-BOWL_Y_MIN = 82
+-BOWL_Y_MAX = 112
+-BOWL_X_MIN = 83
+-BOWL_X_MAX = 194
+-
+-
+-# ── Helper: inpaint the original jar region from frame 00 ─────────
++# Animation: bottom moves from 43 → 123 (just below the bowl) over ~10 frames
++DESCENT_RATE  = 8.0          # px / frame
++DESCENT_FRAMES = 10
++SETTLE_BOTTOM  = 123
++
++# ── Scene regions ─────────────────────────────────────────────────
++FLAME_Y_MIN, FLAME_Y_MAX = 0, 12
++FLAME_X_MIN, FLAME_X_MAX = 140, 157
++
++# ── Inpaint the original jar region ───────────────────────────────
++# The jar in frame 00 (rows 34–43, cols 129–158) hides parts of the
++# matchstick bundle.  We estimate the hidden pixels by column‑wise
++# linear interpolation between row 33 (just above jar) and row 44
++# (just below jar), then smooth the result.
+ def inpaint_original_jar(img):
+-    &quot;&quot;&quot;Linearly interpolate across the jar region (rows 34–43, cols ~129–157)
+-    to remove the jar from frame 00 so we can place it at a new position.&quot;&quot;&quot;
+     result = img.copy()
+-    x0 = JAR_CENTER_X - JAR_HALF_W - 1  # 128
+-    x1 = JAR_CENTER_X + JAR_HALF_W + 1  # 158
++    x0 = JAR_CENTER_X - JAR_HALF_W - 5   # 124
++    x1 = JAR_CENTER_X + JAR_HALF_W + 5   # 162
++    r_top, r_bot = 33, 44
+… diff truncated; 320 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/candidate-090a3daa616f.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T09:27:16.727628+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 090a3daa616f49dc · code d49ab963cb926777</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/candidate-9e24743e4cfd.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T09:30:39.402076+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +136/−152</span></div><p class="hashes">pixels 9e24743e4cfdc69b · code e33c19c342e38118</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -4,11 +4,17 @@
+ Frame 00 == first_frame.png (unaltered).
+ Frames 01–19: glass jar descends, covers matchsticks, flames extinguish.
+ 
+-Method: Pure pixel compositing. The glass jar is rendered as a semi‑transparent
+-overlay with a dark blue‑gray tint matching the original jar glass visible in
+-frame 00 (rows 34‑43).  Flame dimming is driven by oxygen‑depletion timing, not
+-jar opacity.  The original jar region in frame 00 is inpainted via column‑wise
+-linear interpolation so the scene can be re‑composited at the new jar position.
++Method:
++  The scene is modelled as a clear glass jar with a dark rim/ring at its
++  opening (visible in frame 00 at rows 34–43).  The jar is lowered from
++  above; its clear body is nearly invisible (α ≈ 0.08) so we read the
++  flame through it.  Only the rim (α ≈ 0.50) stands out.
++
++  – Original jar region is inpainted via column‑wise interpolation.
++  – Jar body tint: very subtle blue‑grey (α ≈ 0.08).
++  – Jar rim: visible dark ring, α ≈ 0.50.
++  – Flame extinction: driven by oxygen‑depletion timing, not opacity.
++  – Smoke wisps: added inside the jar after extinction.
+ &quot;&quot;&quot;
+ 
+ import numpy as np
+@@ -25,38 +31,34 @@
+ assert frame00.shape == (H, W, 3), frame00.shape
+ 
+ # ── Jar geometry ──────────────────────────────────────────────────
+-JAR_CENTER_X  = 143          # horizontal centre
+-JAR_HALF_W    = 14           # half‑width  →  jar columns 129–157
+-JAR_HEIGHT    = 100          # full jar height in pixels
+-JAR_RIM_H     = 4            # rim thickness at top / bottom
+-JAR_EDGE_FADE = 3            # edge fade width
+-
+-# Glass tint derived from the actual jar pixels in frame 00
+-JAR_TINT = np.array([25.0, 38.0, 58.0], dtype=np.float32)
+-
+-# Position in frame 00  (bottom edge at row 43, top above frame)
+-JAR_BOTTOM_FRAME0 = 43
+-
+-# Animation: bottom moves from 43 → 123 (just below the bowl) over ~10 frames
+-DESCENT_RATE  = 8.0          # px / frame
++JAR_CENTER_X    = 143
++JAR_HALF_W      = 14           # half‑width  →  cols 129–157
++JAR_CLEAR_H     = 130          # clear glass body height
++JAR_RING_H      = 8            # dark rim / ring height
++JAR_TOTAL_H     = JAR_CLEAR_H + JAR_RING_H   # ≈ 138
++JAR_EDGE_FADE   = 3            # horizontal edge‑fade width
++
++# Glass tints
++TINT_CLEAR  = np.array([ 60.0,  65.0,  75.0], dtype=np.float32)  # barely visible
++TINT_RING   = np.array([ 22.0,  35.0,  55.0], dtype=np.float32)  # dark rim
++ALPHA_CLEAR = 0.08                                               # body transparency
++ALPHA_RING  = 0.50                                               # rim opacity
++
++# Position in frame 00: ring bottom at row 43
++RING_BOTTOM_FRAME0 = 43
++
++# Animation: ring bottom moves from 43 → 123 (~just below bowl)
++SETTLE_BOTTOM = 123
+ DESCENT_FRAMES = 10
+-SETTLE_BOTTOM  = 123
+-
+-# ── Scene regions ─────────────────────────────────────────────────
+-FLAME_Y_MIN, FLAME_Y_MAX = 0, 12
+-FLAME_X_MIN, FLAME_X_MAX = 140, 157
+-
+-# ── Inpaint the original jar region ───────────────────────────────
+-# The jar in frame 00 (rows 34–43, cols 129–158) hides parts of the
+-# matchstick bundle.  We estimate the hidden pixels by column‑wise
+-# linear interpolation between row 33 (just above jar) and row 44
+-# (just below jar), then smooth the result.
++
++# ── Inpaint the original jar region (frame 00) ────────────────────
+ def inpaint_original_jar(img):
++    &quot;&quot;&quot;Column‑wise linear interpolation across rows 34‑43.&quot;&quot;&quot;
+     result = img.copy()
+-    x0 = JAR_CENTER_X - JAR_HALF_W - 5   # 124
+-    x1 = JAR_CENTER_X + JAR_HALF_W + 5   # 162
++    x0 = JAR_CENTER_X - JAR_HALF_W - 8
++    x1 = JAR_CENTER_X + JAR_HALF_W + 8
+     r_top, r_bot = 33, 44
+-    span = r_bot - r_top                  # 11 rows
++    span = float(r_bot - r_top)
+ 
+     for c in range(x0, x1 + 1):
+         col_above = img[r_top, c]
+@@ -67,141 +69,129 @@
+     return result
+… diff truncated; 281 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/candidate-9e24743e4cfd.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T09:30:41.186278+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 9e24743e4cfdc69b · code e33c19c342e38118</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0163/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION.md – Scene Measurements &amp; 20-Frame Event Plan</h1>
+<h2>Scene Description</h2>
+<p>Static locked-off single-shot. A realistic scientific demonstration scene:</p>
+<ul>
+<li>A glass jar is being lowered to cover a bundle of lit matchsticks placed in a bowl filled with red liquid.</li>
+<li>The camera is tripod-locked (no camera motion).</li>
+</ul>
+<h2>Scene Elements &amp; Measurements (frame 00, 256×144 RGB)</h2>
+<h3>1. Background Wall (upper portion)</h3>
+<ul>
+<li><strong>Rows</strong>: ~0–40</li>
+<li><strong>Color</strong>: Warm gray, RGB ~(155–175, 160–185, 155–180)</li>
+<li>Left side brighter than right side (lighting falloff)</li>
+</ul>
+<h3>2. Table / Desk Surface</h3>
+<ul>
+<li><strong>Rows</strong>: ~40–143</li>
+<li><strong>Color</strong>: Brownish wood tones, RGB ~(100–155, 80–130, 50–110)</li>
+<li>Transitions darker toward the bottom</li>
+</ul>
+<h3>3. Bowl with Red Liquid</h3>
+<ul>
+<li><strong>Rows</strong>: 82–112</li>
+<li><strong>Columns</strong>: 83–194 (widest at rows 91–98, ~111 px; tapers below)</li>
+<li><strong>Color</strong>: Deep dark red, R~100–115, G~5–25, B~0–5</li>
+<li>Bowl is roughly elliptical/oval in shape, sitting on the desk</li>
+</ul>
+<h3>4. Bundle of Lit Matchsticks</h3>
+<ul>
+<li><strong>Flame region</strong>: Rows 0–7, columns 140–157<ul>
+<li>Bright yellow/orange/white core: RGB ~(250–254, 200–250, 90–115)</li>
+<li>Outer flame glow: RGB ~(200–250, 145–165, 110–125)</li>
+</ul>
+</li>
+<li><strong>Matchstick wood bodies above jar</strong>: Rows 8–33, columns 140–157<ul>
+<li>Wood color: RGB ~(130–155, 115–135, 105–125)</li>
+</ul>
+</li>
+<li><strong>Matchstick bodies below jar</strong>: Rows 44–81, centered around column 150<ul>
+<li>Wood color darkening toward bowl: RGB ~(140–150, 75–90, 65–80)</li>
+</ul>
+</li>
+<li><strong>Matchsticks entering red liquid</strong>: Rows 79–84, columns ~127–201<ul>
+<li>At least 3–4 visible sticks forming a bundle</li>
+</ul>
+</li>
+</ul>
+<h3>5. Glass Jar (partially lowered in frame 00)</h3>
+<ul>
+<li><strong>Visible portion</strong>: Rows 34–43, columns 132–155 (~24 px wide)</li>
+<li><strong>Color</strong>: Dark blue-gray tinted glass<ul>
+<li>Core dark region: RGB ~(50–65, 55–70, 80–95)</li>
+<li>Edges slightly lighter</li>
+</ul>
+</li>
+<li><strong>Bottom edge</strong>: At approximately row 43</li>
+<li><strong>Top edge</strong>: Above the frame (off-screen)</li>
+<li>The jar is a cylindrical glass container being lowered from above</li>
+</ul>
+<h2>20-Frame Event Plan (4 fps, 5 seconds)</h2>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>Initial state. Jar partially lowered, bottom at row ~43. Matchsticks burning, flames bright.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>Jar descends ~8 px. Bottom at row ~51.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>Jar descends further. Bottom at row ~59.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>Jar descending. Bottom at row ~67. Jar now covering more of matchstick bodies.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>Jar bottom at row ~75. Approaching bowl rim area.</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>Jar bottom at row ~83. Beginning to reach red liquid level.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>Jar bottom at row ~91. Jar covering upper half of bowl. Flames beginning to react (oxygen restriction).</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>Jar bottom at row ~99. Flames visibly diminishing.</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>Jar bottom at row ~107. Flames reduced to small flickers. Jar covers most of bowl.</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>Jar bottom at row ~115. Jar fully covering bowl and all matchsticks.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>Jar bottom at row ~123. Final position. Flames nearly extinguished.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>Jar settled. Flames fully out, thin smoke wisps rising inside jar.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>Static. Jar covers entire setup. Dim interior visible through glass.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>Static. Smoke accumulation inside jar, slight fogging on glass.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>Static. Interior slightly darker.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>Static.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>Static.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>Static.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>Static.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>Final state. Jar fully covering matchsticks and bowl. Flames extinguished. Some condensation/smoke visible on jar interior.</td>
+</tr>
+</tbody>
+</table>
+<h2>Implementation Notes</h2>
+<ul>
+<li>Frame 00 must exactly equal <code>first_frame.png</code> (no modifications).</li>
+<li>The glass jar is rendered as a semi-transparent overlay with alpha blending.</li>
+<li>Jar tint: dark blue-gray, alpha ≈ 0.3–0.5 (background visible through glass).</li>
+<li>Jar rim (top and bottom edges): slightly darker/thicker, alpha ≈ 0.6–0.8.</li>
+<li>Flame dimming: progressive reduction in brightness and saturation as jar covers the flame tips.</li>
+<li>After extinction (frame 11+): add subtle gray smoke wisps inside the jar.</li>
+</ul>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD.md — Glass Jar Lowering Animation</h1>
+<h2>Overview</h2>
+<p>The animation shows a glass jar being lowered over a bundle of lit matchsticks standing in a bowl of red liquid. The matchsticks burn with visible flames at their tips, and as the jar descends to cover them, the flames gradually extinguish due to oxygen depletion.</p>
+<h2>Scene Analysis</h2>
+<p>The first frame (<code>first_frame.png</code>, 256×144 RGB) was analysed numerically (no image‑viewing tools used):</p>
+<table>
+<thead>
+<tr>
+  <th>Element</th>
+  <th>Position</th>
+  <th>Key Colours</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Background wall</td>
+  <td>rows 0–40</td>
+  <td>Warm grey, R≈155–175</td>
+</tr>
+<tr>
+  <td>Desk surface</td>
+  <td>rows 40–143</td>
+  <td>Brown wood tones</td>
+</tr>
+<tr>
+  <td>Bowl + red liquid</td>
+  <td>rows 82–112, cols 83–194</td>
+  <td>Deep red, R≈100–115, G/B≈0–20</td>
+</tr>
+<tr>
+  <td>Matchstick flames</td>
+  <td>rows 0–7, cols 140–157</td>
+  <td>Bright yellow/orange, R≈250, G≈200, B≈100</td>
+</tr>
+<tr>
+  <td>Matchstick bodies</td>
+  <td>vertical band x≈128–160 from flame to bowl</td>
+  <td>Warm wood browns</td>
+</tr>
+<tr>
+  <td>Glass jar ring/rim</td>
+  <td>rows 34–43, cols 129–157</td>
+  <td>Dark blue‑grey, R≈53–67, G≈55–60, B≈84–92</td>
+</tr>
+</tbody>
+</table>
+<p>The jar in frame 00 is partially lowered. Its bottom rim (dark ring) is visible at rows 34–43. The clear glass body extends upward beyond the frame.</p>
+<h2>Method</h2>
+<h3>1. Inpainting the Original Jar Region</h3>
+<p>Before each frame (t ≥ 1) can be composited, the original jar ring pixels at rows 34–43 must be removed so the jar can be placed at its new position. This is done by column‑wise linear interpolation between row 33 (just above the ring) and row 44 (just below):</p>
+<pre><code>for each column c:
+  for r in 34…43:
+    t = (r − 33) / 11
+    pixel[r,c] = (1−t) × pixel[33,c] + t × pixel[44,c]
+</code></pre>
+<p>This recovers a plausible matchstick/background appearance through the previously‑occluded region.</p>
+<h3>2. Jar Model</h3>
+<p>The jar is modelled as two parts stacked vertically:</p>
+<ul>
+<li><p><strong>Clear glass body</strong> (130 px tall): very subtle blue‑grey tint.</p>
+<ul>
+<li>Alpha = 0.08, tint = RGB(60, 65, 75).</li>
+<li>Horizontal edge fade over 3 px.</li>
+</ul>
+</li>
+<li><p><strong>Dark ring/rim</strong> (8 px tall): the thicker glass or metal ring at the jar opening.</p>
+<ul>
+<li>Alpha = 0.50, tint = RGB(22, 35, 55).</li>
+<li>Same horizontal extent as the body.</li>
+</ul>
+</li>
+</ul>
+<p>Both parts are composited over the inpainted base image using standard alpha blending:</p>
+<pre><code>output = (1 − α) × background + α × tint
+</code></pre>
+<h3>3. Jar Motion</h3>
+<p>The jar descends with ease‑in‑out cubic easing over 10 frames:</p>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Ring bottom (row)</th>
+  <th>Ring top (row)</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>43</td>
+  <td>35</td>
+  <td>Initial position</td>
+</tr>
+<tr>
+  <td>01–02</td>
+  <td>43 → 46</td>
+  <td>35 → 38</td>
+  <td>Slow start</td>
+</tr>
+<tr>
+  <td>03–05</td>
+  <td>46 → 83</td>
+  <td>38 → 75</td>
+  <td>Accelerating</td>
+</tr>
+<tr>
+  <td>06–08</td>
+  <td>83 → 120</td>
+  <td>75 → 112</td>
+  <td>Decelerating, ring passes bowl</td>
+</tr>
+<tr>
+  <td>09–10</td>
+  <td>120 → 123</td>
+  <td>112 → 115</td>
+  <td>Settling</td>
+</tr>
+<tr>
+  <td>11–19</td>
+  <td>123</td>
+  <td>115</td>
+  <td>Static (fully lowered)</td>
+</tr>
+</tbody>
+</table>
+<p>The ring bottom moves from row 43 to row 123 (just below the bowl).</p>
+<h3>4. Flame Extinction (Oxygen Depletion)</h3>
+<p>Flame dimming is driven by oxygen‑depletion timing, <strong>not</strong> by jar opacity:</p>
+<ul>
+<li>Once the ring has passed below the flame zone (row 12), extinction begins after a short delay.</li>
+<li>Extinction ramps linearly from 0→1 over frames 5–11.</li>
+<li>Pixels identified as flame (bright, warm‑coloured: R &gt; 130, G &gt; 70, R &gt; G + 10, G &gt; B + 10) are darkened and shifted toward a cool smoke grey.</li>
+<li>The relationship is independent of the jar composite: the jar tint and the flame extinction operate on separate layers.</li>
+</ul>
+<h3>5. Smoke Wisps</h3>
+<p>After extinction (frames 11+), random soft smoke patches are placed inside the jar interior using a seeded PRNG (seed = 42). Each wisp is a circular patch with radial falloff, blended at ~10 % opacity in smoke grey RGB(70, 66, 60). Intensity increases gradually from frame 11 to frame 19.</p>
+<h3>6. Outputs</h3>
+<p>All required artefacts are saved via <code>artifact_io.save()</code>:</p>
+<ul>
+<li><code>pixels.npz</code> — uint32 tensor (144×256×20) storing <code>0xRRGGBB</code> packed values</li>
+<li><code>frames/00.png</code> … <code>19.png</code> — individual 256×144 RGB PNGs</li>
+<li><code>inspection.png</code> — 8‑frame overview sheet</li>
+<li><code>transition_check.png</code> — all 20 thumbnails + per‑frame difference visualisation</li>
+<li><code>index.html</code> — standalone player</li>
+</ul>
+<p>Frame 00 is verified to match <code>first_frame.png</code> exactly before saving.</p>
+<h2>Limitations</h2>
+<ul>
+<li>The jar is rendered as a 2D planar overlay rather than a true 3D cylinder; no perspective distortion, reflections, or refraction.</li>
+<li>Inpainting uses simple linear interpolation, which may not perfectly recover fine matchstick detail in the original jar region.</li>
+<li>Smoke wisps are randomly placed and do not model fluid dynamics.</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0163-4b1859da08cc.png';</script></body></html>

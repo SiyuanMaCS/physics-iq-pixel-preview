@@ -1,0 +1,746 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>single-cradle · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_deepseek-v4-pro-text.html">← 返回本组视频</a><span class="tag">DeepSeek-V4-Pro · text · Case 0161</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>single-cradle</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>6</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>5</strong><span>generate.py 执行</span></div><div class="stat"><strong>29</strong><span>工具命令完成</span></div><div class="stat"><strong>0</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>14</strong><span>文件变更事件</span></div><div class="stat"><strong>27.4m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The blue-black grabber tool was holding one metal ball at the position of the amplitude of the Newton&#x27;s cradle. The Newton&#x27;s cradle with five metal balls is sitting on a table. One metal ball of the Newton&#x27;s cradle device is released by the blue-black grabber tool.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>无视觉附件</strong><span>输入边界</span></div><div class="event"><strong>禁用</strong><span>输出视觉工具</span></div><div class="event"><strong>29 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>6 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">此 Track 禁止读取输出图片。逐轮预览由外部 Harness 自动冻结，只用于事后审计，生成 Agent 当时看不到这些页面。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-a3d88ce902c7.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T08:59:19.808339+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +290/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels a3d88ce902c7334d · code 833ffba3ca42877a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,290 @@
++#!/usr/bin/env python3
++&quot;&quot;&quot;Generate 20-frame Newton&#x27;s cradle animation with pendulum physics.&quot;&quot;&quot;
++
++import numpy as np
++from PIL import Image
++from pathlib import Path
++import sys
++
++# Add artifact_io for saving
++sys.path.insert(0, str(Path(__file__).parent))
++from artifact_io import save
++
++CASE_DIR = Path(__file__).parent
++H, W = 144, 256
++
++# ---------------------------------------------------------------------------
++# 1. Load frame 0
++# ---------------------------------------------------------------------------
++frame0 = np.array(Image.open(CASE_DIR / &quot;first_frame.png&quot;)).astype(np.uint8)
++assert frame0.shape == (H, W, 3), f&quot;Expected (144,256,3), got {frame0.shape}&quot;
++
++# ---------------------------------------------------------------------------
++# 2. Scene measurements (from OBSERVATION.md analysis)
++# ---------------------------------------------------------------------------
++# Pendulum parameters
++STRING_LENGTH = 45  # pixels from attachment (~y=30) to ball center (~y=75)
++MAX_DISPLACEMENT = 12  # pixels horizontal at max amplitude
++# Ball rest positions (5 balls equally spaced, 19px apart, touching)
++# Ball 0 = leftmost, Ball 4 = rightmost
++BALL_REST_X = np.array([85, 104, 123, 142, 161])  # x-centers at rest
++BALL_REST_Y = 75  # y-center (all same height)
++BALL_RADIUS = 10  # ball radius in pixels
++
++# Grabber region (blue-black tool on left)
++GRABBER_MASK_Y_START = 55
++GRABBER_MASK_Y_END = 98
++GRABBER_MASK_X_START = 0
++GRABBER_MASK_X_END = 80  # includes grabber tip near ball
++
++# ---------------------------------------------------------------------------
++# 3. Create background plate (frame 0 with ball regions filled)
++# ---------------------------------------------------------------------------
++def create_background_plate(img):
++    &quot;&quot;&quot;Fill ball and grabber-tip regions with sampled background colors.&quot;&quot;&quot;
++    bg = img.copy()
++
++    # Sample background color per row from gap region (x=84-93)
++    # This gap is between held ball and resting balls
++    gap_x_start, gap_x_end = 84, 94
++    bg_samples = img[:, gap_x_start:gap_x_end].mean(axis=1).astype(np.uint8)
++
++    # Fill the ball motion region (x=55 to x=180, y=50 to 105)
++    # This covers all possible ball positions during animation
++    fill_x_start, fill_x_end = 55, 180
++    fill_y_start, fill_y_end = 50, 105
++
++    for y in range(fill_y_start, fill_y_end):
++        bg[y, fill_x_start:fill_x_end] = bg_samples[y]
++
++    # Smooth the filled region edges with the surrounding area
++    # Blend zone: 3 pixels on each side
++    blend = 3
++    for y in range(fill_y_start, fill_y_end):
++        for dx in range(blend):
++            # Left edge blend
++            alpha = (dx + 1) / (blend + 1)
++            bg[y, fill_x_start + dx] = (
++                alpha * bg_samples[y] + (1 - alpha) * img[y, fill_x_start + dx]
++            ).astype(np.uint8)
++            # Right edge blend
++            alpha = (dx + 1) / (blend + 1)
++            bg[y, fill_x_end - 1 - dx] = (
++                alpha * bg_samples[y] + (1 - alpha) * img[y, fill_x_end - 1 - dx]
++            ).astype(np.uint8)
++
++    # Also fill the grabber tip area (below y=65 on left side)
++    # The grabber retracts after releasing the ball
++    for y in range(65, GRABBER_MASK_Y_END):
++        bg[y, 55:GRABBER_MASK_X_END] = bg_samples[y]
++
++    return bg
++
++background = create_background_plate(frame0)
++
++# ---------------------------------------------------------------------------
++# 4. Extract ball sprites from frame 0
++# ---------------------------------------------------------------------------
+… diff truncated; 203 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-81da16a23ec7.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T09:02:03.248412+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +210/−202</span></div><p class="hashes">pixels 81da16a23ec7d276 · code 47730e27a8f2b0b0</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -1,12 +1,20 @@
+ #!/usr/bin/env python3
+-&quot;&quot;&quot;Generate 20-frame Newton&#x27;s cradle animation with pendulum physics.&quot;&quot;&quot;
++&quot;&quot;&quot;Generate 20-frame Newton&#x27;s cradle animation with pendulum physics.
++
++Method: Background-fill compositing with subpixel ball rendering.
++- A clean background plate is created by sampling the gap between held ball
++  and resting balls, filling the entire ball-motion region.
++- Ball sprites are extracted as circular regions from frame 0.
++- Each frame composites balls at pendulum-computed positions with
++  subpixel precision (bilinear blend between integer positions).
++- The grabber tip region is filled with background after release.
++&quot;&quot;&quot;
+ 
+ import numpy as np
+ from PIL import Image
+ from pathlib import Path
+ import sys
+ 
+-# Add artifact_io for saving
+ sys.path.insert(0, str(Path(__file__).parent))
+ from artifact_io import save
+ 
+@@ -20,106 +28,94 @@
+ assert frame0.shape == (H, W, 3), f&quot;Expected (144,256,3), got {frame0.shape}&quot;
+ 
+ # ---------------------------------------------------------------------------
+-# 2. Scene measurements (from OBSERVATION.md analysis)
+-# ---------------------------------------------------------------------------
+-# Pendulum parameters
+-STRING_LENGTH = 45  # pixels from attachment (~y=30) to ball center (~y=75)
+-MAX_DISPLACEMENT = 12  # pixels horizontal at max amplitude
+-# Ball rest positions (5 balls equally spaced, 19px apart, touching)
+-# Ball 0 = leftmost, Ball 4 = rightmost
+-BALL_REST_X = np.array([85, 104, 123, 142, 161])  # x-centers at rest
+-BALL_REST_Y = 75  # y-center (all same height)
+-BALL_RADIUS = 10  # ball radius in pixels
+-
+-# Grabber region (blue-black tool on left)
+-GRABBER_MASK_Y_START = 55
+-GRABBER_MASK_Y_END = 98
+-GRABBER_MASK_X_START = 0
+-GRABBER_MASK_X_END = 80  # includes grabber tip near ball
+-
+-# ---------------------------------------------------------------------------
+-# 3. Create background plate (frame 0 with ball regions filled)
++# 2. Scene measurements
++# ---------------------------------------------------------------------------
++STRING_LENGTH = 45
++MAX_DISPLACEMENT = 12
++BALL_REST_X = np.array([85, 104, 123, 142, 161])  # ball 0..4 at rest
++BALL_REST_Y = 75
++BALL_RADIUS = 10
++
++# Ball 0 (held) position in frame 0
++HELD_BALL_X0 = 73
++HELD_BALL_Y0 = 75
++
++# ---------------------------------------------------------------------------
++# 3. Create background plate
+ # ---------------------------------------------------------------------------
+ def create_background_plate(img):
+     &quot;&quot;&quot;Fill ball and grabber-tip regions with sampled background colors.&quot;&quot;&quot;
+     bg = img.copy()
+ 
+     # Sample background color per row from gap region (x=84-93)
+-    # This gap is between held ball and resting balls
+-    gap_x_start, gap_x_end = 84, 94
+-    bg_samples = img[:, gap_x_start:gap_x_end].mean(axis=1).astype(np.uint8)
+-
+-    # Fill the ball motion region (x=55 to x=180, y=50 to 105)
+-    # This covers all possible ball positions during animation
+-    fill_x_start, fill_x_end = 55, 180
+-    fill_y_start, fill_y_end = 50, 105
+-
+-    for y in range(fill_y_start, fill_y_end):
+-        bg[y, fill_x_start:fill_x_end] = bg_samples[y]
+-
+-    # Smooth the filled region edges with the surrounding area
+-    # Blend zone: 3 pixels on each side
++    gap_x0, gap_x1 = 84, 94
++    bg_samples = img[:, gap_x0:gap_x1].mean(axis=1).astype(np.uint8)
++
++    # Fill ball motion region (x=55..180, y=50..105)
++    fill_x0, fill_x1 = 55, 180
++    fill_y0, fill_y1 = 50, 105
++
++    for y in range(fill_y0, fill_y1):
+… diff truncated; 406 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-81da16a23ec7.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T09:02:05.012626+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 81da16a23ec7d276 · code 47730e27a8f2b0b0</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-ea3f7bc63a9b.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T09:04:42.342134+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +43/−51</span><span class="change">inspection 更新</span></div><p class="hashes">pixels ea3f7bc63a9b75c6 · code 97196012696f5f38</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -5,6 +5,8 @@
+ - A clean background plate is created by sampling the gap between held ball
+   and resting balls, filling the entire ball-motion region.
+ - Ball sprites are extracted as circular regions from frame 0.
++  The held ball sprite uses a resting ball&#x27;s appearance since the held ball
++  is partially occluded by the grabber in frame 0.
+ - Each frame composites balls at pendulum-computed positions with
+   subpixel precision (bilinear blend between integer positions).
+ - The grabber tip region is filled with background after release.
+@@ -36,7 +38,8 @@
+ BALL_REST_Y = 75
+ BALL_RADIUS = 10
+ 
+-# Ball 0 (held) position in frame 0
++# Ball 0 (held) position in frame 0 - used only for reference, 
++# sprite taken from ball 1 (resting) to avoid grabber occlusion
+ HELD_BALL_X0 = 73
+ HELD_BALL_Y0 = 75
+ 
+@@ -86,18 +89,24 @@
+     dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+     return dist &lt;= radius
+ 
+-# Ball sprites: full-frame arrays where only the ball circle has non-zero values
++# All 5 balls look the same (silver metal spheres).
++# Ball 0 is partially occluded by the grabber in frame 0, so we use
++# ball 1&#x27;s sprite (from its rest position) as a clean template.
++# Balls 1-4 use their own positions.
++
+ ball_sprites = []
+-ball_src_centers = []  # source positions in frame 0
+-
+-# Ball 0 - held ball
+-mask0 = make_circular_mask(HELD_BALL_X0, HELD_BALL_Y0, BALL_RADIUS, H, W)
+-sprite0 = np.zeros_like(frame0)
+-sprite0[mask0] = frame0[mask0]
+-ball_sprites.append(sprite0)
+-ball_src_centers.append((HELD_BALL_X0, HELD_BALL_Y0))
+-
+-# Balls 1-4 - resting balls
++ball_src_centers = []
++
++# Ball 0 - use ball 1&#x27;s clean sprite (no grabber occlusion)
++template_cx = BALL_REST_X[1]  # 104
++template_cy = BALL_REST_Y     # 75
++mask = make_circular_mask(template_cx, template_cy, BALL_RADIUS, H, W)
++sprite = np.zeros_like(frame0)
++sprite[mask] = frame0[mask]
++ball_sprites.append(sprite)
++ball_src_centers.append((template_cx, template_cy))
++
++# Balls 1-4 - from their own positions
+ for i in range(1, 5):
+     cx = BALL_REST_X[i]
+     cy = BALL_REST_Y
+@@ -110,7 +119,6 @@
+ # ---------------------------------------------------------------------------
+ # 5. Pendulum physics
+ # ---------------------------------------------------------------------------
+-# Half-swing period = 7 frames = 1.75 s → omega = pi / (2*1.75) = pi/3.5
+ omega = np.pi / 3.5
+ 
+ def pendulum_displacement_left(t):
+@@ -139,28 +147,22 @@
+ def paste_sprite_subpixel(frame, sprite, src_cx, src_cy, dst_cx, dst_cy):
+     &quot;&quot;&quot;Paste a circular sprite at subpixel position using bilinear blend.
+ 
+-    The sprite is extracted at (src_cx, src_cy) in its full-frame array.
+-    It is placed at (dst_cx, dst_cy) which can be fractional.
+-    We blend between the two nearest integer positions.
++    Places the sprite (extracted at src_cx,src_cy) at fractional (dst_cx,dst_cy).
++    Uses bilinear interpolation between 4 nearest integer-shifted versions.
+     &quot;&quot;&quot;
+-    # Integer floor and fractional part
+     ix = int(np.floor(dst_cx))
+     iy = int(np.floor(dst_cy))
+     fx = dst_cx - ix
+     fy = dst_cy - iy
+ 
+-    # Source integer position
+     six = int(round(src_cx))
+     siy = int(round(src_cy))
+ 
+-    # Compute shift for each of the 4 corners and blend
+-    # We&#x27;ll do bilinear blending of 4 shifted versions
++    accum = np.zeros_like(frame, dtype=np.float64)
++    weight_sum = np.zeros((H, W), dtype=np.float64)
++
+… diff truncated; 122 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-5881a98eabb1.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T09:10:48.441940+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +60/−31</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 5881a98eabb1dd51 · code bd78aa4551aae50b</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -47,35 +47,48 @@
+ # 3. Create background plate
+ # ---------------------------------------------------------------------------
+ def create_background_plate(img):
+-    &quot;&quot;&quot;Fill ball and grabber-tip regions with sampled background colors.&quot;&quot;&quot;
++    &quot;&quot;&quot;Fill ball and grabber-tip regions with sampled background colors.
++
++    We fill three separate regions (leaving gaps between them as original):
++      - Left:  x=55..84  (held ball region + grabber tip)
++      - Center: x=94..170 (resting balls region)
++      - Right:  x=170..185 (right ball swing region)
++    The gap at x=84..94 (between held ball and resting balls) is preserved.
++    &quot;&quot;&quot;
+     bg = img.copy()
++    fill_y0, fill_y1 = 50, 105
+ 
+     # Sample background color per row from gap region (x=84-93)
+     gap_x0, gap_x1 = 84, 94
+     bg_samples = img[:, gap_x0:gap_x1].mean(axis=1).astype(np.uint8)
+ 
+-    # Fill ball motion region (x=55..180, y=50..105)
+-    fill_x0, fill_x1 = 55, 180
+-    fill_y0, fill_y1 = 50, 105
+-
+-    for y in range(fill_y0, fill_y1):
+-        bg[y, fill_x0:fill_x1] = bg_samples[y]
+-
+-    # Blend edges (3px) to avoid hard seams
+-    blend = 3
+-    for y in range(fill_y0, fill_y1):
+-        for dx in range(blend):
+-            alpha = (dx + 1) / (blend + 1)
+-            bg[y, fill_x0 + dx] = (
+-                alpha * bg_samples[y] + (1 - alpha) * img[y, fill_x0 + dx]
+-            ).astype(np.uint8)
+-            bg[y, fill_x1 - 1 - dx] = (
+-                alpha * bg_samples[y] + (1 - alpha) * img[y, fill_x1 - 1 - dx]
+-            ).astype(np.uint8)
+-
+-    # Also fill grabber tip after release (y=65..98, x=55..80)
+-    for y in range(65, 98):
+-        bg[y, 55:80] = bg_samples[y]
++    def fill_region(x0, x1, blend_left=True, blend_right=True):
++        for y in range(fill_y0, fill_y1):
++            bg[y, x0:x1] = bg_samples[y]
++        # Blend edges (3px) to avoid hard seams
++        blend = 3
++        for y in range(fill_y0, fill_y1):
++            for dx in range(blend):
++                if blend_left:
++                    alpha = (dx + 1) / (blend + 1)
++                    bg[y, x0 + dx] = (
++                        alpha * bg_samples[y] + (1 - alpha) * img[y, x0 + dx]
++                    ).astype(np.uint8)
++                if blend_right:
++                    alpha = (dx + 1) / (blend + 1)
++                    bg[y, x1 - 1 - dx] = (
++                        alpha * bg_samples[y] + (1 - alpha) * img[y, x1 - 1 - dx]
++                    ).astype(np.uint8)
++
++    # Left region: held ball at amplitude (x~63-83) and rest (x~75-95)
++    # Plus grabber tip area (x~55-75, y~65-98)
++    fill_region(55, 84, blend_left=True, blend_right=True)
++
++    # Center region: resting balls (x~94-170 at rest)
++    fill_region(94, 171, blend_left=True, blend_right=True)
++
++    # Right region: right ball swing extension (x~170-183 at max swing)
++    fill_region(171, 185, blend_left=True, blend_right=True)
+ 
+     return bg
+ 
+@@ -119,11 +132,21 @@
+ # ---------------------------------------------------------------------------
+ # 5. Pendulum physics
+ # ---------------------------------------------------------------------------
+-omega = np.pi / 3.5
++# Half-swing period = 6 frames = 1.5 seconds
++# omega = pi / (half_period_in_seconds) = pi / 1.5 = pi / 3.0 * 2?
++# Actually: we want cos(omega * 1.5) = 0 (quarter period for h-swing)
++# cos(omega * T/4) = 0 → omega * T/4 = pi/2 → omega = 2*pi / T = 2*pi / 6.0?
++# For quarter-swing (amplitude to center): omega * 1.5 = pi/2 → omega = pi/3.0
++omega = np.pi / 3.0
+ 
+ def pendulum_displacement_left(t):
+-    &quot;&quot;&quot;Left ball displacement from rest: positive = left.&quot;&quot;&quot;
+-    if t &lt;= 1.75:
++    &quot;&quot;&quot;Left ball displacement from rest: positive = left.
+… diff truncated; 34 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/candidate-9a6613c302f4.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-06T09:12:32.848862+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +7/−5</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 9a6613c302f4d763 · code 8017ade00d12920a</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -84,11 +84,13 @@
+     # Plus grabber tip area (x~55-75, y~65-98)
+     fill_region(55, 84, blend_left=True, blend_right=True)
+ 
+-    # Center region: resting balls (x~94-170 at rest)
+-    fill_region(94, 171, blend_left=True, blend_right=True)
+-
+-    # Right region: right ball swing extension (x~170-183 at max swing)
+-    fill_region(171, 185, blend_left=True, blend_right=True)
++    # Center region: resting balls (x~94-171 at rest)
++    # Ball 4 at rest has right edge at 171; support structure starts at ~174
++    fill_region(94, 172, blend_left=True, blend_right=True)
++
++    # Note: We do NOT fill beyond x=172 to preserve the support structure
++    # on the right side. The right ball when swinging will overlap with the
++    # support structure, which is the correct visual behavior (ball in front).
+ 
+     return bg
+ </pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/deepseek-v4-pro-text/0161/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>Scene Observation &amp; 20-Frame Event Plan</h1>
+<h2>Scene Measurements</h2>
+<h3>Image Dimensions</h3>
+<ul>
+<li>256×144 pixels, RGB uint8</li>
+</ul>
+<h3>Spatial Layout (from top to bottom)</h3>
+<table>
+<thead>
+<tr>
+  <th>Region</th>
+  <th>Y Range</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Ceiling/upper wall</td>
+  <td>0-11</td>
+  <td>Bright whitish area</td>
+</tr>
+<tr>
+  <td>Background wall</td>
+  <td>12-55</td>
+  <td>Gray-beige wall with Newton's cradle frame visible</td>
+</tr>
+<tr>
+  <td>Cradle apparatus</td>
+  <td>55-100</td>
+  <td>Newton's cradle frame, strings, and balls</td>
+</tr>
+<tr>
+  <td>Table surface</td>
+  <td>100-143</td>
+  <td>Dark brown wooden table</td>
+</tr>
+</tbody>
+</table>
+<h3>Newton's Cradle Structure</h3>
+<ul>
+<li><strong>Frame</strong>: Dark vertical support lines at x≈68-69 (left) and x≈173-174 (right), spanning y≈16-70</li>
+<li><strong>Crossbar</strong>: Around y≈16-20, horizontal</li>
+<li><strong>String length</strong>: ~45 pixels (from crossbar y≈30 to ball center y≈75)</li>
+</ul>
+<h3>Five Metal Balls</h3>
+<ul>
+<li>Ball diameter: ~19 pixels</li>
+<li><strong>Held ball</strong> (pulled to left amplitude by grabber): center ~(73, 75)</li>
+<li><strong>4 resting balls</strong> (touching, at center): centers at approximately x=104, 123, 142, 161, all at y≈75</li>
+<li>Ball colors: specular silver/bronze metallic - bright center highlight (R&gt;170), warm edges (R~120-150, G~80-110, B~50-70)</li>
+</ul>
+<h3>Blue-Black Grabber</h3>
+<ul>
+<li>Position: x≈0-61, y≈67-94 (left side)</li>
+<li>Blue pixels (B &gt; R+40, B &gt; G+30) concentrated in roughly triangular region</li>
+<li>Holds the left ball at its amplitude position</li>
+<li>Ball is partially obscured behind/within grabber gripper</li>
+</ul>
+<h3>Background Behind Balls</h3>
+<ul>
+<li>Gap region x≈83-93, y≈55-90: warm brown gradient, approximately RGB(124,93,66) transitioning darker lower down</li>
+<li>This is the wall/table area behind the moving balls</li>
+</ul>
+<h3>Physics Parameters</h3>
+<ul>
+<li>String length L ≈ 45 px</li>
+<li>Max angular displacement ≈ 43.6° (amplitude from x=73 to x=104, horizontal displacement ≈ 31 px)</li>
+<li>Pendulum period T ≈ 2π√(L/g) → for animation: half-swing ≈ 7 frames at 4 fps</li>
+</ul>
+<h2>20-Frame Event Plan (4 fps, 5 seconds)</h2>
+<h3>Phase 1: Left Ball Release and Swing (Frames 0-4)</h3>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>Initial state: grabber holds left ball at left amplitude. Must match first_frame.png exactly.</td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>Grabber releases ball. Ball begins swinging rightward (~10% of arc). Grabber retracts slightly.</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>Ball swings further right (~30% of arc), gravity accelerates it downward.</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>Ball continues swing (~60% of arc), approaching resting balls.</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>Ball nearly at impact position (~90% of arc).</td>
+</tr>
+</tbody>
+</table>
+<h3>Phase 2: Impact and Right Ball Swing-Out (Frames 5-10)</h3>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td><strong>IMPACT</strong>: Left ball contacts the row of resting balls. Momentum transfers through.</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>Rightmost ball just begins separating from the group (~20% of right arc). Left ball now at rest with others.</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>Right ball swinging outward (~50% of right arc).</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>Right ball continues outward (~80% of right arc).</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>Right ball near right amplitude (~95% of arc).</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>Right ball at maximum right amplitude (mirror of left amplitude, ~31 px displacement from rest).</td>
+</tr>
+</tbody>
+</table>
+<h3>Phase 3: Right Ball Return and Impact (Frames 11-15)</h3>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>Right ball begins return swing (~95% of arc).</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>Right ball returning (~80% of arc).</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>Right ball returning (~50% of arc).</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>Right ball approaching impact (~20% of arc).</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td><strong>IMPACT</strong>: Right ball hits the row. Left ball begins to separate.</td>
+</tr>
+</tbody>
+</table>
+<h3>Phase 4: Left Ball Swing-Out (Frames 16-19)</h3>
+<table>
+<thead>
+<tr>
+  <th>Frame</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>Left ball separates from group (~20% of left arc).</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>Left ball swinging outward (~50% of left arc).</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>Left ball continuing outward (~80% of left arc).</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>Left ball near left amplitude (~95% of arc). Grabber is no longer holding the ball.</td>
+</tr>
+</tbody>
+</table>
+<h2>Implementation Method</h2>
+<p><strong>Approach</strong>: Pixel-level compositing with background fill and ball sprite translation.</p>
+<ol>
+<li><p><strong>Background plate</strong>: Create a clean background by sampling static pixels adjacent to ball regions and filling ball-occupied areas with smooth gradients matching the surrounding background.</p>
+</li>
+<li><p><strong>Ball extraction</strong>: Isolate ball pixels from frame 0 using circular masks centered on each ball position.</p>
+</li>
+<li><p><strong>Pendulum physics</strong>: Compute ball positions using θ(t) = θ₀ · cos(ωt) with ω = π/(7 frames) for a half-swing period of 7 frames (~1.75s).</p>
+</li>
+<li><p><strong>Frame rendering</strong>: For each frame:</p>
+<ul>
+<li>Start from clean background plate</li>
+<li>Composite static frame elements (frame, strings, grabber after release)</li>
+<li>Draw balls at computed pendulum positions</li>
+<li>Handle the grabber separately (present in frame 0, retracted in later frames)</li>
+</ul>
+</li>
+<li><p><strong>Grabber handling</strong>: Frame 0 shows grabber holding the ball. After release (frame 1+), the grabber retracts or remains stationary while the ball moves away. The grabber tip area is filled with background in later frames.</p>
+</li>
+</ol>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>Method: Newton's Cradle Animation</h1>
+<h2>Approach Summary</h2>
+<p>Pixel-level compositing with subpixel ball rendering and pendulum physics. The method uses frame 0 as the reference, extracts ball sprites, creates a clean background plate via per-row gap sampling, and composites balls at physically-correct positions for each frame.</p>
+<h2>Steps</h2>
+<h3>1. Scene Analysis (first_frame.png pixel inspection)</h3>
+<ul>
+<li><strong>Resolution</strong>: 256×144, uint8 RGB</li>
+<li><strong>Newton's cradle</strong>: 5 metal balls, ~19px diameter each, hanging from strings ~45px long</li>
+<li><strong>Held ball</strong> (ball 0): pulled to left amplitude by blue-black grabber, center at ~x=73, y=75</li>
+<li><strong>4 resting balls</strong>: centers at x=104, 123, 142, 161, y=75 (19px spacing, touching)</li>
+<li><strong>Grabber</strong>: blue-black tool at x=0-61, y=67-94, holding the left ball</li>
+<li><strong>Support structure</strong>: metal-colored frame visible on right at x=174+</li>
+<li><strong>Background</strong>: wall gradient transitioning to dark table below y=100</li>
+<li><strong>Max horizontal displacement</strong>: 12 pixels (from rest x=85 to amplitude x=73)</li>
+</ul>
+<h3>2. Background Plate Creation</h3>
+<ul>
+<li>Sample per-row background color from the gap region (x=84-93) between held ball and resting balls, where background is visible in frame 0</li>
+<li>Fill two regions with per-row average colors:<ul>
+<li><strong>Left</strong> (x=55-84): covers held ball positions from amplitude to rest, plus grabber tip area</li>
+<li><strong>Center</strong> (x=94-172): covers 4 resting balls at rest</li>
+</ul>
+</li>
+<li>3-pixel edge blending at region boundaries to avoid hard seams</li>
+<li>Gap region (x=84-93) and support structure (x=174+) are <strong>preserved</strong> from original image</li>
+</ul>
+<h3>3. Ball Sprite Extraction</h3>
+<ul>
+<li>Circular masks (radius=10px) centered at each ball's position in frame 0</li>
+<li>Ball 0 (held) uses ball 1's clean sprite (center x=104) since the held ball is partially occluded by the grabber in frame 0</li>
+<li>Balls 1-4 use their own positions from frame 0</li>
+<li>Sprites are full-frame arrays (144×256×3) with non-zero values only within circular mask</li>
+</ul>
+<h3>4. Pendulum Physics</h3>
+<ul>
+<li>Half-swing period: 6 frames = 1.5 seconds (ω = π/3.0 rad/s)</li>
+<li>4-phase animation over 20 frames:</li>
+</ul>
+<table>
+<thead>
+<tr>
+  <th>Phase</th>
+  <th>Frames</th>
+  <th>Time (s)</th>
+  <th>Event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>0-6</td>
+  <td>0.00-1.50</td>
+  <td>Left ball swings from amplitude (d=12) to center (d=0)</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>6-12</td>
+  <td>1.50-3.00</td>
+  <td>Right ball swings out (d: 0→12)</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>12-18</td>
+  <td>3.00-4.50</td>
+  <td>Right ball returns (d: 12→0)</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>18-19</td>
+  <td>4.50-4.75</td>
+  <td>Left ball begins swinging out (d: 0→3.1)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Displacement functions:<ul>
+<li><code>d_left(t) = 12·cos(ωt)</code> for t∈[0,1.5], <code>12·sin(ω(t-4.5))</code> for t∈[4.5,5.0]</li>
+<li><code>d_right(t) = 12·sin(ω(t-1.5))</code> for t∈[1.5,3.0], <code>12·cos(ω(t-3.0))</code> for t∈[3.0,4.5]</li>
+</ul>
+</li>
+<li>Vertical rise from pendulum arc: <code>dy = L·(1 − cos(arcsin(d/L)))</code> where L=45px</li>
+</ul>
+<h3>5. Subpixel Compositing</h3>
+<ul>
+<li>Ball positions computed as floating-point coordinates</li>
+<li>Bilinear interpolation: render at 4 integer-offset positions and blend by fractional weights</li>
+<li><code>np.roll</code> for integer-pixel shifts with wrap-edge clearing</li>
+<li>Balls composited right-to-left for correct overlap ordering</li>
+</ul>
+<h3>6. Frame Generation</h3>
+<ul>
+<li>Frame 0: exact copy of <code>first_frame.png</code></li>
+<li>Frames 1-19: background plate + composited balls at computed positions</li>
+<li>Grabber tip area automatically filled by background plate (simulating retraction after release)</li>
+</ul>
+<h2>Verification</h2>
+<ul>
+<li>Frame 00 binary-equal to first_frame.png ✓</li>
+<li>All 19 frame transitions have non-zero pixel changes ✓</li>
+<li>Gap region (x=84-93) preserved: only 2 pixels differ from original ✓</li>
+<li>Support structure (x=174+) preserved: 0 pixels differ from original ✓</li>
+<li>All frames have sufficient color diversity (13k+ unique colors) ✓</li>
+<li>Physics produces correct pendulum motion with impact at frames 6 and 18 ✓</li>
+</ul>
+<h2>Output Files</h2>
+<ul>
+<li><code>generate.py</code> - main generation script</li>
+<li><code>pixels.npz</code> - uint32-wrapped pixel tensor (20×144×256 in 0xRRGGBB format)</li>
+<li><code>frames/00.png-19.png</code> - individual frame PNGs</li>
+<li><code>inspection.png</code> - 8-frame contact sheet</li>
+<li><code>transition_check.png</code> - frame-to-frame difference visualization</li>
+<li><code>index.html</code> - standalone player with delta-encoded frames</li>
+<li><code>METHOD.md</code> - this file</li>
+<li><code>OBSERVATION.md</code> - scene measurements and event plan</li>
+</ul>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/deepseek-v4-pro-text/0161-aa704f932158.png';</script></body></html>
