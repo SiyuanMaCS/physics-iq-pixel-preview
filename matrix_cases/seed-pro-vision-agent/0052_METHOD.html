@@ -1,0 +1,910 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>double-cradle · 可观测生成 Trace</title><style>
+:root{color-scheme:dark;--bg:#0d1014;--panel:#171c22;--panel2:#11161b;--line:#303943;--muted:#9faab7;--green:#a5ef83;--blue:#83ccff;--orange:#ffc478;--red:#ffaaa0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#203227 0,transparent 30%),var(--bg);color:#f1f5f7;font:14px/1.65 system-ui,-apple-system,sans-serif}a{color:var(--blue);text-decoration:none}main{max-width:1180px;margin:auto;padding:24px 20px 70px}nav{display:flex;justify-content:space-between;gap:12px;color:var(--muted);margin-bottom:24px}.tag{border:1px solid var(--line);border-radius:999px;padding:5px 10px}.eyebrow{color:var(--green);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin:0 0 6px}h1{font-size:clamp(28px,5vw,44px);line-height:1.08;letter-spacing:-.04em;margin:0 0 10px}.lead{color:#c2cbd3;max-width:900px;margin:0}.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.pill{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:11px}.pill.evidence{color:var(--blue);background:#10202b}.pill.claim{color:var(--orange);background:#241d12}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0}.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px}.stat strong{display:block;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:10px}.two{display:grid;grid-template-columns:1.08fr .92fr;gap:15px}.box,.section{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}.box-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 15px;border-bottom:1px solid var(--line)}.box-head h2,.section h2{font-size:18px;margin:0}.screen{position:relative;background:#080a0c;aspect-ratio:16/9}.screen canvas,.screen img{display:block;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}.screen img{position:absolute;inset:0}.controls{display:flex;gap:9px;align-items:center;padding:11px 14px}.controls button{border:0;border-radius:8px;background:var(--green);color:#11200d;padding:8px 14px;font-weight:800;cursor:pointer}.controls input{flex:1;accent-color:var(--green)}.clock{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}.input-wrap{padding:15px}.prompt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px;margin:0 0 12px;color:#dbe1e6}.validation{display:grid;grid-template-columns:1fr 1fr;gap:7px}.check{background:#132016;border:1px solid #304d32;border-radius:8px;padding:8px;color:#dfffd5;font-size:11px}.section{padding:17px;margin-top:16px}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:12px}.section-head p{margin:0;color:var(--muted);font-size:11px}.events{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.event{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:9px;padding:11px}.event strong{display:block;font-size:15px}.event span{color:var(--muted);font-size:10px}.rounds{display:grid;gap:12px}.round{display:grid;grid-template-columns:310px 1fr;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden}.round img{width:100%;height:100%;min-height:175px;object-fit:contain;background:#080a0c;image-rendering:pixelated}.round-body{padding:13px}.round-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.round h3{margin:0;font-size:16px}.changes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.change{border-radius:999px;background:#202831;padding:3px 7px;color:#cbd5de;font-size:10px}.change.pixel{background:#1b3021;color:#cfffbd}.change.code{background:#2c2316;color:#ffdda7}.hashes{color:var(--muted);font:10px ui-monospace,monospace;overflow-wrap:anywhere}.round details{margin-top:8px}.round summary{cursor:pointer;color:var(--blue);font-size:11px}.round pre{max-height:260px;overflow:auto;background:#090c0f;border:1px solid #27303a;border-radius:8px;padding:10px;color:#ccd4db;font-size:10px;white-space:pre-wrap}.evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.evidence-grid figure{margin:0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden}.evidence-grid img{display:block;width:100%;background:#080a0c;image-rendering:pixelated}.evidence-grid figcaption{padding:8px 10px;color:var(--muted);font-size:10px}.claim-box{background:#201a11;border:1px solid #503e20;border-radius:11px;padding:14px}.claim-box h3{color:var(--orange);margin:0 0 8px;font-size:15px}.markdown{color:#d8dee4}.markdown h2{margin:22px 0 7px;padding-top:17px;border-top:1px solid var(--line)}.markdown h3{font-size:15px}.markdown code{background:#0d1115;border:1px solid #2a333d;border-radius:4px;padding:1px 4px}.markdown pre{overflow:auto;background:#0a0d10;border:1px solid var(--line);border-radius:9px;padding:11px}.note{color:var(--muted);font-size:11px;margin:8px 0 0}.warn{color:#ffe0a9;background:#241d12;border:1px solid #59451f;border-radius:9px;padding:10px;margin-top:10px}@media(max-width:850px){.two,.round{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.events{grid-template-columns:1fr 1fr}.round img{height:auto}.evidence-grid{grid-template-columns:1fr}}@media(max-width:520px){main{padding:16px 11px 45px}.stats{grid-template-columns:1fr 1fr}.events{grid-template-columns:1fr}.validation{grid-template-columns:1fr}nav{font-size:11px}}
+</style></head><body><main><nav><a href="../../matrix_seed-pro-vision-agent.html">← 返回本组视频</a><span class="tag">Seed-2.1-Pro-0915 · vision-agent · Case 0052</span></nav>
+<header><p class="eyebrow">Observable Generation Trace</p><h1>double-cradle</h1><p class="lead">把最终像素视频、Harness 冻结的每轮候选、真实工具事件和 Agent 自述放在同一页。可观测证据与模型自述分开标记，避免把“模型说它检查过”误当成真实工具调用。</p><div class="legend"><span class="pill evidence">蓝色 · Harness / events.jsonl 可验证</span><span class="pill claim">橙色 · Agent 自述，仅作解释</span></div></header>
+<div class="stats"><div class="stat"><strong>17</strong><span>冻结候选 rounds</span></div><div class="stat"><strong>14</strong><span>generate.py 执行</span></div><div class="stat"><strong>108</strong><span>工具命令完成</span></div><div class="stat"><strong>44</strong><span>显式 PNG 视觉读取</span></div><div class="stat"><strong>41</strong><span>文件变更事件</span></div><div class="stat"><strong>120.3m</strong><span>Agent 运行时长</span></div></div>
+<div class="two"><section class="box"><div class="box-head"><h2>最终像素视频</h2><span class="clock">20 帧 · 4 fps · 5 秒</span></div><div class="screen"><canvas id="video" width="256" height="144"></canvas><img id="poster" src="data:image/webp;base64,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" alt="首帧"></div><div class="controls"><button id="play">▶ 播放</button><input id="seek" type="range" min="0" max="19" value="0"><span class="clock" id="clock">00 · 0.00s</span></div></section>
+<section class="box"><div class="box-head"><h2>唯一输入与最终校验</h2><span class="pill evidence">manifest evidence</span></div><div class="input-wrap"><p class="prompt">Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The blue-black grabber tool was holding two metal balls at the position of the amplitude of the Newton&#x27;s cradle. The Newton&#x27;s cradle with five metal balls is sitting on a table. Two metal balls of the Newton&#x27;s cradle device are released by the blue-black grabber tool.</p><div class="validation"><div class="check">✓ frame 00 = 输入逐像素</div><div class="check">✓ 20 PNG = uint32 tensor</div><div class="check">✓ 无网络命令</div><div class="check">✓ 无子 Agent</div><div class="check">✓ 无成功的目录外读取</div><div class="check">✓ Harness validation PASS</div></div><p class="note">首帧显示在左侧播放器初始画面。Track 权限、隔离和 tensor 一致性来自 run manifest，而不是 METHOD.md。</p></div></section></div>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Observable events</p><h2>Agent 实际做了什么</h2></div><p>来源：events.jsonl + run manifest</p></div><div class="events"><div class="event"><strong>首图附件</strong><span>输入边界</span></div><div class="event"><strong>可自主调用</strong><span>输出视觉工具</span></div><div class="event"><strong>108 个完成事件</strong><span>Shell / Python</span></div><div class="event"><strong>17 轮由 Harness 自动保存</strong><span>候选冻结</span></div></div><p class="note">events.jsonl 可验证该 Agent 成功读取了 44 张 PNG；上面的 round 图不等同于读取次数，而是 Harness 独立冻结的候选。</p></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Frozen candidates</p><h2>逐轮候选与修订</h2></div><p>每张图来自该 round 的真实 00 / 01 / 05 / 10 / 19 帧</p></div><div class="rounds"><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-36b942327d08.webp" alt="Round 0 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 00</h3><span class="clock">2026-11-06T08:32:50.080778+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +479/−0</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 36b942327d0844c8 · code ffeb9bb176cad83e</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -0,0 +1,479 @@
++&quot;&quot;&quot;PixelWorld case_0052: Newton&#x27;s cradle — grabber releases two balls.
++
++Local pixel operations only (numpy / cv2 / PIL). Frame 00 is a byte copy of
++first_frame.png; frames 01-19 are composited from an inpainted clean plate,
++procedural chrome-ball sprites, faint bifilar strings, moving jaw-tip patches
++and analytic pendulum phase positions. See OBSERVATION.md / METHOD.md.
++&quot;&quot;&quot;
++from pathlib import Path
++import math
++import numpy as np
++import cv2
++from PIL import Image
++import artifact_io
++
++ROOT = Path(__file__).parent
++TMP = ROOT / &#x27;.tmp&#x27;
++TMP.mkdir(exist_ok=True)
++
++F0 = np.array(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++H, W = 144, 256
++
++# ---------------------------------------------------------------- geometry
++REST = [np.array([123.3, 104.4]), np.array([134.4, 102.3]),
++        np.array([145.4, 100.2]), np.array([156.0, 98.7]),
++        np.array([166.9, 96.0])]
++HOLD = [np.array([101.0, 110.7]), np.array([113.9, 106.1])]      # balls 0,1
++FAR = [np.array([174.0, 95.9]), np.array([184.9, 93.2])]         # balls 3,4
++D_NEAR = [HOLD[i] - REST[i] for i in range(2)]
++D_FAR = [FAR[i] - REST[i + 3] for i in range(2)]
++
++PLATFORM_POLY = np.array([[108, 100], [184, 96], [200, 119],
++                          [158, 144], [80, 140], [95, 117]], np.int32)
++
++
++def platform_top_y(x):
++    &quot;&quot;&quot;Upper boundary of the black platform surface for fill/shadow clipping.&quot;&quot;&quot;
++    pts = [(95, 117), (108, 100), (184, 96), (200, 119)]
++    if x &lt;= pts[0][0]:
++        return 150
++    for (x0, y0), (x1, y1) in zip(pts[:-1], pts[1:]):
++        if x0 &lt;= x &lt;= x1:
++            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
++    return 150
++
++
++def ball_state(i, p):
++    &quot;&quot;&quot;Image position and radius for ball i at phase p (sin fraction).&quot;&quot;&quot;
++    if i &lt; 2:
++        pos = REST[i] + p * D_NEAR[i] if p &lt;= 0 else REST[i].copy()
++    elif i &gt; 2:
++        pos = REST[i] + p * D_FAR[i - 3] if p &gt;= 0 else REST[i].copy()
++    else:
++        pos = REST[i].copy()
++    # tiny upward bow for the pendulum rise away from the two endpoints
++    bow = -0.6 * 4 * abs(p) * (1 - abs(p))
++    pos = pos + np.array([0.0, bow])
++    r = 6.7
++    if i &lt; 2:
++        r += 0.60 * max(-p, 0)
++    elif i &gt; 2:
++        r -= 0.40 * max(p, 0)
++    return pos, r
++
++
++# frame states: p per ball; schedule documented in OBSERVATION.md
++SQ = math.sqrt(0.5)
++STATES = []
++for f in range(20):
++    t = f * 0.25
++    ph = (t % 2.0)                      # one full transfer cycle = 2 s
++    p = [0.0, 0.0, 0.0, 0.0, 0.0]
++    if ph &lt; 1.0:                        # near pair in, then far pair out
++        c = math.cos(math.pi * ph)      # +1 near-amp ... 0 collision ... -1 far
++        if c &gt;= 0:
++            p[0] = p[1] = -c
++        else:
++            p[3] = p[4] = -c
++    else:                               # far pair back, near pair out
++        c = math.cos(math.pi * (ph - 1.0))
++        if c &gt;= 0:
++            p[3] = p[4] = c
++        else:
++            p[0] = p[1] = c
++    STATES.append(p)
++
++# ---------------------------------------------------------------- masks helpers
++def ellipse_mask(mask, cx, cy, rx, ry=None):
+… diff truncated; 392 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-9ab93eb744dc.webp" alt="Round 1 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 01</h3><span class="clock">2026-11-06T08:47:03.466560+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +56/−34</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 9ab93eb744dcf641 · code 88c45526ceef8b59</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -88,7 +88,7 @@
+     if ry is None:
+         ry = rx
+     cv2.ellipse(mask, (int(round(cx)), int(round(cy))),
+-                (int(round(rx)), int(round(ry))), 0, 0, 360, 255)
++                (int(round(rx)), int(round(ry))), 0, 0, 360, 255, -1)
+ 
+ 
+ def poly_mask(points, shape=(H, W)):
+@@ -123,7 +123,7 @@
+     f0_pos = [HOLD[0], HOLD[1], REST[2], REST[3], REST[4]]
+     f0_rad = [7.3, 6.9, 6.7, 6.7, 6.7]
+     for (cx, cy), r in zip(f0_pos, f0_rad):
+-        ellipse_mask(mask, cx, cy, r + 1.6)
++        ellipse_mask(mask, cx, cy, r + 2.0)
+         ellipse_mask(mask, cx + 1, cy + r + 12, r * 1.5, 5.5)   # reflection blob
+         ellipse_mask(mask, cx + 1, cy + r + 5, r * 0.9, 3.0)
+ 
+@@ -177,21 +177,36 @@
+ 
+ 
+ # ---------------------------------------------------------------- chrome posts
+-def post_profile(x0, x1, y0, y1, y_stop, y_dst0, y_dst1, shade_bottom=0.8):
+-    &quot;&quot;&quot;Build a vertical chrome post strip by averaging clean rows y0..y1,
+-    then extend it to destination rows with a smooth brightness ramp.&quot;&quot;&quot;
+-    prof = F0[y0:y1, x0:x1].astype(np.float32).mean(axis=0)      # (w,3)
+-    h = y_dst1 - y_dst0
+-    strip = np.repeat(prof[None], h, axis=0)
+-    t = np.linspace(0, 1, h)
+-    shade = 1.0 - (1.0 - shade_bottom) * np.clip((t - 0.15) / 0.85, 0, 1) ** 1.5
+-    strip *= shade[:, None, None]
++def build_front_post():
++    &quot;&quot;&quot;Front U left post (x106..109) rebuilt across the ball band (y88..144).
++
++    Top segment: real clean rows over wood; bottom segment: real clean rows
++    over the black base (F0 y120+); middle is a blend of the two.
++    &quot;&quot;&quot;
++    top = F0[84:94, 106:110].astype(np.float32).mean(axis=0)     # (4,3)
++    bot = F0[120:144, 106:110].astype(np.float32).mean(axis=0)
++    h = 56
++    strip = np.zeros((h, 4, 3), np.float32)
++    strip[:6] = top[None]
++    t = np.linspace(0, 1, h - 6 - 24)[:, None, None]
++    strip[6:h - 24] = top[None] * (1 - t) + bot[None] * t
++    strip[h - 24:] = F0[120:144, 106:110].astype(np.float32)
+     return np.clip(strip, 0, 255).astype(np.uint8)
+ 
+ 
+-def stamp(canvas, strip, x0, y0, feather=1.0):
++def build_back_post():
++    prof = F0[55:82, 163:168].astype(np.float32).mean(axis=0)     # (5,3)
++    strip = np.repeat(prof[None], 14, axis=0)
++    return np.clip(strip, 0, 255).astype(np.uint8)
++
++
++def stamp(canvas, strip, x0, y0, feather=1.0, fade_top=0):
+     h, w, _ = strip.shape
+     alpha = np.ones((h, w), np.float32)
++    if fade_top:
++        ramp = np.ones((h, 1), np.float32)
++        ramp[:fade_top, 0] = np.linspace(0, 1, fade_top)
++        alpha *= ramp
+     if feather:
+         k = 2 * int(feather * 2) + 1
+         alpha = cv2.GaussianBlur(alpha, (k, k), feather)
+@@ -265,25 +280,29 @@
+     oak_col = oak_l[None] * (1 - horiz)[:, None] + oak_r[None] * horiz[:, None]
+ 
+     up = smoothstep(0.02, 0.18, el[:, 0])[:, None, None]
+-    band = np.exp(-((el + 0.02) / 0.20) ** 2)
++    band = np.exp(-((el + 0.02) / 0.12) ** 2)
+     down = smoothstep(-0.02, -0.20, el[:, 0])[:, None, None]
+-    env[:] = wall_col[None] * up
+-    env += oak_col[None] * band[..., None] * 0.9
+-    env += base_dark[None] * down * (1 - band[..., None] * 0.7)
++    env[:] = wall_col[None] * up * 0.72
++    env += oak_col[None] * band[..., None] * 0.42
++    env += base_dark[None] * down * (1 - band[..., None] * 0.5)
+     # faint oak bounce just under the horizon on the glossy base
+     bounce = np.exp(-((el + 0.28) / 0.12) ** 2)
+-    env += oak_col[None] * bounce[..., None] * 0.25
++    env += oak_col[None] * bounce[..., None] * 0.18
+ 
+     # key softbox (upper-right, warm white)
+     ka, ke = 0.50, 0.62
+     d = np.cos(el) * np.cos(az - ka) * math.cos(ke) + np.sin(el) * math.sin(ke)
+-    key = np.clip((d - 0.86) / 0.14, 0, 1) ** 2
+-    env += np.array([255, 250, 238.0])[None, None] * key[..., None] * 1.4
+… diff truncated; 92 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-f53a9c7b5d95.webp" alt="Round 2 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 02</h3><span class="clock">2026-11-06T08:55:18.165132+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +137/−70</span></div><p class="hashes">pixels f53a9c7b5d954683 · code 2a31d0b7b889e2c1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -44,11 +44,15 @@
+ 
+ 
+ def ball_state(i, p):
+-    &quot;&quot;&quot;Image position and radius for ball i at phase p (sin fraction).&quot;&quot;&quot;
++    &quot;&quot;&quot;Image position and radius for ball i at phase p (sin fraction).
++
++    p&lt;0 near (camera) side, p&gt;0 far side. D_NEAR/D_FAR already point toward
++    the respective amplitude, so the near branch uses -p.
++    &quot;&quot;&quot;
+     if i &lt; 2:
+-        pos = REST[i] + p * D_NEAR[i] if p &lt;= 0 else REST[i].copy()
++        pos = REST[i] + (-p) * D_NEAR[i] if p &lt; 0 else REST[i].copy()
+     elif i &gt; 2:
+-        pos = REST[i] + p * D_FAR[i - 3] if p &gt;= 0 else REST[i].copy()
++        pos = REST[i] + p * D_FAR[i - 3] if p &gt; 0 else REST[i].copy()
+     else:
+         pos = REST[i].copy()
+     # tiny upward bow for the pendulum rise away from the two endpoints
+@@ -124,8 +128,8 @@
+     f0_rad = [7.3, 6.9, 6.7, 6.7, 6.7]
+     for (cx, cy), r in zip(f0_pos, f0_rad):
+         ellipse_mask(mask, cx, cy, r + 2.0)
+-        ellipse_mask(mask, cx + 1, cy + r + 12, r * 1.5, 5.5)   # reflection blob
+-        ellipse_mask(mask, cx + 1, cy + r + 5, r * 0.9, 3.0)
++        ellipse_mask(mask, cx + 1, cy + r + 9, r * 1.6, 4.0)
++        ellipse_mask(mask, cx + 1, cy + r + 18, r * 1.6, 6.0)
+ 
+     # f0 bifilar strings
+     for i, (cx, cy) in enumerate(f0_pos):
+@@ -134,41 +138,66 @@
+         line_quad(mask, af, top, 2.2)
+         line_quad(mask, ab, top, 2.2)
+ 
+-    # moving jaw tips (see extract_jaws): generous polygons
+-    cv2.fillPoly(mask, [np.array([(58, 90), (64, 109), (102, 108),
+-                                  (102, 93)], np.int32)], 255)
+-    cv2.fillPoly(mask, [np.array([(82, 108), (84, 121), (108, 119),
+-                                  (108, 109)], np.int32)], 255)
+-
+-    # ---- directional seed fill: wood above platform edge, dark below
+-    seed = img.copy()
++    # only the pixels actually redrawn by the moving jaw patches are removed
++    _, ua, urect, _, _, _ = UPPER_JAW
++    _, la, lrect, _, _, _ = LOWER_JAW
++    mask = np.maximum(mask, (ua &gt; 8).astype(np.uint8) * 255)
++    mask = np.maximum(mask, (la &gt; 8).astype(np.uint8) * 255)
++
++    # ---- local donor fill, classified by surface (wood / black / body)
++    plat = PLAT &gt; 0
++    gray = img.mean(axis=2)
++    # static black grabber body at lower-left (outside the platform)
++    body = np.zeros((H, W), bool)
++    body[100:144, 0:112] = (~plat[100:144, 0:112]) &amp; (gray[100:144, 0:112] &lt; 60)
++
++    def surface_of(x, y):
++        if plat[y, x]:
++            return 0      # platform
++        if body[y, x]:
++            return 1      # grabber black body
++        return 2          # wood / wall
++
++    filled = img.copy()
+     ys, xs = np.where(mask &gt; 0)
+-    for x in np.unique(xs):
+-        col_ys = ys[xs == x]
+-        top_edge = platform_top_y(x)
+-        mcols = mask[:, x]
+-        idx = np.where(mcols &gt; 0)[0]
+-        if len(idx) == 0:
+-            continue
+-        # nearest unmasked donor above and below
+-        unmasked = np.where(mcols == 0)[0]
+-        for y in col_ys:
+-            if y &lt; top_edge:
+-                donors = unmasked[unmasked &lt; y]
+-                yd = donors[-1] if len(donors) else unmasked[np.argmin(abs(unmasked - y))]
+-            else:
+-                donors = unmasked[unmasked &gt; y]
+-                yd = donors[0] if len(donors) else unmasked[np.argmin(abs(unmasked - y))]
+-            seed[y, x] = img[yd, x]
+-
+-    # Telea inpaint on the seeded image just smooths/repairs residuals
+-    bgr = cv2.cvtColor(seed, cv2.COLOR_RGB2BGR)
+-    filled = cv2.cvtColor(cv2.inpaint(bgr, mask, 2.5, cv2.INPAINT_TELEA),
++    order = sorted(range(len(ys)), key=lambda k: min(ys[k] - 0, 0))
++    for k in order:
++        y, x = int(ys[k]), int(xs[k])
+… diff truncated; 192 more lines …</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-f53a9c7b5d95.webp" alt="Round 3 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 03</h3><span class="clock">2026-11-06T08:55:19.907115+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels f53a9c7b5d954683 · code 2a31d0b7b889e2c1</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-6f7f15af75c2.webp" alt="Round 4 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 04</h3><span class="clock">2026-11-06T09:00:02.151588+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +13/−7</span></div><p class="hashes">pixels 6f7f15af75c23fb2 · code 7e2db20c878276c6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -258,13 +258,19 @@
+                        (106, 117), (98, 119), (84, 120)])
+     blue = (F0[:, :, 2].astype(int) &gt; 95) &amp; \
+            (F0[:, :, 2].astype(int) - F0[:, :, 0].astype(int) &gt; 35)
+-    dark = (F0.mean(axis=2) &lt; 70)
+-    um = ((upoly &gt; 0) &amp; (blue | dark)).astype(np.uint8) * 255
+-    lm = ((lpoly &gt; 0) &amp; blue).astype(np.uint8) * 255
+-    um = cv2.dilate(um, np.ones((3, 3), np.uint8))
+-    lm = cv2.dilate(lm, np.ones((3, 3), np.uint8))
+-    ua = cv2.GaussianBlur(um, (3, 3), 0.8)
+-    la = cv2.GaussianBlur(lm, (3, 3), 0.8)
++    gray0 = F0.mean(axis=2)
++    dark = gray0 &lt; 58
++    chrome = gray0 &gt; 108                  # never let ball highlights ride along
++    ucls = (upoly &gt; 0) &amp; (blue | dark) &amp; ~chrome
++    lcls = (lpoly &gt; 0) &amp; blue &amp; ~chrome
++    # grow only into same-class (non-chrome) neighbours, then AA the edge
++    grow = np.ones((3, 3), np.uint8)
++    ug = cv2.dilate(ucls.astype(np.uint8), grow).astype(bool) &amp; ~chrome
++    lg = cv2.dilate(lcls.astype(np.uint8), grow).astype(bool) &amp; ~chrome
++    ua = cv2.GaussianBlur(ug.astype(np.float32), (3, 3), 0.7) * 255
++    la = cv2.GaussianBlur(lg.astype(np.float32), (3, 3), 0.7) * 255
++    ua = np.clip(ua, 0, 255).astype(np.uint8)
++    la = np.clip(la, 0, 255).astype(np.uint8)
+     return (F0.copy(), ua, (58, 90, 103, 110), (60, 104), -11.0,
+             (-1.5, -3.5)), \
+            (F0.copy(), la, (81, 108, 109, 122), (84, 113), 9.0,</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-6f7f15af75c2.webp" alt="Round 5 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 05</h3><span class="clock">2026-11-06T09:00:03.873888+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 6f7f15af75c23fb2 · code 7e2db20c878276c6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-e713dce065c1.webp" alt="Round 6 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 06</h3><span class="clock">2026-11-06T09:05:49.911941+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +36/−29</span><span class="change">inspection 更新</span></div><p class="hashes">pixels e713dce065c17683 · code ced12609b2abcbba</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -388,44 +388,51 @@
+     rr = np.sqrt(np.clip(d2, 0, r * r)) / r
+     nz = np.sqrt(np.clip(1 - rr * rr, 0, 1))
+     nx, ny = u / r, v / r                      # screen-space normal (y down)
+-    # empirical dark-chrome look: dark room reflected at the centre,
++    # empirical dark-chrome look: dim room reflected at the centre,
+     # brighter wall grazing in at the rim
+-    grazing = (1 - nz) ** 0.75
+-    dark = np.array([30.0, 28.0, 30.0])
+-    rim = np.array([120.0, 112.0, 102.0])
++    grazing = (1 - nz) ** 0.6
++    dark = np.array([52.0, 50.0, 50.0])
++    rim = np.array([138.0, 130.0, 120.0])
+     col = dark[None, None] * (1 - grazing[..., None]) + \
+         rim[None, None] * grazing[..., None]
+-    # oak horizon band near the horizontal equator
+-    band = np.exp(-(ny / 0.30) ** 2) * (0.4 + 0.6 * grazing)
+-    col += np.array([112.0, 80.0, 42.0])[None, None] * band[..., None] * 0.5
+-    # lower hemisphere mirrors the black platform
+-    low = np.clip((ny - 0.18) / 0.62, 0, 1) ** 1.2
+-    col *= (1.0 - 0.82 * low)[..., None]
+-    # slightly cooler crown
+-    crown = np.clip((-ny - 0.35) / 0.5, 0, 1) * grazing * 0.5
+-    col += np.array([16.0, 22.0, 30.0])[None, None] * crown[..., None]
+-
+-    def spec(lx, ly, lz, color, sharp, elong=1.0, strength=1.0):
++    # oak horizon band, strongest just under the equator on the right
++    band = np.exp(-(ny / 0.26) ** 2) * np.clip(0.35 + 0.9 * nx, 0, 1.4)
++    col += np.array([120.0, 86.0, 46.0])[None, None] * band[..., None] * 0.55
++    # lower hemisphere mirrors the black platform (bottom third only)
++    low = np.clip((ny - 0.30) / 0.55, 0, 1) ** 1.5
++    col *= (1.0 - 0.88 * low)[..., None]
++    # cool grey crown at top grazing
++    crown = np.clip((-ny - 0.45) / 0.45, 0, 1) * grazing
++    col += np.array([10.0, 14.0, 20.0])[None, None] * crown[..., None] * 0.8
++
++    def lobe(nx_, ny_, nz_, ux, uy, sharp, elong=0.0):
++        &quot;&quot;&quot;Gaussian angular lobe around unit vector (ux,uy); elongated by
++        unioning two tilted copies (vertical sliver look).&quot;&quot;&quot;
++        def one(ux_, uy_):
++            uz_ = math.sqrt(max(0.0, 1 - ux_ * ux_ - uy_ * uy_))
++            dot = np.clip(nx_ * ux_ + ny_ * uy_ + nz_ * uz_, 0, 1)
++            ang = np.sqrt(np.clip(2 * (1 - dot), 0, None))
++            return np.exp(-((ang / sharp) ** 2))
++        g = one(ux, uy)
++        if elong:
++            g = np.maximum(g, one(ux, uy - elong))
++            g = np.maximum(g, one(ux, uy + elong))
++        return g
++
++    def spec(lx, ly, lz, color, sharp, elong=0.0, strength=1.0):
+         ln = math.hypot(lx, ly, lz)
+         lx, ly, lz = lx / ln, ly / ln, lz / ln
+         hx, hy, hz = lx, ly, lz + 1
+         hn = math.hypot(hx, hy, hz)
+-        hx, hy, hz = hx / hn, hy / hn, hz / hn
+-        dot = np.clip(nx * hx + ny * hy + nz * hz, 0, 1)
+-        ang = np.sqrt(np.clip(2 * (1 - dot), 0, None))
+-        g = np.exp(-((ang / sharp) ** 2))
+-        # stretch tangentially a touch
++        g = lobe(nx, ny, nz, hx / hn, hy / hn, sharp, elong)
+         return color[None, None] * (g * strength)[..., None]
+ 
+-    # warm key softbox upper-right
+-    col += spec(0.36, -0.58, 0.70, np.array([255.0, 248.0, 230.0]),
+-                0.22, strength=1.25)
+-    # tight vertical highlight slivers (overhead softbox reflections)
+-    col += spec(0.02, -0.85, 0.50, np.array([250.0, 250.0, 246.0]),
+-                0.10, strength=1.0)
+-    # cool cyan fill upper-left
+-    col += spec(-0.45, -0.42, 0.78, np.array([190.0, 230.0, 245.0]),
+-                0.14, strength=0.9)
++    # warm white softbox sliver, upper-right of centre
++    col += spec(0.80, -0.27, 0.53, np.array([255.0, 248.0, 230.0]),
++                0.16, elong=0.10, strength=1.35)
++    # cool cyan window sliver, lower-left of centre
++    col += spec(-0.95, 0.50, 0.30, np.array([195.0, 232.0, 246.0]),
++                0.13, elong=0.08, strength=1.05)
+     col = np.clip(col, 0, 255)
+     # coverage (AA at rim)
+     cov = np.clip(r + 0.5 - np.sqrt(d2), 0, 1)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-90e707bd3ff5.webp" alt="Round 7 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 07</h3><span class="clock">2026-11-06T09:07:29.150933+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +6/−3</span></div><p class="hashes">pixels 90e707bd3ff54275 · code c0710ecd68b3db97</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -392,7 +392,7 @@
+     # brighter wall grazing in at the rim
+     grazing = (1 - nz) ** 0.6
+     dark = np.array([52.0, 50.0, 50.0])
+-    rim = np.array([138.0, 130.0, 120.0])
++    rim = np.array([148.0, 140.0, 128.0])
+     col = dark[None, None] * (1 - grazing[..., None]) + \
+         rim[None, None] * grazing[..., None]
+     # oak horizon band, strongest just under the equator on the right
+@@ -431,8 +431,11 @@
+     col += spec(0.80, -0.27, 0.53, np.array([255.0, 248.0, 230.0]),
+                 0.16, elong=0.10, strength=1.35)
+     # cool cyan window sliver, lower-left of centre
+-    col += spec(-0.95, 0.50, 0.30, np.array([195.0, 232.0, 246.0]),
+-                0.13, elong=0.08, strength=1.05)
++    col += spec(-0.86, 0.32, 0.38, np.array([195.0, 232.0, 246.0]),
++                0.12, elong=0.07, strength=1.3)
++    # warm oak reflection on the lower-right flank
++    g = lobe(nx, ny, nz, 0.45, 0.35, 0.30)
++    col += np.array([150.0, 108.0, 60.0])[None, None] * g[..., None] * 0.85
+     col = np.clip(col, 0, 255)
+     # coverage (AA at rim)
+     cov = np.clip(r + 0.5 - np.sqrt(d2), 0, 1)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-90e707bd3ff5.webp" alt="Round 8 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 08</h3><span class="clock">2026-11-06T09:07:30.883999+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 90e707bd3ff54275 · code c0710ecd68b3db97</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-b167baa51b3a.webp" alt="Round 9 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 09</h3><span class="clock">2026-11-06T09:13:11.695671+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +16/−6</span><span class="change">inspection 更新</span></div><p class="hashes">pixels b167baa51b3a4d97 · code d7e3dd2cdf103dcd</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -390,9 +390,9 @@
+     nx, ny = u / r, v / r                      # screen-space normal (y down)
+     # empirical dark-chrome look: dim room reflected at the centre,
+     # brighter wall grazing in at the rim
+-    grazing = (1 - nz) ** 0.6
+-    dark = np.array([52.0, 50.0, 50.0])
+-    rim = np.array([148.0, 140.0, 128.0])
++    grazing = (1 - nz) ** 0.45
++    dark = np.array([56.0, 54.0, 54.0])
++    rim = np.array([156.0, 148.0, 136.0])
+     col = dark[None, None] * (1 - grazing[..., None]) + \
+         rim[None, None] * grazing[..., None]
+     # oak horizon band, strongest just under the equator on the right
+@@ -426,6 +426,10 @@
+         hn = math.hypot(hx, hy, hz)
+         g = lobe(nx, ny, nz, hx / hn, hy / hn, sharp, elong)
+         return color[None, None] * (g * strength)[..., None]
++
++    # broad pale wall sheen across the upper hemisphere
++    sheen = lobe(nx, ny, nz, 0.0, -0.86, 0.62) * np.clip(nz, 0, 1)
++    col += np.array([190.0, 186.0, 180.0])[None, None] * sheen[..., None] * 0.30
+ 
+     # warm white softbox sliver, upper-right of centre
+     col += spec(0.80, -0.27, 0.53, np.array([255.0, 248.0, 230.0]),
+@@ -442,9 +446,15 @@
+     big[inside] = np.concatenate([np.clip(col[inside], 0, 255),
+                                   (cov * 255)[inside, None]], axis=1)
+     small = cv2.resize(big, (size, size), interpolation=cv2.INTER_AREA)
+-    rgb = cv2.GaussianBlur(small[:, :, :3], (3, 3), 0.8)
++    rgb = cv2.GaussianBlur(small[:, :, :3], (3, 3), 0.9)
+     a = small[:, :, 3]
+-    SPRITE_CACHE[key] = (rgb.astype(np.uint8), a.astype(np.float32) / 255.0, n)
++    # soft bloom leaking one pixel past the rim (source highlight bleed)
++    glow_a = cv2.GaussianBlur(a, (5, 5), 1.6) * 0.35
++    glow_rgb = cv2.GaussianBlur(rgb, (5, 5), 1.6)
++    a = np.maximum(a, glow_a)
++    rgb = np.maximum(rgb.astype(np.float32), glow_rgb.astype(np.float32) * 0.5)
++    SPRITE_CACHE[key] = (np.clip(rgb, 0, 255).astype(np.uint8),
++                         np.clip(a, 0, 255).astype(np.float32) / 255.0, n)
+     return SPRITE_CACHE[key]
+ 
+ 
+@@ -516,7 +526,7 @@
+             y0 = 20.0
+             cv2.line(layer, (int(round(x0)), int(round(y0))),
+                      (int(round(x1)), int(round(y1))), (74, 72, 70), 1, cv2.LINE_AA)
+-    alpha = 0.07
++    alpha = 0.055
+     canvas[:] = np.clip(canvas.astype(np.float32) * (1 - alpha) +
+                         layer.astype(np.float32) * alpha, 0, 255).astype(np.uint8)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-aea3988d341c.webp" alt="Round 10 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 10</h3><span class="clock">2026-11-06T09:14:39.922224+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +3/−0</span></div><p class="hashes">pixels aea3988d341c3a4d · code d5315caa5fcc2df7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -395,6 +395,9 @@
+     rim = np.array([156.0, 148.0, 136.0])
+     col = dark[None, None] * (1 - grazing[..., None]) + \
+         rim[None, None] * grazing[..., None]
++    # dark chrome crescent on the left rim
++    left = np.clip((-nx - 0.35) / 0.5, 0, 1) * grazing
++    col *= (1.0 - 0.55 * left)[..., None]
+     # oak horizon band, strongest just under the equator on the right
+     band = np.exp(-(ny / 0.26) ** 2) * np.clip(0.35 + 0.9 * nx, 0, 1.4)
+     col += np.array([120.0, 86.0, 46.0])[None, None] * band[..., None] * 0.55</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-aea3988d341c.webp" alt="Round 11 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 11</h3><span class="clock">2026-11-06T09:14:41.647194+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels aea3988d341c3a4d · code d5315caa5fcc2df7</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-72ecd320726a.webp" alt="Round 12 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 12</h3><span class="clock">2026-11-06T09:23:05.191411+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +25/−13</span></div><p class="hashes">pixels 72ecd320726a9b68 · code cc9e7f9c0d955e28</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -67,10 +67,7 @@
+ 
+ 
+ # frame states: p per ball; schedule documented in OBSERVATION.md
+-SQ = math.sqrt(0.5)
+-STATES = []
+-for f in range(20):
+-    t = f * 0.25
++def state_at(t):
+     ph = (t % 2.0)                      # one full transfer cycle = 2 s
+     p = [0.0, 0.0, 0.0, 0.0, 0.0]
+     if ph &lt; 1.0:                        # near pair in, then far pair out
+@@ -85,7 +82,11 @@
+             p[3] = p[4] = c
+         else:
+             p[0] = p[1] = c
+-    STATES.append(p)
++    return p
++
++
++SQ = math.sqrt(0.5)
++STATES = [state_at(f * 0.25) for f in range(20)]
+ 
+ # ---------------------------------------------------------------- masks helpers
+ def ellipse_mask(mask, cx, cy, rx, ry=None):
+@@ -271,10 +272,10 @@
+     la = cv2.GaussianBlur(lg.astype(np.float32), (3, 3), 0.7) * 255
+     ua = np.clip(ua, 0, 255).astype(np.uint8)
+     la = np.clip(la, 0, 255).astype(np.uint8)
+-    return (F0.copy(), ua, (58, 90, 103, 110), (60, 104), -11.0,
+-            (-1.5, -3.5)), \
+-           (F0.copy(), la, (81, 108, 109, 122), (84, 113), 9.0,
+-            (-1.5, 3.0))
++    return (F0.copy(), ua, (58, 90, 103, 110), (60, 104), -13.0,
++            (-2.0, -4.0)), \
++           (F0.copy(), la, (81, 108, 109, 122), (84, 113), 13.0,
++            (-2.0, 4.5))
+ 
+ 
+ def warp_patch(rgb, alpha, rect, hinge, angle_deg, shift):
+@@ -461,7 +462,7 @@
+     return SPRITE_CACHE[key]
+ 
+ 
+-def composite_sprite(canvas, cx, cy, r):
++def composite_sprite(canvas, cx, cy, r, weight=1.0):
+     rgb, alpha, n = make_sprite(r)
+     x0, y0 = int(round(cx)) - n, int(round(cy)) - n
+     h, w = alpha.shape
+@@ -469,7 +470,7 @@
+     ya, yb = max(0, y0), min(H, y0 + h)
+     if xa &gt;= xb or ya &gt;= yb:
+         return
+-    a = alpha[ya - y0:yb - y0, xa - x0:xb - x0]
++    a = alpha[ya - y0:yb - y0, xa - x0:xb - x0] * weight
+     sp = rgb[ya - y0:yb - y0, xa - x0:xb - x0].astype(np.float32)
+     roi = canvas[ya:yb, xa:xb].astype(np.float32)
+     canvas[ya:yb, xa:xb] = np.clip(
+@@ -566,9 +567,20 @@
+     draw_strings(canvas, states)
+ 
+     order = sorted(range(5), key=lambda i: ball_state(i, states[i])[0][0])
++    p_prev = state_at(max(t - 0.0625, 0.0))
++    p_next = state_at(t + 0.0625)
+     for i in order:
+-        pos, r = ball_state(i, states[i])
+-        composite_sprite(canvas, pos[0], pos[1], r)
++        p0 = states[i]
++        pm, pp = p_prev[i], p_next[i]
++        # motion-blur sub-samples only while one ball stays on the same arc
++        moving = abs(p0) &gt; 0.07 and (pm * p0 &gt; 0.02) and (pp * p0 &gt; 0.02)
++        if moving:
++            for ps, w in ((pm, 0.30), (p0, 0.55), (pp, 0.30)):
++                pos, r = ball_state(i, ps)
++                composite_sprite(canvas, pos[0], pos[1], r, w)
++        else:
++            pos, r = ball_state(i, p0)
++            composite_sprite(canvas, pos[0], pos[1], r)
+ 
+     # opening jaws (retreat behind the front post)
+     q = smoothstep(0.0, 0.5, t)</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-72ecd320726a.webp" alt="Round 13 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 13</h3><span class="clock">2026-11-06T09:23:06.888228+00:00</span></div><div class="changes"><span class="change">inspection 更新</span></div><p class="hashes">pixels 72ecd320726a9b68 · code cc9e7f9c0d955e28</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>No generate.py text change in this frozen round.</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-2bfeaacb355b.webp" alt="Round 14 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 14</h3><span class="clock">2026-11-06T09:26:11.779882+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +5/−5</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 2bfeaacb355b7347 · code 35cc8ce1864b6913</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -272,10 +272,10 @@
+     la = cv2.GaussianBlur(lg.astype(np.float32), (3, 3), 0.7) * 255
+     ua = np.clip(ua, 0, 255).astype(np.uint8)
+     la = np.clip(la, 0, 255).astype(np.uint8)
+-    return (F0.copy(), ua, (58, 90, 103, 110), (60, 104), -13.0,
+-            (-2.0, -4.0)), \
+-           (F0.copy(), la, (81, 108, 109, 122), (84, 113), 13.0,
+-            (-2.0, 4.5))
++    return (F0.copy(), ua, (58, 90, 103, 110), (58, 106), -20.0,
++            (-1.0, -1.0)), \
++           (F0.copy(), la, (81, 108, 109, 122), (81, 116), 18.0,
++            (-1.0, 2.5))
+ 
+ 
+ def warp_patch(rgb, alpha, rect, hinge, angle_deg, shift):
+@@ -530,7 +530,7 @@
+             y0 = 20.0
+             cv2.line(layer, (int(round(x0)), int(round(y0))),
+                      (int(round(x1)), int(round(y1))), (74, 72, 70), 1, cv2.LINE_AA)
+-    alpha = 0.055
++    alpha = 0.032
+     canvas[:] = np.clip(canvas.astype(np.float32) * (1 - alpha) +
+                         layer.astype(np.float32) * alpha, 0, 255).astype(np.uint8)
+ </pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-065706918e81.webp" alt="Round 15 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 15</h3><span class="clock">2026-11-06T09:36:26.515469+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +4/−4</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 065706918e817013 · code 417b13219058d8b8</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -272,10 +272,10 @@
+     la = cv2.GaussianBlur(lg.astype(np.float32), (3, 3), 0.7) * 255
+     ua = np.clip(ua, 0, 255).astype(np.uint8)
+     la = np.clip(la, 0, 255).astype(np.uint8)
+-    return (F0.copy(), ua, (58, 90, 103, 110), (58, 106), -20.0,
+-            (-1.0, -1.0)), \
+-           (F0.copy(), la, (81, 108, 109, 122), (81, 116), 18.0,
+-            (-1.0, 2.5))
++    return (F0.copy(), ua, (58, 90, 103, 110), (58, 106), -28.0,
++            (-2.0, -2.0)), \
++           (F0.copy(), la, (81, 108, 109, 122), (81, 116), 26.0,
++            (-2.0, 3.0))
+ 
+ 
+ def warp_patch(rgb, alpha, rect, hinge, angle_deg, shift):</pre></details></div></article><article class="round"><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/candidate-0f5714789a6e.webp" alt="Round 16 五个时间点"><div class="round-body"><div class="round-top"><h3>Round 16</h3><span class="clock">2026-11-06T09:38:36.265156+00:00</span></div><div class="changes"><span class="change pixel">像素候选变化</span><span class="change code">代码 +12/−12</span><span class="change">inspection 更新</span></div><p class="hashes">pixels 0f5714789a6ebbf7 · code d9eca79c0d6e5aa6</p><details><summary>查看本轮 generate.py 真实 diff</summary><pre>--- previous/generate.py
++++ current/generate.py
+@@ -566,6 +566,18 @@
+ 
+     draw_strings(canvas, states)
+ 
++    # opening jaws (retreat behind the balls after release)
++    q = smoothstep(0.0, 0.5, t)
++    for (rgb0, alpha0, rect, hinge, ang, shift) in (UPPER_JAW, LOWER_JAW):
++        warped, wa, (x0, y0) = warp_patch(
++            rgb0, alpha0, rect, hinge, ang * q, (shift[0] * q, shift[1] * q))
++        h, w = wa.shape
++        a = wa.astype(np.float32) / 255.0
++        roi = canvas[y0:y0 + h, x0:x0 + w].astype(np.float32)
++        canvas[y0:y0 + h, x0:x0 + w] = np.clip(
++            roi * (1 - a[..., None]) + warped.astype(np.float32) * a[..., None],
++            0, 255).astype(np.uint8)
++
+     order = sorted(range(5), key=lambda i: ball_state(i, states[i])[0][0])
+     p_prev = state_at(max(t - 0.0625, 0.0))
+     p_next = state_at(t + 0.0625)
+@@ -582,18 +594,6 @@
+             pos, r = ball_state(i, p0)
+             composite_sprite(canvas, pos[0], pos[1], r)
+ 
+-    # opening jaws (retreat behind the front post)
+-    q = smoothstep(0.0, 0.5, t)
+-    for (rgb0, alpha0, rect, hinge, ang, shift) in (UPPER_JAW, LOWER_JAW):
+-        warped, wa, (x0, y0) = warp_patch(
+-            rgb0, alpha0, rect, hinge, ang * q, (shift[0] * q, shift[1] * q))
+-        h, w = wa.shape
+-        a = wa.astype(np.float32) / 255.0
+-        roi = canvas[y0:y0 + h, x0:x0 + w].astype(np.float32)
+-        canvas[y0:y0 + h, x0:x0 + w] = np.clip(
+-            roi * (1 - a[..., None]) + warped.astype(np.float32) * a[..., None],
+-            0, 255).astype(np.uint8)
+-
+     # front post occludes balls and jaw tips
+     stamp(canvas, FRONT_POST, 106, 88, feather=0.9)
+     return canvas</pre></details></div></article></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Final visual checks</p><h2>最终检查图</h2></div><p>Harness 保存的最终产物</p></div><div class="evidence-grid"><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/final-inspection.webp" alt="最终多时点检查图"><figcaption>最终 inspection：多个时间点的整体事件与稳定状态。</figcaption></figure><figure><img loading="lazy" src="../../assets/matrix_trace/seed-pro-vision-agent/0052/final-transition.webp" alt="首续帧检查图"><figcaption>transition_check：重点检查 00→01→02 的材质、几何和残影。</figcaption></figure></div></section>
+<section class="section"><div class="section-head"><div><p class="eyebrow">Agent claims</p><h2>Agent 的观察与方法说明</h2></div><p>以下文字由生成 Agent 撰写，不等同于工具证据</p></div><div class="claim-box"><h3>OBSERVATION.md</h3><div class="markdown"><h1>OBSERVATION — case_0052</h1>
+<h2>Scene (from <code>first_frame.png</code>, 256×144)</h2>
+<p>Static locked-off oblique view of a Newton's cradle (5 chrome balls, bifilar
+string suspension, two U-shaped chrome frames, glossy black base on a light-oak
+table, pale grey wall behind). A blue-and-black grabber tool (locking-pliers
+style) enters from lower-left; its jaw tips cradle the two leftmost balls,
+which are held pulled out toward the camera at the swing amplitude.</p>
+<h3>Measured geometry (pixel coordinates, x right / y down)</h3>
+<p>Circle fits to the chrome rims (least-squares; soft-focus source):</p>
+<table>
+<thead>
+<tr>
+  <th>ball</th>
+  <th>rest center (row line)</th>
+  <th>frame-0 center (held)</th>
+  <th>radius</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>(123.3, 104.4)</td>
+  <td><strong>(101.0, 110.7)</strong></td>
+  <td>7.3 held → 6.7 rest</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>(134.4, 102.3)</td>
+  <td><strong>(113.9, 106.1)</strong></td>
+  <td>6.9 held → 6.7 rest</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>(145.4, 100.2)</td>
+  <td>(145.4, 100.2)</td>
+  <td>6.7</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>(156.0, 98.7)</td>
+  <td>(156.0, 98.7)</td>
+  <td>6.7</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>(166.9, 96.0)</td>
+  <td>(166.9, 96.0)</td>
+  <td>6.7 → 6.3 far</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Rest row vector per spacing: <strong>u = (+11.05, −2.08)</strong> px (row recedes up-right).</li>
+<li>Near-amplitude displacement (3D pull toward camera, projected):
+ball1 (−22.3, +6.3), ball2 (−20.5, +3.8); pair stays touching (gap 12.9 px vs 11 rest due to perspective magnification).</li>
+<li>Far-amplitude endpoints (mirrored, foreshortened ×0.82):
+ball4 → (174.0, 95.9), ball5 → (184.9, 93.2).</li>
+<li>Arc path per ball: R + p·δ (linear in sin θ) + a ≤1 px upward bow at |p|≈0.71 for the pendulum rise; p∈[−1,+1], negative = near (camera) side.</li>
+</ul>
+<h3>Chrome frame</h3>
+<ul>
+<li>Back U: left post x≈85 (y 6→92), right post x≈166 (y 6→95), top bar y≈4–10.</li>
+<li>Front U: left post x≈108 (y 14→143), right post x≈201 (y 14→120), top bar y≈13–20.</li>
+<li>Front-left post passes <strong>in front of</strong> the held pair (splits ball1/ball2); back-right post passes <strong>behind</strong> ball5.</li>
+<li>String anchors: front bar y≈17 at x = rest-x; back bar y≈8 at x = rest-x−2. Strings are extremely faint (1 px, low contrast) grey diagonals.</li>
+</ul>
+<h3>Base / table</h3>
+<ul>
+<li>Glossy black platform polygon approx (108,100)→(184,96)→(199,118)→(158,144)→(82,139)→(96,118); surface values ~ (15–40), faint blue-black reflections of the balls ~17–20 px below centers (soft blobs y≈118–128), plus a tight dark contact at the ball bottom.</li>
+<li>Oak table outside the base: ~(150,108,58), grain near-horizontal; wall ~(195,189,188); wall/table horizon around y≈55 on the right, lower behind apparatus.</li>
+</ul>
+<h3>Grabber (blue/black)</h3>
+<ul>
+<li>Upper jaw: black metal strip (y≈92–100) carrying a blue rubber pad running (34,108)→tip (99,96); blue ≈ (0,121,208).</li>
+<li>Lower jaw: blue pad (34,132)→tip (105,114); black body lower-left with silver bolts near (27,112),(36,133).</li>
+<li>Only the two jaw <strong>tips</strong> move on release; the body stays static.</li>
+</ul>
+<h2>Event plan (20 frames, 4 fps, t = frame/4)</h2>
+<p>Pendulum period chosen T = 2.0 s (ω = π rad/s), quarter-period τ = 0.5 s,
+amplitude θ₀ ≈ 11–12° (2-ball-diameter pull). Ideal equal-mass cradle → exact
+2-in / 2-out transfer; sampled analytically as a phase envelope.</p>
+<table>
+<thead>
+<tr>
+  <th>f</th>
+  <th>t (s)</th>
+  <th>state (p = sin θ/sin θ₀)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>00</td>
+  <td>0.00</td>
+  <td>balls 1,2 held at near amplitude p=−1.00, jaws closed — <strong>exact copy of first_frame.png</strong></td>
+</tr>
+<tr>
+  <td>01</td>
+  <td>0.25</td>
+  <td>1,2 swinging in p=−0.71; jaws half open</td>
+</tr>
+<tr>
+  <td>02</td>
+  <td>0.50</td>
+  <td>collision: all five in rest row p=0; jaws fully open</td>
+</tr>
+<tr>
+  <td>03</td>
+  <td>0.75</td>
+  <td>balls 4,5 exiting p=+0.71</td>
+</tr>
+<tr>
+  <td>04</td>
+  <td>1.00</td>
+  <td>4,5 at far amplitude p=+1.00</td>
+</tr>
+<tr>
+  <td>05</td>
+  <td>1.25</td>
+  <td>4,5 returning p=+0.71</td>
+</tr>
+<tr>
+  <td>06</td>
+  <td>1.50</td>
+  <td>collision: all five in row</td>
+</tr>
+<tr>
+  <td>07</td>
+  <td>1.75</td>
+  <td>1,2 swinging back out p=−0.71</td>
+</tr>
+<tr>
+  <td>08</td>
+  <td>2.00</td>
+  <td>1,2 near amplitude (grabber remains open, no re-grip)</td>
+</tr>
+<tr>
+  <td>09</td>
+  <td>2.25</td>
+  <td>−0.71 in</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>2.50</td>
+  <td>collision</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td>2.75</td>
+  <td>+0.71 out</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td>3.00</td>
+  <td>far amplitude</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td>3.25</td>
+  <td>+0.71 back</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td>3.50</td>
+  <td>collision</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td>3.75</td>
+  <td>−0.71 out</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td>4.00</td>
+  <td>near amplitude</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td>4.25</td>
+  <td>−0.71 in</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td>4.50</td>
+  <td>collision</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td>4.75</td>
+  <td>+0.71 out (sequence continues past cut)</td>
+</tr>
+</tbody>
+</table>
+<p>Jaw opening q = smoothstep over t∈[0,0.5], held open afterwards; tiny retraction.
+Strings stay anchored, tilt with balls; shadows/reflections track ball positions.</p>
+<h2>Render method (local pixels only)</h2>
+<ol>
+<li>Clean plate: remove all five balls + reflections + faint strings + two jaw
+tips from <code>first_frame.png</code>; directional seeded fill + cv2 Telea inpaint;
+chrome post strips (x≈108 front, x≈166 back) reconstructed from clean post
+segments and re-stamped (front post above balls, back post behind).</li>
+<li>Per frame composite: platform shadows → bifilar strings → procedural chrome
+sphere sprites (analytic normals, mirrored procedural environment map,
+key softbox upper-right + cyan fill, Fresnel dark rim, 8× supersample then
+Gaussian blur to match source softness, radius scales 7.3/6.7/6.3 along the
+swing) → warped jaw-tip patches (blue pixels + black backing extracted from
+frame 0, rotated/translated by q).</li>
+<li>Frame 00 is byte-identical to <code>first_frame.png</code>; frames 01–19 generated.</li>
+</ol>
+</div></div><div class="claim-box" style="margin-top:12px"><h3>METHOD.md</h3><div class="markdown"><h1>METHOD — case_0052</h1>
+<p>Local pixel synthesis only (numpy, Pillow, OpenCV). No external models,
+engines, network access, or frames other than <code>first_frame.png</code>. Frame 00 is
+a byte-for-byte copy of <code>first_frame.png</code>; frames 01–19 are composited.</p>
+<h2>1. Scene measurement</h2>
+<p>From <code>first_frame.png</code> (256×144) I least-squares fit circles to the five
+chrome balls and measured the frame posts, string anchors, platform polygon,
+grabber pads and key colours (all numbers in <code>OBSERVATION.md</code>). The resting
+row runs along u = (+11.05, −2.08) px; the held pair (balls 1–2) sits at the
+near amplitude around (101,111) and (114,106); mirrored far-amplitude
+endpoints for balls 4–5 are (174,96) and (185,93), foreshortened ×0.82.</p>
+<h2>2. Physics</h2>
+<p>Ideal equal-mass Newton's cradle gives exact 2-in/2-out momentum transfer,
+sampled analytically. Period T = 2.0 s, so at 4 fps the 20 sample times
+(0…4.75 s) land exactly on the instructive phases: held → 0.707 in →
+collision → 0.707 out → far amplitude, repeating. Each ball's screen
+position is <code>rest + p·Δ</code> on its arc with a ≤0.6 px mid-arc rise bow; p is the
+sine-fraction phase (negative = camera side). Apparent radius interpolates
+7.3 px held (perspective magnification) to 6.7 px at rest to 6.3 px far.
+Grabber jaw opening is a smoothstep over the first 0.5 s, then held open.</p>
+<h2>3. Clean background plate</h2>
+<p>All elements that move (five balls, their soft base reflections, ten faint
+bifilar strings, the two jaw-tip pads) are erased from frame 0. The erase
+mask is filled per pixel by nearest same-surface donor (wood / black base /
+black grabber body classified from the platform polygon and luminance),
+expanding outward in rings, then smoothed with a 1.5 px cv2 Telea inpaint and
+re-grained. Chrome post sections that pass behind/through the balls (front
+post x≈106–109, back post x≈164–167) are rebuilt from real clean post rows
+elsewhere in the same image and re-stamped with feathered alpha at the
+correct depth.</p>
+<h2>4. Ball rendering</h2>
+<p>Each ball is a procedural chrome sphere rendered 8× supersampled on analytic
+surface normals: dark room colour at the centre blending to a brighter
+grazing rim, a left dark crescent, an oak-horizon band, black-platform
+mirroring on the lower third, plus angular Gaussian highlight lobes (a warm
+white softbox sliver upper-right, a cyan window sliver lower-left, a warm
+flank lobe). The sprite is area-downsampled, Gaussian-blurred to match the
+source soft focus, and given a one-pixel highlight bloom. A tinted,
+squashed, blurred copy of the sprite plus a tight dark ellipse provides the
+glossy reflection/contact shadow on the base, clipped to the platform
+polygon. Moving balls are composited from three phase samples (±1/16 s) as
+motion blur; balls are drawn over the opened jaws, and the front post is
+stamped over everything.</p>
+<h2>5. Strings and grabber</h2>
+<p>Strings are 1 px anti-aliased lines at 3.2% opacity from fixed front/back
+top-bar anchors to the instantaneous ball tops. The two moving jaw pads are
+extracted directly from frame 0 (blue/dark pixels, explicitly excluding
+chrome highlights so no ball pixels ride with them), alpha-feathered, and
+rotated/translated about in-board hinges (upper −28°/up-left, lower
++26°/down-left) by the jaw-opening factor. The static grabber body and bolts
+remain untouched from the original.</p>
+<h2>6. Outputs and verification</h2>
+<p><code>generate.py</code> writes frames via <code>artifact_io.save</code> (<code>pixels.npz</code> packed as
+uint32 0xRRGGBB with shape 144×256×20, 20 PNGs, <code>inspection.png</code>, standalone
+<code>index.html</code>). <code>verify.py</code> confirms frame 00 is byte-identical to
+<code>first_frame.png</code>, every PNG matches the uint32 tensor exactly (0
+mismatches), and reports per-frame changed-pixel counts (1.6k–9.4k, confined
+to balls, strings, reflections and jaw tips). <code>transition_check.png</code> shows
+six key frame pairs with amplified difference maps; visual review was done
+with the image Read tool on frame sheets and zoomed crops.</p>
+</div></div></section>
+</main><script>'use strict';const W=256,H=144,N=20,im=new Image(),frames=[],canvas=document.getElementById('video'),ctx=canvas.getContext('2d',{willReadFrequently:true}),image=ctx.createImageData(W,H),seek=document.getElementById('seek'),play=document.getElementById('play'),poster=document.getElementById('poster');let frame=0,playing=false,start=0,raf=null;function draw(n){frame=Math.max(0,Math.min(19,n));if(frames.length){image.data.set(frames[frame]);ctx.putImageData(image,0,0);poster.hidden=true}seek.value=frame;document.getElementById('clock').textContent=String(frame).padStart(2,'0')+' · '+(frame/4).toFixed(2)+'s'}function stop(){playing=false;if(raf)cancelAnimationFrame(raf);raf=null;play.textContent='▶ 播放'}function tick(){if(!playing)return;const elapsed=performance.now()-start;if(elapsed>=5000){start=performance.now();draw(0)}else draw(Math.floor(elapsed/250));raf=requestAnimationFrame(tick)}play.onclick=()=>{if(playing){stop();return}playing=true;start=performance.now()-frame*250;play.textContent='❚❚ 暂停';tick()};seek.oninput=()=>{stop();draw(+seek.value)};im.onload=()=>{const c=document.createElement('canvas');c.width=W;c.height=H*N;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(im,0,0);const raw=x.getImageData(0,0,W,H*N).data,size=W*H*4;for(let n=0;n<N;n++){const a=new Uint8ClampedArray(size),off=n*size,prev=n?frames[n-1]:null;for(let j=0;j<size;j+=4){a[j]=raw[off+j]^(prev?prev[j]:0);a[j+1]=raw[off+j+1]^(prev?prev[j+1]:0);a[j+2]=raw[off+j+2]^(prev?prev[j+2]:0);a[j+3]=255}frames.push(a)}draw(0);window.__matrixTraceReady=true};im.onerror=()=>{play.textContent='像素加载失败'};im.src='../../assets/matrix/seed-pro-vision-agent/0052-29f197c52a52.png';</script></body></html>
