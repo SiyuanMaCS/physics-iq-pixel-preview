@@ -1,0 +1,76 @@
+{
+  "stats": {
+    "text": {
+      "median_first_saved_minutes": 4.143160483333333,
+      "median_post_first_minutes": 2.25523525,
+      "median_total_minutes": 6.440184400000001,
+      "median_output_tokens": 15522.5,
+      "revision_fraction": 0.6464646464646465
+    },
+    "vision-agent": {
+      "median_first_saved_minutes": 3.4840867583333335,
+      "median_post_first_minutes": 2.913223675,
+      "median_total_minutes": 6.528241550000001,
+      "median_output_tokens": 14161.5,
+      "revision_fraction": 0.8585858585858586
+    }
+  },
+  "verification_examples": [
+    {
+      "track": "text",
+      "case": "0005",
+      "transition": {
+        "from_snapshot": 2,
+        "to_snapshot": 3,
+        "rgb_changed": false,
+        "code_ast_changed": true,
+        "changed_functions": [
+          "verify"
+        ]
+      },
+      "diff": "--- \n+++ \n@@ -5,6 +5,8 @@\n import sys\n sys.dont_write_bytecode = True\n import json\n+import base64\n+import re\n import shutil\n import numpy as np\n from PIL import Image, ImageDraw\n@@ -278,7 +280,24 @@\n         if i:\n             delta=np.abs(png.astype(np.int16)-frames[i-1].astype(np.int16))\n             metrics.append({'transition':f'{i-1:02d}->{i:02d}','changed_pixels':int(np.any(delta,axis=2).sum()),'mean_abs_rgb':round(float(delta.mean()),4),'max_rgb':int(delta.max())})\n-    report={'frame_count':20,'size':[256,144],'fps':4,'duration_seconds':5,'tensor_shape':list(packed.shape),'tensor_dtype':str(packed.dtype),'frame_00_exact':True,'frame_00_file_bytes_exact':True,'all_pngs_match_0xRRGGBB_tensor':True,'image_tools_used':False,'transitions':metrics}\n+    # Independently decode the standalone player's base frame and run-length deltas.\n+    html=(ROOT/'index.html').read_text()\n+    data=json.loads(re.search(r'const DATA=(.*?);\\nfunction unpack',html,re.S).group(1))\n+    unpack=lambda text: np.frombuffer(base64.b64decode(text),dtype='<u4').copy()\n+    current=unpack(data['first'])\n+    assert np.array_equal(current,packed[:,:,0].reshape(-1))\n+    assert len(data['deltas'])==19\n+    for i,encoded in enumerate(data['deltas'],1):\n+        packet=unpack(encoded);pos=0\n+        while pos<len(packet):\n+            start,count=map(int,packet[pos:pos+2]);pos+=2\n+            assert count>0 and start+count<=H*W and pos+count<=len(packet)\n+            current[start:start+count]=packet[pos:pos+count];pos+=count\n+        assert np.array_equal(current,packed[:,:,i].reshape(-1)),i\n+    assert all(np.array_equal(frame[:,:65],SOURCE[:,:65]) for frame in frames)\n+    required=['OBSERVATION.md','generate.py','pixels.npz','inspection.png','transition_check.png','index.html','METHOD.md']\n+    assert all((ROOT/name).is_file() for name in required)\n+    report={'player_frames_match_tensor':True,'required_artifacts_present':True,'static_left_region_exact':True,'frame_count':20,'size':[256,144],'fps':4,'duration_seconds':5,'tensor_shape':list(packed.shape),'tensor_dtype':str(packed.dtype),'frame_00_exact':True,'frame_00_file_bytes_exact':True,'all_pngs_match_0xRRGGBB_tensor':True,'image_tools_used':False,'transitions':metrics}\n     (ROOT/'.tmp'/'verification.json').write_text(json.dumps(report,indent=2))\n     print(json.dumps(report,indent=2))\n "
+    },
+    {
+      "track": "text",
+      "case": "0012",
+      "transition": {
+        "from_snapshot": 1,
+        "to_snapshot": 2,
+        "rgb_changed": false,
+        "code_ast_changed": true,
+        "changed_functions": [
+          "verify"
+        ]
+      },
+      "diff": "--- \n+++ \n@@ -1,6 +1,8 @@\n \"\"\"Pixel-only continuation of the supplied still; no renderer or learned model.\"\"\"\n from pathlib import Path\n+import base64\n import json\n+import re\n import numpy as np\n from PIL import Image, ImageDraw\n from scipy import ndimage, sparse\n@@ -187,9 +189,24 @@\n     assert np.all(np.diff(measured[:, 0]) > 9.)\n     assert np.max(np.linalg.norm(np.diff(measured, axis=0)-step[0], axis=1)) < 1.\n     assert np.max(packed) <= 0xffffff\n+    html = (ROOT / 'index.html').read_text()\n+    player_data = json.loads(re.search(r'const DATA=(.*?);\\nfunction unpack', html, re.S).group(1))\n+    displayed = np.frombuffer(base64.b64decode(player_data['first']), dtype='<u4').copy()\n+    assert np.array_equal(displayed, packed[..., 0].ravel())\n+    assert len(player_data['deltas']) == 19\n+    for t, packet in enumerate(player_data['deltas'], 1):\n+        patch = np.frombuffer(base64.b64decode(packet), dtype='<u4')\n+        pos = 0\n+        while pos < len(patch):\n+            start, count = int(patch[pos]), int(patch[pos + 1])\n+            displayed[start:start+count] = patch[pos+2:pos+2+count]\n+            pos += 2 + count\n+        assert np.array_equal(displayed, packed[..., t].ravel()), t\n+    assert 'setInterval' in html and '},250)' in html\n     report = {'method': 'local harmonic inpainting, source-fitted analytic sphere shading, rotating RGB residuals',\n               'frame_count': 20, 'fps': 4, 'duration_seconds': 5,\n               'frame_00_exact': True, 'all_png_tensor_checks_passed': True,\n+              'all_player_tensor_checks_passed': True,\n               'image_tools_used': False, 'source_fit_rmse': float(np.sqrt(np.mean((FIT_MODEL-FIT_SOURCE)**2))),\n               'sphere_parameters': PARAMS.tolist(), 'shader_coefficients': COEFF.tolist(), 'frames': reports}\n     (ROOT / 'verification.json').write_text(json.dumps(report, indent=2) + '\\n')"
+    },
+    {
+      "track": "vision-agent",
+      "case": "0025",
+      "transition": {
+        "from_snapshot": 5,
+        "to_snapshot": 6,
+        "rgb_changed": false,
+        "code_ast_changed": true,
+        "changed_functions": [
+          "verify"
+        ]
+      },
+      "diff": "--- \n+++ \n@@ -3,6 +3,7 @@\n No model, renderer, network, or external scene assets are used.\n \"\"\"\n from pathlib import Path\n+import base64\n import json\n import numpy as np\n from PIL import Image, ImageDraw\n@@ -182,16 +183,37 @@\n     assert np.array_equal(frames[0], SOURCE)\n     # Only the old ball area and the moving sphere/shadow/reflection may change.\n     assert np.array_equal(frames[:, :48], np.broadcast_to(SOURCE[:48], frames[:, :48].shape))\n+    # Decode the player's actual embedded pixels and replay all delta packets.\n+    html = (ROOT / 'index.html').read_text()\n+    payload = html.split('const DATA=', 1)[1].split(';\\nfunction unpack', 1)[0]\n+    data = json.loads(payload)\n+    decoded = np.frombuffer(base64.b64decode(data['first']), dtype='<u4').copy()\n+    assert np.array_equal(decoded, tensor[..., 0].reshape(-1))\n+    assert len(data['deltas']) == 19\n+    for i, encoded in enumerate(data['deltas'], 1):\n+        packet = np.frombuffer(base64.b64decode(encoded), dtype='<u4')\n+        cursor = 0\n+        while cursor < len(packet):\n+            start, count = int(packet[cursor]), int(packet[cursor+1])\n+            cursor += 2\n+            decoded[start:start+count] = packet[cursor:cursor+count]\n+            cursor += count\n+        assert np.array_equal(decoded, tensor[..., i].reshape(-1)), i\n+    required = ['generate.py', 'OBSERVATION.md', 'METHOD.md', 'pixels.npz',\n+                'inspection.png', 'transition_check.png', 'index.html']\n+    assert all((ROOT / name).is_file() for name in required)\n+    assert len(list((ROOT / 'frames').glob('*.png'))) == 20\n     report = {\n         'shape': list(tensor.shape), 'dtype': str(tensor.dtype), 'packing': '0xRRGGBB',\n         'frame_count': 20, 'resolution': [256, 144], 'fps': 4, 'playback_seconds': 5,\n         'source_frame_exact': True, 'all_pngs_match_tensor': True,\n+        'player_embedded_frames_match_tensor': True, 'all_required_artifacts_present': True,\n         'method': 'Local wood donor reconstruction; source-derived texture; analytic sphere rotation; supersampled pixel compositing.',\n         'centers': [[round(float(v), 3) for v in C0+i/4*np.array([22.4, 2.6])] for i in range(20)],\n         'radians_per_frame': float(OMEGA/4),\n     }\n     (ROOT / 'verification.json').write_text(json.dumps(report, indent=2)+'\\n')\n-    print('Verified: 20 RGB PNGs, packed uint32 tensor, exact frame 00, fixed background.')\n+    print('Verified: 20 RGB PNGs, packed uint32 tensor, exact frame 00, fixed background, player delta decoding, required artifacts.')\n \n \n if __name__ == '__main__':"
+    },
+    {
+      "track": "vision-agent",
+      "case": "0027",
+      "transition": {
+        "from_snapshot": 3,
+        "to_snapshot": 4,
+        "rgb_changed": false,
+        "code_ast_changed": true,
+        "changed_functions": [
+          "verify"
+        ]
+      },
+      "diff": "--- \n+++ \n@@ -1,6 +1,7 @@\n \"\"\"Generate a local pixel continuation of the supplied scene, without external assets.\"\"\"\n from pathlib import Path\n import json\n+import base64\n import numpy as np\n from PIL import Image, ImageDraw\n from scipy.ndimage import map_coordinates, gaussian_filter\n@@ -179,9 +180,27 @@\n         assert png.shape == (144,256,3)\n         assert np.array_equal(png,unpacked),f'PNG/tensor mismatch: {n}'\n         assert np.array_equal(png,frames[n])\n+    html = (ROOT/'index.html').read_text()\n+    data = json.loads(html.split('const DATA=',1)[1].split(';\\nfunction unpack',1)[0])\n+    first = np.frombuffer(base64.b64decode(data['first']),dtype='<u4').copy()\n+    reconstructed = [first]\n+    for encoded in data['deltas']:\n+        patch = np.frombuffer(base64.b64decode(encoded),dtype='<u4')\n+        f = reconstructed[-1].copy()\n+        i = 0\n+        while i < len(patch):\n+            start, count = int(patch[i]),int(patch[i+1])\n+            f[start:start+count] = patch[i+2:i+2+count]\n+            i += count+2\n+        reconstructed.append(f)\n+    assert len(reconstructed)==20\n+    for n,f in enumerate(reconstructed):\n+        assert np.array_equal(f.reshape(H,W),tensor[:,:,n]),f'Player mismatch: {n}'\n+    assert np.array_equal(frames[:,:40],np.broadcast_to(SOURCE[:40],frames[:,:40].shape))\n+    assert np.array_equal(frames[:,126:],np.broadcast_to(SOURCE[126:],frames[:,126:].shape))\n     report = {'frame_count':20,'width':256,'height':144,'fps':4,'duration_seconds':5,\n               'tensor_shape':list(tensor.shape),'tensor_dtype':str(tensor.dtype),\n-              'packing':'0xRRGGBB','frame_00_exact':True,'all_pngs_match_tensor':True,\n+              'packing':'0xRRGGBB','frame_00_exact':True,'all_pngs_match_tensor':True,'all_player_frames_match_tensor':True,\n               'base_blue':BASE_BLUE.tolist()}\n     (TMP/'verification.json').write_text(json.dumps(report,indent=2))\n     print(json.dumps(report,indent=2))"
+    }
+  ]
+}
