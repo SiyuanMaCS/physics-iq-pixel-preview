@@ -1,0 +1,287 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0003</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0003</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two pillows are on a table and two grabber tools are positioned above them. The grabber tools release the brown tennis ball and the orange block.
+</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T18:37:00.675381+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.pyc&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!__pycache__&#x27;&quot;&#x27; | sort&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T18:37:00.789667+00:00</strong><pre>/bin/bash -c &#x27;cat prompt.txt&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T18:37:01.092593+00:00</strong><pre>/bin/bash -c &#x27;cat GENERATION_RULES.md&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T18:37:01.286549+00:00</strong><pre>/bin/bash -c &#x27;file first_frame.png 2&gt;/dev/null; identify first_frame.png 2&gt;/dev/null || true; ls -lah&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T18:37:10.881062+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T18:37:11.124453+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; player_template.html&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T18:37:11.575814+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(im.shape, im.dtype, im.min(), im.max())
+# dominant colors exact
+u,c=np.unique(im.reshape(-1,3),axis=0,return_counts=True)
+for i in np.argsort(c)[-30:][::-1]: print(tuple(u[i]), int(c[i]))
+# row/col summary
+for y in range(0,144,8):
+ a=im[y:y+8]
+ print(&#x27;row&#x27;,y, &#x27;mean&#x27;, np.round(a.mean((0,1)),1), &#x27;std&#x27;,np.round(a.std((0,1)),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T18:37:21.481888+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from collections import Counter
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float32)
+h,w,_=im.shape
+# rgb quantized 16
+q=(im//16)*16
+u,c=np.unique(q.reshape(-1,3),axis=0,return_counts=True)
+for i in np.argsort(c)[-25:][::-1]: print(&#x27;q&#x27;,tuple(map(int,u[i])),int(c[i]))
+# HSV simple
+mx=im.max(2); mn=im.min(2); sat=(mx-mn)/np.maximum(mx,1)
+print(&#x27;sat percentiles&#x27;,np.percentile(sat,[50,75,90,95,97,98,99,99.5,99.9]))
+for th in [.12,.18,.25,.35,.5]:
+ m=sat&gt;th
+ ys,xs=np.where(m)
+ print(&#x27;sat&gt;&#x27;,th,&#x27;count&#x27;,m.sum(),&#x27;bbox&#x27;, (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else None)
+# Print coarse stats per 8x8 tile: dominant hue-ish, brightness, sat
+print(&#x27;TILE GRID mean RGB / sat (16x18)&#x27;)
+for ty in range(18):
+ vals=[]
+ for tx in range(16):
+  a=im[ty*8:(ty+1)*8,tx*8:(tx+1)*8]
+  m=a.mean((0,1)); s=(a.max(2)-a.min(2)).mean()/max(a.mean(),1)
+  vals.append(f&#x27;{int(m[0]):3d},{int(m[1]):3d},{int(m[2]):3d}/{s:.2f}&#x27;)
+ print(f&#x27;{ty*8:3d}&#x27;, &#x27; | &#x27;.join(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T18:37:26.499804+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+h,w,_=im.shape
+# print classification map 4x4 blocks: use letters based hue / darkness / brightness
+for y0 in range(0,h,4):
+ s=&#x27;&#x27;
+ for x0 in range(0,w,4):
+  a=im[y0:y0+4,x0:x0+4].reshape(-1,3).mean(0)
+  r,g,b=a; mx=max(a);mn=min(a);sat=(mx-mn)/max(mx,1)
+  if mx&lt;18: ch=&#x27; &#x27;
+  elif sat&gt;.35 and r&gt;g*1.2 and r&gt;b*1.5: ch=&#x27;R&#x27;
+  elif sat&gt;.3 and b&gt;r*1.15: ch=&#x27;B&#x27;
+  elif sat&gt;.25 and g&gt;=r*.8 and g&gt;b*.95: ch=&#x27;G&#x27;
+  elif sat&gt;.18 and r&gt;b*1.1: ch=&#x27;b&#x27;
+  elif mx&gt;145: ch=&#x27;W&#x27;
+  elif mx&gt;120: ch=&#x27;.&#x27;
+  elif mx&gt;90: ch=&#x27;:&#x27;
+  elif mx&gt;60: ch=&#x27;,&#x27;
+  else: ch=&#x27;-&#x27;
+  s+=ch
+ print(f&#x27;{y0:03d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T18:37:32.589177+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float32)
+# detect high saturation warm pixels
+r,g,b=np.moveaxis(im,2,0)
+mx=im.max(2);mn=im.min(2);sat=(mx-mn)/np.maximum(mx,1)
+m=(sat&gt;.25)&amp;(r&gt;g*1.15)&amp;(r&gt;b*1.3)&amp;(mx&gt;40)
+ys,xs=np.where(m)
+print(&#x27;warm sat pixels&#x27;,len(xs),&#x27;bbox&#x27;,xs.min(),ys.min(),xs.max(),ys.max())
+# connected comps 8-neighbor
+from scipy.ndimage import label
+lab,n=label(m,np.ones((3,3)))
+for i in range(1,n+1):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;5:
+  print(i,len(xx),&#x27;bbox&#x27;,xx.min(),yy.min(),xx.max(),yy.max(),&#x27;mean&#x27;,im[yy,xx].mean(0).round(1))
+# blue
+m2=(sat&gt;.25)&amp;(b&gt;r*1.2)&amp;(mx&gt;30)
+lab,n=label(m2,np.ones((3,3)))
+print(&#x27;blue&#x27;)
+for i in range(1,n+1):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;5:
+  print(i,len(xx),&#x27;bbox&#x27;,xx.min(),yy.min(),xx.max(),yy.max(),&#x27;mean&#x27;,im[yy,xx].mean(0).round(1))
+# white gray objects via low sat bright
+m3=(sat&lt;.09)&amp;(mx&gt;145)
+lab,n=label(m3,np.ones((3,3)))
+print(&#x27;bright low sat&#x27;)
+for i in range(1,n+1):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;30:
+  print(i,len(xx),&#x27;bbox&#x27;,xx.min(),yy.min(),xx.max(),yy.max(),&#x27;mean&#x27;,im[yy,xx].mean(0).round(1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T18:37:41.879916+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print unique colors and color at grid every 8 px
+for y in range(0,144,8):
+ print(&#x27;y&#x27;,y)
+ for x in range(0,256,16):
+  a=im[y:y+8,x:x+16].reshape(-1,3)
+  m=a.mean(0).astype(int)
+  print(f&#x27;{x:3}:{m[0]:3},{m[1]:3},{m[2]:3}&#x27;,end=&#x27;  &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T18:37:46.803988+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float32)
+# masks for red object(s), blue, white pillow
+r,g,b=np.moveaxis(im,2,0)
+red=(r&gt;g*1.35)&amp;(r&gt;b*1.4)&amp;(r&gt;45)
+blue=(b&gt;r*1.35)&amp;(b&gt;g*1.2)&amp;(b&gt;25)
+white=(im.min(2)&gt;125)&amp;((im.max(2)-im.min(2))&lt;18)
+for name,m in [(&#x27;red&#x27;,red),(&#x27;blue&#x27;,blue),(&#x27;white&#x27;,white)]:
+ print(&#x27;\\n&#x27;,name)
+ for y in range(0,144,4):
+  xs=np.where(m[y:y+4].any(0))[0]
+  if len(xs):
+   # segments
+   d=np.diff(xs); starts=np.r_[0,np.where(d&gt;1)[0]+1]; ends=np.r_[np.where(d&gt;1)[0],len(xs)-1]
+   print(y,[(int(xs[s]),int(xs[e])) for s,e in zip(starts,ends)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T18:37:51.958943+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# save ascii around key zones with RGB hex-ish brightness hue chars, use bigger 2x2 blocks
+def dump(x0,x1,y0,y1,step=2):
+ for y in range(y0,y1,step):
+  s=&#x27;&#x27;
+  for x in range(x0,x1,step):
+   a=im[y:y+step,x:x+step].reshape(-1,3).mean(0)
+   r,g,b=a
+   if max(a)&lt;10: c=&#x27; &#x27;
+   elif r&gt;g*1.5 and r&gt;b*1.5 and r&gt;40: c=&#x27;R&#x27;
+   elif b&gt;r*1.25 and b&gt;g*1.1 and b&gt;20: c=&#x27;B&#x27;
+   elif max(a)-min(a)&lt;14 and max(a)&gt;130: c=&#x27;#&#x27;
+   elif max(a)&gt;135: c=&#x27;@&#x27;
+   elif max(a)&gt;115: c=&#x27;+&#x27;
+   elif max(a)&gt;95: c=&#x27;.&#x27;
+   elif max(a)&gt;70: c=&#x27;,&#x27;
+   else: c=&#x27;:&#x27;
+   s+=c
+  print(f&#x27;{y:03d} {s}&#x27;)
+print(&#x27;upper&#x27;)
+dump(0,256,0,40,2)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T18:37:57.297578+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print pixel grid x 25-80 y 10-45 in hex chars compact colors as rgb values
+for y in range(10,46,2):
+ s=&#x27;&#x27;
+ for x in range(20,85,2):
+  a=im[y:y+2,x:x+2].reshape(-1,3).mean(0)
+  r,g,b=a
+  if max(a)&lt;10: c=&#x27; &#x27;
+  elif r&gt;g*1.5 and r&gt;b*1.5 and r&gt;40: c=&#x27;R&#x27;
+  elif b&gt;r*1.25 and b&gt;g*1.1 and b&gt;20: c=&#x27;B&#x27;
+  elif max(a)-min(a)&lt;14 and max(a)&gt;130: c=&#x27;#&#x27;
+  elif max(a)&gt;135: c=&#x27;@&#x27;
+  elif max(a)&gt;115: c=&#x27;+&#x27;
+  elif max(a)&gt;95: c=&#x27;.&#x27;
+  elif max(a)&gt;70: c=&#x27;,&#x27;
+  else: c=&#x27;:&#x27;
+  s+=c
+ print(f&#x27;{y:03d} {s}&#x27;)
+print(&#x27;values around x 40-70 y 25-45&#x27;)
+for y in [25,28,30,32,34,36,38,40,42,44]:
+ print(y,[tuple(im[y,x]) for x in range(38,72,3)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T18:38:09.804858+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# nearest palette categories based on hue, brightness
+r,g,b=np.moveaxis(im.astype(float),2,0)
+mx=im.max(2).astype(float); mn=im.min(2).astype(float); sat=(mx-mn)/np.maximum(mx,1)
+# classify
+out=np.full(im.shape[:2],&#x27;.&#x27;,dtype=&#x27;&lt;U1&#x27;)
+out[mx&lt;20]=&#x27; &#x27;
+out[(mx&gt;=20)&amp;(mx&lt;50)]=&#x27;-&#x27;
+out[(mx&gt;=50)&amp;(mx&lt;80)]=&#x27;,&#x27;
+out[(mx&gt;=80)&amp;(mx&lt;105)]=&#x27;:&#x27;
+out[(mx&gt;=105)&amp;(mx&lt;125)]=&#x27;.&#x27;
+out[(mx&gt;=125)&amp;(mx&lt;145)]=&#x27;+&#x27;
+out[mx&gt;=145]=&#x27;#&#x27;
+# warm red / blue overlay
+out[(sat&gt;.22)&amp;(r&gt;g*1.2)&amp;(r&gt;b*1.2)&amp;(mx&gt;35)]=&#x27;R&#x27;
+out[(sat&gt;.22)&amp;(b&gt;r*1.2)&amp;(b&gt;g*1.1)&amp;(mx&gt;20)]=&#x27;B&#x27;
+out[(sat&gt;.18)&amp;(g&gt;r*1.15)&amp;(g&gt;b*1.05)&amp;(mx&gt;25)]=&#x27;G&#x27;
+# output 2x2 blocks choosing modal category
+for y in range(0,144,2):
+ s=&#x27;&#x27;
+ for x in range(0,256,2):
+  block=out[y:y+2,x:x+2].ravel()
+  vals,c=np.unique(block,return_counts=True); c=block[np.argmax(c)]
+  s+=c
+ print(f&#x27;{y:03d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T18:38:15.182705+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# upscale nearest and save crops to tmp for possible pixel values; no visual tools, just files
+for name,box in [(&#x27;left&#x27;,(20,10,90,70)),(&#x27;right&#x27;,(145,10,205,70)),(&#x27;center&#x27;,(30,25,160,105)),(&#x27;bottom&#x27;,(0,90,256,144))]:
+ Image.fromarray(im).crop(box).resize(((box[2]-box[0])*6,(box[3]-box[1])*6),Image.Resampling.NEAREST).save(&#x27;.tmp/&#x27;+name+&#x27;.png&#x27;)
+print(&#x27;saved&#x27;)
+# color clusters kmeans-ish via PIL quantize
+q=Image.fromarray(im).quantize(colors=24,method=Image.Quantize.MEDIANCUT)
+pal=np.array(q.getpalette()).reshape(-1,3)[:24]
+counts=np.bincount(np.array(q).ravel(),minlength=24)
+for i in np.argsort(counts)[::-1]: print(i,tuple(pal[i]),counts[i])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T18:38:22.031838+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# classify rough objects via semantic RGB thresholds and report bounding boxes/centroids
+r,g,b=[im[:,:,i].astype(float) for i in range(3)]
+mx=im.max(2).astype(float); mn=im.min(2).astype(float); sat=(mx-mn)/np.maximum(mx,1)
+# red-orange mask: red &gt; green by 30 and red &gt; blue by 25
+m=(r&gt;50)&amp;(r-g&gt;30)&amp;(r-b&gt;25)
+from scipy.ndimage import label, binary_dilation, binary_closing
+for n,m in [(&#x27;red&#x27;,m),(&#x27;blue&#x27;,(b&gt;30)&amp;(b-r&gt;20)&amp;(b-g&gt;8)),(&#x27;verybright&#x27;,(mx&gt;155)&amp;(sat&lt;.12))]:
+ print(n, m.sum())
+ lab,num=label(m,np.ones((3,3)))
+ for i in range(1,num+1):
+  yy,xx=np.where(lab==i)
+  if len(xx)&gt;10:
+   print(&#x27; &#x27;,len(xx), &#x27;bbox&#x27;,xx.min(),yy.min(),xx.max(),yy.max(),&#x27;centroid&#x27;,xx.mean(),yy.mean(),&#x27;mean&#x27;,im[yy,xx].mean(0).round(1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T18:38:40.400356+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# exact-ish row scans for key x/y. print color runs by quantized thresholds at selected y
+for y in [4,8,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64]:
+ runs=[]; last=None; st=0
+ for x in range(256):
+  r,g,b=im[y,x]
+  mx=max(r,g,b); mn=min(r,g,b); sat=(mx-mn)/max(mx,1)
+  if mx&lt;15: c=&#x27;k&#x27;
+  elif r&gt;g+30 and r&gt;b+20 and r&gt;45: c=&#x27;R&#x27; if r&gt;100 else &#x27;r&#x27;
+  elif b&gt;r+20 and b&gt;g+8 and b&gt;25: c=&#x27;B&#x27;
+  elif mx&gt;145 and sat&lt;.10: c=&#x27;W&#x27;
+  elif mx&gt;130: c=&#x27;w&#x27;
+  elif mx&gt;105: c=&#x27;g&#x27;
+  elif mx&gt;75: c=&#x27;d&#x27;
+  else: c=&#x27;x&#x27;
+  if c&quot;&#x27;!=last:
+   if last is not None: runs.append((st,x-1,last))
+   st=x;last=c
+ runs.append((st,255,last))
+ # only runs within 20-220 or meaningful colors
+ print(f&#x27;&quot;&#x27;y={y:03d}&#x27;, &#x27; &#x27;.join(f&#x27;{a}-{b}:{c}&#x27; for a,b,c in runs if b-a&gt;=2 and (a&gt;=20 or b&lt;=220)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T18:38:46.831494+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# crop coords print with 1px chars for top area, 2 rows per line, actual categories; useful map
+r,g,b=np.moveaxis(im.astype(float),2,0);mx=im.max(2).astype(float);mn=im.min(2).astype(float);sat=(mx-mn)/np.maximum(mx,1)
+for y in range(0,100,2):
+ s=&#x27;&#x27;
+ for x in range(0,256,2):
+  a=im[y:y+2,x:x+2].reshape(-1,3).astype(float).mean(0); rr,gg,bb=a; mm=max(a); ss=(mm-min(a))/max(mm,1)
+  if mm&lt;10:c=&#x27; &#x27;
+  elif rr&gt;gg+30 and rr&gt;bb+25 and rr&gt;45:c=&#x27;R&#x27;
+  elif bb&gt;rr+20 and bb&gt;gg+8 and bb&gt;25:c=&#x27;B&#x27;
+  elif mm&gt;145 and ss&lt;.10:c=&#x27;W&#x27;
+  elif mm&gt;130:c=&#x27;w&#x27;
+  elif mm&gt;105:c=&#x27;g&#x27;
+  elif mm&gt;75:c=&#x27;d&#x27;
+  else:c=&#x27;x&#x27;
+  s+=c
+ print(f&#x27;{y:03d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 19 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
