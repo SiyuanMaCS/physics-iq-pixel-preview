@@ -1,0 +1,301 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · static_080_turn_3</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · static_080_turn_3</h1><p class=muted>vision-agent · 512×288 · 10.0 FPS · 50 帧 · 状态 complete · 输出 tokens 11170</p><div class=box><strong>原始任务</strong><p>Camera pull out. In a Sunset Garden Party, warm hues of the setting sun illuminate cozy garden seating adorned with twinkling string lights. photorealistic. Everything in the scene remains completely motionless.</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_91fc1b460bf2ad40.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d6ebc0afa4aa449b72cbc257faf3af29c3e0d432cc62c9bf792ac46109d7f397&quot;, &quot;pixels&quot;: &quot;final/pixels_91fc1b460bf2ad40.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T21:45:46.316426+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_5b685e1882fdc27e.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;89cbf15b44c386401bb4da164921b0cecda7a4190ddbbf0f94ca54a723d7f1ea&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_5b685e1882fdc27e.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,103 @@
++from pathlib import Path
++import numpy as np
++import cv2
++from PIL import Image
++from scipy.ndimage import gaussian_filter
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++W, H = 512, 288
++PAD = 80
++
++def make_extended(im):
++    # Continue the visible architectural planes in a guard band. Textures are
++    # taken from the supplied view; no generated or external image assets.
++    yy, xx = np.mgrid[-PAD:H+PAD, -PAD:W+PAD].astype(np.float32)
++    sx, sy = xx.copy(), yy.copy()
++    bottom = yy &gt; H-1
++    ry = 2*(H-1)-yy
++    # Terrace boards and the interior timber floor maintain their perspective.
++    ratio = (ry-135.0)/(yy-135.0 + 1e-6)
++    floor_x = 414.0+(xx-414.0)*ratio
++    side_x = 353.0+(xx-353.0)*ratio
++    blend = np.clip((xx-375)/30, 0, 1)
++    sx[bottom] = np.where(xx &lt; 121, 57+(xx-57)*(ry-110)/(yy-110+1e-6),
++                         np.where(xx &lt; 353, xx, side_x*(1-blend)+floor_x*blend))[bottom]
++    sy[bottom] = ry[bottom]
++    top = yy &lt; 0
++    sy[top] = -yy[top]
++    # Extrapolate the cropped ceiling track and the sloping skylight edges.
++    ceiling_slope = np.where(xx &lt; 410, 0.61, -0.84)
++    sx[top] = (xx-2*ceiling_slope*yy)[top]
++    left = sx &lt; 0
++    oldx = sx.copy()
++    sx[left] = -sx[left]
++    sy[left] = (sy + 0.212*oldx*np.clip((150-sy)/40,0,1))[left]
++    right = sx &gt; W-1
++    oldx = sx.copy()
++    sx[right] = 2*(W-1)-sx[right]
++    sy[right] = (135+(sy-135)*(sx-414)/(oldx-414+1e-6))[right]
++    sx = np.clip(sx, 0, W-1)
++    sy = np.clip(sy, 0, H-1)
++    extended = cv2.remap(im, sx, sy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
++    extended[PAD:PAD+H, PAD:PAD+W] = im
++    return extended
++
++def scene_depth():
++    yy, xx = np.mgrid[-PAD:H+PAD, -PAD:W+PAD].astype(np.float32)
++    z = np.full(xx.shape, 7.6, dtype=np.float32)
++    ceiling = yy &lt; 105
++    z[ceiling] = np.clip(415.0/np.maximum(135-yy[ceiling], 1), 3.1, 7.6)
++    # The glazed doorway / terrace is closer than the back of the room.
++    z[xx &lt; 131] = 3.9
++    # Stair wall, behind the island.
++    m = (xx &gt;= 131)&amp;(xx &lt; 303)&amp;(yy &gt;= 100)
++    z[m] = 5.8
++    # Floor and tall cabinet plane converge toward the room&#x27;s vanishing point.
++    floor = (xx &gt; 350)&amp;(yy &gt; 200)
++    z[floor] = np.clip(520/np.maximum(yy[floor]-135, 1), 2.9, 7.6)
++    cabinets = (xx &gt; 463)&amp;(yy &gt; 53)
++    z[cabinets] = np.clip(350/np.maximum(xx[cabinets]-414,1), 2.8, 7.6)
++    # Island, represented by planar front, worktop and receding right end.
++    mask = np.zeros(xx.shape, np.uint8)
++    points = np.array([[124,177],[151,186],[352,192],[352,400],[124,400]],np.int32)+PAD
++    cv2.fillPoly(mask,[points],1)
++    z[mask.astype(bool)] = 3.65
++    topmask = np.zeros_like(mask)
++    points=np.array([[151,185],[297,162],[392,161],[352,192]],np.int32)+PAD
++    cv2.fillPoly(topmask,[points],1)
++    tz=3.65+np.clip((192-yy)/31,0,1)*2.75
++    z[topmask.astype(bool)] = tz[topmask.astype(bool)]
++    sidemask=np.zeros_like(mask)
++    points=np.array([[352,192],[392,161],[393,207],[373,288],[366,368],[352,368]],np.int32)+PAD
++    cv2.fillPoly(sidemask,[points],1)
++    sz=3.65+np.clip((xx-352)/40,0,1)*2.75
++    z[sidemask.astype(bool)] = sz[sidemask.astype(bool)]
++    # A small continuous transition prevents tearing at occluding silhouettes.
++    inverse = gaussian_filter(1/z, 5.0)
++    return (1/inverse).astype(np.float32)
++
++def generate():
++    im=np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++    extended=make_extended(im)
++    Image.fromarray(extended).save(ROOT/&#x27;.tmp/extended.png&#x27;)
++    z=scene_depth()
++    y,x=np.mgrid[0:H,0:W].astype(np.float32)
++    cx,cy=256.0,144.0
++    frames=[im.copy()]
++    for i in range(1,50):
++        t=i/49
++        travel=0.65*(0.3*t+0.7*(3*t*t-2*t*t*t))
++        sx=x.copy(); sy=y.copy()
++        for _ in range(10):
++            dz=cv2.remap(z,sx+PAD,sy+PAD,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
++            nx=cx+(x-cx)*(1+travel/dz)
++            ny=cy+(y-cy)*(1+travel/dz)
++            sx=.25*sx+.75*nx
++            sy=.25*sy+.75*ny
++        frame=cv2.remap(extended,sx+PAD,sy+PAD,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
++        frames.append(frame)
++    artifact_io.save(np.stack(frames).astype(np.uint8),ROOT)
++
++if __name__==&#x27;__main__&#x27;:
++    generate()
+</pre></details></details><details><summary>候选 02 · 2026-11-08T21:45:49.879975+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_5b685e1882fdc27e.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;89cbf15b44c386401bb4da164921b0cecda7a4190ddbbf0f94ca54a723d7f1ea&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_5b685e1882fdc27e.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><details><summary>候选 03 · 2026-11-08T21:46:43.648243+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_3bb1fc75515211c6.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;a9beb0ac965a7aa1368125cdebe1e75894dfab3c309632f168a92926fd26c7cd&quot;, &quot;pixels&quot;: &quot;candidate_02/pixels_3bb1fc75515211c6.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_02/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_02/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -31,11 +31,11 @@
+     sx[top] = (xx-2*ceiling_slope*yy)[top]
+     left = sx &lt; 0
+     oldx = sx.copy()
+-    sx[left] = -sx[left]
++    sx[left] = np.minimum(-sx[left]*0.18, 8)
+     sy[left] = (sy + 0.212*oldx*np.clip((150-sy)/40,0,1))[left]
+     right = sx &gt; W-1
+     oldx = sx.copy()
+-    sx[right] = 2*(W-1)-sx[right]
++    sx[right] = (W-1) - 0.12*(sx[right]-(W-1))
+     sy[right] = (135+(sy-135)*(sx-414)/(oldx-414+1e-6))[right]
+     sx = np.clip(sx, 0, W-1)
+     sy = np.clip(sy, 0, H-1)
+@@ -87,7 +87,7 @@
+     frames=[im.copy()]
+     for i in range(1,50):
+         t=i/49
+-        travel=0.65*(0.3*t+0.7*(3*t*t-2*t*t*t))
++        travel=0.52*(0.3*t+0.7*(3*t*t-2*t*t*t))
+         sx=x.copy(); sy=y.copy()
+         for _ in range(10):
+             dz=cv2.remap(z,sx+PAD,sy+PAD,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+</pre></details></details><details><summary>候选 04 · 2026-11-08T21:46:47.641678+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_3bb1fc75515211c6.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;a9beb0ac965a7aa1368125cdebe1e75894dfab3c309632f168a92926fd26c7cd&quot;, &quot;pixels&quot;: &quot;candidate_03/pixels_3bb1fc75515211c6.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_03/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_03/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_03/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><details><summary>候选 05 · 2026-11-08T21:47:17.016282+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_91fc1b460bf2ad40.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d6ebc0afa4aa449b72cbc257faf3af29c3e0d432cc62c9bf792ac46109d7f397&quot;, &quot;pixels&quot;: &quot;candidate_04/pixels_91fc1b460bf2ad40.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_04/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_04/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_04/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -31,7 +31,7 @@
+     sx[top] = (xx-2*ceiling_slope*yy)[top]
+     left = sx &lt; 0
+     oldx = sx.copy()
+-    sx[left] = np.minimum(-sx[left]*0.18, 8)
++    sx[left] = np.minimum(-sx[left]*0.50, 23)
+     sy[left] = (sy + 0.212*oldx*np.clip((150-sy)/40,0,1))[left]
+     right = sx &gt; W-1
+     oldx = sx.copy()
+@@ -56,7 +56,7 @@
+     # Floor and tall cabinet plane converge toward the room&#x27;s vanishing point.
+     floor = (xx &gt; 350)&amp;(yy &gt; 200)
+     z[floor] = np.clip(520/np.maximum(yy[floor]-135, 1), 2.9, 7.6)
+-    cabinets = (xx &gt; 463)&amp;(yy &gt; 53)
++    cabinets = (xx &gt; 463)
+     z[cabinets] = np.clip(350/np.maximum(xx[cabinets]-414,1), 2.8, 7.6)
+     # Island, represented by planar front, worktop and receding right end.
+     mask = np.zeros(xx.shape, np.uint8)
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T21:42:29.924201+00:00</strong><pre>/bin/bash -lc &#x27;ls -la &amp;&amp; cat prompt.txt &amp;&amp; cat GENERATION_RULES.md&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T21:42:35.953881+00:00</strong><pre>/bin/bash -lc &#x27;cat task_spec.json &amp;&amp; cat artifact_io.py&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T21:42:53.146450+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for x in [&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;,&#x27;cv2&#x27;]:
+ print(x,bool(importlib.util.find_spec(x)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T21:43:34.243483+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,576)).save(&#x27;.tmp/large.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T21:45:45.689812+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+import cv2
+from PIL import Image
+from scipy.ndimage import gaussian_filter
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+W, H = 512, 288
+PAD = 80
+
+def make_extended(im):
+    # Continue the visible architectural planes in a guard band. Textures are
+    # taken from the supplied view; no generated or external image assets.
+    yy, xx = np.mgrid[-PAD:H+PAD, -PAD:W+PAD].astype(np.float32)
+    sx, sy = xx.copy(), yy.copy()
+    bottom = yy &gt; H-1
+    ry = 2*(H-1)-yy
+    # Terrace boards and the interior timber floor maintain their perspective.
+    ratio = (ry-135.0)/(yy-135.0 + 1e-6)
+    floor_x = 414.0+(xx-414.0)*ratio
+    side_x = 353.0+(xx-353.0)*ratio
+    blend = np.clip((xx-375)/30, 0, 1)
+    sx[bottom] = np.where(xx &lt; 121, 57+(xx-57)*(ry-110)/(yy-110+1e-6),
+                         np.where(xx &lt; 353, xx, side_x*(1-blend)+floor_x*blend))[bottom]
+    sy[bottom] = ry[bottom]
+    top = yy &lt; 0
+    sy[top] = -yy[top]
+    # Extrapolate the cropped ceiling track and the sloping skylight edges.
+    ceiling_slope = np.where(xx &lt; 410, 0.61, -0.84)
+    sx[top] = (xx-2*ceiling_slope*yy)[top]
+    left = sx &lt; 0
+    oldx = sx.copy()
+    sx[left] = -sx[left]
+    sy[left] = (sy + 0.212*oldx*np.clip((150-sy)/40,0,1))[left]
+    right = sx &gt; W-1
+    oldx = sx.copy()
+    sx[right] = 2*(W-1)-sx[right]
+    sy[right] = (135+(sy-135)*(sx-414)/(oldx-414+1e-6))[right]
+    sx = np.clip(sx, 0, W-1)
+    sy = np.clip(sy, 0, H-1)
+    extended = cv2.remap(im, sx, sy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    extended[PAD:PAD+H, PAD:PAD+W] = im
+    return extended
+
+def scene_depth():
+    yy, xx = np.mgrid[-PAD:H+PAD, -PAD:W+PAD].astype(np.float32)
+    z = np.full(xx.shape, 7.6, dtype=np.float32)
+    ceiling = yy &lt; 105
+    z[ceiling] = np.clip(415.0/np.maximum(135-yy[ceiling], 1), 3.1, 7.6)
+    # The glazed doorway / terrace is closer than the back of the room.
+    z[xx &lt; 131] = 3.9
+    # Stair wall, behind the island.
+    m = (xx &gt;= 131)&amp;(xx &lt; 303)&amp;(yy &gt;= 100)
+    z[m] = 5.8
+    # Floor and tall cabinet plane converge toward the room&#x27;s vanishing point.
+    floor = (xx &gt; 350)&amp;(yy &gt; 200)
+    z[floor] = np.clip(520/np.maximum(yy[floor]-135, 1), 2.9, 7.6)
+    cabinets = (xx &gt; 463)&amp;(yy &gt; 53)
+    z[cabinets] = np.clip(350/np.maximum(xx[cabinets]-414,1), 2.8, 7.6)
+    # Island, represented by planar front, worktop and receding right end.
+    mask = np.zeros(xx.shape, np.uint8)
+    points = np.array([[124,177],[151,186],[352,192],[352,400],[124,400]],np.int32)+PAD
+    cv2.fillPoly(mask,[points],1)
+    z[mask.astype(bool)] = 3.65
+    topmask = np.zeros_like(mask)
+    points=np.array([[151,185],[297,162],[392,161],[352,192]],np.int32)+PAD
+    cv2.fillPoly(topmask,[points],1)
+    tz=3.65+np.clip((192-yy)/31,0,1)*2.75
+    z[topmask.astype(bool)] = tz[topmask.astype(bool)]
+    sidemask=np.zeros_like(mask)
+    points=np.array([[352,192],[392,161],[393,207],[373,288],[366,368],[352,368]],np.int32)+PAD
+    cv2.fillPoly(sidemask,[points],1)
+    sz=3.65+np.clip((xx-352)/40,0,1)*2.75
+    z[sidemask.astype(bool)] = sz[sidemask.astype(bool)]
+    # A small continuous transition prevents tearing at occluding silhouettes.
+    inverse = gaussian_filter(1/z, 5.0)
+    return (1/inverse).astype(np.float32)
+
+def generate():
+    im=np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+    extended=make_extended(im)
+    Image.fromarray(extended).save(ROOT/&#x27;.tmp/extended.png&#x27;)
+    z=scene_depth()
+    y,x=np.mgrid[0:H,0:W].astype(np.float32)
+    cx,cy=256.0,144.0
+    frames=[im.copy()]
+    for i in range(1,50):
+        t=i/49
+        travel=0.65*(0.3*t+0.7*(3*t*t-2*t*t*t))
+        sx=x.copy(); sy=y.copy()
+        for _ in range(10):
+            dz=cv2.remap(z,sx+PAD,sy+PAD,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+            nx=cx+(x-cx)*(1+travel/dz)
+            ny=cy+(y-cy)*(1+travel/dz)
+            sx=.25*sx+.75*nx
+            sy=.25*sy+.75*ny
+        frame=cv2.remap(extended,sx+PAD,sy+PAD,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+        frames.append(frame)
+    artifact_io.save(np.stack(frames).astype(np.uint8),ROOT)
+
+if __name__==&#x27;__main__&#x27;:
+    generate()
+PY
+python generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T21:46:06.078416+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.crop((448,0,512,288)).resize((256,1152)).save(&#x27;.tmp/right.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T21:46:43.440064+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+p=&#x27;generate.py&#x27;
+s=open(p).read().replace(&#x27;sx[left] = -sx[left]&#x27;,&#x27;sx[left] = np.minimum(-sx[left]*0.18, 8)&#x27;).replace(&#x27;sx[right] = 2*(W-1)-sx[right]&#x27;,&#x27;sx[right] = (W-1) - 0.12*(sx[right]-(W-1))&#x27;).replace(&#x27;travel=0.65*&#x27;,&#x27;travel=0.52*&#x27;)
+open(p,&#x27;w&#x27;).write(s)
+PY
+python generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T21:47:15.735072+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+p=&#x27;generate.py&#x27;
+s=open(p).read().replace(&#x27;sx[left] = np.minimum(-sx[left]*0.18, 8)&#x27;,&#x27;sx[left] = np.minimum(-sx[left]*0.50, 23)&#x27;).replace(&#x27;cabinets = (xx &gt; 463)&amp;(yy &gt; 53)&#x27;,&#x27;cabinets = (xx &gt; 463)&#x27;)
+open(p,&#x27;w&#x27;).write(s)
+PY
+python generate.py
+python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+f=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+p=(im[:,:,0].astype(np.uint32)&lt;&lt;16)|(im[:,:,1].astype(np.uint32)&lt;&lt;8)|im[:,:,2].astype(np.uint32)
+assert f.shape==(288,512,50)
+assert np.array_equal(p,f[:,:,0])
+print(&#x27;Validated 50 frames, 512x288, exact first frame.&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><details><summary>视觉工具实际返回图片 1</summary><img loading=lazy src="tool_view_01.png"></details><details><summary>视觉工具实际返回图片 2</summary><img loading=lazy src="tool_view_02.png"></details><details><summary>视觉工具实际返回图片 3</summary><img loading=lazy src="tool_view_03.png"></details><details><summary>视觉工具实际返回图片 4</summary><img loading=lazy src="tool_view_04.png"></details><details><summary>视觉工具实际返回图片 5</summary><img loading=lazy src="tool_view_05.png"></details><details><summary>视觉工具实际返回图片 6</summary><img loading=lazy src="tool_view_06.png"></details><p class=muted>保存候选 5 份；完成命令 8 次；可验证图片返回 6 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
