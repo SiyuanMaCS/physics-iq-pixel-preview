@@ -45,9 +45,9 @@
 </tr>
 <tr>
 <td>WorldScore</td>
-<td>Official camera/scene controls; smoke at width 256 then 512, aspect ratio preserved, provisionally 10 fps</td>
-<td>Full selected official setting; multi-scene entries require multiple segments</td>
-<td>Follow per-model/setting output conventions and the official loader. Do not infer target duration from one café demo. Full-generation cost remains separate from the primary small benchmarks.</td>
+<td>Smoke: <strong>256×144, 10 fps, 50 frames/segment</strong> with the exact official crop and controls</td>
+<td>Static: 2,000 cases / 2,800 segments. Dynamic overall: Static + 1,000 motion cases = 3,800 segments</td>
+<td>One-segment output occupies 5 seconds. Three-segment output drops repeated anchor frames and contains 148 frames / 14.8 seconds. Index80 is now queued as a three-segment smoke. Full Dynamic includes Static dimensions, not just motion metrics. Frontier-row native specs/full-scope provenance remain unconfirmed.</td>
 </tr>
 <tr>
 <td>PVBench I2V</td>
@@ -89,6 +89,15 @@
 <p>The native self-review policy and 50k cumulative output-token ceiling remain fixed at every analysis point. The above observations were made by the external researcher and are not sent back to generation agents.</p>
 <h2>Report frame timing without ambiguity</h2>
 <p>The current RGB player uses frame hold: N frames at F fps occupy N/F seconds, with sample timestamps 0 through (N−1)/F. Thus Physics-IQ 20/4 occupies 5 seconds but its last sample is at 4.75 seconds. VBench 81/16 occupies 5.0625 seconds and ends with a 5-second sample; WorldArena 121/24 occupies 5.0417 seconds and ends with a 5-second sample. Do not silently call all three “exactly five seconds” in exports. Follow each official loader’s interval semantics and preserve native FPS/frame count in manifests.</p>
+<h2>Feasible main-table selection before full dispatch</h2>
+<ul>
+<li><strong>Physics-IQ Verified</strong> is the primary quantitative anchor: identified full198 input/evaluation setting, direct published frontier comparison and substantial reusable PixelWorld results.</li>
+<li><strong>RoboJudge shared-50</strong> is the compact semantic/embodied complement, after exact-checkpoint scoring smoke and published common50 averaging provenance are resolved. Keep PA and IA separate.</li>
+<li><strong>VBench-I2V</strong> is operational, but its full requirement is5,590 videos per configuration (44,720 for fourmodels/twotracks). Its metric functions may also be used on Physics-IQ for labeled appearance/consistency analysis, which is not a VBench-I2V leaderboard score. Do not silently turn a diagnostic subset into a full benchmark.</li>
+<li><strong>WorldArena</strong> full local protocol requires3,000 videos/configuration plus its metric stack and export reconciliation; retain the current one-episode demonstration while those gates remain open.</li>
+<li><strong>WBench/WorldScore</strong> are protocol-audited candidates with complete-case diagnostic adapters and explicit resource/provenance gates. PVBench is blocked on full release. Do not launch expensive full generation merely because a public baseline number exists.</li>
+</ul>
+<p>For multi-turn tasks, the current clean Codex unit is one generation segment. Each segment has a50k cumulative output-token ceiling across requests/recovery; a multi-segment case therefore has the sum of its segment budgets and usages. Report both per-segment and per-case totals. This must be declared before formal comparison; never describe a three-segment case as capped at50k total under the current implementation.</p>
 </main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
