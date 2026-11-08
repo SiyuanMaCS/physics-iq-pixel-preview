@@ -4,7 +4,25 @@
 </p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T18:37:03.346608+00:00</strong><pre>/bin/bash -lc &#x27;ls -la &amp;&amp; cat prompt.txt &amp;&amp; cat GENERATION_RULES.md&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T18:37:12.747342+00:00</strong><pre>/bin/bash -lc &quot;cat artifact_io.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
 from PIL import Image
 im=Image.open(&#x27;first_frame.png&#x27;); print(im.size,im.mode); im.resize((1024,576)).save(&#x27;.tmp/first_up.png&#x27;)
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 2 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T18:39:33.203415+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for m in [&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;,&#x27;cv2&#x27;]:
+ print(m, bool(importlib.util.find_spec(m)))
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;); im.crop((51,12,94,48)).resize((516,432)).save(&#x27;.tmp/ball.png&#x27;);im.crop((192,22,217,66)).resize((250,440)).save(&#x27;.tmp/block.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T18:42:15.889911+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+for y in [17,18,19,20,21,22,24,26,28,31,34,37,39,41,43,45]:
+ print(y, [&#x27;%d:%s&#x27;%(x,&#x27;,&#x27;.join(map(str,im[y,x]))) for x in [57,59,60,61,63,65,67,69,71,75,79,81,83,85,87]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T18:43:27.061224+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+for y in [29,31,33,35,40,45,50,54,56,59]:
+ print(y, im[y,200:211].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 5 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}

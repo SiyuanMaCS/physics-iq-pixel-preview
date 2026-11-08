@@ -40,7 +40,127 @@ from PIL import Image
 im=Image.open(&#x27;first_frame.png&#x27;)
 for name,box in [(&#x27;left_tool&#x27;,(30,0,95,65)),(&#x27;right_tool&#x27;,(155,0,210,75)),(&#x27;left_pillow&#x27;,(30,85,135,140)),(&#x27;right_pillow&#x27;,(120,85,230,140))]:
  im.crop(box).resize(((box[2]-box[0])*10,(box[3]-box[1])*10),Image.Resampling.NEAREST).save(&#x27;.tmp/&#x27;+name+&#x27;.png&#x27;)
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 11 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T18:39:05.684815+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+for x in [40,50,56,65,80,100,150,175,190]:
+ l=a[:,x].mean(1)
+ # print strongest negative gradient below 80
+ g=np.diff(l)
+ cand=np.argsort(g[80:])[:4]+80
+ print(&#x27;x&#x27;,x,[(int(y),round(g[y],1),round(l[y],1)) for y in sorted(cand)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T18:39:10.733849+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print pixel colors around object masks
+for name,box in [(&#x27;ball&#x27;,(35,25,75,60)),(&#x27;block&#x27;,(160,25,185,70)),(&#x27;bg&#x27;,(120,20,150,60)),(&#x27;pillowL&#x27;,(40,90,120,135)),(&#x27;pillowR&#x27;,(145,90,220,135))]:
+ x0,y0,x1,y1=box; q=a[y0:y1,x0:x1].reshape(-1,3)
+ print(&#x27;\\n&#x27;,name,&#x27;mean&#x27;,q.mean(0).round(1),&#x27;min&#x27;,q.min(0),&#x27;max&#x27;,q.max(0))
+ print(&#x27;sample&#x27;,q[::max(1,len(q)//8)].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T18:39:15.095612+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+box=(25,0,100,100)
+c=im.crop(box).resize((750,1000),Image.Resampling.NEAREST)
+c.save(&#x27;.tmp/left_100.png&#x27;)
+box=(145,0,220,100)
+im.crop(box).resize((750,1000),Image.Resampling.NEAREST).save(&#x27;.tmp/right_100.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T18:40:03.479649+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for name,(x0,y0,x1,y1) in {&#x27;lefttool&#x27;:(30,0,90,70),&#x27;righttool&#x27;:(155,0,200,80)}.items():
+ q=a[y0:y1,x0:x1].reshape(-1,3)
+ # quantize to 12 colors
+ im=Image.fromarray(q.reshape(y1-y0,x1-x0,3)).quantize(colors=16,method=Image.Quantize.MEDIANCUT)
+ p=np.array(im.getpalette()).reshape(-1,3)
+ counts=im.getcolors(); print(name)
+ for n,i in sorted(counts,reverse=True): print(n,p[i].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T18:40:42.424728+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for y in range(30,69,3):
+ print(y, [(x,a[y,x].tolist()) for x in range(168,184,2)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T18:40:47.824486+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# approximate silhouette extents by color masks
+Y,X=np.indices(a.shape[:2]); r,g,b=[a[:,:,i].astype(int) for i in range(3)]
+ball=((X&gt;35)&amp;(X&lt;72)&amp;(Y&gt;28)&amp;(Y&lt;60)&amp;(r&gt;35)&amp;(r&gt;g+8)&amp;(g&gt;b+2))
+block=((X&gt;165)&amp;(X&lt;182)&amp;(Y&gt;30)&amp;(Y&lt;67)&amp;(r&gt;70)&amp;(g&lt;110)&amp;(r&gt;g+35))
+for name,m in [(&#x27;ball&#x27;,ball),(&#x27;block&#x27;,block)]:
+ ys,xs=np.where(m); print(name, xs.min(),xs.max(),ys.min(),ys.max(),len(xs), &#x27;centroid&#x27;,xs.mean(),ys.mean())
+ for y in range(ys.min(),ys.max()+1):
+  xx=np.where(m[y])[0]
+  if len(xx): print(y,xx.min(),xx.max())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T18:41:24.298776+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+q=a[27:49,39:66].reshape(-1,3)
+im=Image.fromarray(q.reshape(22,27,3)).quantize(colors=20)
+p=np.array(im.getpalette()).reshape(-1,3)
+for n,i in sorted(im.getcolors(),reverse=True): print(n,p[i].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T18:41:28.971729+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for y in range(28,49,2):
+ print(y, [(x,a[y,x].tolist()) for x in range(40,65,3)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-08T18:42:25.377587+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+pts=[(41,25),(43,27),(40,30),(40,34),(43,36),(44,39),(61,30),(63,32),(65,35),(67,36),(64,39),(62,40),(47,25),(53,25),(58,25)]
+for x,y in pts: print((x,y),a[y,x].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-08T18:42:30.507524+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+# create exact static plate by cloning similar nearby background into object bboxes, then median blur only interior? save candidates
+a=np.asarray(im).copy()
+# simple horizontal inpaint by linear interpolation from left/right anchors
+for y in range(20,70):
+ for x0,x1 in [(38,68),(164,184)]:
+  left=a[y,x0-4].astype(float); right=a[y,x1+4].astype(float)
+  for x in range(x0,x1+1):
+   t=(x-x0+4)/(x1-x0+8)
+   a[y,x]=np.round(left*(1-t)+right*t).astype(np.uint8)
+Image.fromarray(a).save(&#x27;.tmp/plate_linear.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-08T18:43:06.581605+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+a=cv2.cvtColor(im,cv2.COLOR_BGR2RGB)
+Y,X=np.indices(a.shape[:2]); r,g,b=[a[:,:,i].astype(np.int16) for i in range(3)]
+mask=np.zeros(a.shape[:2],np.uint8)
+# brown ball
+mask[((X&gt;=40)&amp;(X&lt;=66)&amp;(Y&gt;=26)&amp;(Y&lt;=48)&amp;(r&gt;g+4)&amp;(r&gt;b+4))]=255
+# red block
+mask[((X&gt;=164)&amp;(X&lt;=184)&amp;(Y&gt;=31)&amp;(Y&lt;=67)&amp;(r&gt;g+15)&amp;(r&gt;b+15))]=255
+# fill holes/edge dilation
+mask=cv2.dilate(mask,np.ones((3,3),np.uint8),iterations=1)
+out=cv2.inpaint(cv2.cvtColor(a,cv2.COLOR_RGB2BGR),mask,4,cv2.INPAINT_TELEA)
+cv2.imwrite(&#x27;.tmp/plate_inpaint.png&#x27;,out)
+# side by side crops
+cv2.imwrite(&#x27;.tmp/plate_mask.png&#x27;,mask)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-08T18:43:38.286911+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for x in [45,52,60,165,174,182]:
+ print(&#x27;\\nx&#x27;,x)
+ for y in range(85,115,2): print(y,a[y,x].tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-08T18:43:52.370725+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;.tmp/plate_inpaint.png&#x27;)
+for name,box in [(&#x27;li&#x27;,(30,20,78,62)),(&#x27;ri&#x27;,(155,25,195,75))]:
+ im.crop(box).resize(((box[2]-box[0])*10,(box[3]-box[1])*10),Image.Resampling.NEAREST).save(&#x27;.tmp/&#x27;+name+&#x27;.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 24 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
