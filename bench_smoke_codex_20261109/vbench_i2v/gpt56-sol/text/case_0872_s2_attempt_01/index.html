@@ -1,0 +1,345 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-5.6-Sol · 0872_s2</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-5.6-Sol · 0872_s2</h1><p class=muted>text · 256×144 · 16 FPS · 81 帧 · 状态 complete · 输出 tokens 8298</p><div class=box><strong>原始任务</strong><p>a brown bear in the water with a fish in its mouth</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16, &quot;pixels_file&quot;: &quot;pixels_6c725ce0c60c4ece.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;abb118ee7096652d48ebcafe59f0653154d53008ab58a19d0ae6f839c3764ada&quot;, &quot;pixels&quot;: &quot;final/pixels_6c725ce0c60c4ece.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T20:57:10.035092+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16, &quot;pixels_file&quot;: &quot;pixels_6c725ce0c60c4ece.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;abb118ee7096652d48ebcafe59f0653154d53008ab58a19d0ae6f839c3764ada&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_6c725ce0c60c4ece.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,107 @@
++from pathlib import Path
++import numpy as np
++import cv2
++from PIL import Image
++import artifact_io
++
++# A deliberately restrained image-to-video treatment: the photographed subject bobs
++# in the current while several differently-sized ripples travel through the water.
++# All texture and detail comes from the supplied RGB photograph.
++ROOT = Path(__file__).resolve().parent
++src_u8 = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;), dtype=np.uint8)
++src = src_u8.astype(np.float32)
++H, W = src.shape[:2]
++yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
++
++# Build soft, photograph-derived foreground mattes.  The animal/fish are warmer and
++# considerably darker than the cool grey water.  Closing joins fur highlights into
++# one coherent subject before the matte is feathered broadly.
++r, g, b = [src[..., k] for k in range(3)]
++roi = (xx &gt; 70) &amp; (xx &lt; 229) &amp; (yy &gt; 35)
++warm = (r &gt; g + 5) &amp; (r &gt; b + 10)
++dark = (np.maximum.reduce([r, g, b]) &lt; 113)
++seed = ((warm &amp; (r &gt; 58)) | dark) &amp; roi
++seed8 = (seed.astype(np.uint8) * 255)
++seed8 = cv2.morphologyEx(seed8, cv2.MORPH_CLOSE, np.ones((13,13), np.uint8), iterations=2)
++# Keep components connected to the center/lower foreground, then bound it naturally.
++n, labs, stats, _ = cv2.connectedComponentsWithStats(seed8)
++keep = np.zeros((H,W), np.uint8)
++for i in range(1,n):
++    x0,y0,w0,h0,area = stats[i]
++    if area &gt; 300 and x0 &lt; 175 and x0+w0 &gt; 95 and y0+h0 &gt; 78:
++        keep[labs == i] = 255
++# Include bright fur/fish surrounded by the detected silhouette without engulfing water.
++keep = cv2.morphologyEx(keep, cv2.MORPH_CLOSE, np.ones((17,17),np.uint8), iterations=1)
++subject = cv2.GaussianBlur(keep.astype(np.float32)/255.0, (0,0), 5.0)
++subject *= np.clip((yy-31)/15,0,1)
++subject = np.clip(subject,0,1)
++# A tighter upper-subject matte controls a small natural nod.
++head_gate = np.exp(-(((xx-128)/69)**4 + ((yy-77)/47)**4)).astype(np.float32)
++head = subject * head_gate
++# Possible projecting fish/tail area receives only subpixel flex -- conservative enough
++# to preserve the semantics whichever edge is fur or fish.
++fish_gate = subject * np.clip((xx-124)/75,0,1) * np.exp(-((yy-88)/43)**4)
++
++# Water matte and a foreground strip where waves lap in front of the immersed subject.
++water = np.clip(1.0 - cv2.GaussianBlur((keep&gt;0).astype(np.float32),(0,0),7), 0, 1)
++water *= np.clip((yy-4)/34, .12, 1.0)
++lap = np.clip((yy-119)/21,0,1) * subject
++
++frames = []
++for k in range(81):
++    if k == 0:
++        frames.append(src_u8.copy())
++        continue
++    t = k / 16.0
++    # Slow current and buoyant motion. Envelopes start at exactly zero and finish calmly.
++    ease = 1.0 - np.exp(-k/8.0)
++    bob = ease * (1.05*np.sin(2*np.pi*t/2.85) + .32*np.sin(2*np.pi*t/1.18 + .4))
++    sway = ease * (.72*np.sin(2*np.pi*t/3.8 + .25) - .18)
++    nod = ease * .55*np.sin(2*np.pi*t/3.1 - .35)
++
++    # Tiny documentary-style camera drift and push, always sampled from the source.
++    zoom = 1.0 + ease*(0.0055*(1-np.cos(2*np.pi*t/8.5)))
++    cx, cy = 138.0, 86.0
++    camx = cx + (xx-cx)/zoom - .25*ease*np.sin(2*np.pi*t/4.7)
++    camy = cy + (yy-cy)/zoom - .18*ease*np.sin(2*np.pi*t/4.1+.5)
++
++    # Layered, low-amplitude wave refraction. Frequencies and speeds differ to avoid
++    # the appearance of one rigid sine warp.
++    phase1 = 2*np.pi*(yy/26.0 - t/2.35)
++    phase2 = 2*np.pi*(yy/47.0 + t/4.4) + .018*xx
++    phase3 = 2*np.pi*(xx/97.0 - t/5.2) + yy/29.0
++    wx = water * ease * (0.64*np.sin(phase1) + .31*np.sin(phase2))
++    wy = water * ease * (0.19*np.sin(phase3) + .11*np.sin(phase1*0.72))
++
++    # Inverse local deformation: coherent bob/sway plus a softer nod and fish flex.
++    # Horizontal flex increases gradually toward the projecting edge.
++    tail_flex = ease * .48*np.sin(2*np.pi*t/1.65 + (xx-120)/48.0) * fish_gate
++    dx = sway*subject + nod*head*((yy-82)/55.0) + tail_flex
++    dy = bob*subject + nod*head + .15*tail_flex*np.sin((yy-60)/13.0)
++
++    mapx = (camx - dx + wx).astype(np.float32)
++    mapy = (camy - dy + wy).astype(np.float32)
++    warped = cv2.remap(src, mapx, mapy, interpolation=cv2.INTER_CUBIC,
++                       borderMode=cv2.BORDER_REFLECT_101)
++
++    # Moving reflected-light ribbons are broad and translucent, preserving photographic
++    # grain rather than drawing synthetic lines. Some water crosses the lower silhouette.
++    p = 2*np.pi*(yy/19.0 - t/2.05) + .22*np.sin(xx/24.0 + t)
++    ribbons = (np.maximum(0,np.sin(p))**7 - .22) * (water + .32*lap)
++    p2 = 2*np.pi*(yy/34.0 + t/3.4) + xx/61.0
++    ribbons += .35*(np.maximum(0,np.sin(p2))**9 - .12)*water
++    ribbons = cv2.GaussianBlur(ribbons.astype(np.float32),(0,0),1.15)
++    # Cool highlights brighten more than shadows, as on a rippling overcast surface.
++    light = (1.15*ribbons)[...,None]
++    tint = np.array([0.72,0.92,1.18],np.float32)[None,None,:]
++    warped = warped + light*tint
++
++    # Minute exposure breathing adds life without altering the first-frame palette.
++    exposure = 1.0 + ease*.0025*np.sin(2*np.pi*t/4.0)
++    warped = np.clip(warped*exposure,0,255).astype(np.uint8)
++    frames.append(warped)
++
++frames = np.stack(frames, axis=0).astype(np.uint8)
++assert frames.shape == (81,144,256,3)
++assert np.array_equal(frames[0], src_u8)
++artifact_io.save(frames, ROOT)
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T20:55:21.041196+00:00</strong><pre>/bin/bash -lc &quot;cat GENERATION_RULES.md &amp;&amp; printf &#x27;\\n---PROMPT---\\n&#x27; &amp;&amp; cat prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T20:55:21.458153+00:00</strong><pre>/bin/bash -lc &quot;find . -maxdepth 2 -type f -printf &#x27;%p\\n&#x27; | sort &amp;&amp; file first_frame.png&quot;</pre><span class=pill>exit 127</span></div><div class=step><strong>命令 3 · 2026-11-08T20:55:27.024740+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json; sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T20:55:27.402593+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(im.shape, im.dtype, im.min(),im.max())
+print(&#x27;mean&#x27;,im.mean((0,1)),&#x27;std&#x27;,im.std((0,1)))
+# sample grid 12x8 centers
+for y in np.linspace(5,138,8).astype(int):
+ print(y, [tuple(im[y,x]) for x in np.linspace(5,250,12).astype(int)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T20:55:35.804721+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# 64x36 avg, char warm/dark/saturation/light
+for yy in range(36):
+ s=&#x27;&#x27;
+ for xx in range(64):
+  p=im[yy*4:(yy+1)*4,xx*4:(xx+1)*4].mean((0,1)); r,g,b=p
+  if max(p)&lt;35:c=&#x27;@&#x27;
+  elif max(p)&lt;60:c=&#x27;#&#x27;
+  elif max(p)&lt;90:c=&#x27;O&#x27;
+  elif max(p)&lt;120:c=&#x27;o&#x27;
+  elif r&gt;g*1.16 and r&gt;b*1.18:c=&#x27;W&#x27;
+  elif r&gt;b+18 and r&gt;g+8:c=&#x27;w&#x27;
+  elif max(p)&gt;215:c=&#x27;.&#x27;
+  elif max(p)&gt;180:c=&#x27;-&#x27;
+  elif max(p)&gt;145:c=&#x27;~&#x27;
+  else:c=&#x27;+&#x27;
+  s+=c
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T20:55:45.856127+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+from scipy.ndimage import label
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(int)
+r,g,b=im.transpose(2,0,1)
+for name,m in [(&#x27;warm&#x27;,(r&gt;g+8)&amp;(r&gt;b+12)&amp;(r&gt;80)),(&#x27;brown&#x27;,(r&gt;b*1.15)&amp;(r&gt;g*1.05)&amp;(r&gt;55)),(&#x27;dark&#x27;,(r&lt;70)&amp;(g&lt;70)&amp;(b&lt;70)),(&#x27;bright&#x27;,(r&gt;190)&amp;(g&gt;160)&amp;(b&gt;140)),(&#x27;salmon&#x27;,(r&gt;160)&amp;(g&gt;100)&amp;(g&lt;190)&amp;(b&lt;160))]:
+ print(&#x27;\\n&#x27;,name,m.sum())
+ L,n=label(m)
+ out=[]
+ for i in range(1,n+1):
+  yy,xx=np.where(L==i); n1=len(xx)
+  if n1&gt;10:out.append((n1,(xx.min(),yy.min(),xx.max(),yy.max()), tuple(im[yy,xx].mean(0).astype(int))))
+ print(sorted(out,reverse=True)[:15])
+# ranges each 5 rows warm
+m=(r&gt;g+8)&amp;(r&gt;b+12)&amp;(r&gt;70)
+for y in range(0,144,4):
+ xs=np.where(m[y:y+4].any(0))[0]
+ print(f&#x27;{y:3}&#x27;, (xs.min(),xs.max(),len(xs)) if len(xs) else None)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T20:55:53.750810+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image,ImageEnhance,ImageFilter
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;L&#x27;).resize((96,54))
+a=np.array(im)
+chars=&#x27;@%#*+=-:. &#x27;
+# dark @
+for row in a:
+ print(&#x27;&#x27;.join(chars[min(9,int(v)*10//256)] for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T20:56:12.523212+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T20:56:28.366117+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(int)
+# central 75:225, 38:144 blocks 2x2 classify priority black dark, W warm, P peach, l light, bg blank
+for y in range(38,144,2):
+ s=&#x27;&#x27;
+ for x in range(72,228,2):
+  p=im[y:y+2,x:x+2].mean((0,1)); r,g,b=p; v=p.mean()
+  if max(p)&lt;55:c=&#x27;@&#x27;
+  elif max(p)&lt;85:c=&#x27;#&#x27;
+  elif r&gt;170 and r&gt;g+16 and r&gt;b+25:c=&#x27;S&#x27;
+  elif r&gt;g+8 and r&gt;b+13 and r&gt;90:c=&#x27;w&#x27;
+  elif v&gt;195:c=&#x27;.&#x27;
+  elif v&gt;165:c=&#x27;-&#x27;
+  elif v&gt;135:c=&#x27;~&#x27;
+  elif v&gt;105:c=&#x27;+&#x27;
+  else:c=&#x27;o&#x27;
+  s+=c
+ print(f&#x27;{y:3} &#x27;+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T20:57:07.853730+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import numpy as np
+import cv2
+from PIL import Image
+import artifact_io
+
+# A deliberately restrained image-to-video treatment: the photographed subject bobs
+# in the current while several differently-sized ripples travel through the water.
+# All texture and detail comes from the supplied RGB photograph.
+ROOT = Path(__file__).resolve().parent
+src_u8 = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;), dtype=np.uint8)
+src = src_u8.astype(np.float32)
+H, W = src.shape[:2]
+yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+
+# Build soft, photograph-derived foreground mattes.  The animal/fish are warmer and
+# considerably darker than the cool grey water.  Closing joins fur highlights into
+# one coherent subject before the matte is feathered broadly.
+r, g, b = [src[..., k] for k in range(3)]
+roi = (xx &gt; 70) &amp; (xx &lt; 229) &amp; (yy &gt; 35)
+warm = (r &gt; g + 5) &amp; (r &gt; b + 10)
+dark = (np.maximum.reduce([r, g, b]) &lt; 113)
+seed = ((warm &amp; (r &gt; 58)) | dark) &amp; roi
+seed8 = (seed.astype(np.uint8) * 255)
+seed8 = cv2.morphologyEx(seed8, cv2.MORPH_CLOSE, np.ones((13,13), np.uint8), iterations=2)
+# Keep components connected to the center/lower foreground, then bound it naturally.
+n, labs, stats, _ = cv2.connectedComponentsWithStats(seed8)
+keep = np.zeros((H,W), np.uint8)
+for i in range(1,n):
+    x0,y0,w0,h0,area = stats[i]
+    if area &gt; 300 and x0 &lt; 175 and x0+w0 &gt; 95 and y0+h0 &gt; 78:
+        keep[labs == i] = 255
+# Include bright fur/fish surrounded by the detected silhouette without engulfing water.
+keep = cv2.morphologyEx(keep, cv2.MORPH_CLOSE, np.ones((17,17),np.uint8), iterations=1)
+subject = cv2.GaussianBlur(keep.astype(np.float32)/255.0, (0,0), 5.0)
+subject *= np.clip((yy-31)/15,0,1)
+subject = np.clip(subject,0,1)
+# A tighter upper-subject matte controls a small natural nod.
+head_gate = np.exp(-(((xx-128)/69)**4 + ((yy-77)/47)**4)).astype(np.float32)
+head = subject * head_gate
+# Possible projecting fish/tail area receives only subpixel flex -- conservative enough
+# to preserve the semantics whichever edge is fur or fish.
+fish_gate = subject * np.clip((xx-124)/75,0,1) * np.exp(-((yy-88)/43)**4)
+
+# Water matte and a foreground strip where waves lap in front of the immersed subject.
+water = np.clip(1.0 - cv2.GaussianBlur((keep&gt;0).astype(np.float32),(0,0),7), 0, 1)
+water *= np.clip((yy-4)/34, .12, 1.0)
+lap = np.clip((yy-119)/21,0,1) * subject
+
+frames = []
+for k in range(81):
+    if k == 0:
+        frames.append(src_u8.copy())
+        continue
+    t = k / 16.0
+    # Slow current and buoyant motion. Envelopes start at exactly zero and finish calmly.
+    ease = 1.0 - np.exp(-k/8.0)
+    bob = ease * (1.05*np.sin(2*np.pi*t/2.85) + .32*np.sin(2*np.pi*t/1.18 + .4))
+    sway = ease * (.72*np.sin(2*np.pi*t/3.8 + .25) - .18)
+    nod = ease * .55*np.sin(2*np.pi*t/3.1 - .35)
+
+    # Tiny documentary-style camera drift and push, always sampled from the source.
+    zoom = 1.0 + ease*(0.0055*(1-np.cos(2*np.pi*t/8.5)))
+    cx, cy = 138.0, 86.0
+    camx = cx + (xx-cx)/zoom - .25*ease*np.sin(2*np.pi*t/4.7)
+    camy = cy + (yy-cy)/zoom - .18*ease*np.sin(2*np.pi*t/4.1+.5)
+
+    # Layered, low-amplitude wave refraction. Frequencies and speeds differ to avoid
+    # the appearance of one rigid sine warp.
+    phase1 = 2*np.pi*(yy/26.0 - t/2.35)
+    phase2 = 2*np.pi*(yy/47.0 + t/4.4) + .018*xx
+    phase3 = 2*np.pi*(xx/97.0 - t/5.2) + yy/29.0
+    wx = water * ease * (0.64*np.sin(phase1) + .31*np.sin(phase2))
+    wy = water * ease * (0.19*np.sin(phase3) + .11*np.sin(phase1*0.72))
+
+    # Inverse local deformation: coherent bob/sway plus a softer nod and fish flex.
+    # Horizontal flex increases gradually toward the projecting edge.
+    tail_flex = ease * .48*np.sin(2*np.pi*t/1.65 + (xx-120)/48.0) * fish_gate
+    dx = sway*subject + nod*head*((yy-82)/55.0) + tail_flex
+    dy = bob*subject + nod*head + .15*tail_flex*np.sin((yy-60)/13.0)
+
+    mapx = (camx - dx + wx).astype(np.float32)
+    mapy = (camy - dy + wy).astype(np.float32)
+    warped = cv2.remap(src, mapx, mapy, interpolation=cv2.INTER_CUBIC,
+                       borderMode=cv2.BORDER_REFLECT_101)
+
+    # Moving reflected-light ribbons are broad and translucent, preserving photographic
+    # grain rather than drawing synthetic lines. Some water crosses the lower silhouette.
+    p = 2*np.pi*(yy/19.0 - t/2.05) + .22*np.sin(xx/24.0 + t)
+    ribbons = (np.maximum(0,np.sin(p))**7 - .22) * (water + .32*lap)
+    p2 = 2*np.pi*(yy/34.0 + t/3.4) + xx/61.0
+    ribbons += .35*(np.maximum(0,np.sin(p2))**9 - .12)*water
+    ribbons = cv2.GaussianBlur(ribbons.astype(np.float32),(0,0),1.15)
+    # Cool highlights brighten more than shadows, as on a rippling overcast surface.
+    light = (1.15*ribbons)[...,None]
+    tint = np.array([0.72,0.92,1.18],np.float32)[None,None,:]
+    warped = warped + light*tint
+
+    # Minute exposure breathing adds life without altering the first-frame palette.
+    exposure = 1.0 + ease*.0025*np.sin(2*np.pi*t/4.0)
+    warped = np.clip(warped*exposure,0,255).astype(np.uint8)
+    frames.append(warped)
+
+frames = np.stack(frames, axis=0).astype(np.uint8)
+assert frames.shape == (81,144,256,3)
+assert np.array_equal(frames[0], src_u8)
+artifact_io.save(frames, ROOT)
+PY
+python generate.py
+python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+print(&#x27;packed shape&#x27;,z.shape)
+a=np.array(Image.open(&#x27;frames/00.png&#x27;)); b=np.array(Image.open(&#x27;first_frame.png&#x27;))
+print(&#x27;first identical&#x27;,np.array_equal(a,b))
+# frame difference diagnostics
+ims=[np.array(Image.open(f&#x27;frames/{i:02}.png&#x27;)).astype(int) for i in range(81)]
+for i in [1,10,20,40,60,80]:
+ d=np.abs(ims[i]-ims[0]); print(i, &#x27;mae&#x27;,d.mean(), &#x27;changed&#x27;,np.mean(np.any(d,2)), &#x27;max&#x27;,d.max())
+print(&#x27;adjacent MAE mean/max&#x27;,np.mean([np.abs(ims[i]-ims[i-1]).mean() for i in range(1,81)]),max(np.abs(ims[i]-ims[i-1]).mean() for i in range(1,81)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T20:57:17.597439+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+# report matte geometry by importing until before save isn&#x27;t easy; reconstruct quick
+import cv2,numpy as np
+from PIL import Image
+s=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float); H,W=s.shape[:2]; yy,xx=np.mgrid[:H,:W];r,g,b=s.transpose(2,0,1)
+roi=(xx&gt;70)&amp;(xx&lt;229)&amp;(yy&gt;35); seed=(((r&gt;g+5)&amp;(r&gt;b+10)&amp;(r&gt;58))|(np.maximum.reduce([r,g,b])&lt;113))&amp;roi
+q=cv2.morphologyEx(seed.astype(&#x27;uint8&#x27;)*255,cv2.MORPH_CLOSE,np.ones((13,13),&#x27;uint8&#x27;),iterations=2)
+n,l,st,_=cv2.connectedComponentsWithStats(q)
+print(&#x27;components&#x27;, sorted(st[1:].tolist(),key=lambda x:x[4],reverse=True)[:10])
+keep=np.zeros((H,W),&#x27;uint8&#x27;)
+for i in range(1,n):
+ x0,y0,w0,h0,a=st[i]
+ if a&gt;300 and x0&lt;175 and x0+w0&gt;95 and y0+h0&gt;78:keep[l==i]=255
+keep=cv2.morphologyEx(keep,cv2.MORPH_CLOSE,np.ones((17,17),&#x27;uint8&#x27;))
+print(&#x27;keep area&#x27;,sum(keep.flat&gt;0),&#x27;bbox&#x27;,cv2.boundingRect(keep))
+for y in range(0,144,8):
+ xs=np.where(keep[y]&gt;0)[0]; print(y,(xs.min(),xs.max(),len(xs)) if len(xs) else &#x27;&#x27;)
+PY
+ls -lh pixels.npz index.html inspection.png transition_check.png frames/00.png frames/80.png generate.py&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 1 份；完成命令 11 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
