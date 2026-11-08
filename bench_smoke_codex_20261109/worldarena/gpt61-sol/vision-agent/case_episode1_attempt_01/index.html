@@ -1,6 +1,463 @@
 <!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · episode1</title><style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
-</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · episode1</h1><p class=muted>vision-agent · 640×480 · 24 FPS · 121 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>In a fixed robotic workspace, generate a rigid, physically consistent embodied robotic arm. The arm maintains high stability with no deformation and enters the frame to Use arms to pick the bottle with small ridged green cap, drop it in the smooth black dustbin, repeat for the bottle with ribbed design and the hand-sized drinking bottle.</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T17:48:42.701546+00:00</strong><pre>/bin/bash -lc &quot;ls -la &amp;&amp; cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T17:48:50.819682+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; cat artifact_io.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · episode1</h1><p class=muted>vision-agent · 640×480 · 24 FPS · 121 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>In a fixed robotic workspace, generate a rigid, physically consistent embodied robotic arm. The arm maintains high stability with no deformation and enters the frame to Use arms to pick the bottle with small ridged green cap, drop it in the smooth black dustbin, repeat for the bottle with ribbed design and the hand-sized drinking bottle.</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 640, &quot;height&quot;: 480, &quot;frames&quot;: 121, &quot;fps&quot;: 24, &quot;pixels&quot;: &quot;final/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p class=muted>此结果可播放，但该运行尚未通过最终提交审核。页面展示不代表评测通过。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T17:55:25.849305+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 640, &quot;height&quot;: 480, &quot;frames&quot;: 121, &quot;fps&quot;: 24, &quot;pixels&quot;: &quot;candidate_00/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,338 @@
++from pathlib import Path
++import math
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++from scipy.ndimage import gaussian_filter
++import artifact_io
++
++ROOT=Path(__file__).resolve().parent
++W,H=640,480
++ORIG=Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
++A=np.array(ORIG)
++S=2
++
++def smooth(x):
++    x=np.clip(x,0,1); return x*x*(3-2*x)
++def lerp(a,b,t): return np.asarray(a)*(1-t)+np.asarray(b)*t
++
++def polygon_mask(points,blur=0):
++    im=Image.new(&#x27;L&#x27;,(W,H)); ImageDraw.Draw(im).polygon(points,fill=255)
++    return im.filter(ImageFilter.GaussianBlur(blur)) if blur else im
++
++# Bottle contours, traced only from the supplied still.
++contours=[
++ [(638,90),(634,94),(628,103),(624,114),(620,128),(613,144),(607,160),(600,173),(592,186),(589,201),(595,215),(610,225),(628,230),(646,226),(658,214),(668,187),(674,157),(676,128),(674,105),(669,87),(664,73),(663,67),(647,65),(645,77)],
++ [(397,-1),(459,-1),(456,24),(452,50),(449,80),(443,108),(438,128),(430,139),(414,144),(399,142),(388,136),(383,123),(384,97),(387,72),(390,49),(393,22)],
++ [(124,-1),(188,-1),(192,25),(197,61),(201,87),(204,101),(204,118),(197,131),(184,138),(165,139),(153,132),(148,118),(147,98),(144,76),(137,58),(131,35)]
++]
++# Local clean plates reconstructed from adjacent pixels and a smooth table fit.
++yy,xx=np.mgrid[0:H,0:W]
++# Table polynomial trained only on unoccupied tabletop.
++train=((yy&gt;43)&amp;(yy&lt;285)&amp;(xx&gt;105)&amp;(xx&lt;628))
++exclusions=[[(418,150),(519,139),(600,144),(639,83),(639,242),(552,244),(458,229),(418,205)],
++[(376,39),(470,39),(470,149),(370,164)],[(105,39),(210,39),(231,75),(369,67),(384,133),(204,158),(128,158)]]
++for poly in exclusions: train &amp;= np.asarray(polygon_mask(poly,3))&lt;2
++X=np.stack([np.ones_like(xx),xx/640,yy/480,(xx/640)**2,(yy/480)**2,xx*yy/(640*480)],-1)
++coeff=np.linalg.lstsq(X[train],A[train],rcond=None)[0]
++table=np.clip(X@coeff,0,255)
++# Back wall samples, interpolated row-wise without the bottles.
++wall=A.astype(float).copy()
++for y in range(39):
++    samples=[20,65,90,220,280,330,365,490,540,590]
++    for c in range(3): wall[y,:,c]=np.interp(np.arange(W),samples,[np.mean(A[y,max(0,x-4):x+5,c]) for x in samples])
++plate=table.copy(); plate[:38]=wall[:38]
++plate[38]=.65*table[38]+.35*wall[37]
++# Replace only the removed bottle and its associated old contact shadow.
++rem_polys=[[(579,96),(625,73),(639,74),(639,246),(590,244),(542,235),(482,224),(425,212),(414,194),(427,174),(488,158),(577,159)],
++[(379,0),(466,0),(460,89),(451,136),(438,153),(407,157),(377,145),(372,120)],
++[(116,0),(199,0),(209,76),(231,73),(299,70),(344,83),(360,104),(351,130),(274,151),(203,151),(160,150),(142,140),(135,106)]]
++clean=[]
++current=A.astype(float).copy()
++for i,p in enumerate(rem_polys):
++    m=np.asarray(polygon_mask(p,4),float)/255
++    current=current*(1-m[...,None])+plate*m[...,None]
++    clean.append(Image.fromarray(np.uint8(np.clip(current,0,255))))
++
++# Create rigid textured bottle sprites. The portions beyond the original crop
++# are completed with mirrored source textures and simple geometric caps.
++class Bottle:
++    def __init__(self,i,grip,box):
++        self.i=i; self.grip=np.array(grip,float); self.box=box
++        x0,y0,x1,y1=box; self.origin=np.array([x0,y0],float)
++        width,height=x1-x0,y1-y0
++        data=np.zeros((height,width,4),np.uint8)
++        mask=np.asarray(polygon_mask(contours[i],.7))
++        for y in range(max(y0,0),min(y1,H)):
++            for x in range(max(x0,0),min(x1,W)):
++                data[y-y0,x-x0,:3]=A[y,x]
++                data[y-y0,x-x0,3]=mask[y,x]
++        im=Image.fromarray(data)
++        d=ImageDraw.Draw(im)
++        if i==0:
++            # Continue transparent ridged PET around its slightly inclined axis.
++            for y in range(68,231):
++                center=656-(y-58)*.16
++                for x in range(640,min(x1,677)):
++                    src=int(round(2*center-x))
++                    if 0&lt;=src&lt;640 and 0&lt;=y&lt;H and mask[y,src]&gt;5:
++                        rgba=tuple(A[y,src])+ (int(mask[y,src]),)
++                        d.point((x-x0,y-y0),fill=rgba)
++            # Neck and shoulder, most initially beyond the right edge.
++            d.polygon([(647-x0,76-y0),(648-x0,63-y0),(665-x0,63-y0),(665-x0,78-y0),(671-x0,88-y0),(643-x0,91-y0)],fill=(187,185,170,240))
++            d.line([(650-x0,70-y0),(649-x0,81-y0),(645-x0,89-y0)],fill=(240,240,225,240),width=2)
++            d.rounded_rectangle((646-x0,52-y0,666-x0,67-y0),radius=3,fill=(76,108,33,255))
++            d.ellipse((646-x0,50-y0,666-x0,55-y0),fill=(126,153,57,255))
++            for k in range(648,666,3): d.line((k-x0,55-y0,k-x0,65-y0),fill=(137,155,63,255),width=1)
++            d.line((648-x0,66-y0,664-x0,66-y0),fill=(54,77,22,255),width=1)
++        else:
++            # Extend offscreen upper bottle with exact source column texture.
++            for y in range(y0,0):
++                if i==1:
++                    # ribbed bottle remains a single rigid body
++                    left=397 + max(0,-y-32)*.32
++                    right=459 - max(0,-y-32)*.28
++                    if y &lt; -67: left,right=418,442
++                else:
++                    left=124+max(0,-y-7)*.31
++                    right=188-max(0,-y-7)*.35
++                    if y &lt; -49:left,right=139,166
++                for x in range(math.ceil(left),math.floor(right)+1):
++                    sx=int(np.clip(x,0,W-1)); sy=3+(abs(y)%11)
++                    c=A[sy,sx].astype(float)
++                    if i==2: c=c*.90
++                    d.point((x-x0,y-y0),fill=tuple(np.uint8(c))+(255,))
++            if i==1:
++                d.rounded_rectangle((416-x0,-83-y0,444-x0,-68-y0),radius=3,fill=(134,116,31,255))
++                d.ellipse((416-x0,-84-y0,444-x0,-78-y0),fill=(191,172,66,255))
++                for x in range(419,445,3):d.line((x-x0,-78-y0,x-x0,-69-y0),fill=(203,179,71,255))
++            else:
++                d.rounded_rectangle((137-x0,-63-y0,168-x0,-48-y0),radius=3,fill=(82,40,37,255))
++                d.ellipse((137-x0,-64-y0,168-x0,-58-y0),fill=(126,65,57,255))
++                for x in range(139,169,3):d.line((x-x0,-58-y0,x-x0,-51-y0),fill=(112,53,49,255))
++        self.sprite=im
++        self.base=[(628,230),(414,144),(177,139)][i]
++        self.width=[35,32,31][i]
++    def overlay(self,canvas,pos,angle=0,opacity=1):
++        # Inverse affine mapping, no deformation, constant scale.
++        th=math.radians(angle); cs,sn=math.cos(th),math.sin(th)
++        # sprite-local initial grip coordinates
++        g=self.grip-self.origin
++        px,py=pos
++        tx=g[0]-cs*px-sn*py;ty=g[1]+sn*px-cs*py
++        sp=self.sprite.transform((W,H),Image.Transform.AFFINE,(cs,sn,tx,-sn,cs,ty),resample=Image.Resampling.BICUBIC)
++        if opacity&lt;1:
++            alpha=np.array(sp.getchannel(&#x27;A&#x27;));sp.putalpha(Image.fromarray(np.uint8(alpha*opacity)))
++        canvas.alpha_composite(sp)
++
++bottles=[Bottle(0,(635,147),(581,47,680,236)),Bottle(1,(421,40),(378,-85,465,150)),Bottle(2,(161,45),(118,-65,212,145))]
++
++# Orthographic workspace geometry; lengths stay fixed for all joint poses.
++CY=410.
++def project(p):
++    p=np.asarray(p);return np.stack([p[...,0],CY-.5*p[...,1]-.8660254*p[...,2]],axis=-1)
++def unproject(pos,z):return np.array([pos[0],2*(CY-pos[1]-.8660254*z),z],float)
++SHOULDER=np.array([727.,45.,62.]); L1,L2=444.,427.
++LIGHT=np.array([-.35,-.45,.82]);LIGHT/=np.linalg.norm(LIGHT)
++VIEW=np.array([0,-.8660254,.5])
++
++def ik(wrist):
++    v=wrist-SHOULDER;r=np.linalg.norm(v);n=v/r
++    a=(L1*L1-L2*L2+r*r)/(2*r)
++    h=math.sqrt(max(1,L1*L1-a*a))
++    pole=np.array([.65,-.20,.72]); pole-=n*np.dot(pole,n);pole/=np.linalg.norm(pole)
++    elbow=SHOULDER+a*n+h*pole
++    return elbow
++
++class Mesh:
++    def __init__(self):self.faces=[]
++    def face(self,points,col):
++        p=np.array(points,float);n=np.cross(p[1]-p[0],p[2]-p[0]); norm=np.linalg.norm(n)
++        if norm&lt;1e-8:return
++        n/=norm
++        shade=.73+.28*np.dot(n,LIGHT)
++        # cast metal specular highlights
++        half=(LIGHT+VIEW);half/=np.linalg.norm(half)
++        spec=max(0,np.dot(n,half))**24*28
++        color=tuple(np.uint8(np.clip(np.array(col)*shade+spec,0,255)))
++        self.faces.append((np.mean(p,axis=0)@VIEW,project(p),color))
++    def cylinder(self,a,b,r,color,r2=None,sides=24):
++        a=np.array(a,float);b=np.array(b,float);v=b-a;v/=np.linalg.norm(v)
++        other=np.array([0,0,1.]) if abs(v[2])&lt;.9 else np.array([0,1.,0])
++        u=np.cross(v,other);u/=np.linalg.norm(u);w=np.cross(v,u)
++        r2=r if r2 is None else r2
++        ra=[];rb=[]
++        for k in range(sides):
++            radial=u*math.cos(k*2*math.pi/sides)+w*math.sin(k*2*math.pi/sides)
++            ra.append(a+r*radial);rb.append(b+r2*radial)
++        for k in range(sides):
++            j=(k+1)%sides;self.face([ra[k],ra[j],rb[j],rb[k]],color)
++        self.face(ra[::-1],np.array(color)*.83);self.face(rb,np.array(color)*1.02)
++    def ball(self,c,r,color):
++        # small faceted rounded bearing
++        for j in range(8):
++            p0=-math.pi/2+j*math.pi/8;p1=p0+math.pi/8
++            for k in range(24):
++                t0=k*2*math.pi/24;t1=t0+2*math.pi/24
++                points=[]
++                for p,t in [(p0,t0),(p0,t1),(p1,t1),(p1,t0)]:
++                    points.append(c+r*np.array([math.cos(p)*math.cos(t),math.cos(p)*math.sin(t),math.sin(p)]))
++                self.face(points,color)
++    def draw(self,img):
++        d=ImageDraw.Draw(img)
++        for dep,p,c in sorted(self.faces,key=lambda f:f[0]):d.polygon([tuple(a*S) for a in p],fill=c)
++
++def add_link(m,a,b,r):
++    v=b-a;v/=np.linalg.norm(v)
++    # dark bearing necks and machined silver collars
++    m.cylinder(a+v*10,a+v*36,r*.87,(73,81,85))
++    m.cylinder(a+v*33,a+v*46,r*1.04,(185,191,191))
++    m.cylinder(a+v*46,b-v*41,r,(219,224,219),r2=r*.79)
++    m.cylinder(b-v*47,b-v*33,r*.83,(171,179,179))
++    m.cylinder(b-v*33,b-v*10,r*.68,(68,76,80))
++    # Narrow raised longitudinal reinforcement; it moves with its rigid shell.
++    normal=np.cross(v,VIEW);normal/=np.linalg.norm(normal)
++    offset=normal*r*.81+VIEW*r*.35
++    m.cylinder(a+v*58+offset,b-v*56+offset,2.6,(158,166,166),sides=10)
++
++def robot_geometry(grip,z):
++    wrist=unproject(np.array(grip)+[0,-34],z+8)
++    elbow=ik(wrist)
++    m=Mesh()
++    m.cylinder([727,45,0],[727,45,45],40,(70,77,79))
++    m.cylinder([727,45,36],[727,45,76],32,(205,211,206))
++    add_link(m,SHOULDER,elbow,25)
++    add_link(m,elbow,wrist,19)
++    axis=np.array([0,-1,0.])
++    for center,r in [(SHOULDER,34),(elbow,29),(wrist,20)]:
++        m.cylinder(center-axis*16,center+axis*16,r,(53,61,65))
++        m.cylinder(center+axis*16,center+axis*20,r*.88,(166,173,174))
++        m.cylinder(center+axis*20,center+axis*22,r*.62,(89,98,101))
++        m.cylinder(center+axis*22,center+axis*24,r*.23,(183,191,191),sides=12)
++        # screws on joint cover fixed in housing
++        for a in range(0,360,90):
++            p=center+axis*23+np.array([math.cos(math.radians(a))*r*.72,0,math.sin(math.radians(a))*r*.72])
++            m.cylinder(p,p+axis*1.3,2.1,(46,51,53),sides=8)
++    return m,elbow,wrist
++
++def gripper(img,pos,opening):
++    x,y=pos;d=ImageDraw.Draw(img)
++    def rect(box,c,rad=0):
++        box=tuple(int(q*S) for q in box)
++        if rad:d.rounded_rectangle(box,radius=int(rad*S),fill=c)
++        else:d.rectangle(box,fill=c)
++    def poly(p,c):d.polygon([(int(a*S),int(b*S)) for a,b in p],fill=c)
++    # wrist flange and slim industrial two-finger parallel gripper
++    rect((x-16,y-43,x+16,y-30),(46,54,59),5)
++    rect((x-12,y-41,x+12,y-33),(149,156,157),3)
++    half=opening+8
++    rect((x-half-5,y-31,x+half+5,y-14),(66,75,80),3)
++    rect((x-half-3,y-31,x+half+3,y-27),(196,204,204),2)
++    rect((x-half+1,y-24,x+half-1,y-19),(116,128,134),2)
++    rect((x-9,y-29,x+9,y-16),(39,49,55),1)
++    rect((x-5,y-26,x+5,y-20),(174,184,187),1)
++    for sign in [-1,1]:
++        fx=x+sign*opening
++        # Steel L-shaped fingers with soft rubber contact pads.
++        poly([(fx-sign*3,y-17),(fx+sign*8,y-17),(fx+sign*8,y+16),(fx-sign*2,y+20),(fx-sign*5,y+17),(fx-sign*5,y+5),(fx-sign*3,y+4)],(88,98,103))
++        rect((fx-3,y-16,fx+3,y+12),(181,188,187),1)
++        rect((fx-sign*2-3,y+4,fx-sign*2+3,y+20),(35,41,44),2)
++        d.ellipse(((fx-2)*S,(y-11)*S,(fx+2)*S,(y-7)*S),fill=(36,43,46))
++    # Restrained blue indicator.
++    rect((x+13,y-28,x+17,y-25),(76,133,154),1)
++
++# The same arm performs three successive grasp-lift-carry-release cycles.
++# Grip positions are object-space anchors, kept invariant during the hold.
++STARTS=[0,39,78]
++ENDS=[39,78,118]
++rest_z=[105,116,108]
++release_positions=[np.array([-12.,177.]),np.array([-12.,168.]),np.array([-12.,172.])]
++
++def action(frame,i):
++    f=frame-STARTS[i]
++    g=bottles[i].grip; z=rest_z[i]
++    pre=g+np.array([26,-35.])
++    rel=release_positions[i]
++    # Continuous entry/repositioning, no appearance morphs.
++    prev=np.array([800.,270.]) if i==0 else release_positions[i-1]+np.array([88,-38.])
++    if f&lt;8:
++        t=smooth(f/8); pos=lerp(prev,pre,t);height=lerp(135,z+25,t);opening=bottles[i].width+15
++    elif f&lt;12:
++        t=smooth((f-8)/4);pos=lerp(pre,g,t);height=lerp(z+25,z,t);opening=bottles[i].width+15
++    elif f&lt;15:
++        t=smooth((f-12)/3);pos=g;height=z;opening=lerp(bottles[i].width+15,bottles[i].width,t)
++    elif f&lt;20:
++        t=smooth((f-15)/5);pos=g+np.array([-20,-57])*t;height=z+66*t;opening=bottles[i].width
++    elif f&lt;29:
++        t=smooth((f-20)/9);pos=lerp(g+[-20,-57],rel,t)
++        # An arcing clearance trajectory over the table.
++        pos[1]-=23*math.sin(math.pi*t)
++        height=lerp(z+66,200,t)+30*math.sin(math.pi*t);opening=bottles[i].width
++    elif f&lt;32:
++        pos=rel;height=200;opening=lerp(bottles[i].width,bottles[i].width+18,smooth((f-29)/3))
++    else:
++        t=smooth((f-32)/7);pos=lerp(rel,rel+[88,-38],t);height=lerp(200,225,t);opening=bottles[i].width+18
++    return np.array(pos,float),float(height),float(opening),f
++
++BINMASK=polygon_mask([(0,250),(5,268),(12,300),(19,326),(29,345),(42,371),(29,382),(0,385)],.5)
++BINLAYER=ORIG.copy().convert(&#x27;RGBA&#x27;);BINLAYER.putalpha(BINMASK)
++
++def make_frame(frame):
++    if frame==0:return A.copy()
++    i=min(frame//39,2)
++    pos,z,opening,f=action(frame,i)
++    lifted=f&gt;15
++    # Use untouched source pixels while each bottle is resting.
++    plate_index=i if lifted else i-1
++    canvas=(clean[plate_index] if plate_index&gt;=0 else ORIG).convert(&#x27;RGBA&#x27;)
++    if lifted and f&lt;37:
++        if f&lt;=29:
++            objpos=pos.copy();angle=0
++        else:
++            t=(f-29)/7
++            objpos=release_positions[i]+np.array([-14*t,160*t*t])
++            angle=-8*t*t
++        # Diffuse shadow of held bottle at its new floor projection.
++        if f&lt;29:
++            delta=objpos-bottles[i].grip
++            foot=np.asarray(bottles[i].base)+delta
++            shadow=Image.new(&#x27;RGBA&#x27;,(W,H));dd=ImageDraw.Draw(shadow)
++            ground_y=foot[1]+.72*max(0,z-rest_z[i])
++            dd.ellipse((foot[0]-25,ground_y-8,foot[0]+73,ground_y+14),fill=(91,84,75,28))
++            canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(8)))
++        bottles[i].overlay(canvas,objpos,angle)
++        if f&gt;=29:
++            canvas.alpha_composite(BINLAYER)
++            # Falling into a bin partially outside the image: behind its front wall.
++            occlude=Image.new(&#x27;RGBA&#x27;,(W,H));od=ImageDraw.Draw(occlude)
++            if f&gt;=32:
++                # below the rim only, matching existing bin&#x27;s black side
++                od.polygon([(0,279),(10,290),(18,325),(31,355),(40,373),(0,382)],fill=(17,20,19,255))
++                canvas.alpha_composite(occlude)
++    # Render the rigid arm and its table shadow.
++    if frame&gt;=118:
++        t=smooth((frame-118)/3);pos=lerp(pos,np.array([818,268]),t);z=lerp(z,145,t)
++    mesh,elbow,wrist=robot_geometry(pos,z)
++    shadow=Image.new(&#x27;RGBA&#x27;,(W*S,H*S));sd=ImageDraw.Draw(shadow)
++    points=[SHOULDER,elbow,wrist]
++    ground=[]
++    for p in points:
++        ground.append(project(np.array([p[0]+.28*p[2],p[1]+.16*p[2],0.])))
++    sd.line([tuple(q*S) for q in ground],fill=(81,83,80,24),width=27*S,joint=&#x27;curve&#x27;)
++    shadow=shadow.filter(ImageFilter.GaussianBlur(10*S)).resize((W,H),Image.Resampling.LANCZOS)
++    canvas.alpha_composite(shadow)
++    robot=Image.new(&#x27;RGBA&#x27;,(W*S,H*S));mesh.draw(robot)
++    gripper(robot,pos,opening)
++    robot=robot.resize((W,H),Image.Resampling.LANCZOS)
++    # Match the source&#x27;s slightly soft camera optics.
++    robot=robot.filter(ImageFilter.GaussianBlur(.30))
++    canvas.alpha_composite(robot)
++    return np.array(canvas.convert(&#x27;RGB&#x27;))
++
++if __name__==&#x27;__main__&#x27;:
++    frames=np.stack([make_frame(i) for i in range(121)])
++    artifact_io.save(frames,ROOT)
++    try:
++        import imageio.v2 as imageio
++        imageio.mimwrite(ROOT/&#x27;video.mp4&#x27;,frames,fps=24,codec=&#x27;libx264&#x27;,quality=8,macro_block_size=None)
++    except Exception as exc:print(&#x27;MP4 preview:&#x27;,exc)
++    print(&#x27;Saved&#x27;,frames.shape,frames.dtype)
+</pre></details></details><details><summary>候选 02 · 2026-11-08T17:57:50.459056+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 640, &quot;height&quot;: 480, &quot;frames&quot;: 121, &quot;fps&quot;: 24, &quot;pixels&quot;: &quot;candidate_01/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -3,6 +3,8 @@
+ import numpy as np
+ from PIL import Image, ImageDraw, ImageFilter
+ from scipy.ndimage import gaussian_filter
++from scipy.sparse import coo_matrix
++from scipy.sparse.linalg import cg
+ import artifact_io
+ 
+ ROOT=Path(__file__).resolve().parent
+@@ -45,13 +47,36 @@
+ # Replace only the removed bottle and its associated old contact shadow.
+ rem_polys=[[(579,96),(625,73),(639,74),(639,246),(590,244),(542,235),(482,224),(425,212),(414,194),(427,174),(488,158),(577,159)],
+ [(379,0),(466,0),(460,89),(451,136),(438,153),(407,157),(377,145),(372,120)],
+-[(116,0),(199,0),(209,76),(231,73),(299,70),(344,83),(360,104),(351,130),(274,151),(203,151),(160,150),(142,140),(135,106)]]
++[(116,0),(200,0),(211,63),(261,63),(315,67),(365,76),(395,93),(402,119),(372,139),(290,154),(204,158),(160,151),(142,140),(135,106)]]
++# Solve the Laplace equation on the residual to preserve the surrounding
++# illumination without a visible fill boundary. No external masks or models.
++def harmonic_fill(source,prior,mask):
++    hole=np.asarray(mask)&gt;80
++    ids=np.full((H,W),-1,np.int32);ids[hole]=np.arange(hole.sum())
++    ys,xs=np.where(hole);n=len(ys)
++    rows=[np.arange(n)];cols=[np.arange(n)];vals=[]
++    diagonal=np.zeros(n,float);rhs=np.zeros((n,3),float)
++    residual=source.astype(float)-prior
++    for dy,dx in [(0,1),(0,-1),(1,0),(-1,0)]:
++        y2=ys+dy;x2=xs+dx;valid=(y2&gt;=0)&amp;(y2&lt;H)&amp;(x2&gt;=0)&amp;(x2&lt;W)
++        k=np.flatnonzero(valid);y2=y2[valid];x2=x2[valid]
++        diagonal[k]+=1
++        other=ids[y2,x2]; inside=other&gt;=0
++        rows.append(k[inside]);cols.append(other[inside]);vals.append(-np.ones(inside.sum()))
++        rhs[k[~inside]]+=residual[y2[~inside],x2[~inside]]
++    values=np.concatenate([diagonal]+vals)
++    mat=coo_matrix((values,(np.concatenate(rows),np.concatenate(cols))),shape=(n,n)).tocsr()
++    filled=source.astype(float).copy()
++    for c in range(3):
++        correction,info=cg(mat,rhs[:,c],rtol=1e-5,maxiter=1600)
++        filled[hole,c]=prior[hole,c]+correction
++    return np.clip(filled,0,255)
+ clean=[]
+ current=A.astype(float).copy()
+ for i,p in enumerate(rem_polys):
+-    m=np.asarray(polygon_mask(p,4),float)/255
+-    current=current*(1-m[...,None])+plate*m[...,None]
+-    clean.append(Image.fromarray(np.uint8(np.clip(current,0,255))))
++    m=polygon_mask(p,.8)
++    current=harmonic_fill(current,plate,m)
++    clean.append(Image.fromarray(np.uint8(current)))
+ 
+ # Create rigid textured bottle sprites. The portions beyond the original crop
+ # are completed with mirrored source textures and simple geometric caps.
+@@ -77,6 +102,16 @@
+                     if 0&lt;=src&lt;640 and 0&lt;=y&lt;H and mask[y,src]&gt;5:
+                         rgba=tuple(A[y,src])+ (int(mask[y,src]),)
+                         d.point((x-x0,y-y0),fill=rgba)
++            for y in range(90,230):
++                center=656-(y-58)*.16
++                for x in range(630,min(x1,677)):
++                    src=int(round(2*center-x))
++                    if 0&lt;=src&lt;640 and mask[y,src]&gt;8:
++                        target=np.array(A[y,src],float)
++                        if x&lt;640:
++                            weight=smooth((x-630)/10)
++                            target=A[y,x]*(1-weight)+target*weight
++                        d.point((x-x0,y-y0),fill=tuple(np.uint8(target))+(int(mask[y,src]),))
+             # Neck and shoulder, most initially beyond the right edge.
+             d.polygon([(647-x0,76-y0),(648-x0,63-y0),(665-x0,63-y0),(665-x0,78-y0),(671-x0,88-y0),(643-x0,91-y0)],fill=(187,185,170,240))
+             d.line([(650-x0,70-y0),(649-x0,81-y0),(645-x0,89-y0)],fill=(240,240,225,240),width=2)
+@@ -124,7 +159,7 @@
+             alpha=np.array(sp.getchannel(&#x27;A&#x27;));sp.putalpha(Image.fromarray(np.uint8(alpha*opacity)))
+         canvas.alpha_composite(sp)
+ 
+-bottles=[Bottle(0,(635,147),(581,47,680,236)),Bottle(1,(421,40),(378,-85,465,150)),Bottle(2,(161,45),(118,-65,212,145))]
++bottles=[Bottle(0,(635,147),(581,47,680,236)),Bottle(1,(421,85),(378,-85,465,150)),Bottle(2,(174,83),(118,-65,212,145))]
+ 
+ # Orthographic workspace geometry; lengths stay fixed for all joint poses.
+ CY=410.
+@@ -139,7 +174,7 @@
+     v=wrist-SHOULDER;r=np.linalg.norm(v);n=v/r
+     a=(L1*L1-L2*L2+r*r)/(2*r)
+     h=math.sqrt(max(1,L1*L1-a*a))
+-    pole=np.array([.65,-.20,.72]); pole-=n*np.dot(pole,n);pole/=np.linalg.norm(pole)
++    pole=np.array([0.,-1.,.08]); pole-=n*np.dot(pole,n);pole/=np.linalg.norm(pole)
+     elbow=SHOULDER+a*n+h*pole
+     return elbow
+ 
+@@ -245,7 +280,7 @@
+ STARTS=[0,39,78]
+ ENDS=[39,78,118]
+ rest_z=[105,116,108]
+-release_positions=[np.array([-12.,177.]),np.array([-12.,168.]),np.array([-12.,172.])]
++release_positions=[np.array([-3.,177.]),np.array([-3.,168.]),np.array([-3.,172.])]
+ 
+ def action(frame,i):
+     f=frame-STARTS[i]
+@@ -309,8 +344,8 @@
+                 od.polygon([(0,279),(10,290),(18,325),(31,355),(40,373),(0,382)],fill=(17,20,19,255))
+                 canvas.alpha_composite(occlude)
+     # Render the rigid arm and its table shadow.
+-    if frame&gt;=118:
+-        t=smooth((frame-118)/3);pos=lerp(pos,np.array([818,268]),t);z=lerp(z,145,t)
++    if frame&gt;=112:
++        t=smooth((frame-112)/8);pos=lerp(release_positions[2]+[25,-15],np.array([818,268]),t);z=lerp(209,145,t)
+     mesh,elbow,wrist=robot_geometry(pos,z)
+     shadow=Image.new(&#x27;RGBA&#x27;,(W*S,H*S));sd=ImageDraw.Draw(shadow)
+     points=[SHOULDER,elbow,wrist]
+@@ -324,7 +359,7 @@
+     gripper(robot,pos,opening)
+     robot=robot.resize((W,H),Image.Resampling.LANCZOS)
+     # Match the source&#x27;s slightly soft camera optics.
+-    robot=robot.filter(ImageFilter.GaussianBlur(.30))
++    robot=robot.filter(ImageFilter.GaussianBlur(.48))
+     canvas.alpha_composite(robot)
+     return np.array(canvas.convert(&#x27;RGB&#x27;))
+ 
+</pre></details></details><details><summary>候选 03 · 2026-11-08T17:57:59.747501+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 640, &quot;height&quot;: 480, &quot;frames&quot;: 121, &quot;fps&quot;: 24, &quot;pixels&quot;: &quot;candidate_02/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_02/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_02/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T17:48:42.701546+00:00</strong><pre>/bin/bash -lc &quot;ls -la &amp;&amp; cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T17:48:50.819682+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; cat artifact_io.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
 from PIL import Image
 im=Image.open(&#x27;first_frame.png&#x27;); im.resize((1280,960)).save(&#x27;.tmp/frame_large.png&#x27;)
 PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T17:49:14.746846+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
@@ -19,7 +476,444 @@ PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令
 import importlib.util
 for m in [&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;,&#x27;cv2&#x27;,&#x27;imageio&#x27;,&#x27;imageio_ffmpeg&#x27;]:
  print(m,importlib.util.find_spec(m))
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 5 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T17:55:20.389603+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import math
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+from scipy.ndimage import gaussian_filter
+import artifact_io
+
+ROOT=Path(__file__).resolve().parent
+W,H=640,480
+ORIG=Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+A=np.array(ORIG)
+S=2
+
+def smooth(x):
+    x=np.clip(x,0,1); return x*x*(3-2*x)
+def lerp(a,b,t): return np.asarray(a)*(1-t)+np.asarray(b)*t
+
+def polygon_mask(points,blur=0):
+    im=Image.new(&#x27;L&#x27;,(W,H)); ImageDraw.Draw(im).polygon(points,fill=255)
+    return im.filter(ImageFilter.GaussianBlur(blur)) if blur else im
+
+# Bottle contours, traced only from the supplied still.
+contours=[
+ [(638,90),(634,94),(628,103),(624,114),(620,128),(613,144),(607,160),(600,173),(592,186),(589,201),(595,215),(610,225),(628,230),(646,226),(658,214),(668,187),(674,157),(676,128),(674,105),(669,87),(664,73),(663,67),(647,65),(645,77)],
+ [(397,-1),(459,-1),(456,24),(452,50),(449,80),(443,108),(438,128),(430,139),(414,144),(399,142),(388,136),(383,123),(384,97),(387,72),(390,49),(393,22)],
+ [(124,-1),(188,-1),(192,25),(197,61),(201,87),(204,101),(204,118),(197,131),(184,138),(165,139),(153,132),(148,118),(147,98),(144,76),(137,58),(131,35)]
+]
+# Local clean plates reconstructed from adjacent pixels and a smooth table fit.
+yy,xx=np.mgrid[0:H,0:W]
+# Table polynomial trained only on unoccupied tabletop.
+train=((yy&gt;43)&amp;(yy&lt;285)&amp;(xx&gt;105)&amp;(xx&lt;628))
+exclusions=[[(418,150),(519,139),(600,144),(639,83),(639,242),(552,244),(458,229),(418,205)],
+[(376,39),(470,39),(470,149),(370,164)],[(105,39),(210,39),(231,75),(369,67),(384,133),(204,158),(128,158)]]
+for poly in exclusions: train &amp;= np.asarray(polygon_mask(poly,3))&lt;2
+X=np.stack([np.ones_like(xx),xx/640,yy/480,(xx/640)**2,(yy/480)**2,xx*yy/(640*480)],-1)
+coeff=np.linalg.lstsq(X[train],A[train],rcond=None)[0]
+table=np.clip(X@coeff,0,255)
+# Back wall samples, interpolated row-wise without the bottles.
+wall=A.astype(float).copy()
+for y in range(39):
+    samples=[20,65,90,220,280,330,365,490,540,590]
+    for c in range(3): wall[y,:,c]=np.interp(np.arange(W),samples,[np.mean(A[y,max(0,x-4):x+5,c]) for x in samples])
+plate=table.copy(); plate[:38]=wall[:38]
+plate[38]=.65*table[38]+.35*wall[37]
+# Replace only the removed bottle and its associated old contact shadow.
+rem_polys=[[(579,96),(625,73),(639,74),(639,246),(590,244),(542,235),(482,224),(425,212),(414,194),(427,174),(488,158),(577,159)],
+[(379,0),(466,0),(460,89),(451,136),(438,153),(407,157),(377,145),(372,120)],
+[(116,0),(199,0),(209,76),(231,73),(299,70),(344,83),(360,104),(351,130),(274,151),(203,151),(160,150),(142,140),(135,106)]]
+clean=[]
+current=A.astype(float).copy()
+for i,p in enumerate(rem_polys):
+    m=np.asarray(polygon_mask(p,4),float)/255
+    current=current*(1-m[...,None])+plate*m[...,None]
+    clean.append(Image.fromarray(np.uint8(np.clip(current,0,255))))
+
+# Create rigid textured bottle sprites. The portions beyond the original crop
+# are completed with mirrored source textures and simple geometric caps.
+class Bottle:
+    def __init__(self,i,grip,box):
+        self.i=i; self.grip=np.array(grip,float); self.box=box
+        x0,y0,x1,y1=box; self.origin=np.array([x0,y0],float)
+        width,height=x1-x0,y1-y0
+        data=np.zeros((height,width,4),np.uint8)
+        mask=np.asarray(polygon_mask(contours[i],.7))
+        for y in range(max(y0,0),min(y1,H)):
+            for x in range(max(x0,0),min(x1,W)):
+                data[y-y0,x-x0,:3]=A[y,x]
+                data[y-y0,x-x0,3]=mask[y,x]
+        im=Image.fromarray(data)
+        d=ImageDraw.Draw(im)
+        if i==0:
+            # Continue transparent ridged PET around its slightly inclined axis.
+            for y in range(68,231):
+                center=656-(y-58)*.16
+                for x in range(640,min(x1,677)):
+                    src=int(round(2*center-x))
+                    if 0&lt;=src&lt;640 and 0&lt;=y&lt;H and mask[y,src]&gt;5:
+                        rgba=tuple(A[y,src])+ (int(mask[y,src]),)
+                        d.point((x-x0,y-y0),fill=rgba)
+            # Neck and shoulder, most initially beyond the right edge.
+            d.polygon([(647-x0,76-y0),(648-x0,63-y0),(665-x0,63-y0),(665-x0,78-y0),(671-x0,88-y0),(643-x0,91-y0)],fill=(187,185,170,240))
+            d.line([(650-x0,70-y0),(649-x0,81-y0),(645-x0,89-y0)],fill=(240,240,225,240),width=2)
+            d.rounded_rectangle((646-x0,52-y0,666-x0,67-y0),radius=3,fill=(76,108,33,255))
+            d.ellipse((646-x0,50-y0,666-x0,55-y0),fill=(126,153,57,255))
+            for k in range(648,666,3): d.line((k-x0,55-y0,k-x0,65-y0),fill=(137,155,63,255),width=1)
+            d.line((648-x0,66-y0,664-x0,66-y0),fill=(54,77,22,255),width=1)
+        else:
+            # Extend offscreen upper bottle with exact source column texture.
+            for y in range(y0,0):
+                if i==1:
+                    # ribbed bottle remains a single rigid body
+                    left=397 + max(0,-y-32)*.32
+                    right=459 - max(0,-y-32)*.28
+                    if y &lt; -67: left,right=418,442
+                else:
+                    left=124+max(0,-y-7)*.31
+                    right=188-max(0,-y-7)*.35
+                    if y &lt; -49:left,right=139,166
+                for x in range(math.ceil(left),math.floor(right)+1):
+                    sx=int(np.clip(x,0,W-1)); sy=3+(abs(y)%11)
+                    c=A[sy,sx].astype(float)
+                    if i==2: c=c*.90
+                    d.point((x-x0,y-y0),fill=tuple(np.uint8(c))+(255,))
+            if i==1:
+                d.rounded_rectangle((416-x0,-83-y0,444-x0,-68-y0),radius=3,fill=(134,116,31,255))
+                d.ellipse((416-x0,-84-y0,444-x0,-78-y0),fill=(191,172,66,255))
+                for x in range(419,445,3):d.line((x-x0,-78-y0,x-x0,-69-y0),fill=(203,179,71,255))
+            else:
+                d.rounded_rectangle((137-x0,-63-y0,168-x0,-48-y0),radius=3,fill=(82,40,37,255))
+                d.ellipse((137-x0,-64-y0,168-x0,-58-y0),fill=(126,65,57,255))
+                for x in range(139,169,3):d.line((x-x0,-58-y0,x-x0,-51-y0),fill=(112,53,49,255))
+        self.sprite=im
+        self.base=[(628,230),(414,144),(177,139)][i]
+        self.width=[35,32,31][i]
+    def overlay(self,canvas,pos,angle=0,opacity=1):
+        # Inverse affine mapping, no deformation, constant scale.
+        th=math.radians(angle); cs,sn=math.cos(th),math.sin(th)
+        # sprite-local initial grip coordinates
+        g=self.grip-self.origin
+        px,py=pos
+        tx=g[0]-cs*px-sn*py;ty=g[1]+sn*px-cs*py
+        sp=self.sprite.transform((W,H),Image.Transform.AFFINE,(cs,sn,tx,-sn,cs,ty),resample=Image.Resampling.BICUBIC)
+        if opacity&lt;1:
+            alpha=np.array(sp.getchannel(&#x27;A&#x27;));sp.putalpha(Image.fromarray(np.uint8(alpha*opacity)))
+        canvas.alpha_composite(sp)
+
+bottles=[Bottle(0,(635,147),(581,47,680,236)),Bottle(1,(421,40),(378,-85,465,150)),Bottle(2,(161,45),(118,-65,212,145))]
+
+# Orthographic workspace geometry; lengths stay fixed for all joint poses.
+CY=410.
+def project(p):
+    p=np.asarray(p);return np.stack([p[...,0],CY-.5*p[...,1]-.8660254*p[...,2]],axis=-1)
+def unproject(pos,z):return np.array([pos[0],2*(CY-pos[1]-.8660254*z),z],float)
+SHOULDER=np.array([727.,45.,62.]); L1,L2=444.,427.
+LIGHT=np.array([-.35,-.45,.82]);LIGHT/=np.linalg.norm(LIGHT)
+VIEW=np.array([0,-.8660254,.5])
+
+def ik(wrist):
+    v=wrist-SHOULDER;r=np.linalg.norm(v);n=v/r
+    a=(L1*L1-L2*L2+r*r)/(2*r)
+    h=math.sqrt(max(1,L1*L1-a*a))
+    pole=np.array([.65,-.20,.72]); pole-=n*np.dot(pole,n);pole/=np.linalg.norm(pole)
+    elbow=SHOULDER+a*n+h*pole
+    return elbow
+
+class Mesh:
+    def __init__(self):self.faces=[]
+    def face(self,points,col):
+        p=np.array(points,float);n=np.cross(p[1]-p[0],p[2]-p[0]); norm=np.linalg.norm(n)
+        if norm&lt;1e-8:return
+        n/=norm
+        shade=.73+.28*np.dot(n,LIGHT)
+        # cast metal specular highlights
+        half=(LIGHT+VIEW);half/=np.linalg.norm(half)
+        spec=max(0,np.dot(n,half))**24*28
+        color=tuple(np.uint8(np.clip(np.array(col)*shade+spec,0,255)))
+        self.faces.append((np.mean(p,axis=0)@VIEW,project(p),color))
+    def cylinder(self,a,b,r,color,r2=None,sides=24):
+        a=np.array(a,float);b=np.array(b,float);v=b-a;v/=np.linalg.norm(v)
+        other=np.array([0,0,1.]) if abs(v[2])&lt;.9 else np.array([0,1.,0])
+        u=np.cross(v,other);u/=np.linalg.norm(u);w=np.cross(v,u)
+        r2=r if r2 is None else r2
+        ra=[];rb=[]
+        for k in range(sides):
+            radial=u*math.cos(k*2*math.pi/sides)+w*math.sin(k*2*math.pi/sides)
+            ra.append(a+r*radial);rb.append(b+r2*radial)
+        for k in range(sides):
+            j=(k+1)%sides;self.face([ra[k],ra[j],rb[j],rb[k]],color)
+        self.face(ra[::-1],np.array(color)*.83);self.face(rb,np.array(color)*1.02)
+    def ball(self,c,r,color):
+        # small faceted rounded bearing
+        for j in range(8):
+            p0=-math.pi/2+j*math.pi/8;p1=p0+math.pi/8
+            for k in range(24):
+                t0=k*2*math.pi/24;t1=t0+2*math.pi/24
+                points=[]
+                for p,t in [(p0,t0),(p0,t1),(p1,t1),(p1,t0)]:
+                    points.append(c+r*np.array([math.cos(p)*math.cos(t),math.cos(p)*math.sin(t),math.sin(p)]))
+                self.face(points,color)
+    def draw(self,img):
+        d=ImageDraw.Draw(img)
+        for dep,p,c in sorted(self.faces,key=lambda f:f[0]):d.polygon([tuple(a*S) for a in p],fill=c)
+
+def add_link(m,a,b,r):
+    v=b-a;v/=np.linalg.norm(v)
+    # dark bearing necks and machined silver collars
+    m.cylinder(a+v*10,a+v*36,r*.87,(73,81,85))
+    m.cylinder(a+v*33,a+v*46,r*1.04,(185,191,191))
+    m.cylinder(a+v*46,b-v*41,r,(219,224,219),r2=r*.79)
+    m.cylinder(b-v*47,b-v*33,r*.83,(171,179,179))
+    m.cylinder(b-v*33,b-v*10,r*.68,(68,76,80))
+    # Narrow raised longitudinal reinforcement; it moves with its rigid shell.
+    normal=np.cross(v,VIEW);normal/=np.linalg.norm(normal)
+    offset=normal*r*.81+VIEW*r*.35
+    m.cylinder(a+v*58+offset,b-v*56+offset,2.6,(158,166,166),sides=10)
+
+def robot_geometry(grip,z):
+    wrist=unproject(np.array(grip)+[0,-34],z+8)
+    elbow=ik(wrist)
+    m=Mesh()
+    m.cylinder([727,45,0],[727,45,45],40,(70,77,79))
+    m.cylinder([727,45,36],[727,45,76],32,(205,211,206))
+    add_link(m,SHOULDER,elbow,25)
+    add_link(m,elbow,wrist,19)
+    axis=np.array([0,-1,0.])
+    for center,r in [(SHOULDER,34),(elbow,29),(wrist,20)]:
+        m.cylinder(center-axis*16,center+axis*16,r,(53,61,65))
+        m.cylinder(center+axis*16,center+axis*20,r*.88,(166,173,174))
+        m.cylinder(center+axis*20,center+axis*22,r*.62,(89,98,101))
+        m.cylinder(center+axis*22,center+axis*24,r*.23,(183,191,191),sides=12)
+        # screws on joint cover fixed in housing
+        for a in range(0,360,90):
+            p=center+axis*23+np.array([math.cos(math.radians(a))*r*.72,0,math.sin(math.radians(a))*r*.72])
+            m.cylinder(p,p+axis*1.3,2.1,(46,51,53),sides=8)
+    return m,elbow,wrist
+
+def gripper(img,pos,opening):
+    x,y=pos;d=ImageDraw.Draw(img)
+    def rect(box,c,rad=0):
+        box=tuple(int(q*S) for q in box)
+        if rad:d.rounded_rectangle(box,radius=int(rad*S),fill=c)
+        else:d.rectangle(box,fill=c)
+    def poly(p,c):d.polygon([(int(a*S),int(b*S)) for a,b in p],fill=c)
+    # wrist flange and slim industrial two-finger parallel gripper
+    rect((x-16,y-43,x+16,y-30),(46,54,59),5)
+    rect((x-12,y-41,x+12,y-33),(149,156,157),3)
+    half=opening+8
+    rect((x-half-5,y-31,x+half+5,y-14),(66,75,80),3)
+    rect((x-half-3,y-31,x+half+3,y-27),(196,204,204),2)
+    rect((x-half+1,y-24,x+half-1,y-19),(116,128,134),2)
+    rect((x-9,y-29,x+9,y-16),(39,49,55),1)
+    rect((x-5,y-26,x+5,y-20),(174,184,187),1)
+    for sign in [-1,1]:
+        fx=x+sign*opening
+        # Steel L-shaped fingers with soft rubber contact pads.
+        poly([(fx-sign*3,y-17),(fx+sign*8,y-17),(fx+sign*8,y+16),(fx-sign*2,y+20),(fx-sign*5,y+17),(fx-sign*5,y+5),(fx-sign*3,y+4)],(88,98,103))
+        rect((fx-3,y-16,fx+3,y+12),(181,188,187),1)
+        rect((fx-sign*2-3,y+4,fx-sign*2+3,y+20),(35,41,44),2)
+        d.ellipse(((fx-2)*S,(y-11)*S,(fx+2)*S,(y-7)*S),fill=(36,43,46))
+    # Restrained blue indicator.
+    rect((x+13,y-28,x+17,y-25),(76,133,154),1)
+
+# The same arm performs three successive grasp-lift-carry-release cycles.
+# Grip positions are object-space anchors, kept invariant during the hold.
+STARTS=[0,39,78]
+ENDS=[39,78,118]
+rest_z=[105,116,108]
+release_positions=[np.array([-12.,177.]),np.array([-12.,168.]),np.array([-12.,172.])]
+
+def action(frame,i):
+    f=frame-STARTS[i]
+    g=bottles[i].grip; z=rest_z[i]
+    pre=g+np.array([26,-35.])
+    rel=release_positions[i]
+    # Continuous entry/repositioning, no appearance morphs.
+    prev=np.array([800.,270.]) if i==0 else release_positions[i-1]+np.array([88,-38.])
+    if f&lt;8:
+        t=smooth(f/8); pos=lerp(prev,pre,t);height=lerp(135,z+25,t);opening=bottles[i].width+15
+    elif f&lt;12:
+        t=smooth((f-8)/4);pos=lerp(pre,g,t);height=lerp(z+25,z,t);opening=bottles[i].width+15
+    elif f&lt;15:
+        t=smooth((f-12)/3);pos=g;height=z;opening=lerp(bottles[i].width+15,bottles[i].width,t)
+    elif f&lt;20:
+        t=smooth((f-15)/5);pos=g+np.array([-20,-57])*t;height=z+66*t;opening=bottles[i].width
+    elif f&lt;29:
+        t=smooth((f-20)/9);pos=lerp(g+[-20,-57],rel,t)
+        # An arcing clearance trajectory over the table.
+        pos[1]-=23*math.sin(math.pi*t)
+        height=lerp(z+66,200,t)+30*math.sin(math.pi*t);opening=bottles[i].width
+    elif f&lt;32:
+        pos=rel;height=200;opening=lerp(bottles[i].width,bottles[i].width+18,smooth((f-29)/3))
+    else:
+        t=smooth((f-32)/7);pos=lerp(rel,rel+[88,-38],t);height=lerp(200,225,t);opening=bottles[i].width+18
+    return np.array(pos,float),float(height),float(opening),f
+
+BINMASK=polygon_mask([(0,250),(5,268),(12,300),(19,326),(29,345),(42,371),(29,382),(0,385)],.5)
+BINLAYER=ORIG.copy().convert(&#x27;RGBA&#x27;);BINLAYER.putalpha(BINMASK)
+
+def make_frame(frame):
+    if frame==0:return A.copy()
+    i=min(frame//39,2)
+    pos,z,opening,f=action(frame,i)
+    lifted=f&gt;15
+    # Use untouched source pixels while each bottle is resting.
+    plate_index=i if lifted else i-1
+    canvas=(clean[plate_index] if plate_index&gt;=0 else ORIG).convert(&#x27;RGBA&#x27;)
+    if lifted and f&lt;37:
+        if f&lt;=29:
+            objpos=pos.copy();angle=0
+        else:
+            t=(f-29)/7
+            objpos=release_positions[i]+np.array([-14*t,160*t*t])
+            angle=-8*t*t
+        # Diffuse shadow of held bottle at its new floor projection.
+        if f&lt;29:
+            delta=objpos-bottles[i].grip
+            foot=np.asarray(bottles[i].base)+delta
+            shadow=Image.new(&#x27;RGBA&#x27;,(W,H));dd=ImageDraw.Draw(shadow)
+            ground_y=foot[1]+.72*max(0,z-rest_z[i])
+            dd.ellipse((foot[0]-25,ground_y-8,foot[0]+73,ground_y+14),fill=(91,84,75,28))
+            canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(8)))
+        bottles[i].overlay(canvas,objpos,angle)
+        if f&gt;=29:
+            canvas.alpha_composite(BINLAYER)
+            # Falling into a bin partially outside the image: behind its front wall.
+            occlude=Image.new(&#x27;RGBA&#x27;,(W,H));od=ImageDraw.Draw(occlude)
+            if f&gt;=32:
+                # below the rim only, matching existing bin&#x27;s black side
+                od.polygon([(0,279),(10,290),(18,325),(31,355),(40,373),(0,382)],fill=(17,20,19,255))
+                canvas.alpha_composite(occlude)
+    # Render the rigid arm and its table shadow.
+    if frame&gt;=118:
+        t=smooth((frame-118)/3);pos=lerp(pos,np.array([818,268]),t);z=lerp(z,145,t)
+    mesh,elbow,wrist=robot_geometry(pos,z)
+    shadow=Image.new(&#x27;RGBA&#x27;,(W*S,H*S));sd=ImageDraw.Draw(shadow)
+    points=[SHOULDER,elbow,wrist]
+    ground=[]
+    for p in points:
+        ground.append(project(np.array([p[0]+.28*p[2],p[1]+.16*p[2],0.])))
+    sd.line([tuple(q*S) for q in ground],fill=(81,83,80,24),width=27*S,joint=&#x27;curve&#x27;)
+    shadow=shadow.filter(ImageFilter.GaussianBlur(10*S)).resize((W,H),Image.Resampling.LANCZOS)
+    canvas.alpha_composite(shadow)
+    robot=Image.new(&#x27;RGBA&#x27;,(W*S,H*S));mesh.draw(robot)
+    gripper(robot,pos,opening)
+    robot=robot.resize((W,H),Image.Resampling.LANCZOS)
+    # Match the source&#x27;s slightly soft camera optics.
+    robot=robot.filter(ImageFilter.GaussianBlur(.30))
+    canvas.alpha_composite(robot)
+    return np.array(canvas.convert(&#x27;RGB&#x27;))
+
+if __name__==&#x27;__main__&#x27;:
+    frames=np.stack([make_frame(i) for i in range(121)])
+    artifact_io.save(frames,ROOT)
+    try:
+        import imageio.v2 as imageio
+        imageio.mimwrite(ROOT/&#x27;video.mp4&#x27;,frames,fps=24,codec=&#x27;libx264&#x27;,quality=8,macro_block_size=None)
+    except Exception as exc:print(&#x27;MP4 preview:&#x27;,exc)
+    print(&#x27;Saved&#x27;,frames.shape,frames.dtype)
+PY
+python generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T17:55:54.499861+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np, math
+for pole in [[.65,-.20,.72],[.6,-.8,.1],[.7,-.5,.4],[.5,-.5,.6]]:
+ print(&#x27;pole&#x27;,pole)
+ for pos,z in [([635,147],105),([421,85],116),([174,83],108),([250,100],190),([-12,177],200)]:
+  wrist=g.unproject(np.array(pos)+[0,-34],z+8)
+  v=wrist-g.SHOULDER;r=np.linalg.norm(v);n=v/r;a=(g.L1*g.L1-g.L2*g.L2+r*r)/(2*r);h=math.sqrt(max(1,g.L1*g.L1-a*a));p=np.array(pole);p=p-n*(p@n);p/=np.linalg.norm(p)
+  e=g.SHOULDER+a*n+h*p
+  print(&#x27; &#x27;,pos,&#x27;elbow&#x27;,g.project(e),&#x27;xyz&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T17:56:04.499318+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np, math
+for pole in [[0,-1,0],[0,-1,-.6],[-.3,-1,.1]]:
+ print(pole)
+ for pos,z in [([635,147],105),([421,85],116),([174,83],108),([250,100],190),([-12,177],200)]:
+  w=g.unproject(np.array(pos)+[0,-34],z+8);v=w-g.SHOULDER;r=np.linalg.norm(v);n=v/r;a=(g.L1*g.L1-g.L2*g.L2+r*r)/(2*r);h=math.sqrt(max(1,g.L1*g.L1-a*a));p=np.array(pole,dtype=float);p-=n*(p@n);p/=np.linalg.norm(p)
+  e=g.SHOULDER+a*n+h*p;print(g.project(e),e[2])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T17:57:46.046856+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+p=&#x27;generate.py&#x27;
+s=open(p).read().replace(&#x27;from scipy.ndimage import gaussian_filter&#x27;,&#x27;from scipy.ndimage import gaussian_filter\\nfrom scipy.sparse import coo_matrix\\nfrom scipy.sparse.linalg import cg&#x27;)
+s=s.replace(\&quot;[(116,0),(199,0),(209,76),(231,73),(299,70),(344,83),(360,104),(351,130),(274,151),(203,151),(160,150),(142,140),(135,106)]\&quot;, \&quot;[(116,0),(200,0),(211,63),(261,63),(315,67),(365,76),(395,93),(402,119),(372,139),(290,154),(204,158),(160,151),(142,140),(135,106)]\&quot;)
+a=s.index(&#x27;clean=[]\\ncurrent=&#x27;); b=s.index(&#x27;\\n# Create rigid textured&#x27;,a)
+s=s[:a]+&#x27;&#x27;&#x27;# Solve the Laplace equation on the residual to preserve the surrounding
+# illumination without a visible fill boundary. No external masks or models.
+def harmonic_fill(source,prior,mask):
+    hole=np.asarray(mask)&gt;80
+    ids=np.full((H,W),-1,np.int32);ids[hole]=np.arange(hole.sum())
+    ys,xs=np.where(hole);n=len(ys)
+    rows=[np.arange(n)];cols=[np.arange(n)];vals=[]
+    diagonal=np.zeros(n,float);rhs=np.zeros((n,3),float)
+    residual=source.astype(float)-prior
+    for dy,dx in [(0,1),(0,-1),(1,0),(-1,0)]:
+        y2=ys+dy;x2=xs+dx;valid=(y2&gt;=0)&amp;(y2&lt;H)&amp;(x2&gt;=0)&amp;(x2&lt;W)
+        k=np.flatnonzero(valid);y2=y2[valid];x2=x2[valid]
+        diagonal[k]+=1
+        other=ids[y2,x2]; inside=other&gt;=0
+        rows.append(k[inside]);cols.append(other[inside]);vals.append(-np.ones(inside.sum()))
+        rhs[k[~inside]]+=residual[y2[~inside],x2[~inside]]
+    values=np.concatenate([diagonal]+vals)
+    mat=coo_matrix((values,(np.concatenate(rows),np.concatenate(cols))),shape=(n,n)).tocsr()
+    filled=source.astype(float).copy()
+    for c in range(3):
+        correction,info=cg(mat,rhs[:,c],rtol=1e-5,maxiter=1600)
+        filled[hole,c]=prior[hole,c]+correction
+    return np.clip(filled,0,255)
+clean=[]
+current=A.astype(float).copy()
+for i,p in enumerate(rem_polys):
+    m=polygon_mask(p,.8)
+    current=harmonic_fill(current,plate,m)
+    clean.append(Image.fromarray(np.uint8(current)))
+&#x27;&#x27;&#x27; + s[b:]
+s=s.replace(\&quot;elif\&quot;, \&quot;elif\&quot;)
+s=s.replace(&#x27;pole=np.array([.65,-.20,.72])&#x27;,&#x27;pole=np.array([0.,-1.,.08])&#x27;)
+s=s.replace(\&quot;Bottle(1,(421,40)\&quot;,\&quot;Bottle(1,(421,85)\&quot;).replace(\&quot;Bottle(2,(161,45)\&quot;,\&quot;Bottle(2,(174,83)\&quot;)
+s=s.replace(\&quot;np.array([-12.,177.]),np.array([-12.,168.]),np.array([-12.,172.])\&quot;,\&quot;np.array([-3.,177.]),np.array([-3.,168.]),np.array([-3.,172.])\&quot;)
+# Seam correction on the incomplete source sprite by a softly blended mirrored continuation.
+a=s.index(&#x27;            # Neck and shoulder,&#x27;)
+s=s[:a]+&#x27;&#x27;&#x27;            for y in range(90,230):
+                center=656-(y-58)*.16
+                for x in range(630,min(x1,677)):
+                    src=int(round(2*center-x))
+                    if 0&lt;=src&lt;640 and mask[y,src]&gt;8:
+                        target=np.array(A[y,src],float)
+                        if x&lt;640:
+                            weight=smooth((x-630)/10)
+                            target=A[y,x]*(1-weight)+target*weight
+                        d.point((x-x0,y-y0),fill=tuple(np.uint8(target))+(int(mask[y,src]),))
+&#x27;&#x27;&#x27; +s[a:]
+# Wider depth clarity / softer metal shading to match video camera.
+s=s.replace(&#x27;GaussianBlur(.30)&#x27;,&#x27;GaussianBlur(.48)&#x27;)
+# End with the same consistent retraction, not a final single-frame lurch.
+s=s.replace(\&quot;if frame&gt;=118:\\n        t=smooth((frame-118)/3);pos=lerp(pos,np.array([818,268]),t);z=lerp(z,145,t)\&quot;,\&quot;if frame&gt;=112:\\n        t=smooth((frame-112)/8);pos=lerp(release_positions[2]+[25,-15],np.array([818,268]),t);z=lerp(209,145,t)\&quot;)
+open(p,&#x27;w&#x27;).write(s)
+PY
+OPENBLAS_NUM_THREADS=1 python generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T17:58:23.873212+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np
+for i in range(3):
+ for f in [8,12,15,20,25,29]:
+  p,z,o,l=g.action(g.STARTS[i]+f,i);w=g.unproject(p+[0,-34],z+8);e=g.ik(w)
+  print(i,f,&#x27;elbow-height&#x27;,round(e[2],1),&#x27;L1&#x27;,round(np.linalg.norm(e-g.SHOULDER),1),&#x27;L2&#x27;,round(np.linalg.norm(e-w),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T17:58:49.337513+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+from pathlib import Path
+p=Path(&#x27;.&#x27;)
+f=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+f0=np.asarray(Image.open(&#x27;frames/00.png&#x27;).convert(&#x27;RGB&#x27;))
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+assert np.array_equal(f,f0)
+assert z.shape==(480,640,121)
+assert len(list(p.glob(&#x27;frames/*.png&#x27;)))==121
+assert all(Image.open(p/&#x27;frames&#x27;/f&#x27;{i:02d}.png&#x27;).mode==&#x27;RGB&#x27; for i in range(121))
+print(&#x27;Verified: 121 RGB frames, 640x480, source-identical frame 00.&#x27;)
+print(&#x27;Artifacts:&#x27;,[(x.name,x.stat().st_size) for x in [p/&#x27;generate.py&#x27;,p/&#x27;pixels.npz&#x27;,p/&#x27;video.mp4&#x27;,p/&#x27;index.html&#x27;]])
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 3 份；完成命令 11 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
