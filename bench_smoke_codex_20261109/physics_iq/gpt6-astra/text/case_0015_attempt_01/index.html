@@ -10,7 +10,75 @@ print(&#x27;image&#x27;,im.shape)
 im=np.array(Image.fromarray(im).resize((64,36)))
 for row in im:
  print(&#x27;&#x27;.join(&#x27;O&#x27; if r&gt;g*1.4 and r&gt;b*1.8 and r&gt;90 else &#x27;H&#x27; if r&gt;g*1.2 and g&gt;b*1.2 and r&gt;80 else &#x27;K&#x27; if max(r,g,b)&lt;50 else &#x27;d&#x27; if max(r,g,b)&lt;100 else &#x27;s&#x27; if r&gt;g*1.08 and r&gt;b*1.15 else &#x27;W&#x27; if min(r,g,b)&gt;190 else &#x27;.&#x27; for r,g,b in row.astype(float)))
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 2 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T22:45:54.840594+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+m=(r&gt;1.35*g)&amp;(r&gt;1.8*b)&amp;(r&gt;80)
+l,n=ndimage.label(m)
+for i in range(1,n+1):
+ ys,xs=np.where(l==i)
+ if len(xs)&gt;10:print(len(xs), (xs.min(),ys.min(),xs.max(),ys.max()), &#x27;centroid&#x27;, xs.mean(),ys.mean())
+for y in range(0,80,2):
+ print(&#x27;%3d&#x27;%y,&#x27;&#x27;.join(&#x27;O&#x27; if r[y,x]&gt;g[y,x]*1.35 and r[y,x]&gt;b[y,x]*1.8 and r[y,x]&gt;80 else &#x27;h&#x27; if r[y,x]&gt;g[y,x]*1.17 and g[y,x]&gt;b[y,x]*1.1 and r[y,x]&gt;60 else &#x27;K&#x27; if max(im[y,x])&lt;35 else &#x27;k&#x27; if max(im[y,x])&lt;65 else &#x27;d&#x27; if max(im[y,x])&lt;100 else &#x27;W&#x27; if min(im[y,x])&gt;190 else &#x27;.&#x27; for x in range(48,160)))
+print(&#x27;RGB rows every 8 px&#x27;)
+for y in (0,8,12,24,40,52,56,60,64,68,72,80,96,112,128,140):
+ print(y,[im[y,x].astype(int).tolist() for x in range(64,161,8)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T22:49:11.797922+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+print(&#x27;crate luminance, x50-155 every pixel, y52-140 every 2&#x27;)
+for y in range(52,142,2):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(&#x27;O&#x27; if r&gt;1.4*g and r&gt;2*b and r&gt;65 else &#x27; &#x27; if max(r,g,b)&lt;12 else &#x27;.&#x27; if max(r,g,b)&lt;25 else &#x27;:&#x27; if max(r,g,b)&lt;40 else &#x27;-&#x27; if max(r,g,b)&lt;65 else &#x27;=&#x27; if max(r,g,b)&lt;90 else &#x27;+&#x27; if max(r,g,b)&lt;120 else &#x27;*&#x27; if max(r,g,b)&lt;150 else &#x27;#&#x27; if max(r,g,b)&lt;180 else &#x27;@&#x27; for r,g,b in im[y,50:156]))
+# get edge endpoints y&lt;60 threshold ball vs outside
+for y in range(5,61):
+ r,g,b=im[y].T
+ xs=np.flatnonzero((r&gt;g*1.28)&amp;(r&gt;b*1.5)&amp;(r&gt;100)&amp;(np.arange(256)&gt;65)&amp;(np.arange(256)&lt;147))
+ if len(xs): print(y, xs.min(),xs.max())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T22:49:29.680007+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for p in [&#x27;cv2&#x27;,&#x27;scipy&#x27;]:
+ print(p,importlib.util.find_spec(p))
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+print(&#x27;Wall profiles&#x27;)
+for y in [6,10,20,30,40,50,54,56,58,60]:
+ print(y,[(x,list(im[y-1:y+2,x-1:x+2].mean((0,1)).round(1))) for x in [68,72,76,80,84,92,108,128,136,140,144,148,152,156]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T22:50:06.452974+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+from scipy.optimize import least_squares
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float); r,g,b=im.transpose(2,0,1)
+points=[]
+for y in range(8,58):
+ xs=np.flatnonzero((r[y]&gt;g[y]*1.28)&amp;(r[y]&gt;b[y]*1.5)&amp;(r[y]&gt;100)&amp;(np.arange(256)&gt;65)&amp;(np.arange(256)&lt;147))
+ if len(xs):points.extend([(xs.min()-.3,y),(xs.max()+.3,y)])
+p=np.array(points)
+def fun(v):
+ cx,cy,rx,ry,sk=v
+ return ((p[:,0]-cx-sk*(p[:,1]-cy))/rx)**2+((p[:,1]-cy)/ry)**2-1
+v=least_squares(fun,[109,40,29,32,0]).x
+print(v, np.sqrt(np.mean(fun(v)**2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T22:50:32.872845+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+for x in range(82,139,2):
+ print(x,[(y,im[y,x].astype(int).tolist()) for y in range(55,62)])
+print(&#x27;holes grayscale y66-110&#x27;)
+for y in range(66,112):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(&#x27;O&#x27; if r&gt;g*1.5 and r&gt;55 else &#x27;H&#x27; if max(r,g,b)&gt;110 else &#x27;h&#x27; if max(r,g,b)&gt;70 else &#x27;+&#x27; if max(r,g,b)&gt;40 else &#x27;.&#x27; if max(r,g,b)&gt;20 else &#x27; &#x27; for r,g,b in im[y,64:142]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T22:52:51.174476+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float);r,g,b=im.transpose(2,0,1)
+for y in range(65,76):
+ m=(r[y]-g[y]&gt;10)&amp;(r[y]&gt;25);xs=np.flatnonzero(m&amp;(np.arange(256)&gt;84)&amp;(np.arange(256)&lt;118)); print(y, xs.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 8 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
