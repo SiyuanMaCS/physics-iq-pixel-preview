@@ -1,0 +1,412 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-5.6-Sol · common50_0001</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-5.6-Sol · common50_0001</h1><p class=muted>vision-agent · 256×192 · 4 FPS · 20 帧 · 状态 complete · 输出 tokens 10854</p><div class=box><strong>原始任务</strong><p>In a fixed robotic workspace, a rigid and physically consistent embodied robotic arm with high stability and no deformation proceeds to Toast two slices of the brown square bread with the left gripper from the woven basket into the white two-slot toaster.
+</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels&quot;: &quot;final/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T17:08:59.965989+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels&quot;: &quot;candidate_00/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,161 @@
++from pathlib import Path
++import math
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++base_im = Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
++base = np.asarray(base_im).copy()
++W,H = base_im.size
++
++# static object geometry observed in the supplied frame
++BREAD_POLY=[(48,111),(55,106),(75,103),(84,109),(88,130),(80,143),(59,145),(50,137)]
++BASKET_POLY=[(47,124),(52,111),(81,109),(91,127),(87,151),(67,159),(49,149)]
++
++def mask_poly(poly, blur=0):
++    m=Image.new(&#x27;L&#x27;,(W,H),0); ImageDraw.Draw(m).polygon(poly,fill=255)
++    if blur: m=m.filter(ImageFilter.GaussianBlur(blur))
++    return np.asarray(m)
++
++def fill_texture(arr, mask, x0=0,y0=0):
++    &quot;&quot;&quot;Plausibly fill a vacated object region from nearby counter texture.&quot;&quot;&quot;
++    out=arr.copy(); ys,xs=np.where(mask&gt;20)
++    for y,x in zip(ys,xs):
++        sy=min(H-1,max(0, y-18))
++        sx=min(W-1,max(0, x + (18 if x&lt;70 else -34)))
++        c=arr[sy,sx].astype(float)
++        # softly match bright countertop, retaining local camera grain
++        c=.38*c + .62*np.array([174,174,171])
++        out[y,x]=np.clip(c,0,255)
++    # blend only softened interior to avoid a cutout edge
++    soft=np.asarray(Image.fromarray(mask).filter(ImageFilter.GaussianBlur(3)),dtype=float)[...,None]/255
++    return np.uint8(out*soft+arr*(1-soft))
++
++# background after two slices have left the basket: preserve basket rim, replace only bread interior
++breadmask=mask_poly(BREAD_POLY,1)
++clean_base=fill_texture(base,breadmask)
++# Repaint basket so the action remains legible and the container does not disappear.
++clean_im=Image.fromarray(clean_base); d=ImageDraw.Draw(clean_im,&#x27;RGBA&#x27;)
++d.polygon(BASKET_POLY, fill=(118,55,20,225), outline=(84,38,15,255), width=2)
++d.polygon([(50,125),(57,116),(80,114),(88,128),(84,145),(66,152),(52,145)], fill=(94,45,19,220))
++for k in range(5):
++    y=126+k*5; d.line([(51,y),(84,y-5)], fill=(180,93,39,145), width=2)
++for k in range(5):
++    x=55+k*7; d.line([(x,117),(x+5,149)], fill=(58,31,18,130), width=1)
++clean_base=np.asarray(clean_im)
++
++# canonical toast: a rigid, textured square viewed nearly front-on
++TW,TH=45,38
++def make_bread(seed=0):
++    rng=np.random.default_rng(seed)
++    im=Image.new(&#x27;RGBA&#x27;,(TW,TH),(0,0,0,0)); dr=ImageDraw.Draw(im,&#x27;RGBA&#x27;)
++    poly=[(4,7),(8,3),(34,2),(40,7),(42,31),(36,36),(8,35),(3,29)]
++    dr.polygon(poly,fill=(77,34,13,255))
++    dr.line(poly+[poly[0]],fill=(49,23,11,255),width=2)
++    inner=[(7,8),(10,5),(32,5),(37,8),(39,28),(34,33),(10,32),(6,27)]
++    dr.polygon(inner,fill=(145,73,29,255))
++    # toast mottling/crumbs
++    for _ in range(30):
++        x=int(rng.integers(8,37)); y=int(rng.integers(7,31)); r=int(rng.integers(1,3))
++        col=(94,43,17,int(rng.integers(35,95))) if rng.random()&lt;.7 else (202,121,55,70)
++        dr.ellipse((x-r,y-r,x+r,y+r),fill=col)
++    return im.filter(ImageFilter.GaussianBlur(.18))
++bread1=make_bread(2); bread2=make_bread(8)
++
++def ease(t):
++    t=max(0,min(1,t)); return t*t*(3-2*t)
++def path_interp(points,t):
++    # points are (time,x,y), piecewise smooth
++    if t&lt;=points[0][0]: return points[0][1:]
++    for a,b in zip(points,points[1:]):
++        if t&lt;=b[0]:
++            q=ease((t-a[0])/(b[0]-a[0])); return (a[1]*(1-q)+b[1]*q,a[2]*(1-q)+b[2]*q)
++    return points[-1][1:]
++
++def draw_shadow(im,xy,wh=(42,10),alpha=45):
++    layer=Image.new(&#x27;RGBA&#x27;,(W,H),(0,0,0,0)); ld=ImageDraw.Draw(layer)
++    x,y=xy; ld.ellipse((x-wh[0]/2,y-wh[1]/2,x+wh[0]/2,y+wh[1]/2),fill=(15,13,10,alpha))
++    layer=layer.filter(ImageFilter.GaussianBlur(4)); im.alpha_composite(layer)
++
++def arm_geometry(target):
++    # consistent two-link IK, shoulder is just outside left edge
++    sx,sy=-8,58; tx,ty=target; L1,L2=66,59
++    dx,dy=tx-sx,ty-sy; dist=max(1,math.hypot(dx,dy)); dist=min(dist,L1+L2-1)
++    a=(L1*L1-L2*L2+dist*dist)/(2*dist); h=math.sqrt(max(0,L1*L1-a*a))
++    ux,uy=dx/dist,dy/dist
++    # upper-elbow branch stays over the counter and mimics supplied robot pose
++    ex=sx+a*ux-h*(-uy); ey=sy+a*uy-h*ux
++    return (sx,sy),(ex,ey),(tx,ty)
++
++def draw_arm(im,target,closed=True,angle=0):
++    sh,el,wr=arm_geometry(target)
++    layer=Image.new(&#x27;RGBA&#x27;,(W,H),(0,0,0,0)); dr=ImageDraw.Draw(layer,&#x27;RGBA&#x27;)
++    # compact contact shadows under moving rigid arm
++    dr.line([sh,el],fill=(8,10,10,95),width=22)
++    dr.line([el,wr],fill=(8,10,10,100),width=18)
++    # hard stable industrial links and subtle highlights
++    dr.line([sh,el],fill=(12,18,17,255),width=18)
++    dr.line([el,wr],fill=(17,23,22,255),width=14)
++    dr.line([(sh[0],sh[1]-4),(el[0],el[1]-4)],fill=(52,61,58,150),width=3)
++    dr.line([(el[0],el[1]-3),(wr[0],wr[1]-3)],fill=(50,60,57,140),width=2)
++    for p,r in [(sh,14),(el,11),(wr,8)]:
++        dr.ellipse((p[0]-r,p[1]-r,p[0]+r,p[1]+r),fill=(10,16,15,255),outline=(56,63,60,255),width=2)
++        dr.ellipse((p[0]-3,p[1]-3,p[0]+3,p[1]+3),fill=(155,161,156,210))
++    # wrist module plus white/red collar retained from source robot&#x27;s visual identity
++    tx,ty=wr
++    dr.rounded_rectangle((tx-7,ty-7,tx+9,ty+7),3,fill=(24,30,29,255),outline=(68,74,70,255))
++    dr.rectangle((tx+7,ty-6,tx+12,ty+6),fill=(224,224,219,255))
++    dr.rectangle((tx+10,ty-5,tx+13,ty+5),fill=(156,26,25,255))
++    # parallel-jaw left gripper, vertically oriented around bread edge
++    gap=5 if closed else 14
++    dr.line([(tx+12,ty-gap),(tx+19,ty-gap)],fill=(12,17,16,255),width=5)
++    dr.line([(tx+12,ty+gap),(tx+19,ty+gap)],fill=(12,17,16,255),width=5)
++    dr.line([(tx+18,ty-gap),(tx+18,ty-gap+8)],fill=(8,12,12,255),width=4)
++    dr.line([(tx+18,ty+gap),(tx+18,ty+gap-8)],fill=(8,12,12,255),width=4)
++    im.alpha_composite(layer)
++
++# sequence: acquire both stacked slices, lift/translate above toaster, insert, release and withdraw.
++# gripper target is at left edge of carried slices.
++points=[(0.00,80,64),(0.14,72,93),(0.28,67,112),(0.39,70,96),(0.58,96,64),(0.72,113,51),(0.82,113,62),(0.90,113,70),(1.00,78,61)]
++frames=[]
++for i in range(20):
++    if i==0:
++        frames.append(base.copy()); continue
++    t=i/19
++    # fade from source&#x27;s original arm into exact same workspace clean layer only once arm starts moving
++    arr=base.copy() if t&lt;.16 else clean_base.copy()
++    im=Image.fromarray(arr).convert(&#x27;RGBA&#x27;)
++    gx,gy=path_interp(points,t)
++    carrying=(t&gt;=.26 and t&lt;.87)
++    # bread remains in basket before grasp; both slices move together thereafter
++    if t&lt;.26:
++        # preserve source bread by using original background; after initial approach explicitly show two slices
++        if t&gt;=.16:
++            im.alpha_composite(bread2,(48,107)); im.alpha_composite(bread1,(50,103))
++    elif carrying:
++        # carried stack is rigidly coupled to gripper. It rotates edge-on above slots to fit.
++        q=ease((t-.50)/.24)
++        bw=int(round(TW*(1-q)+13*q)); bh=int(round(TH*(1-q)+31*q))
++        # at insertion, progressively hide lower part inside toaster slot
++        b2=bread2.resize((bw,bh),Image.Resampling.BICUBIC)
++        b1=bread1.resize((bw,bh),Image.Resampling.BICUBIC)
++        bx=int(gx+15); by=int(gy-bh/2)
++        if t&gt;.76:
++            visible=max(7,int(bh*(1-ease((t-.76)/.14)*.72)))
++            b2=b2.crop((0,0,bw,visible)); b1=b1.crop((0,0,bw,visible))
++        draw_shadow(im,(bx+bw/2, min(129,by+bh+8)),(max(18,bw),7),30)
++        im.alpha_composite(b2,(bx+3,by+2)); im.alpha_composite(b1,(bx,by))
++    else:
++        # two narrow browned top edges visibly seated in the two slots
++        dr=ImageDraw.Draw(im,&#x27;RGBA&#x27;)
++        if t&gt;=.87:
++            dr.rounded_rectangle((113,71,126,77),2,fill=(68,31,15,255),outline=(37,20,13,255),width=1)
++            dr.rounded_rectangle((132,71,145,77),2,fill=(74,33,15,255),outline=(37,20,13,255),width=1)
++    closed = (t&gt;=.24 and t&lt;.88)
++    draw_arm(im,(gx,gy),closed)
++    frames.append(np.asarray(im.convert(&#x27;RGB&#x27;),dtype=np.uint8))
++frames=np.stack(frames)
++# contract invariant
++frames[0]=base
++artifact_io.save(frames,ROOT)
+</pre></details></details><details><summary>候选 02 · 2026-11-08T17:09:37.328938+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels&quot;: &quot;candidate_01/pixels.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -38,11 +38,14 @@
+ # Repaint basket so the action remains legible and the container does not disappear.
+ clean_im=Image.fromarray(clean_base); d=ImageDraw.Draw(clean_im,&#x27;RGBA&#x27;)
+ d.polygon(BASKET_POLY, fill=(118,55,20,225), outline=(84,38,15,255), width=2)
+-d.polygon([(50,125),(57,116),(80,114),(88,128),(84,145),(66,152),(52,145)], fill=(94,45,19,220))
+-for k in range(5):
+-    y=126+k*5; d.line([(51,y),(84,y-5)], fill=(180,93,39,145), width=2)
+-for k in range(5):
+-    x=55+k*7; d.line([(x,117),(x+5,149)], fill=(58,31,18,130), width=1)
++# A dark, hollow centre makes the basket read as empty after pickup; the woven
++# strokes are confined to the raised side wall rather than resembling a third toast.
++d.polygon([(52,126),(58,117),(78,115),(86,128),(82,143),(66,150),(54,143)],
++          fill=(61,31,18,245), outline=(158,77,31,230), width=2)
++for k in range(4):
++    y=144+k*3; d.line([(53,y),(68,y+5),(84,y-1)], fill=(178,89,36,175), width=2)
++for x in (53,59,82,87):
++    d.line([(x,124),(x+2,148)], fill=(187,92,37,145), width=1)
+ clean_base=np.asarray(clean_im)
+ 
+ # canonical toast: a rigid, textured square viewed nearly front-on
+@@ -145,7 +148,7 @@
+             visible=max(7,int(bh*(1-ease((t-.76)/.14)*.72)))
+             b2=b2.crop((0,0,bw,visible)); b1=b1.crop((0,0,bw,visible))
+         draw_shadow(im,(bx+bw/2, min(129,by+bh+8)),(max(18,bw),7),30)
+-        im.alpha_composite(b2,(bx+3,by+2)); im.alpha_composite(b1,(bx,by))
++        im.alpha_composite(b2,(bx+5,by+4)); im.alpha_composite(b1,(bx,by))
+     else:
+         # two narrow browned top edges visibly seated in the two slots
+         dr=ImageDraw.Draw(im,&#x27;RGBA&#x27;)
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T17:07:06.644380+00:00</strong><pre>/bin/bash -lc &quot;cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T17:07:06.880790+00:00</strong><pre>/bin/bash -lc &quot;find . -maxdepth 2 -type f -printf &#x27;%p\\n&#x27; | sort &amp;&amp; printf &#x27;\\nTOOLS\\n&#x27; &amp;&amp; command -v ffmpeg &amp;&amp; command -v python3 &amp;&amp; python3 - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+try:
+ from PIL import Image; print(&#x27;PIL yes&#x27;)
+except Exception as e: print(&#x27;no PIL&#x27;,e)
+PY&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 3 · 2026-11-08T17:07:13.533029+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json; echo ---; sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T17:07:28.096790+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+mods=[&#x27;cv2&#x27;,&#x27;PIL&#x27;,&#x27;numpy&#x27;,&#x27;scipy&#x27;,&#x27;imageio&#x27;]
+for m in mods:
+ try:
+  q=__import__(m); print(m,&#x27;yes&#x27;,getattr(q,&#x27;__version__&#x27;,&#x27;&#x27;))
+ except Exception as e: print(m,&#x27;NO&#x27;,e)
+PY
+command -v ffmpeg || true&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T17:07:41.524255+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.crop((0,0,120,100)).resize((720,600)).save(&#x27;.tmp/crop.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T17:08:28.831156+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+import math
+A=(-5,61); L1=66; L2=58
+for p in [(77,61),(66,98),(77,82),(106,51),(112,70)]:
+ dx=p[0]-A[0];dy=p[1]-A[1];d=math.hypot(dx,dy)
+ a=(L1*L1-L2*L2+d*d)/(2*d); h=math.sqrt(max(0,L1*L1-a*a)); ux=dx/d;uy=dy/d
+ ex=A[0]+a*ux+h*(-uy);ey=A[1]+a*uy+h*ux
+ ex2=A[0]+a*ux-h*(-uy);ey2=A[1]+a*uy-h*ux
+ print(p,d,(ex,ey),(ex2,ey2))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T17:08:58.906796+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import math
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+base_im = Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+base = np.asarray(base_im).copy()
+W,H = base_im.size
+
+# static object geometry observed in the supplied frame
+BREAD_POLY=[(48,111),(55,106),(75,103),(84,109),(88,130),(80,143),(59,145),(50,137)]
+BASKET_POLY=[(47,124),(52,111),(81,109),(91,127),(87,151),(67,159),(49,149)]
+
+def mask_poly(poly, blur=0):
+    m=Image.new(&#x27;L&#x27;,(W,H),0); ImageDraw.Draw(m).polygon(poly,fill=255)
+    if blur: m=m.filter(ImageFilter.GaussianBlur(blur))
+    return np.asarray(m)
+
+def fill_texture(arr, mask, x0=0,y0=0):
+    \&quot;\&quot;\&quot;Plausibly fill a vacated object region from nearby counter texture.\&quot;\&quot;\&quot;
+    out=arr.copy(); ys,xs=np.where(mask&gt;20)
+    for y,x in zip(ys,xs):
+        sy=min(H-1,max(0, y-18))
+        sx=min(W-1,max(0, x + (18 if x&lt;70 else -34)))
+        c=arr[sy,sx].astype(float)
+        # softly match bright countertop, retaining local camera grain
+        c=.38*c + .62*np.array([174,174,171])
+        out[y,x]=np.clip(c,0,255)
+    # blend only softened interior to avoid a cutout edge
+    soft=np.asarray(Image.fromarray(mask).filter(ImageFilter.GaussianBlur(3)),dtype=float)[...,None]/255
+    return np.uint8(out*soft+arr*(1-soft))
+
+# background after two slices have left the basket: preserve basket rim, replace only bread interior
+breadmask=mask_poly(BREAD_POLY,1)
+clean_base=fill_texture(base,breadmask)
+# Repaint basket so the action remains legible and the container does not disappear.
+clean_im=Image.fromarray(clean_base); d=ImageDraw.Draw(clean_im,&#x27;RGBA&#x27;)
+d.polygon(BASKET_POLY, fill=(118,55,20,225), outline=(84,38,15,255), width=2)
+d.polygon([(50,125),(57,116),(80,114),(88,128),(84,145),(66,152),(52,145)], fill=(94,45,19,220))
+for k in range(5):
+    y=126+k*5; d.line([(51,y),(84,y-5)], fill=(180,93,39,145), width=2)
+for k in range(5):
+    x=55+k*7; d.line([(x,117),(x+5,149)], fill=(58,31,18,130), width=1)
+clean_base=np.asarray(clean_im)
+
+# canonical toast: a rigid, textured square viewed nearly front-on
+TW,TH=45,38
+def make_bread(seed=0):
+    rng=np.random.default_rng(seed)
+    im=Image.new(&#x27;RGBA&#x27;,(TW,TH),(0,0,0,0)); dr=ImageDraw.Draw(im,&#x27;RGBA&#x27;)
+    poly=[(4,7),(8,3),(34,2),(40,7),(42,31),(36,36),(8,35),(3,29)]
+    dr.polygon(poly,fill=(77,34,13,255))
+    dr.line(poly+[poly[0]],fill=(49,23,11,255),width=2)
+    inner=[(7,8),(10,5),(32,5),(37,8),(39,28),(34,33),(10,32),(6,27)]
+    dr.polygon(inner,fill=(145,73,29,255))
+    # toast mottling/crumbs
+    for _ in range(30):
+        x=int(rng.integers(8,37)); y=int(rng.integers(7,31)); r=int(rng.integers(1,3))
+        col=(94,43,17,int(rng.integers(35,95))) if rng.random()&lt;.7 else (202,121,55,70)
+        dr.ellipse((x-r,y-r,x+r,y+r),fill=col)
+    return im.filter(ImageFilter.GaussianBlur(.18))
+bread1=make_bread(2); bread2=make_bread(8)
+
+def ease(t):
+    t=max(0,min(1,t)); return t*t*(3-2*t)
+def path_interp(points,t):
+    # points are (time,x,y), piecewise smooth
+    if t&lt;=points[0][0]: return points[0][1:]
+    for a,b in zip(points,points[1:]):
+        if t&lt;=b[0]:
+            q=ease((t-a[0])/(b[0]-a[0])); return (a[1]*(1-q)+b[1]*q,a[2]*(1-q)+b[2]*q)
+    return points[-1][1:]
+
+def draw_shadow(im,xy,wh=(42,10),alpha=45):
+    layer=Image.new(&#x27;RGBA&#x27;,(W,H),(0,0,0,0)); ld=ImageDraw.Draw(layer)
+    x,y=xy; ld.ellipse((x-wh[0]/2,y-wh[1]/2,x+wh[0]/2,y+wh[1]/2),fill=(15,13,10,alpha))
+    layer=layer.filter(ImageFilter.GaussianBlur(4)); im.alpha_composite(layer)
+
+def arm_geometry(target):
+    # consistent two-link IK, shoulder is just outside left edge
+    sx,sy=-8,58; tx,ty=target; L1,L2=66,59
+    dx,dy=tx-sx,ty-sy; dist=max(1,math.hypot(dx,dy)); dist=min(dist,L1+L2-1)
+    a=(L1*L1-L2*L2+dist*dist)/(2*dist); h=math.sqrt(max(0,L1*L1-a*a))
+    ux,uy=dx/dist,dy/dist
+    # upper-elbow branch stays over the counter and mimics supplied robot pose
+    ex=sx+a*ux-h*(-uy); ey=sy+a*uy-h*ux
+    return (sx,sy),(ex,ey),(tx,ty)
+
+def draw_arm(im,target,closed=True,angle=0):
+    sh,el,wr=arm_geometry(target)
+    layer=Image.new(&#x27;RGBA&#x27;,(W,H),(0,0,0,0)); dr=ImageDraw.Draw(layer,&#x27;RGBA&#x27;)
+    # compact contact shadows under moving rigid arm
+    dr.line([sh,el],fill=(8,10,10,95),width=22)
+    dr.line([el,wr],fill=(8,10,10,100),width=18)
+    # hard stable industrial links and subtle highlights
+    dr.line([sh,el],fill=(12,18,17,255),width=18)
+    dr.line([el,wr],fill=(17,23,22,255),width=14)
+    dr.line([(sh[0],sh[1]-4),(el[0],el[1]-4)],fill=(52,61,58,150),width=3)
+    dr.line([(el[0],el[1]-3),(wr[0],wr[1]-3)],fill=(50,60,57,140),width=2)
+    for p,r in [(sh,14),(el,11),(wr,8)]:
+        dr.ellipse((p[0]-r,p[1]-r,p[0]+r,p[1]+r),fill=(10,16,15,255),outline=(56,63,60,255),width=2)
+        dr.ellipse((p[0]-3,p[1]-3,p[0]+3,p[1]+3),fill=(155,161,156,210))
+    # wrist module plus white/red collar retained from source robot&#x27;s visual identity
+    tx,ty=wr
+    dr.rounded_rectangle((tx-7,ty-7,tx+9,ty+7),3,fill=(24,30,29,255),outline=(68,74,70,255))
+    dr.rectangle((tx+7,ty-6,tx+12,ty+6),fill=(224,224,219,255))
+    dr.rectangle((tx+10,ty-5,tx+13,ty+5),fill=(156,26,25,255))
+    # parallel-jaw left gripper, vertically oriented around bread edge
+    gap=5 if closed else 14
+    dr.line([(tx+12,ty-gap),(tx+19,ty-gap)],fill=(12,17,16,255),width=5)
+    dr.line([(tx+12,ty+gap),(tx+19,ty+gap)],fill=(12,17,16,255),width=5)
+    dr.line([(tx+18,ty-gap),(tx+18,ty-gap+8)],fill=(8,12,12,255),width=4)
+    dr.line([(tx+18,ty+gap),(tx+18,ty+gap-8)],fill=(8,12,12,255),width=4)
+    im.alpha_composite(layer)
+
+# sequence: acquire both stacked slices, lift/translate above toaster, insert, release and withdraw.
+# gripper target is at left edge of carried slices.
+points=[(0.00,80,64),(0.14,72,93),(0.28,67,112),(0.39,70,96),(0.58,96,64),(0.72,113,51),(0.82,113,62),(0.90,113,70),(1.00,78,61)]
+frames=[]
+for i in range(20):
+    if i==0:
+        frames.append(base.copy()); continue
+    t=i/19
+    # fade from source&#x27;s original arm into exact same workspace clean layer only once arm starts moving
+    arr=base.copy() if t&lt;.16 else clean_base.copy()
+    im=Image.fromarray(arr).convert(&#x27;RGBA&#x27;)
+    gx,gy=path_interp(points,t)
+    carrying=(t&gt;=.26 and t&lt;.87)
+    # bread remains in basket before grasp; both slices move together thereafter
+    if t&lt;.26:
+        # preserve source bread by using original background; after initial approach explicitly show two slices
+        if t&gt;=.16:
+            im.alpha_composite(bread2,(48,107)); im.alpha_composite(bread1,(50,103))
+    elif carrying:
+        # carried stack is rigidly coupled to gripper. It rotates edge-on above slots to fit.
+        q=ease((t-.50)/.24)
+        bw=int(round(TW*(1-q)+13*q)); bh=int(round(TH*(1-q)+31*q))
+        # at insertion, progressively hide lower part inside toaster slot
+        b2=bread2.resize((bw,bh),Image.Resampling.BICUBIC)
+        b1=bread1.resize((bw,bh),Image.Resampling.BICUBIC)
+        bx=int(gx+15); by=int(gy-bh/2)
+        if t&gt;.76:
+            visible=max(7,int(bh*(1-ease((t-.76)/.14)*.72)))
+            b2=b2.crop((0,0,bw,visible)); b1=b1.crop((0,0,bw,visible))
+        draw_shadow(im,(bx+bw/2, min(129,by+bh+8)),(max(18,bw),7),30)
+        im.alpha_composite(b2,(bx+3,by+2)); im.alpha_composite(b1,(bx,by))
+    else:
+        # two narrow browned top edges visibly seated in the two slots
+        dr=ImageDraw.Draw(im,&#x27;RGBA&#x27;)
+        if t&gt;=.87:
+            dr.rounded_rectangle((113,71,126,77),2,fill=(68,31,15,255),outline=(37,20,13,255),width=1)
+            dr.rounded_rectangle((132,71,145,77),2,fill=(74,33,15,255),outline=(37,20,13,255),width=1)
+    closed = (t&gt;=.24 and t&lt;.88)
+    draw_arm(im,(gx,gy),closed)
+    frames.append(np.asarray(im.convert(&#x27;RGB&#x27;),dtype=np.uint8))
+frames=np.stack(frames)
+# contract invariant
+frames[0]=base
+artifact_io.save(frames,ROOT)
+PY
+python3 generate.py
+python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;inspection.png&#x27;); print(im.size)
+import numpy as np
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]; print(z.shape,z.dtype)
+print(&#x27;first identical&#x27;,np.array_equal(np.asarray(Image.open(&#x27;frames/00.png&#x27;)),np.asarray(Image.open(&#x27;first_frame.png&#x27;))))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T17:09:36.678856+00:00</strong><pre>/bin/bash -lc &quot;python3 generate.py &amp;&amp; python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+fs=[np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;)) for i in range(20)]
+print(len(fs),fs[0].shape,fs[0].dtype,np.array_equal(fs[0],np.asarray(Image.open(&#x27;first_frame.png&#x27;))))
+print(&#x27;successive changed pixels:&#x27;, [int(np.any(fs[i]&quot;&#x27;!=fs[i-1],2).sum()) for i in range(1,20)])
+PY&#x27;</pre><span class=pill>exit 0</span></div><details><summary>视觉工具实际返回图片 1</summary><img loading=lazy src="tool_view_01.png"></details><details><summary>视觉工具实际返回图片 2</summary><img loading=lazy src="tool_view_02.png"></details><details><summary>视觉工具实际返回图片 3</summary><img loading=lazy src="tool_view_03.png"></details><details><summary>视觉工具实际返回图片 4</summary><img loading=lazy src="tool_view_04.png"></details><details><summary>视觉工具实际返回图片 5</summary><img loading=lazy src="tool_view_05.png"></details><p class=muted>保存候选 2 份；完成命令 8 次；可验证图片返回 5 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,o=this.frame*n*3,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){rgba[4*i]=this.frames[o+3*i];rgba[4*i+1]=this.frames[o+3*i+1];rgba[4*i+2]=this.frames[o+3*i+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
