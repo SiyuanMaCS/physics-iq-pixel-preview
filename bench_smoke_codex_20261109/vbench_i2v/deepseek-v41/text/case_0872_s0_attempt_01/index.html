@@ -1,0 +1,475 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0872_s0</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0872_s0</h1><p class=muted>text · 256×144 · 16 FPS · 81 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>a brown bear in the water with a fish in its mouth</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T20:13:09.563826+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.mp4&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!*.mov&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!*.webm&#x27;&quot;&#x27; | sed -n &#x27;1,160p&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T20:13:09.684076+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T20:13:09.908195+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,320p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T20:13:10.167346+00:00</strong><pre>/bin/bash -c &quot;find . -maxdepth 2 -type f -printf &#x27;%p %s bytes\\n&#x27; | sort&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T20:13:19.118447+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T20:13:19.424536+00:00</strong><pre>/bin/bash -c &quot;cat task_spec.json &amp;&amp; python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.mode, im.size)
+print(im.getextrema())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T20:13:19.724864+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(im.shape, im.dtype)
+# average in 16x9 blocks; print RGB hex grid
+h,w=im.shape[:2]
+for by in range(9):
+    row=[]
+    for bx in range(16):
+        p=im[by*h//9:(by+1)*h//9,bx*w//16:(bx+1)*w//16].mean((0,1)).astype(int)
+        row.append(&#x27;#%02x%02x%02x&#x27;%tuple(p))
+    print(&#x27; &#x27;.join(row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T20:13:32.607983+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from sklearn.cluster import KMeans
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+X=im.reshape(-1,3)
+km=KMeans(10, random_state=0, n_init=10).fit(X[::3])
+cent=km.cluster_centers_.round().astype(int)
+lab=km.predict(X).reshape(im.shape[:2])
+# sort colors by luminance and print stats and chars
+order=np.argsort(cent.mean(1))
+chars=&#x27; .:-=+*#%@&#x27;
+print(&#x27;clusters:&#x27;)
+for rank,i in enumerate(order): print(chars[rank], i, cent[i], &#x27;count&#x27;,int((lab==i).sum()))
+# map blocks to majority labels ranked
+h,w=lab.shape
+for by in range(24):
+    line=&#x27;&#x27;
+    for bx in range(64):
+        a=lab[by*h//24:(by+1)*h//24,bx*w//64:(bx+1)*w//64]
+        vals,cnt=np.unique(a,return_counts=True); i=vals[cnt.argmax()]
+        line+=chars[np.where(order==i)[0][0]]
+    print(line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T20:13:42.921829+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+r,g,b=im.transpose(2,0,1)
+brown=(r-g&gt;10)&amp;(g-b&gt;4)&amp;(r&gt;45)
+tan=(r&gt;130)&amp;(r-g&gt;12)&amp;(g-b&gt;8)
+dark=(r+g+b&lt;150)
+blue=(b&gt;=r+2)&amp;(g&gt;=r)
+h,w=im.shape[:2]
+for by in range(36):
+    line=&#x27;&#x27;
+    for bx in range(64):
+        sl=(slice(by*h//36,(by+1)*h//36),slice(bx*w//64,(bx+1)*w//64))
+        cnt=[tan[sl].mean(),brown[sl].mean(),dark[sl].mean(),blue[sl].mean()]
+        i=int(np.argmax(cnt)); chars=&#x27;TBDW&#x27;
+        if max(cnt)&lt;.18:
+            m=im[sl].mean((0,1)).mean(); line += &#x27; &#x27; if m&gt;200 else &#x27;.&#x27; if m&gt;150 else &#x27;:&#x27; if m&gt;100 else &#x27;-&#x27;
+        else: line+=chars[i]
+    print(f&#x27;{by:02d} &#x27;+line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T20:13:47.910733+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+# candidate segmentation: bear/fish colorfulness vs water neutral/blue
+mx=im.max(2); mn=im.min(2)
+sat=(mx-mn)
+animal=(r&gt;g*1.04)&amp;(g&gt;b*1.03)&amp;(sat&gt;10)&amp;(r&gt;45)&amp;(r&lt;245)
+# print bbox, row/col summaries
+ys,xs=np.where(animal)
+print(&#x27;animal bbox&#x27;,xs.min(),xs.max(),ys.min(),ys.max(),&#x27;count&#x27;,len(xs))
+for y in range(8,144,4):
+ print(f&#x27;{y:03d}&#x27;, int(animal[y:y+4].sum()), int(animal[y:y+4,:128].sum()), int(animal[y:y+4,128:].sum()))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T20:13:53.091745+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# gradient magnitude coarse, print edges ascii
+lum=im.mean(2)
+gx=np.abs(np.diff(lum,axis=1)); gy=np.abs(np.diff(lum,axis=0))
+for y in range(0,143,3):
+ line=&#x27;&#x27;
+ for x in range(0,255,4):
+  a=gx[y:y+3,x:x+4].mean()+gy[y:y+3,x:x+4].mean()
+  line += &#x27; &#x27; if a&lt;2 else &#x27;.&#x27; if a&lt;5 else &#x27;:&#x27; if a&lt;10 else &#x27;+&#x27; if a&lt;20 else &#x27;#&#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T20:14:03.349569+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+r,g,b=im.transpose(2,0,1)
+# categories
+blue=(b&gt;r+3)&amp;(b&gt;=g-1)&amp;(r&gt;60)
+neutral=(np.max(im,2)-np.min(im,2)&lt;12)
+dark=(im.mean(2)&lt;55)
+brown=(r&gt;g+5)&amp;(g&gt;b+2)&amp;(r&lt;150)&amp;(~dark)
+tan=(r&gt;130)&amp;(r&gt;g+12)&amp;(g&gt;b+5)
+white=(im.mean(2)&gt;205)&amp;(np.max(im,2)-np.min(im,2)&lt;20)
+# classify in 4x4 block by dominant salient category, otherwise brightness shade
+for y in range(0,144,4):
+ line=&#x27;&#x27;
+ for x in range(0,256,4):
+  sl=np.s_[y:y+4,x:x+4]
+  scores=[tan[sl].mean(),brown[sl].mean(),dark[sl].mean(),blue[sl].mean(),white[sl].mean()]
+  labels=&#x27;TBDW@&#x27;
+  i=int(np.argmax(scores))
+  if scores[i]&lt;.28:
+   m=im[sl].mean()
+   line += &#x27; &#x27; if m&gt;210 else &#x27;.&#x27; if m&gt;180 else &#x27;:&#x27; if m&gt;140 else &#x27;-&#x27; if m&gt;100 else &#x27;=&#x27;
+  else: line += labels[i]
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T20:14:10.296872+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# crop approximate and grayscale edge/ascii at 2px blocks with 2-tone quantile
+# animal silhouette mask based on colorfulness/luminance and area x=80..225,y=38..130
+mx=im.max(2); mn=im.min(2)
+# smooth-ish mask, avoid water by requiring brown chroma
+r,g,b=im.transpose(2,0,1)
+mask=(r&gt;g*1.03)&amp;(g&gt;b*1.02)&amp;(mx-mn&gt;12)&amp;(r&gt;45)
+# Print within bbox with color categories and high contrast, use threshold on luma after masking
+for y in range(40,132,2):
+ line=&#x27;&#x27;
+ for x in range(78,228,2):
+  m=mask[y:y+2,x:x+2].mean()
+  if m&lt;.3: line+=&#x27; &#x27;
+  else:
+   rgb=im[y:y+2,x:x+2][mask[y:y+2,x:x+2]].mean(0) if mask[y:y+2,x:x+2].any() else im[y:y+2,x:x+2].mean((0,1))
+   v=rgb.mean()
+   line += &#x27;#&#x27; if v&lt;45 else &#x27;+&#x27; if v&lt;75 else &#x27;=&#x27; if v&lt;105 else &#x27;:&#x27; if v&lt;135 else &#x27;-&#x27; if v&lt;165 else &#x27;.&#x27; if v&lt;200 else &#x27; &#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T20:14:15.115611+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+mx=im.max(2); mn=im.min(2)
+mask=(r&gt;g*1.03)&amp;(g&gt;b*1.02)&amp;(mx-mn&gt;12)&amp;(r&gt;45)
+# connected components 8-connect using scipy
+from scipy.ndimage import label, binary_closing, binary_opening
+m=binary_closing(mask, iterations=2)
+lab,n=label(m)
+for i in range(1,n+1):
+ ys,xs=np.where(lab==i)
+ if len(xs)&gt;100: print(i,len(xs),(xs.min(),ys.min(),xs.max(),ys.max()))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T20:14:29.772116+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print 8x8 average colors in bbox x72:232 y32:144 as compact hex, 20 cols x14 rows
+for y in range(32,144,8):
+ print(&#x27;y%03d&#x27;%y, end=&#x27; &#x27;)
+ for x in range(72,232,8):
+  p=im[y:y+8,x:x+8].mean((0,1)).astype(int)
+  print(&#x27;%02x%02x%02x&#x27;%tuple(p),end=&#x27; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T20:14:43.075606+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1); mx=im.max(2); mn=im.min(2)
+mask=(r&gt;g*1.03)&amp;(g&gt;b*1.02)&amp;(mx-mn&gt;12)&amp;(r&gt;45)
+for y in range(40,143,2):
+ xs=np.where(mask[y:y+2].any(0))[0]
+ if len(xs):
+  # intervals
+  cuts=np.r_[0,np.flatnonzero(np.diff(xs)&gt;1)+1,len(xs)]
+  ints=[(xs[cuts[i]],xs[cuts[i+1]-1]) for i in range(len(cuts)-1) if cuts[i+1]-cuts[i]&gt;=2]
+  print(f&#x27;{y:03d}:&#x27;, &#x27; &#x27;.join(f&#x27;{a}-{b}&#x27; for a,b in ints))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T20:14:47.788525+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# print grayscale at 1 px over head bbox x90:175,y44:100, using chars threshold relative
+lum=im.mean(2)
+for y in range(44,102,2):
+ line=&#x27;&#x27;
+ for x in range(92,178,1):
+  v=lum[y:y+2,x:x+1].mean()
+  line += &#x27;#&#x27; if v&lt;25 else &#x27;@&#x27; if v&lt;45 else &#x27;+&#x27; if v&lt;70 else &#x27;=&#x27; if v&lt;95 else &#x27;:&#x27; if v&lt;125 else &#x27;-&#x27; if v&lt;155 else &#x27;.&#x27; if v&lt;190 else &#x27; &#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T20:14:52.190186+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+lum=im.mean(2)
+# larger head x70..180 y38..125 at 1 char per 2x2 px
+for y in range(38,126,2):
+ line=&#x27;&#x27;
+ for x in range(70,182,2):
+  v=lum[y:y+2,x:x+2].mean()
+  line += &#x27;#&#x27; if v&lt;25 else &#x27;@&#x27; if v&lt;45 else &#x27;+&#x27; if v&lt;70 else &#x27;=&#x27; if v&lt;95 else &#x27;:&#x27; if v&lt;125 else &#x27;-&#x27; if v&lt;155 else &#x27;.&#x27; if v&lt;190 else &#x27; &#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T20:14:56.775440+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# sample likely eye/fish positions and extremes
+for p in [(105,65),(110,67),(115,69),(120,72),(125,75),(130,78),(135,80),(140,82),(145,84),(150,86),(155,88),(160,90),(165,92),(170,94),(175,96),(180,98),(185,100)]:
+ x,y=p
+ print(p, im[y,x])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-08T20:15:02.324464+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+# List darkest clusters and color averages in body region x105:205 y70:130
+for y in range(64,136,4):
+ vals=[]
+ for x in range(90,210,10):
+  p=im[y:y+4,x:x+10].mean((0,1)).astype(int)
+  vals.append(&#x27;%02x%02x%02x&#x27;%tuple(p))
+ print(y,&#x27; &#x27;.join(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-08T20:15:07.883443+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# color channels diff maps at 4px blocks x70:230 y38:135
+r,g,b=im.transpose(2,0,1)
+for y in range(38,136,4):
+ line=&#x27;&#x27;
+ for x in range(70,230,4):
+  sl=np.s_[y:y+4,x:x+4]
+  R,G,B=[im[sl][...,i].mean() for i in range(3)]
+  if B&gt;R+8: c=&#x27;W&#x27;
+  elif R&gt;B+50 and R&gt;G+20: c=&#x27;F&#x27; # pale fish
+  elif R&gt;G+8 and G&gt;B+4: c=&#x27;b&#x27;
+  elif R&gt;G+12: c=&#x27;t&#x27;
+  elif R+G+B&lt;120: c=&#x27;#&#x27;
+  elif R+G+B&lt;300: c=&#x27;d&#x27;
+  else: c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-08T20:15:20.242876+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy.ndimage import label, binary_opening, binary_closing
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+tests={
+&#x27;pale&#x27;:(r&gt;125)&amp;(r&gt;g+10)&amp;(g&gt;b+5),
+&#x27;warm&#x27;:(r&gt;g+5)&amp;(g&gt;b+3),
+&#x27;dark&#x27;:(r+g+b&lt;180),
+&#x27;light&#x27;:(r+g+b&gt;480),
+&#x27;orange&#x27;:(r&gt;g+20)&amp;(g&gt;b+10),
+}
+for name,m in tests.items():
+ m=binary_closing(binary_opening(m,np.ones((2,2))),np.ones((2,2)))
+ lab,n=label(m,np.ones((3,3)))
+ comps=[]
+ for i in range(1,n+1):
+  ys,xs=np.where(lab==i)
+  if len(xs)&gt;30: comps.append((len(xs),(xs.min(),ys.min(),xs.max(),ys.max())))
+ print(name, sorted(comps,reverse=True)[:8])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-08T20:15:25.819219+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# coarse exact color/colorfulness map with symbols by hue and luminance
+for y in range(40,144,3):
+ line=&#x27;&#x27;
+ for x in range(70,232,3):
+  sl=im[y:y+3,x:x+3].reshape(-1,3)
+  R,G,B=sl.mean(0)
+  mx,mn=sl.max(1),sl.min(1)
+  sat=(mx-mn).mean(); lum=sl.mean()
+  if B&gt;R+8: c=&#x27; &#x27; if lum&gt;150 else &#x27;.&#x27;
+  elif R&gt;G+15 and G&gt;B+8 and lum&gt;150: c=&#x27;F&#x27;
+  elif R&gt;G+10 and G&gt;B+5 and lum&gt;90: c=&#x27;b&#x27;
+  elif R&gt;G+8 and G&gt;B+3: c=&#x27;d&#x27;
+  elif lum&lt;45:c=&#x27;#&#x27;
+  elif lum&lt;90:c=&#x27;+&#x27;
+  elif lum&lt;140:c=&#x27;:&#x27;
+  elif lum&lt;190:c=&#x27;-&#x27;
+  else:c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-08T20:15:30.374420+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# show row colors from x130..210 at y 80..120 with chars from luminance, 1px
+lum=im.mean(2)
+for y in range(78,126,1):
+ line=&#x27;&#x27;
+ for x in range(128,214,1):
+  v=lum[y,x]
+  line += &#x27;#&#x27; if v&lt;20 else &#x27;@&#x27; if v&lt;40 else &#x27;+&#x27; if v&lt;65 else &#x27;=&#x27; if v&lt;90 else &#x27;:&#x27; if v&lt;120 else &#x27;-&#x27; if v&lt;150 else &#x27;.&#x27; if v&lt;185 else &#x27; &#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-08T20:15:36.285554+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# RGB samples around suspected fish: show grayscale-coded hue categories for x130..210,y78..115 at 1px
+for y in range(78,116):
+ line=&#x27;&#x27;
+ for x in range(128,214):
+  R,G,B=im[y,x]
+  if B&gt;R+8: c=&#x27; &#x27;
+  elif R&gt;G+18 and G&gt;B+8 and (R+G+B)&gt;450: c=&#x27;F&#x27;
+  elif R&gt;G+10 and G&gt;B+4: c=&#x27;b&#x27;
+  elif R+G+B&lt;80:c=&#x27;#&#x27;
+  elif R+G+B&lt;150:c=&#x27;+&#x27;
+  elif R+G+B&lt;250:c=&#x27;=&#x27;
+  elif R+G+B&lt;350:c=&#x27;:&#x27;
+  elif R+G+B&lt;450:c=&#x27;-&#x27;
+  else:c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-08T20:15:41.641403+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(90,122,2):
+ print(&#x27;Y&#x27;,y)
+ for x in range(160,204,4):
+  print(f&#x27;{x}:{im[y,x,0]:03}/{im[y,x,1]:03}/{im[y,x,2]:03}&#x27;,end=&#x27;  &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-08T20:15:46.273332+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# print saturation/warm map x180..230 y88..125, likely fish edge
+for y in range(88,126):
+ line=&#x27;&#x27;
+ for x in range(180,232):
+  R,G,B=im[y,x]; s=max(R,G,B)-min(R,G,B); l=(R+G+B)/3
+  line += &#x27;@&#x27; if l&lt;35 else &#x27;#&#x27; if l&lt;65 else &#x27;+&#x27; if l&lt;95 else &#x27;=&#x27; if l&lt;125 else &#x27;:&#x27; if l&lt;155 else &#x27;-&#x27; if l&lt;185 else &#x27;.&#x27; if l&lt;215 else &#x27; &#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-08T20:15:52.860114+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy.ndimage import gaussian_filter
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+# likely water masks: B-R &gt;= 6 and lum &gt; 80
+water=(b-r&gt;=5)&amp;((r+g+b)/3&gt;80)
+print(&#x27;water pixels&#x27;,water.sum())
+# row average water color
+for y in range(0,144,8):
+ m=water[y:y+8]
+ if m.sum(): print(y, im[y:y+8][m].mean(0).round().astype(int), &#x27;count&#x27;,m.sum())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-08T20:15:57.329457+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# print 1px row avg color and gradient y
+for y in range(0,144,2):
+ p=im[y:y+2].mean((0,1)).astype(int)
+ gx=np.abs(np.diff(im[y:y+2],axis=1)).mean()
+ print(f&#x27;{y:03d} {p[0]:3} {p[1]:3} {p[2]:3}  grad {gx:5.1f}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-08T20:16:01.775500+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Estimate per-channel affine difference horizontal neighbor: water pixel base variation
+for y0,y1 in [(20,40),(45,90),(95,140)]:
+ print(&#x27;range&#x27;,y0,y1)
+ for x in [20,40,60,200,220,240]:
+  p=im[y0:y1,x:x+8].mean((0,1)).round().astype(int)
+  q=im[y0:y1,x+8:x+16].mean((0,1)).round().astype(int)
+  print(x,p,q)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-08T20:16:06.778558+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=im.transpose(2,0,1)
+mask=(r&gt;g*1.03)&amp;(g&gt;b*1.02)&amp;((im.max(2)-im.min(2))&gt;12)&amp;(r&gt;45)
+# exact bbox row extents excluding disconnected left
+for y in range(40,144,1):
+ xs=np.where(mask[y])[0]
+ xs=xs[(xs&gt;70)&amp;(xs&lt;230)]
+ if len(xs): print(y, xs.min(),xs.max(),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-08T20:16:11.633329+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# grayscale and hue map for right protrusion x180:222 y92:140
+for y in range(92,142):
+ line=&#x27;&#x27;
+ for x in range(180,224):
+  R,G,B=im[y,x]
+  if B&gt;R+7:c=&#x27; &#x27;
+  elif R&gt;G+15 and G&gt;B+5:c=&#x27;F&#x27;
+  elif R&gt;G+7 and G&gt;B+3:c=&#x27;b&#x27;
+  elif R+G+B&lt;90:c=&#x27;#&#x27;
+  elif R+G+B&lt;170:c=&#x27;+&#x27;
+  elif R+G+B&lt;260:c=&#x27;=&#x27;
+  elif R+G+B&lt;360:c=&#x27;:&#x27;
+  elif R+G+B&lt;470:c=&#x27;-&#x27;
+  else:c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-08T20:16:15.777729+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# inspect possible fish head/pale region at x198..222,y102..126 colors
+for y in range(100,128,2):
+ print(y,end=&#x27; &#x27;)
+ for x in range(190,224,4):
+  p=im[y:y+2,x:x+4].mean((0,1)).astype(int)
+  print(&#x27;%02x%02x%02x&#x27;%tuple(p),end=&#x27; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-08T20:16:20.772450+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# animal pixels categorized into RGB channels at 4px to infer fish: print warm pixel bbox &amp; samples at right half
+r,g,b=im.transpose(2,0,1)
+mask=(r&gt;g*1.03)&amp;(g&gt;b*1.02)&amp;((im.max(2)-im.min(2))&gt;12)&amp;(r&gt;45)
+for y in range(98,130,3):
+ line=&#x27;&#x27;
+ for x in range(150,220,2):
+  if mask[y:y+3,x:x+2].mean()&lt;.35: line+=&#x27; &#x27;
+  else:
+   sl=im[y:y+3,x:x+2][mask[y:y+3,x:x+2]]
+   if len(sl)==0: sl=im[y:y+3,x:x+2].reshape(-1,3)
+   R,G,B=sl.mean(0)
+   line += &#x27;#&#x27; if R+G+B&lt;100 else &#x27;+&#x27; if R+G+B&lt;180 else &#x27;=&#x27; if R+G+B&lt;280 else &#x27;:&#x27; if R+G+B&lt;380 else &#x27;-&#x27; if R+G+B&lt;480 else &#x27;.&#x27;
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 35 · 2026-11-08T20:16:26.513359+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# print 8x8 block colors in head and suspected fish in categorical notation x82:220 y42:132
+# chars based hue/chroma: F pale orange fish, b brown bear, d dark, w blue water
+for y in range(42,132,3):
+ line=&#x27;&#x27;
+ for x in range(80,220,3):
+  sl=im[y:y+3,x:x+3].reshape(-1,3)
+  R,G,B=sl.mean(0); mx,mn=sl.max(1),sl.min(1)
+  sat=(mx-mn).mean(); lum=(R+G+B)/3
+  if B&gt;R+5: c=&#x27;.&#x27;
+  elif R&gt;G+18 and G&gt;B+7 and lum&gt;150:c=&#x27;F&#x27;
+  elif R&gt;G+10 and G&gt;B+5 and lum&gt;100:c=&#x27;b&#x27;
+  elif R&gt;G+7 and G&gt;B+3:c=&#x27;d&#x27;
+  elif lum&lt;50:c=&#x27;#&#x27;
+  elif lum&lt;90:c=&#x27;+&#x27;
+  elif lum&lt;140:c=&#x27;=&#x27;
+  elif lum&lt;190:c=&#x27;:&#x27;
+  elif lum&lt;225:c=&#x27;-&#x27;
+  else:c=&#x27; &#x27;
+  line+=c
+ print(f&#x27;{y:03d} {line}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 36 · 2026-11-08T20:16:35.479583+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# per-color cluster centroids in bbox region and their spatial extents
+from sklearn.cluster import KMeans
+ys,xs=np.mgrid[40:132,75:220]
+X=im[40:132,75:220].reshape(-1,3)
+km=KMeans(12,random_state=4,n_init=10).fit(X)
+lab=km.labels_.reshape(92,145)
+for i,c in enumerate(km.cluster_centers_.round().astype(int)):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;40:
+  print(i,len(xx),c,&#x27;bbox&#x27;,(xx.min()+75,yy.min()+40,xx.max()+75,yy.max()+40))
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 36 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
