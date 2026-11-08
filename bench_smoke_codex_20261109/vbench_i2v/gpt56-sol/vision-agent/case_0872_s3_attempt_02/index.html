@@ -1,0 +1,502 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-5.6-Sol · 0872_s3</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-5.6-Sol · 0872_s3</h1><p class=muted>vision-agent · 256×144 · 16 FPS · 81 帧 · 状态 failed · 输出 tokens 9916</p><div class=box><strong>原始任务</strong><p>a brown bear in the water with a fish in its mouth</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16, &quot;pixels_file&quot;: &quot;pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;c5e086f4a859d3bd674c39bd6a80e622f1483e3fa763a53aa7c8cfea169f382e&quot;, &quot;pixels&quot;: &quot;final/pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p class=muted>此结果可播放，但该运行尚未通过最终提交审核。页面展示不代表评测通过。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T21:22:36.305905+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16, &quot;pixels_file&quot;: &quot;pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;c5e086f4a859d3bd674c39bd6a80e622f1483e3fa763a53aa7c8cfea169f382e&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,200 @@
++&quot;&quot;&quot;Generate a restrained photographic animation from first_frame.png.
++
++The animation keeps the supplied bear and fish intact while introducing a slow
++camera push, organic body/head motion, moving surface refraction, wakes around
++the legs, and occasional falling water drops.  It uses only deterministic
++OpenCV/Numpy image geometry and the required local input image.
++&quot;&quot;&quot;
++from pathlib import Path
++import cv2
++import numpy as np
++from PIL import Image
++import artifact_io
++
++CASE_DIR = Path(__file__).resolve().parent
++W, H, N, FPS = 256, 144, 81, 16
++
++
++def smoothstep(x):
++    x = np.clip(x, 0.0, 1.0)
++    return x * x * (3.0 - 2.0 * x)
++
++
++def subject_matte(rgb):
++    &quot;&quot;&quot;A deterministic soft matte initialized from the known central silhouette.&quot;&quot;&quot;
++    bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
++    mask = np.zeros((H, W), np.uint8)
++    outer = np.array([
++        [76,42],[84,40],[96,44],[107,42],[121,54],[146,58],
++        [169,64],[186,76],[196,96],[207,118],[215,132],[205,138],
++        [177,138],[155,134],[130,133],[114,136],[99,137],[85,134],
++        [76,124],[78,108],[77,88],[75,72],[79,57]
++    ], np.int32)
++    cv2.fillPoly(mask, [outer], cv2.GC_PR_FGD)
++    inner = [
++        [[84,52],[98,45],[111,49],[120,67],[111,85],[88,84],[80,67]],
++        [[110,64],[150,61],[178,74],[191,102],[184,126],[149,128],[120,116]],
++        [[86,77],[105,76],[108,128],[84,128]],
++        [[115,91],[136,96],[131,133],[111,132]],
++        [[174,89],[198,103],[208,130],[184,132]],
++    ]
++    for points in inner:
++        cv2.fillPoly(mask, [np.array(points, np.int32)], cv2.GC_FGD)
++    # The salmon projects from both sides of the muzzle.
++    cv2.line(mask, (96,76), (70,94), cv2.GC_PR_FGD, 7)
++    cv2.line(mask, (102,75), (125,93), cv2.GC_PR_FGD, 7)
++    bgd = np.zeros((1, 65), np.float64)
++    fgd = np.zeros((1, 65), np.float64)
++    cv2.grabCut(bgr, mask, None, bgd, fgd, 7, cv2.GC_INIT_WITH_MASK)
++    hard = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 1.0, 0.0).astype(np.float32)
++    hard = cv2.morphologyEx(hard, cv2.MORPH_CLOSE, np.ones((3,3), np.uint8))
++    soft = cv2.GaussianBlur(hard, (0,0), 2.2)
++    return np.clip(soft, 0, 1), hard
++
++
++def ellipse_mask(xx, yy, cx, cy, rx, ry, blur=1.0):
++    q = ((xx-cx)/rx)**2 + ((yy-cy)/ry)**2
++    # Smooth, compact falloff rather than a visible oval boundary.
++    a = np.clip(1.0 - q, 0.0, 1.0)
++    a = a*a*(3.0-2.0*a)
++    if blur:
++        a = cv2.GaussianBlur(a.astype(np.float32), (0,0), blur)
++    return a
++
++
++def add_ripple(frame, center, age, strength, occlusion):
++    &quot;&quot;&quot;Add an expanding, soft elliptical wake. age is in seconds.&quot;&quot;&quot;
++    if age &lt; 0 or age &gt; 1.55:
++        return frame
++    fade = np.sin(np.pi * age / 1.55) ** 0.7
++    rx = 6.0 + 22.0 * age / 1.55
++    ry = 1.3 + 3.7 * age / 1.55
++    layer = np.zeros((H, W), np.float32)
++    c = (int(round(center[0])), int(round(center[1])))
++    cv2.ellipse(layer, c, (int(rx), max(1,int(ry))), 0, 0, 360, 1.0, 1, cv2.LINE_AA)
++    cv2.ellipse(layer, c, (max(2,int(rx-2.3)), max(1,int(ry-0.8))), 0, 0, 360, -0.55, 1, cv2.LINE_AA)
++    layer = cv2.GaussianBlur(layer, (0,0), 0.45) * fade * strength
++    layer *= (1.0 - 0.90 * occlusion)
++    # Pale upper glint, with a tiny darker trough for dimensionality.
++    out = frame.astype(np.float32)
++    tint = np.array([194, 204, 202], np.float32)
++    pos = np.clip(layer, 0, 1)[...,None]
++    out = out * (1-pos) + tint * pos
++    neg = np.clip(-layer, 0, 1)[...,None]
++    out *= (1.0 - 0.13*neg)
++    return np.clip(out,0,255).astype(np.uint8)
++
++
++def generate():
++    base = np.asarray(Image.open(CASE_DIR / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;), dtype=np.uint8)
++    assert base.shape == (H, W, 3)
++    matte, hard_matte = subject_matte(base)
++    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
++
++    head = ellipse_mask(xx, yy, 99, 66, 30, 28, .7) * matte
++    muzzle_fish = ellipse_mask(xx, yy, 97, 82, 34, 16, .5) * matte
++    body = matte
++    water = smoothstep((yy - 53.0) / 23.0) * (1.0 - 0.94*matte)
++    water *= 1.0 - 0.55*smoothstep((57.0-yy)/15.0)
++
++    # Deterministic elongated low-amplitude caustic texture.
++    rng = np.random.default_rng(872)
++    noise = rng.normal(0, 1, (H, W*2)).astype(np.float32)
++    noise = cv2.GaussianBlur(noise, (0,0), sigmaX=8.0, sigmaY=.65)
++    noise /= max(noise.std(), 1e-5)
++
++    frames = []
++    for i in range(N):
++        if i == 0:
++            frames.append(base.copy())
++            continue
++        sec = i / FPS
++        p = smoothstep(i/(N-1))
++
++        # Gentle camera push-in, centered on the bear&#x27;s face/chest.
++        zoom = 1.0 + 0.0105*p
++        mapx = 112.0 + (xx-112.0)/zoom
++        mapy = 82.0 + (yy-82.0)/zoom
++
++        # The bear shifts its weight while wading; vertical and horizontal
++        # components use different periods to avoid mechanical looping.
++        dx_body = 0.72*np.sin(2*np.pi*sec/3.8) + 0.45*p
++        dy_body = -0.78*np.sin(2*np.pi*sec/2.85)
++        mapx -= body * dx_body
++        mapy -= body * dy_body
++
++        # A tiny independent head turn/nod keeps the eyes and carried fish alive.
++        dx_head = 0.72*np.sin(2*np.pi*sec/3.15)
++        dy_head = 0.38*(np.cos(2*np.pi*sec/2.45)-1.0)
++        angle = 0.010*np.sin(2*np.pi*sec/3.4)
++        mapx -= head*dx_head
++        mapy -= head*dy_head
++        mapx += head * angle*(yy-68.0)
++        mapy -= head * angle*(xx-99.0)
++
++        # The ends of the salmon sway fractionally as the muzzle moves.
++        fish_phase = np.sin(2*np.pi*sec/1.72)
++        fish_angle = 0.013*fish_phase
++        mapx += muzzle_fish * fish_angle*(yy-76.0)
++        mapy -= muzzle_fish * fish_angle*(xx-100.0)
++
++        # Surface refraction: layered traveling waves, almost entirely excluded
++        # from the animal itself. Subtracting the phase at t=0 ensures a clean
++        # transition from the exact supplied first frame.
++        phase1 = .075*xx + .155*yy
++        phase2 = .045*xx - .235*yy
++        wx = .43*((np.sin(phase1-1.35*sec)-np.sin(phase1)))
++        wx += .24*((np.sin(phase2+.85*sec)-np.sin(phase2)))
++        wy = .16*((np.sin(.105*xx+.19*yy-1.05*sec)-np.sin(.105*xx+.19*yy)))
++        mapx += water*wx
++        mapy += water*wy
++
++        warped = cv2.remap(base, mapx.astype(np.float32), mapy.astype(np.float32),
++                           cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT_101)
++
++        # Slow coherent shimmer from horizontally elongated surface detail.
++        shift = sec*7.0
++        nmapx = (xx + shift).astype(np.float32)
++        nmapy = yy.astype(np.float32)
++        moving_noise = cv2.remap(noise[:,:W], nmapx, nmapy, cv2.INTER_LINEAR,
++                                 borderMode=cv2.BORDER_WRAP)
++        # Correct use of a 2W source, sampled continuously.
++        moving_noise = cv2.remap(noise, (xx+shift).astype(np.float32), nmapy,
++                                 cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
++        initial_noise = noise[:,:W]
++        shimmer = (moving_noise-initial_noise) * 1.45 * water
++        out = np.clip(warped.astype(np.float32) + shimmer[...,None], 0, 255).astype(np.uint8)
++
++        # Wakes repeatedly propagate from forepaw and rear flank.
++        occ = cv2.remap(hard_matte, mapx.astype(np.float32), mapy.astype(np.float32),
++                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
++        births = [0.12, 1.55, 3.02, 4.35]
++        for birth in births:
++            out = add_ripple(out, (101+0.25*sec, 132), sec-birth, .18, occ)
++        for birth in [0.72, 2.35, 3.82]:
++            out = add_ripple(out, (190+0.15*sec, 130), sec-birth, .13, occ)
++
++        # Water beads falling from the fish/muzzle, subtle at this resolution.
++        drop_layer = out.astype(np.float32)
++        for birth in [0.42, 1.63, 2.78, 3.95]:
++            age = sec-birth
++            if 0 &lt;= age &lt;= .62:
++                x = 102 + 1.5*np.sin(age*10 + birth)
++                y = 88 + 18*age + 24*age*age
++                iy, ix = int(round(y)), int(round(x))
++                if 1 &lt;= ix &lt; W-1 and 1 &lt;= iy &lt; H-1:
++                    a = max(0.0, 1.0-age/.62)*.48
++                    drop_layer[iy,ix] = drop_layer[iy,ix]*(1-a) + np.array([215,224,219])*a
++                    if iy+1 &lt; H: drop_layer[iy+1,ix] *= (1-.18*a)
++        out = np.clip(drop_layer,0,255).astype(np.uint8)
++        frames.append(out)
++
++    frames = np.stack(frames).astype(np.uint8)
++    # Contract-critical identity assertion.
++    assert np.array_equal(frames[0], base)
++    artifact_io.save(frames, CASE_DIR)
++    return frames
++
++
++if __name__ == &#x27;__main__&#x27;:
++    generate()
+</pre></details></details><details><summary>候选 02 · 2026-11-08T21:23:06.509658+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16, &quot;pixels_file&quot;: &quot;pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;c5e086f4a859d3bd674c39bd6a80e622f1483e3fa763a53aa7c8cfea169f382e&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_9e3f56acc8ff57dc.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T21:20:37.914450+00:00</strong><pre>/bin/bash -lc &quot;cat GENERATION_RULES.md &amp;&amp; printf &#x27;\\n--- PROMPT ---\\n&#x27; &amp;&amp; cat prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T21:20:38.171235+00:00</strong><pre>/bin/bash -lc &quot;find . -maxdepth 2 -type f -printf &#x27;%p\\n&#x27; | sort &amp;&amp; printf &#x27;\\n--- tools ---\\n&#x27; &amp;&amp; command -v ffmpeg &amp;&amp; command -v python3 &amp;&amp; python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.size, im.mode)
+PY&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 3 · 2026-11-08T21:20:44.203463+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T21:20:44.843186+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.size, im.mode, np.asarray(im).shape)
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+try:
+ import scipy; print(&#x27;scipy&#x27;,scipy.__version__)
+except Exception as e: print(&#x27;no scipy&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T21:21:01.663136+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.crop((45,25,225,144)).resize((900,595)).save(&#x27;bear_crop.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T21:21:19.461093+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; /tmp/testseg.py &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+mask=np.zeros(im.shape[:2],np.uint8)
+# polygon probable foreground, designed tightly around silhouette including fish
+poly=np.array([[76,42],[84,41],[95,45],[107,43],[121,55],[145,59],[169,65],[186,77],[195,96],[207,119],[214,131],[202,137],[175,137],[154,133],[128,132],[113,135],[99,136],[85,133],[77,124],[79,107],[78,88],[75,72],[79,58]],np.int32)
+cv2.fillPoly(mask,[poly],cv2.GC_PR_FGD)
+# sure fg sampled inner structures
+polys=[np.array([[84,52],[98,45],[112,50],[120,69],[110,86],[87,84],[80,67]],np.int32),
+np.array([[111,65],[151,61],[179,75],[191,104],[184,126],[148,127],[120,116]],np.int32),
+np.array([[87,77],[106,77],[107,128],[84,127]],np.int32),
+np.array([[115,92],[135,96],[130,132],[111,132]],np.int32),
+np.array([[174,90],[198,104],[207,130],[185,131]],np.int32)]
+for p in polys: cv2.fillPoly(mask,[p],cv2.GC_FGD)
+# fish/tongue
+cv2.line(mask,(86,78),(72,94),cv2.GC_PR_FGD,5)
+cv2.line(mask,(106,76),(123,92),cv2.GC_PR_FGD,5)
+bgd=np.zeros((1,65),np.float64); fgd=bgd.copy()
+cv2.grabCut(im,mask,None,bgd,fgd,7,cv2.GC_INIT_WITH_MASK)
+a=np.where((mask==1)|(mask==3),255,0).astype(&#x27;uint8&#x27;)
+a=cv2.morphologyEx(a,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+# feather
+soft=cv2.GaussianBlur(a,(0,0),0.7)
+out=im.copy(); out[a==0]=(out[a==0]*.25).astype(np.uint8)
+cv2.imwrite(&#x27;seg_preview.png&#x27;,out)
+cv2.imwrite(&#x27;seg_alpha.png&#x27;,a)
+PY
+python3 /tmp/testseg.py&quot;</pre><span class=pill>exit 2</span></div><div class=step><strong>命令 7 · 2026-11-08T21:21:29.741219+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; .tmp/testseg.py &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+mask=np.zeros(im.shape[:2],np.uint8)
+poly=np.array([[76,42],[84,41],[95,45],[107,43],[121,55],[145,59],[169,65],[186,77],[195,96],[207,119],[214,131],[202,137],[175,137],[154,133],[128,132],[113,135],[99,136],[85,133],[77,124],[79,107],[78,88],[75,72],[79,58]],np.int32)
+cv2.fillPoly(mask,[poly],cv2.GC_PR_FGD)
+polys=[np.array([[84,52],[98,45],[112,50],[120,69],[110,86],[87,84],[80,67]],np.int32),np.array([[111,65],[151,61],[179,75],[191,104],[184,126],[148,127],[120,116]],np.int32),np.array([[87,77],[106,77],[107,128],[84,127]],np.int32),np.array([[115,92],[135,96],[130,132],[111,132]],np.int32),np.array([[174,90],[198,104],[207,130],[185,131]],np.int32)]
+for p in polys: cv2.fillPoly(mask,[p],cv2.GC_FGD)
+cv2.line(mask,(86,78),(72,94),cv2.GC_PR_FGD,5)
+cv2.line(mask,(106,76),(123,92),cv2.GC_PR_FGD,5)
+bgd=np.zeros((1,65),np.float64); fgd=bgd.copy()
+cv2.grabCut(im,mask,None,bgd,fgd,7,cv2.GC_INIT_WITH_MASK)
+a=np.where((mask==1)|(mask==3),255,0).astype(&#x27;uint8&#x27;)
+a=cv2.morphologyEx(a,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+out=im.copy(); out[a==0]=(out[a==0]*.25).astype(np.uint8)
+cv2.imwrite(&#x27;seg_preview.png&#x27;,out); cv2.imwrite(&#x27;seg_alpha.png&#x27;,a)
+PY
+python3 .tmp/testseg.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T21:22:32.930103+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+\&quot;\&quot;\&quot;Generate a restrained photographic animation from first_frame.png.
+
+The animation keeps the supplied bear and fish intact while introducing a slow
+camera push, organic body/head motion, moving surface refraction, wakes around
+the legs, and occasional falling water drops.  It uses only deterministic
+OpenCV/Numpy image geometry and the required local input image.
+\&quot;\&quot;\&quot;
+from pathlib import Path
+import cv2
+import numpy as np
+from PIL import Image
+import artifact_io
+
+CASE_DIR = Path(__file__).resolve().parent
+W, H, N, FPS = 256, 144, 81, 16
+
+
+def smoothstep(x):
+    x = np.clip(x, 0.0, 1.0)
+    return x * x * (3.0 - 2.0 * x)
+
+
+def subject_matte(rgb):
+    \&quot;\&quot;\&quot;A deterministic soft matte initialized from the known central silhouette.\&quot;\&quot;\&quot;
+    bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    mask = np.zeros((H, W), np.uint8)
+    outer = np.array([
+        [76,42],[84,40],[96,44],[107,42],[121,54],[146,58],
+        [169,64],[186,76],[196,96],[207,118],[215,132],[205,138],
+        [177,138],[155,134],[130,133],[114,136],[99,137],[85,134],
+        [76,124],[78,108],[77,88],[75,72],[79,57]
+    ], np.int32)
+    cv2.fillPoly(mask, [outer], cv2.GC_PR_FGD)
+    inner = [
+        [[84,52],[98,45],[111,49],[120,67],[111,85],[88,84],[80,67]],
+        [[110,64],[150,61],[178,74],[191,102],[184,126],[149,128],[120,116]],
+        [[86,77],[105,76],[108,128],[84,128]],
+        [[115,91],[136,96],[131,133],[111,132]],
+        [[174,89],[198,103],[208,130],[184,132]],
+    ]
+    for points in inner:
+        cv2.fillPoly(mask, [np.array(points, np.int32)], cv2.GC_FGD)
+    # The salmon projects from both sides of the muzzle.
+    cv2.line(mask, (96,76), (70,94), cv2.GC_PR_FGD, 7)
+    cv2.line(mask, (102,75), (125,93), cv2.GC_PR_FGD, 7)
+    bgd = np.zeros((1, 65), np.float64)
+    fgd = np.zeros((1, 65), np.float64)
+    cv2.grabCut(bgr, mask, None, bgd, fgd, 7, cv2.GC_INIT_WITH_MASK)
+    hard = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 1.0, 0.0).astype(np.float32)
+    hard = cv2.morphologyEx(hard, cv2.MORPH_CLOSE, np.ones((3,3), np.uint8))
+    soft = cv2.GaussianBlur(hard, (0,0), 2.2)
+    return np.clip(soft, 0, 1), hard
+
+
+def ellipse_mask(xx, yy, cx, cy, rx, ry, blur=1.0):
+    q = ((xx-cx)/rx)**2 + ((yy-cy)/ry)**2
+    # Smooth, compact falloff rather than a visible oval boundary.
+    a = np.clip(1.0 - q, 0.0, 1.0)
+    a = a*a*(3.0-2.0*a)
+    if blur:
+        a = cv2.GaussianBlur(a.astype(np.float32), (0,0), blur)
+    return a
+
+
+def add_ripple(frame, center, age, strength, occlusion):
+    \&quot;\&quot;\&quot;Add an expanding, soft elliptical wake. age is in seconds.\&quot;\&quot;\&quot;
+    if age &lt; 0 or age &gt; 1.55:
+        return frame
+    fade = np.sin(np.pi * age / 1.55) ** 0.7
+    rx = 6.0 + 22.0 * age / 1.55
+    ry = 1.3 + 3.7 * age / 1.55
+    layer = np.zeros((H, W), np.float32)
+    c = (int(round(center[0])), int(round(center[1])))
+    cv2.ellipse(layer, c, (int(rx), max(1,int(ry))), 0, 0, 360, 1.0, 1, cv2.LINE_AA)
+    cv2.ellipse(layer, c, (max(2,int(rx-2.3)), max(1,int(ry-0.8))), 0, 0, 360, -0.55, 1, cv2.LINE_AA)
+    layer = cv2.GaussianBlur(layer, (0,0), 0.45) * fade * strength
+    layer *= (1.0 - 0.90 * occlusion)
+    # Pale upper glint, with a tiny darker trough for dimensionality.
+    out = frame.astype(np.float32)
+    tint = np.array([194, 204, 202], np.float32)
+    pos = np.clip(layer, 0, 1)[...,None]
+    out = out * (1-pos) + tint * pos
+    neg = np.clip(-layer, 0, 1)[...,None]
+    out *= (1.0 - 0.13*neg)
+    return np.clip(out,0,255).astype(np.uint8)
+
+
+def generate():
+    base = np.asarray(Image.open(CASE_DIR / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;), dtype=np.uint8)
+    assert base.shape == (H, W, 3)
+    matte, hard_matte = subject_matte(base)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+
+    head = ellipse_mask(xx, yy, 99, 66, 30, 28, .7) * matte
+    muzzle_fish = ellipse_mask(xx, yy, 97, 82, 34, 16, .5) * matte
+    body = matte
+    water = smoothstep((yy - 53.0) / 23.0) * (1.0 - 0.94*matte)
+    water *= 1.0 - 0.55*smoothstep((57.0-yy)/15.0)
+
+    # Deterministic elongated low-amplitude caustic texture.
+    rng = np.random.default_rng(872)
+    noise = rng.normal(0, 1, (H, W*2)).astype(np.float32)
+    noise = cv2.GaussianBlur(noise, (0,0), sigmaX=8.0, sigmaY=.65)
+    noise /= max(noise.std(), 1e-5)
+
+    frames = []
+    for i in range(N):
+        if i == 0:
+            frames.append(base.copy())
+            continue
+        sec = i / FPS
+        p = smoothstep(i/(N-1))
+
+        # Gentle camera push-in, centered on the bear&#x27;s face/chest.
+        zoom = 1.0 + 0.0105*p
+        mapx = 112.0 + (xx-112.0)/zoom
+        mapy = 82.0 + (yy-82.0)/zoom
+
+        # The bear shifts its weight while wading; vertical and horizontal
+        # components use different periods to avoid mechanical looping.
+        dx_body = 0.72*np.sin(2*np.pi*sec/3.8) + 0.45*p
+        dy_body = -0.78*np.sin(2*np.pi*sec/2.85)
+        mapx -= body * dx_body
+        mapy -= body * dy_body
+
+        # A tiny independent head turn/nod keeps the eyes and carried fish alive.
+        dx_head = 0.72*np.sin(2*np.pi*sec/3.15)
+        dy_head = 0.38*(np.cos(2*np.pi*sec/2.45)-1.0)
+        angle = 0.010*np.sin(2*np.pi*sec/3.4)
+        mapx -= head*dx_head
+        mapy -= head*dy_head
+        mapx += head * angle*(yy-68.0)
+        mapy -= head * angle*(xx-99.0)
+
+        # The ends of the salmon sway fractionally as the muzzle moves.
+        fish_phase = np.sin(2*np.pi*sec/1.72)
+        fish_angle = 0.013*fish_phase
+        mapx += muzzle_fish * fish_angle*(yy-76.0)
+        mapy -= muzzle_fish * fish_angle*(xx-100.0)
+
+        # Surface refraction: layered traveling waves, almost entirely excluded
+        # from the animal itself. Subtracting the phase at t=0 ensures a clean
+        # transition from the exact supplied first frame.
+        phase1 = .075*xx + .155*yy
+        phase2 = .045*xx - .235*yy
+        wx = .43*((np.sin(phase1-1.35*sec)-np.sin(phase1)))
+        wx += .24*((np.sin(phase2+.85*sec)-np.sin(phase2)))
+        wy = .16*((np.sin(.105*xx+.19*yy-1.05*sec)-np.sin(.105*xx+.19*yy)))
+        mapx += water*wx
+        mapy += water*wy
+
+        warped = cv2.remap(base, mapx.astype(np.float32), mapy.astype(np.float32),
+                           cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT_101)
+
+        # Slow coherent shimmer from horizontally elongated surface detail.
+        shift = sec*7.0
+        nmapx = (xx + shift).astype(np.float32)
+        nmapy = yy.astype(np.float32)
+        moving_noise = cv2.remap(noise[:,:W], nmapx, nmapy, cv2.INTER_LINEAR,
+                                 borderMode=cv2.BORDER_WRAP)
+        # Correct use of a 2W source, sampled continuously.
+        moving_noise = cv2.remap(noise, (xx+shift).astype(np.float32), nmapy,
+                                 cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        initial_noise = noise[:,:W]
+        shimmer = (moving_noise-initial_noise) * 1.45 * water
+        out = np.clip(warped.astype(np.float32) + shimmer[...,None], 0, 255).astype(np.uint8)
+
+        # Wakes repeatedly propagate from forepaw and rear flank.
+        occ = cv2.remap(hard_matte, mapx.astype(np.float32), mapy.astype(np.float32),
+                        cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        births = [0.12, 1.55, 3.02, 4.35]
+        for birth in births:
+            out = add_ripple(out, (101+0.25*sec, 132), sec-birth, .18, occ)
+        for birth in [0.72, 2.35, 3.82]:
+            out = add_ripple(out, (190+0.15*sec, 130), sec-birth, .13, occ)
+
+        # Water beads falling from the fish/muzzle, subtle at this resolution.
+        drop_layer = out.astype(np.float32)
+        for birth in [0.42, 1.63, 2.78, 3.95]:
+            age = sec-birth
+            if 0 &lt;= age &lt;= .62:
+                x = 102 + 1.5*np.sin(age*10 + birth)
+                y = 88 + 18*age + 24*age*age
+                iy, ix = int(round(y)), int(round(x))
+                if 1 &lt;= ix &lt; W-1 and 1 &lt;= iy &lt; H-1:
+                    a = max(0.0, 1.0-age/.62)*.48
+                    drop_layer[iy,ix] = drop_layer[iy,ix]*(1-a) + np.array([215,224,219])*a
+                    if iy+1 &lt; H: drop_layer[iy+1,ix] *= (1-.18*a)
+        out = np.clip(drop_layer,0,255).astype(np.uint8)
+        frames.append(out)
+
+    frames = np.stack(frames).astype(np.uint8)
+    # Contract-critical identity assertion.
+    assert np.array_equal(frames[0], base)
+    artifact_io.save(frames, CASE_DIR)
+    return frames
+
+
+if __name__ == &#x27;__main__&#x27;:
+    generate()
+PY
+python3 generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T21:23:03.428371+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import hashlib, subprocess, sys
+import numpy as np
+from PIL import Image
+root=Path(&#x27;.&#x27;)
+orig=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+fr=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(81)])
+print(&#x27;frames&#x27;,fr.shape,fr.dtype)
+print(&#x27;first_exact&#x27;,np.array_equal(fr[0],orig),&#x27;first_maxdiff&#x27;,np.abs(fr[0].astype(int)-orig.astype(int)).max())
+for j in [1,10,20,40,60,80]:
+ d=np.abs(fr[j].astype(np.int16)-fr[0].astype(np.int16))
+ print(f&#x27;frame {j:02d}: mean_abs={d.mean():.3f} changed_px={np.any(d,axis=2).mean():.3%} max={d.max()}&#x27;)
+print(&#x27;adjacent mean abs avg/max&#x27;,np.mean(np.abs(np.diff(fr.astype(np.int16),axis=0))),max(np.abs(fr[i].astype(np.int16)-fr[i-1].astype(np.int16)).mean() for i in range(1,81)))
+p=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+print(&#x27;packed tensor&#x27;,p.shape,p.dtype,&#x27;files_ok&#x27;,all((root/f).exists() for f in [&#x27;pixels.npz&#x27;,&#x27;index.html&#x27;,&#x27;inspection.png&#x27;]))
+h1=hashlib.sha256((root/&#x27;pixels.npz&#x27;).read_bytes()).hexdigest()
+subprocess.run([sys.executable,&#x27;generate.py&#x27;],check=True)
+h2=hashlib.sha256((root/&#x27;pixels.npz&#x27;).read_bytes()).hexdigest()
+print(&#x27;deterministic_npz&#x27;,h1==h2,h2[:16])
+PY&quot;</pre><span class=pill>exit 0</span></div><details><summary>视觉工具实际返回图片 1</summary><img loading=lazy src="tool_view_01.png"></details><details><summary>视觉工具实际返回图片 2</summary><img loading=lazy src="tool_view_02.png"></details><details><summary>视觉工具实际返回图片 3</summary><img loading=lazy src="tool_view_03.png"></details><details><summary>视觉工具实际返回图片 4</summary><img loading=lazy src="tool_view_04.png"></details><details><summary>视觉工具实际返回图片 5</summary><img loading=lazy src="tool_view_05.png"></details><details><summary>视觉工具实际返回图片 6</summary><img loading=lazy src="tool_view_06.png"></details><p class=muted>保存候选 2 份；完成命令 9 次；可验证图片返回 6 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
