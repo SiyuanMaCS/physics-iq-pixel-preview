@@ -1,0 +1,491 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · static_080_turn_2</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · static_080_turn_2</h1><p class=muted>vision-agent · 512×288 · 10.0 FPS · 50 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>Camera pan left. Evening Balcony: bathed in the warm glow of twinkling hanging fairy lights, an outdoor dining set invites a serene ambiance against the backdrop of a twilight sky. photorealistic. Everything in the scene remains completely motionless.</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;27740e6b87a7eec39fb51c603bc92f5d7dbde7303056c557ac8f43bb81545e1c&quot;, &quot;pixels&quot;: &quot;final/pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p class=muted>此结果可播放，但该运行尚未通过最终提交审核。页面展示不代表评测通过。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T21:38:18.779913+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;27740e6b87a7eec39fb51c603bc92f5d7dbde7303056c557ac8f43bb81545e1c&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,230 @@
++from pathlib import Path
++import math
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++W, H = 512, 288
++S = 3
++XL, YT, XR, YB = -360, -90, 525, 430
++rng = np.random.default_rng(31)
++source = np.array(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++CW, CH = (XR-XL)*S, (YB-YT)*S
++Y, X = np.mgrid[:CH, :CW].astype(np.float32)
++X = X/S+XL; Y=Y/S+YT
++
++def sample(a, x, y):
++    x=np.clip(x,0,a.shape[1]-1.001); y=np.clip(y,0,a.shape[0]-1.001)
++    ix=x.astype(np.int32); iy=y.astype(np.int32)
++    fx=(x-ix)[...,None]; fy=(y-iy)[...,None]
++    return (a[iy,ix]*(1-fx)*(1-fy)+a[iy,ix+1]*fx*(1-fy)+a[iy+1,ix]*(1-fx)*fy+a[iy+1,ix+1]*fx*fy)
++
++# A single extended, static image plane. The original photograph is not animated
++# independently: all motion is produced by the optical rotation below.
++xedge=np.clip(-X*.13,0,8)
++base=sample(source,xedge,np.clip(Y,0,H-1.001))
++# Seamless continuation of the wall and ascending stair rails on the near left.
++wall=np.zeros_like(base)
++wall[:]=[201,202,198]
++shade=-2.5*np.clip((-X)/90,0,1)+1.2*np.sin((Y-50)/90)
++wall+=shade[...,None]
++ceiling=sample(source,np.clip(-X*.08,0,20),np.clip(Y,0,34))
++wall=np.where((Y&lt;35)[...,None],ceiling,wall)
++rail=sample(source,xedge,Y+.675*X-.675*xedge)
++base=np.where(((X&lt;0)&amp;(Y&gt;=35)&amp;(Y&lt;112))[...,None],wall,base)
++base=np.where(((X&lt;0)&amp;(Y&gt;=112)&amp;(Y&lt;192))[...,None],rail,base)
++canvas=Image.fromarray(np.clip(base,0,255).astype(&#x27;uint8&#x27;))
++
++def points(p): return [((x-XL)*S,(y-YT)*S) for x,y in p]
++def mask_poly(poly):
++    m=Image.new(&#x27;L&#x27;,(CW,CH)); ImageDraw.Draw(m).polygon(points(poly),fill=255)
++    return m
++
++def fill_poly(poly, col):
++    ImageDraw.Draw(canvas).polygon(points(poly),fill=tuple(map(int,col)))
++
++def texture_poly(poly, texture):
++    im=Image.fromarray(np.clip(texture,0,255).astype(&#x27;uint8&#x27;))
++    canvas.paste(im,(0,0),mask_poly(poly))
++
++def line(p, color, width=1):
++    ImageDraw.Draw(canvas).line(points(p),fill=color,width=max(1,round(width*S)),joint=&#x27;curve&#x27;)
++
++def ellipse(box,col):
++    x0,y0,x1,y1=box
++    ImageDraw.Draw(canvas).ellipse(((x0-XL)*S,(y0-YT)*S,(x1-XL)*S,(y1-YT)*S),fill=col)
++
++# The camera discovers an adjacent recessed balcony, through its glazed opening.
++# Colors, textures and material finish are related to the supplied kitchen.
++opening=[(-360,29),(-77,29),(-77,425),(-360,425)]
++t=np.clip((Y-29)/145,0,1)
++sky=np.empty_like(base)
++for c,(a,b) in enumerate(zip((59,78,98),(158,156,151))): sky[:,:,c]=a+(b-a)*t
++sky += (1.1*np.sin(X*.035+Y*.023)+.65*np.sin(Y*.08))[...,None]
++texture_poly(opening,sky)
++# Far, soft-edged skyline silhouettes, well beyond the static glass rail.
++for left,width,height in [(-360,48,9),(-308,17,6),(-281,37,14),(-237,22,8),(-207,44,5),(-159,24,11),(-129,40,6),(-91,17,10)]:
++    fill_poly([(left,155),(left,148-height),(left+width,148-height),(left+width,155)],(103,116,124))
++    line([(left,148-height),(left+width,148-height)],(116,126,132),.7)
++
++# Balcony deck, with perspective board divisions and natural fine wood grain.
++board=(2*np.sin(X*.11+Y*.049)+1.25*np.sin(X*.41+Y*.014)+.45*np.sin(X*1.9+Y*.008))
++light=np.clip((Y-170)/200,0,1)
++deck=np.empty_like(base)
++for c,v in enumerate((126,111,91)): deck[:,:,c]=v + 15*light + board
++texture_poly([(-360,179),(-77,179),(-77,430),(-360,430)],deck)
++for xx in range(-460,170,28):
++    endx=-215+(xx+215)*3.2
++    line([(xx,179),(endx,430)],(83,77,67),.65)
++for yy in [205,252,318,413]:
++    line([(-360,yy),(-77,yy)],(111,100,84),.45)
++# Balcony glass: desaturated partial reflection, dark powder-coated posts.
++glass=np.empty_like(base)
++for c,v in enumerate((113,132,137)): glass[:,:,c]=v+2.2*np.sin(X*.01+Y*.012)
++texture_poly([(-360,145),(-78,145),(-78,194),(-360,194)],glass)
++for xx in [-350,-270,-187,-105]:
++    line([(xx,144),(xx,196)],(53,58,55),2.2)
++    line([(xx+.9,145),(xx+.9,193)],(132,138,135),.55)
++line([(-360,144),(-77,144)],(39,46,43),3)
++line([(-360,142.7),(-77,142.7)],(159,160,147),.7)
++line([(-360,195),(-78,195)],(80,83,76),1.1)
++# Static softened furniture contact shadows.
++shadow=Image.new(&#x27;RGBA&#x27;,(CW,CH)); dr=ImageDraw.Draw(shadow)
++for box in [(-289,223,-132,251),(-280,214,-242,239),(-160,230,-111,256)]:
++    x0,y0,x1,y1=box
++    dr.ellipse(((x0-XL)*S,(y0-YT)*S,(x1-XL)*S,(y1-YT)*S),fill=(22,25,26,65))
++shadow=shadow.filter(ImageFilter.GaussianBlur(4*S))
++canvas=Image.alpha_composite(canvas.convert(&#x27;RGBA&#x27;),shadow).convert(&#x27;RGB&#x27;)
++
++# Two compact dining chairs, slender metal frames and woven taupe seats.
++def chair(cx,cy,scale=1):
++    def P(a,b): return (cx+a*scale,cy+b*scale)
++    for p,q in [((-16,13),(-18,53)),((13,15),(20,54)),((-14,-29),(-16,29)),((13,-30),(15,30))]:
++        line([P(*p),P(*q)],(45,47,40),2.1*scale)
++    poly=[P(-14,-29),P(12,-30),P(15,0),P(-15,2)]
++    fill_poly(poly,(134,127,104))
++    for k in range(11):
++        yy=-27+k*2.55
++        line([P(-13,yy),P(12,yy-1)],(99,96,79),.5*scale)
++        line([P(-13,yy+.55),P(12,yy-.45)],(159,149,122),.4*scale)
++    fill_poly([P(-15,2),P(15,0),P(21,16),P(-13,18)],(145,132,105))
++    line([P(-13,18),P(21,16)],(70,69,54),2*scale)
++    line([P(-18,-5),P(-17,15)],(53,52,43),1.3*scale)
++    line([P(-18,-5),P(-9,-6)],(86,81,64),2*scale)
++    line([P(14,-6),P(24,4),P(22,18)],(59,57,47),1.7*scale)
++chair(-260,190,.88)
++chair(-138,214,.98)
++# Wooden dining table: four fixed tapered legs and a bevel-edged top.
++for a,b in [((-250,213),(-255,256)),((-159,209),(-153,251)),((-130,226),(-124,273)),((-222,242),(-225,285))]:
++    line([a,b],(60,55,44),4.3)
++    line([(a[0]+.8,a[1]),(b[0]+.8,b[1])],(98,88,69),1.0)
++top=[(-270,205),(-173,194),(-116,224),(-222,241)]
++fill_poly([(-270,205),(-222,241),(-222,246),(-270,210)],(113,95,72))
++fill_poly([(-222,241),(-116,224),(-116,229),(-222,246)],(104,86,65))
++grains=1.8*np.sin((Y+.16*X)*2.2)+2*np.sin(X*.12+Y*.025)+.6*np.sin(X*1.7+Y*.15)
++table=np.empty_like(base)
++for c,v in enumerate((158,137,105)): table[:,:,c]=v+grains+(Y-210)*.04
++texture_poly(top,table)
++line([(-270,205),(-173,194),(-116,224)],(186,167,132),.6)
++# Small understated table setting, with elliptical plates and ceramic planter.
++ellipse((-220,210,-200,218),(203,196,176))
++ellipse((-217,211,-202,216),(180,176,159))
++ellipse((-174,215,-153,223),(210,202,180))
++ellipse((-171,216,-156,221),(186,181,162))
++fill_poly([(-195,210),(-189,210),(-190,218),(-194,218)],(133,128,111))
++ellipse((-195,207,-189,211),(89,105,68))
++for p in [(-196,203),(-187,205),(-191,200),(-189,202)]:
++    line([(-192,209),p],(75,93,56),.9)
++    ellipse((p[0]-2,p[1]-1,p[0]+1.4,p[1]+1.2),(103,116,73))
++
++# Balcony soffit above the door, and fine, unchanging warm fairy lights.
++soffit=np.empty_like(base)
++for c,v in enumerate((175,172,159)): soffit[:,:,c]=v-12*np.clip((Y+10)/48,0,1)+.6*np.sin(X*.11)
++texture_poly([(-360,-90),(-77,-90),(-77,32),(-360,32)],soffit)
++line([(-360,32),(-77,32)],(90,94,90),1.3)
++strand=[]
++for x in np.linspace(-365,-73,160):
++    u=(x+365)/292
++    yy=39+20*np.sin(np.pi*u)+4*u
++    strand.append((x,yy))
++line(strand,(67,65,51),.65)
++# Light halos are part of the fixed scene radiance, not animated effects.
++halo=Image.new(&#x27;RGBA&#x27;,(CW,CH)); hd=ImageDraw.Draw(halo)
++bulbs=[]
++for x in np.arange(-351,-77,23):
++    u=(x+365)/292; y=39+20*np.sin(np.pi*u)+4*u+4
++    bulbs.append((x,y))
++    hd.ellipse(((x-7-XL)*S,(y-7-YT)*S,(x+7-XL)*S,(y+7-YT)*S),fill=(255,186,85,38))
++halo=halo.filter(ImageFilter.GaussianBlur(3*S))
++canvas=Image.alpha_composite(canvas.convert(&#x27;RGBA&#x27;),halo).convert(&#x27;RGB&#x27;)
++for x,y in bulbs:
++    line([(x,y-4),(x,y-1.1)],(72,64,43),.6)
++    ellipse((x-1.65,y-1.3,x+1.65,y+2.3),(251,218,145))
++    ellipse((x-.8,y-.4,x+.8,y+1.5),(255,248,218))
++
++# Sliding door dark metal jamb and a slim adjacent off-white interior reveal.
++fill_poly([(-82,28),(-75,30),(-75,430),(-82,430)],(59,66,65))
++line([(-80,31),(-80,425)],(167,175,166),.9)
++fill_poly([(-75,29),(-62,32),(-62,430),(-75,430)],(201,203,192))
++line([(-62,34),(-62,430)],(170,175,163),1.4)
++line([(-81,30),(-360,30)],(79,83,75),1.3)
++# Continue the stair&#x27;s handrails to their lower landing behind the island.
++rail_ext=sample(source,np.clip(-X*.12,0,8),Y+.675*X-.675*np.clip(-X*.12,0,8))
++rail_area=((-62&lt; X)&amp;(X&lt;0)&amp;(Y&gt;112)&amp;(Y&lt;192))
++rail_image=Image.fromarray(np.clip(rail_ext,0,255).astype(&#x27;uint8&#x27;))
++canvas.paste(rail_image,(0,0),Image.fromarray((rail_area*255).astype(&#x27;uint8&#x27;)))
++
++# Close end of the stationary white kitchen island, with the photographed
++# front texture carried naturally beyond the original crop.
++side=sample(source,np.full_like(X,32),np.clip(Y,193,287))*.85
++side+=((X+60)*.04)[...,None]
++texture_poly([(-72,183),(-34,192),(-34,430),(-72,405)],side)
++front=sample(source,np.clip((-X)*.075,0,9),np.clip(Y,192,287))
++texture_poly([(-34,192),(0,192),(0,430),(-34,430)],front)
++# The narrow countertop strip falls behind the existing front edge.
++stone=sample(source,np.full_like(X,83),np.full_like(Y,184))
++stone += (.7*np.sin(X*.3+Y*.53))[...,None]
++texture_poly([(-72,180),(-34,190),(0,190),(0,192),(-34,192),(-72,183)],stone)
++line([(-72,183),(-34,192)],(175,181,172),.6)
++line([(-34,193),(-34,430)],(163,174,177),.6)
++
++# Exact original on its original coordinates, with a very narrow seam repair
++# outside the photograph only. No generated pixels replace frame zero.
++arr=np.asarray(canvas).astype(np.float32)
++# boundary continuation is a tiny blend, avoiding an artificial vertical seam.
++a=np.clip((X+7)/7,0,1)
++edge=sample(source,np.zeros_like(X),np.clip(Y,0,287))
++blend=(X&lt;0)&amp;(X&gt;-7)&amp;(Y&gt;=0)&amp;(Y&lt;288)
++arr=np.where(blend[...,None],arr*(1-a[...,None])+edge*a[...,None],arr)
++# Restore the real photograph after all drawing and extension work.
++orig_large=Image.fromarray(source).resize((W*S,H*S),Image.Resampling.BICUBIC)
++canvas=Image.fromarray(np.clip(arr,0,255).astype(&#x27;uint8&#x27;))
++canvas.paste(orig_large,((-XL)*S,(-YT)*S))
++panorama=np.array(canvas)
++canvas.resize(((XR-XL)*1,(YB-YT)*1),Image.Resampling.LANCZOS).save(ROOT/&#x27;extended_scene.png&#x27;)
++
++# Pinhole-camera yaw about its optical center. Rotation (rather than a crop
++# translation) keeps rigid architecture and perspective fully consistent.
++f=420.0; cx=256.0; cy=144.0
++# 2x optical sampling gives clean diagonal handrails and fixed tiny bulbs.
++oy,ox=np.mgrid[:H*2,:W*2].astype(np.float32)
++ox=(ox+.5)/2-.5; oy=(oy+.5)/2-.5
++u=(ox-cx)/f; v=(oy-cy)/f
++frames=[source.copy()]
++for i in range(1,50):
++    q=i/49
++    # Nearly uniform pan with gently feathered acceleration/deceleration.
++    progress=q-.075*np.sin(2*np.pi*q)/(2*np.pi)
++    theta=-.36*progress
++    c=math.cos(theta); s=math.sin(theta)
++    den=c-s*u
++    sx=cx+f*(c*u+s)/den
++    sy=cy+f*v/den
++    pixels=sample(panorama,(sx-XL)*S,(sy-YT)*S)
++    im=Image.fromarray(np.clip(pixels,0,255).astype(&#x27;uint8&#x27;)).resize((W,H),Image.Resampling.LANCZOS)
++    frames.append(np.asarray(im))
++frames=np.stack(frames).astype(np.uint8)
++artifact_io.save(frames,ROOT)
++Image.fromarray(frames[-1]).save(ROOT/&#x27;last_frame.png&#x27;)
++print(&#x27;Saved&#x27;,frames.shape,&#x27;RGB; first-frame equality:&#x27;,np.array_equal(frames[0],source))
+</pre></details></details><details><summary>候选 02 · 2026-11-08T21:38:23.048574+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 512, &quot;height&quot;: 288, &quot;frames&quot;: 50, &quot;fps&quot;: 10.0, &quot;pixels_file&quot;: &quot;pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;27740e6b87a7eec39fb51c603bc92f5d7dbde7303056c557ac8f43bb81545e1c&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_2a44c420891e7b03.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T21:34:50.930964+00:00</strong><pre>/bin/bash -lc &quot;cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T21:34:55.256588+00:00</strong><pre>/bin/bash -lc &#x27;ls -la &amp;&amp; cat task_spec.json&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T21:35:13.096649+00:00</strong><pre>/bin/bash -lc &#x27;cat artifact_io.py&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T21:35:28.698443+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.size)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T21:35:35.311650+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+Image.open(&#x27;first_frame.png&#x27;).resize((1024,576)).save(&#x27;first_large.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T21:35:57.831705+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+for y in range(0,288,4):
+ print(y,im.getpixel((0,y)),im.getpixel((5,y)),im.getpixel((20,y)))
+im.crop((0,0,150,210)).resize((600,840)).save(&#x27;left_detail.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T21:38:17.630602+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+import math
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+W, H = 512, 288
+S = 3
+XL, YT, XR, YB = -360, -90, 525, 430
+rng = np.random.default_rng(31)
+source = np.array(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+CW, CH = (XR-XL)*S, (YB-YT)*S
+Y, X = np.mgrid[:CH, :CW].astype(np.float32)
+X = X/S+XL; Y=Y/S+YT
+
+def sample(a, x, y):
+    x=np.clip(x,0,a.shape[1]-1.001); y=np.clip(y,0,a.shape[0]-1.001)
+    ix=x.astype(np.int32); iy=y.astype(np.int32)
+    fx=(x-ix)[...,None]; fy=(y-iy)[...,None]
+    return (a[iy,ix]*(1-fx)*(1-fy)+a[iy,ix+1]*fx*(1-fy)+a[iy+1,ix]*(1-fx)*fy+a[iy+1,ix+1]*fx*fy)
+
+# A single extended, static image plane. The original photograph is not animated
+# independently: all motion is produced by the optical rotation below.
+xedge=np.clip(-X*.13,0,8)
+base=sample(source,xedge,np.clip(Y,0,H-1.001))
+# Seamless continuation of the wall and ascending stair rails on the near left.
+wall=np.zeros_like(base)
+wall[:]=[201,202,198]
+shade=-2.5*np.clip((-X)/90,0,1)+1.2*np.sin((Y-50)/90)
+wall+=shade[...,None]
+ceiling=sample(source,np.clip(-X*.08,0,20),np.clip(Y,0,34))
+wall=np.where((Y&lt;35)[...,None],ceiling,wall)
+rail=sample(source,xedge,Y+.675*X-.675*xedge)
+base=np.where(((X&lt;0)&amp;(Y&gt;=35)&amp;(Y&lt;112))[...,None],wall,base)
+base=np.where(((X&lt;0)&amp;(Y&gt;=112)&amp;(Y&lt;192))[...,None],rail,base)
+canvas=Image.fromarray(np.clip(base,0,255).astype(&#x27;uint8&#x27;))
+
+def points(p): return [((x-XL)*S,(y-YT)*S) for x,y in p]
+def mask_poly(poly):
+    m=Image.new(&#x27;L&#x27;,(CW,CH)); ImageDraw.Draw(m).polygon(points(poly),fill=255)
+    return m
+
+def fill_poly(poly, col):
+    ImageDraw.Draw(canvas).polygon(points(poly),fill=tuple(map(int,col)))
+
+def texture_poly(poly, texture):
+    im=Image.fromarray(np.clip(texture,0,255).astype(&#x27;uint8&#x27;))
+    canvas.paste(im,(0,0),mask_poly(poly))
+
+def line(p, color, width=1):
+    ImageDraw.Draw(canvas).line(points(p),fill=color,width=max(1,round(width*S)),joint=&#x27;curve&#x27;)
+
+def ellipse(box,col):
+    x0,y0,x1,y1=box
+    ImageDraw.Draw(canvas).ellipse(((x0-XL)*S,(y0-YT)*S,(x1-XL)*S,(y1-YT)*S),fill=col)
+
+# The camera discovers an adjacent recessed balcony, through its glazed opening.
+# Colors, textures and material finish are related to the supplied kitchen.
+opening=[(-360,29),(-77,29),(-77,425),(-360,425)]
+t=np.clip((Y-29)/145,0,1)
+sky=np.empty_like(base)
+for c,(a,b) in enumerate(zip((59,78,98),(158,156,151))): sky[:,:,c]=a+(b-a)*t
+sky += (1.1*np.sin(X*.035+Y*.023)+.65*np.sin(Y*.08))[...,None]
+texture_poly(opening,sky)
+# Far, soft-edged skyline silhouettes, well beyond the static glass rail.
+for left,width,height in [(-360,48,9),(-308,17,6),(-281,37,14),(-237,22,8),(-207,44,5),(-159,24,11),(-129,40,6),(-91,17,10)]:
+    fill_poly([(left,155),(left,148-height),(left+width,148-height),(left+width,155)],(103,116,124))
+    line([(left,148-height),(left+width,148-height)],(116,126,132),.7)
+
+# Balcony deck, with perspective board divisions and natural fine wood grain.
+board=(2*np.sin(X*.11+Y*.049)+1.25*np.sin(X*.41+Y*.014)+.45*np.sin(X*1.9+Y*.008))
+light=np.clip((Y-170)/200,0,1)
+deck=np.empty_like(base)
+for c,v in enumerate((126,111,91)): deck[:,:,c]=v + 15*light + board
+texture_poly([(-360,179),(-77,179),(-77,430),(-360,430)],deck)
+for xx in range(-460,170,28):
+    endx=-215+(xx+215)*3.2
+    line([(xx,179),(endx,430)],(83,77,67),.65)
+for yy in [205,252,318,413]:
+    line([(-360,yy),(-77,yy)],(111,100,84),.45)
+# Balcony glass: desaturated partial reflection, dark powder-coated posts.
+glass=np.empty_like(base)
+for c,v in enumerate((113,132,137)): glass[:,:,c]=v+2.2*np.sin(X*.01+Y*.012)
+texture_poly([(-360,145),(-78,145),(-78,194),(-360,194)],glass)
+for xx in [-350,-270,-187,-105]:
+    line([(xx,144),(xx,196)],(53,58,55),2.2)
+    line([(xx+.9,145),(xx+.9,193)],(132,138,135),.55)
+line([(-360,144),(-77,144)],(39,46,43),3)
+line([(-360,142.7),(-77,142.7)],(159,160,147),.7)
+line([(-360,195),(-78,195)],(80,83,76),1.1)
+# Static softened furniture contact shadows.
+shadow=Image.new(&#x27;RGBA&#x27;,(CW,CH)); dr=ImageDraw.Draw(shadow)
+for box in [(-289,223,-132,251),(-280,214,-242,239),(-160,230,-111,256)]:
+    x0,y0,x1,y1=box
+    dr.ellipse(((x0-XL)*S,(y0-YT)*S,(x1-XL)*S,(y1-YT)*S),fill=(22,25,26,65))
+shadow=shadow.filter(ImageFilter.GaussianBlur(4*S))
+canvas=Image.alpha_composite(canvas.convert(&#x27;RGBA&#x27;),shadow).convert(&#x27;RGB&#x27;)
+
+# Two compact dining chairs, slender metal frames and woven taupe seats.
+def chair(cx,cy,scale=1):
+    def P(a,b): return (cx+a*scale,cy+b*scale)
+    for p,q in [((-16,13),(-18,53)),((13,15),(20,54)),((-14,-29),(-16,29)),((13,-30),(15,30))]:
+        line([P(*p),P(*q)],(45,47,40),2.1*scale)
+    poly=[P(-14,-29),P(12,-30),P(15,0),P(-15,2)]
+    fill_poly(poly,(134,127,104))
+    for k in range(11):
+        yy=-27+k*2.55
+        line([P(-13,yy),P(12,yy-1)],(99,96,79),.5*scale)
+        line([P(-13,yy+.55),P(12,yy-.45)],(159,149,122),.4*scale)
+    fill_poly([P(-15,2),P(15,0),P(21,16),P(-13,18)],(145,132,105))
+    line([P(-13,18),P(21,16)],(70,69,54),2*scale)
+    line([P(-18,-5),P(-17,15)],(53,52,43),1.3*scale)
+    line([P(-18,-5),P(-9,-6)],(86,81,64),2*scale)
+    line([P(14,-6),P(24,4),P(22,18)],(59,57,47),1.7*scale)
+chair(-260,190,.88)
+chair(-138,214,.98)
+# Wooden dining table: four fixed tapered legs and a bevel-edged top.
+for a,b in [((-250,213),(-255,256)),((-159,209),(-153,251)),((-130,226),(-124,273)),((-222,242),(-225,285))]:
+    line([a,b],(60,55,44),4.3)
+    line([(a[0]+.8,a[1]),(b[0]+.8,b[1])],(98,88,69),1.0)
+top=[(-270,205),(-173,194),(-116,224),(-222,241)]
+fill_poly([(-270,205),(-222,241),(-222,246),(-270,210)],(113,95,72))
+fill_poly([(-222,241),(-116,224),(-116,229),(-222,246)],(104,86,65))
+grains=1.8*np.sin((Y+.16*X)*2.2)+2*np.sin(X*.12+Y*.025)+.6*np.sin(X*1.7+Y*.15)
+table=np.empty_like(base)
+for c,v in enumerate((158,137,105)): table[:,:,c]=v+grains+(Y-210)*.04
+texture_poly(top,table)
+line([(-270,205),(-173,194),(-116,224)],(186,167,132),.6)
+# Small understated table setting, with elliptical plates and ceramic planter.
+ellipse((-220,210,-200,218),(203,196,176))
+ellipse((-217,211,-202,216),(180,176,159))
+ellipse((-174,215,-153,223),(210,202,180))
+ellipse((-171,216,-156,221),(186,181,162))
+fill_poly([(-195,210),(-189,210),(-190,218),(-194,218)],(133,128,111))
+ellipse((-195,207,-189,211),(89,105,68))
+for p in [(-196,203),(-187,205),(-191,200),(-189,202)]:
+    line([(-192,209),p],(75,93,56),.9)
+    ellipse((p[0]-2,p[1]-1,p[0]+1.4,p[1]+1.2),(103,116,73))
+
+# Balcony soffit above the door, and fine, unchanging warm fairy lights.
+soffit=np.empty_like(base)
+for c,v in enumerate((175,172,159)): soffit[:,:,c]=v-12*np.clip((Y+10)/48,0,1)+.6*np.sin(X*.11)
+texture_poly([(-360,-90),(-77,-90),(-77,32),(-360,32)],soffit)
+line([(-360,32),(-77,32)],(90,94,90),1.3)
+strand=[]
+for x in np.linspace(-365,-73,160):
+    u=(x+365)/292
+    yy=39+20*np.sin(np.pi*u)+4*u
+    strand.append((x,yy))
+line(strand,(67,65,51),.65)
+# Light halos are part of the fixed scene radiance, not animated effects.
+halo=Image.new(&#x27;RGBA&#x27;,(CW,CH)); hd=ImageDraw.Draw(halo)
+bulbs=[]
+for x in np.arange(-351,-77,23):
+    u=(x+365)/292; y=39+20*np.sin(np.pi*u)+4*u+4
+    bulbs.append((x,y))
+    hd.ellipse(((x-7-XL)*S,(y-7-YT)*S,(x+7-XL)*S,(y+7-YT)*S),fill=(255,186,85,38))
+halo=halo.filter(ImageFilter.GaussianBlur(3*S))
+canvas=Image.alpha_composite(canvas.convert(&#x27;RGBA&#x27;),halo).convert(&#x27;RGB&#x27;)
+for x,y in bulbs:
+    line([(x,y-4),(x,y-1.1)],(72,64,43),.6)
+    ellipse((x-1.65,y-1.3,x+1.65,y+2.3),(251,218,145))
+    ellipse((x-.8,y-.4,x+.8,y+1.5),(255,248,218))
+
+# Sliding door dark metal jamb and a slim adjacent off-white interior reveal.
+fill_poly([(-82,28),(-75,30),(-75,430),(-82,430)],(59,66,65))
+line([(-80,31),(-80,425)],(167,175,166),.9)
+fill_poly([(-75,29),(-62,32),(-62,430),(-75,430)],(201,203,192))
+line([(-62,34),(-62,430)],(170,175,163),1.4)
+line([(-81,30),(-360,30)],(79,83,75),1.3)
+# Continue the stair&#x27;s handrails to their lower landing behind the island.
+rail_ext=sample(source,np.clip(-X*.12,0,8),Y+.675*X-.675*np.clip(-X*.12,0,8))
+rail_area=((-62&lt; X)&amp;(X&lt;0)&amp;(Y&gt;112)&amp;(Y&lt;192))
+rail_image=Image.fromarray(np.clip(rail_ext,0,255).astype(&#x27;uint8&#x27;))
+canvas.paste(rail_image,(0,0),Image.fromarray((rail_area*255).astype(&#x27;uint8&#x27;)))
+
+# Close end of the stationary white kitchen island, with the photographed
+# front texture carried naturally beyond the original crop.
+side=sample(source,np.full_like(X,32),np.clip(Y,193,287))*.85
+side+=((X+60)*.04)[...,None]
+texture_poly([(-72,183),(-34,192),(-34,430),(-72,405)],side)
+front=sample(source,np.clip((-X)*.075,0,9),np.clip(Y,192,287))
+texture_poly([(-34,192),(0,192),(0,430),(-34,430)],front)
+# The narrow countertop strip falls behind the existing front edge.
+stone=sample(source,np.full_like(X,83),np.full_like(Y,184))
+stone += (.7*np.sin(X*.3+Y*.53))[...,None]
+texture_poly([(-72,180),(-34,190),(0,190),(0,192),(-34,192),(-72,183)],stone)
+line([(-72,183),(-34,192)],(175,181,172),.6)
+line([(-34,193),(-34,430)],(163,174,177),.6)
+
+# Exact original on its original coordinates, with a very narrow seam repair
+# outside the photograph only. No generated pixels replace frame zero.
+arr=np.asarray(canvas).astype(np.float32)
+# boundary continuation is a tiny blend, avoiding an artificial vertical seam.
+a=np.clip((X+7)/7,0,1)
+edge=sample(source,np.zeros_like(X),np.clip(Y,0,287))
+blend=(X&lt;0)&amp;(X&gt;-7)&amp;(Y&gt;=0)&amp;(Y&lt;288)
+arr=np.where(blend[...,None],arr*(1-a[...,None])+edge*a[...,None],arr)
+# Restore the real photograph after all drawing and extension work.
+orig_large=Image.fromarray(source).resize((W*S,H*S),Image.Resampling.BICUBIC)
+canvas=Image.fromarray(np.clip(arr,0,255).astype(&#x27;uint8&#x27;))
+canvas.paste(orig_large,((-XL)*S,(-YT)*S))
+panorama=np.array(canvas)
+canvas.resize(((XR-XL)*1,(YB-YT)*1),Image.Resampling.LANCZOS).save(ROOT/&#x27;extended_scene.png&#x27;)
+
+# Pinhole-camera yaw about its optical center. Rotation (rather than a crop
+# translation) keeps rigid architecture and perspective fully consistent.
+f=420.0; cx=256.0; cy=144.0
+# 2x optical sampling gives clean diagonal handrails and fixed tiny bulbs.
+oy,ox=np.mgrid[:H*2,:W*2].astype(np.float32)
+ox=(ox+.5)/2-.5; oy=(oy+.5)/2-.5
+u=(ox-cx)/f; v=(oy-cy)/f
+frames=[source.copy()]
+for i in range(1,50):
+    q=i/49
+    # Nearly uniform pan with gently feathered acceleration/deceleration.
+    progress=q-.075*np.sin(2*np.pi*q)/(2*np.pi)
+    theta=-.36*progress
+    c=math.cos(theta); s=math.sin(theta)
+    den=c-s*u
+    sx=cx+f*(c*u+s)/den
+    sy=cy+f*v/den
+    pixels=sample(panorama,(sx-XL)*S,(sy-YT)*S)
+    im=Image.fromarray(np.clip(pixels,0,255).astype(&#x27;uint8&#x27;)).resize((W,H),Image.Resampling.LANCZOS)
+    frames.append(np.asarray(im))
+frames=np.stack(frames).astype(np.uint8)
+artifact_io.save(frames,ROOT)
+Image.fromarray(frames[-1]).save(ROOT/&#x27;last_frame.png&#x27;)
+print(&#x27;Saved&#x27;,frames.shape,&#x27;RGB; first-frame equality:&#x27;,np.array_equal(frames[0],source))
+PY
+python generate.py&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 2 份；完成命令 7 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
