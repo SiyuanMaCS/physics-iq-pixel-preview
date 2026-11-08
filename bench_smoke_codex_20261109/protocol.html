@@ -1,0 +1,102 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>OUTPUT_SPEC_AND_ABLATION_PLAN.md</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a href="index.html">← 本轮总览</a><h1>Main output specifications and controlled ablations</h1>
+<p>Plan 2026-11-09. This document separates official-score experiments from capability diagnostics. No FPS/resolution sweep has been run by this plan. Published comparison rows and protocol evidence are in <a href="FRONTIER_BASELINE_AUDIT.md">FRONTIER_BASELINE_AUDIT.md</a>.</p>
+<h2>Main benchmark runs</h2>
+<table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>Proposed primary output</th>
+<th>Complete official workload</th>
+<th>Boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Physics-IQ Verified</td>
+<td>Keep existing <strong>256×144, 4 fps, 20 frames / 5 s</strong> for missing-model generation</td>
+<td>198 cases per model/Track, one accepted run</td>
+<td>Reuse completed old-protocol results. Export/normalize with the pinned official evaluator; label actual native/output and evaluation FPS. No four-run expansion or SOTA variance claim.</td>
+</tr>
+<tr>
+<td>RoboJudge shared-50</td>
+<td>Begin with existing <strong>width 256, aspect ratio preserved, 4 fps, 20 frames / 5 s</strong></td>
+<td>50 original tasks per model/Track</td>
+<td>The paper specifies judge inputs at 4 fps with at most 32 frames, not one common generator duration. Freeze prefix construction and disclose native baseline output differences. Smoke can test 512-wide if 256 output is visually inadequate; do not silently change a completed cohort.</td>
+</tr>
+<tr>
+<td>WorldArena Track 1, text-driven</td>
+<td><strong>640×480, 24 fps, 121 frames / 5.04 s</strong></td>
+<td>Pinned official test archive: <strong>1,000 episodes</strong>; exact fixed/random scene coverage must match the selected leaderboard release</td>
+<td>Keep the official text-driven length/FPS. Prior 256×192 validation smoke remains historical; do not count it as the new official test set. The downloaded 2026-03-06 TEST archive contains 1,000 episodes, while older prose mentions a smaller split. One official test episode is now launched. Freeze actual archive identities and baseline release coverage before full scoring.</td>
+</tr>
+<tr>
+<td>VBench-I2V</td>
+<td>Working smoke: <strong>256×144, 16 fps, 81 frames / 5.0625 s</strong>, official 16:9 crop. Proposed primary default: the same, pending scoring smoke</td>
+<td>1,118 pairs × 5 samples = 5,590 videos per configuration</td>
+<td>Its protocol allows model default/best resolution, but requires the official image suite and five samples. Upstream explicitly permits each model’s default/best resolution. These values are PixelWorld’s declared defaults, not a claim that all baselines were rendered at 256 pixels or 16 fps. Preserve official timing/decoding and report each baseline’s native configuration where public. Five outputs cannot be copies of one result presented as independent samples.</td>
+</tr>
+<tr>
+<td>WBench Full</td>
+<td>Preserve each official action/prompt and turn order; start from its existing <strong>5 s per turn</strong> smoke; select native FPS/resolution after scoring smoke</td>
+<td>289 cases / 1,058 turns</td>
+<td>Each next turn receives the preceding generated last frame. Match original judge and naming/export pipeline. Do not replace Full with Navi without naming the separate official setting.</td>
+</tr>
+<tr>
+<td>WorldScore</td>
+<td>Official camera/scene controls; smoke at width 256 then 512, aspect ratio preserved, provisionally 10 fps</td>
+<td>Full selected official setting; multi-scene entries require multiple segments</td>
+<td>Follow per-model/setting output conventions and the official loader. Do not infer target duration from one café demo. Full-generation cost remains separate from the primary small benchmarks.</td>
+</tr>
+<tr>
+<td>PVBench I2V</td>
+<td>Paper specifies <strong>720p, 24 fps, ~240 frames / 10 s</strong></td>
+<td>600 groups</td>
+<td>Blocked until complete resource/protocol bundle is established. Do not substitute 256-wide/4-fps/5-s outputs and call them the paper's controlled specification.</td>
+</tr>
+</tbody>
+</table>
+<p>For each exported result record input dimensions, native generated dimensions/FPS/frame count/duration, any encoding/resampling, evaluator revision, and judged case/sample count. Generate explicit RGB first; MP4 is an evaluation/export container. The saved program remains runnable. Keep all weak-but-valid outputs and candidate history.</p>
+<h2>Minimal resolution/FPS diagnostic design</h2>
+<p>Use <strong>GPT-6.1-Sol</strong> first, one fixed protocol and 50k cumulative output-token budget. This is a diagnostic cohort, not a sampled official leaderboard. Do not run every model and benchmark across the grid.</p>
+<ol>
+<li>Start with three specifications: <strong>256×144 / 4 fps</strong>, <strong>512×288 / 4 fps</strong>, <strong>256×144 / 8 fps</strong>, all 5 seconds. Use a small predeclared set of scenes with solids/contact, optical detail and fluid/material change.</li>
+<li>If those are informative, vary FPS at fixed resolution: <strong>2, 4, 8, 16 fps</strong>, giving <strong>10, 20, 40, 80 frames</strong> over 5 seconds.</li>
+<li>Vary resolution at fixed 4 fps: <strong>128×72, 256×144, 512×288, 1024×576</strong>, always 20 frames. Treat the last setting as a limit probe; no blanket assertion that it succeeds.</li>
+<li>Across all points keep source image, task semantics, model, tool/harness settings, token budget and autonomous review policy fixed. Freeze selection before inspecting scores; store input hashes and task versions. Existing v1 scores remain reusable main results, but do not attribute a v1/TRAE → v2/Codex change to FPS/resolution alone.</li>
+</ol>
+<p>The three-point smoke precedes any larger cohort. A possible first expansion is 6 scenes × 3 points = 18 runs on one Track. A later Text/Vision comparison should use the same selected scenes, rather than automatically multiplying all benchmarks by both Tracks and four models. These analysis runs are not yet scheduled.</p>
+<h2>Avoid confounding output resolution with input perception</h2>
+<p>In ordinary I2V, <code>first_frame.png</code> has the target output size to satisfy the exact-first-frame rule. Changing resolution therefore changes both observed image detail and rendering demand. Call the main grid <strong>end-to-end resolution sensitivity</strong>, not a pure output-only causal effect.</p>
+<p>A separate diagnostic can freeze a high-resolution conditioning image across all points and require output frame 0 to equal its declared deterministic resize. That needs a clearly named analysis input contract; it is not silently applied to official runs. It can separate input-detail effects from output-grid effects after the minimal grid shows a signal.</p>
+<h2>Measurements and interpretation</h2>
+<ul>
+<li>Delivery: valid/runnable result rate, actual frame count, interruptions and retained output at budget cutoff.</li>
+<li>Generation: visible geometry/material/texture, newly exposed regions, contacts/occlusion, event order and text/control adherence.</li>
+<li>Physics: official per-case/component scores with their stated preprocessing; score changes are not automatically evidence of better physical understanding.</li>
+<li>Appearance: per-video/per-candidate image quality; distribution metrics need the same complete cohort and reference distribution.</li>
+<li>Refinement: saved candidate count, code vs RGB changes, observed visual-tool use, first/final quality and tokens spent after first valid output. Do not infer review counts from snapshot counts.</li>
+<li>Efficiency: reported input/output/reasoning details, inference request ledger, generation execution count and CPU rendering time. Wall-clock latency remains supplementary because API queueing/rate limits vary.</li>
+</ul>
+<p>For diagnostic temporal comparisons additionally sample outputs on predeclared common physical timestamps using a deterministic non-learned rule. State whether frame hold/nearest selection was used; it does not recover absent motion. Keep official-score preprocessing and diagnostic resampling separate. Check for static/duplicated-frame metrics that reward low motion rather than correct event completion.</p>
+<h2>Observations motivating the grid (current smoke, not aggregate conclusions)</h2>
+<ul>
+<li>RoboJudge robot-toaster case: 6.1 Sol and 5.6 Sol both represent grasp, transport and insertion, but the synthesized bread/arm appearance differs from the input photograph. More pixels alone may not fix this representation choice. The paired resolution diagnostic must also record whether source pixels are copied/warped or appearance is redrawn.</li>
+<li>VBench animal case 872 has a descriptive prompt (a bear in water with a fish), rather than a required large action. The first saved outputs mostly preserve the scene with small motion. High subject similarity therefore needs to be read alongside dynamic degree and actual motion, rather than treated as action success.</li>
+<li>Physics-IQ case 0008 with Flash completed and scored through the official per-view functions. Its weighted spatial IoUs are about 0.276/0.297, while the time-aligned overlap falls to zero after early frames. This is one view, not a Verified score; it illustrates why spatial appearance and event timing must be separated.</li>
+</ul>
+<p>The native self-review policy and 50k cumulative output-token ceiling remain fixed at every analysis point. The above observations were made by the external researcher and are not sent back to generation agents.</p>
+<h2>Report frame timing without ambiguity</h2>
+<p>The current RGB player uses frame hold: N frames at F fps occupy N/F seconds, with sample timestamps 0 through (N−1)/F. Thus Physics-IQ 20/4 occupies 5 seconds but its last sample is at 4.75 seconds. VBench 81/16 occupies 5.0625 seconds and ends with a 5-second sample; WorldArena 121/24 occupies 5.0417 seconds and ends with a 5-second sample. Do not silently call all three “exactly five seconds” in exports. Follow each official loader’s interval semantics and preserve native FPS/frame count in manifests.</p>
+</main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,o=this.frame*n*3,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){rgba[4*i]=this.frames[o+3*i];rgba[4*i+1]=this.frames[o+3*i+1];rgba[4*i+2]=this.frames[o+3*i+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
