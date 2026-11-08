@@ -1,0 +1,554 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0039</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0039</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 complete · 输出 tokens 50889</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The balloon is attached to a black hose that points upwards from behind a wooden table. Air is being pumped into the black balloon.
+</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;pixels_file&quot;: &quot;pixels_9fa723384c7e865a.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;4c655924ddc326b9818aa3f0b1984e3cf63d696c4d1fa225429eef024d09d94e&quot;, &quot;pixels&quot;: &quot;final/pixels_9fa723384c7e865a.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-08T23:40:16.245841+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;pixels_file&quot;: &quot;pixels_2a5eed61f43e4c88.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;648b6becc3f1f37de93cf051da3bee6cf81c8b1f12b4da0f0ba6ed6a051c2a52&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_2a5eed61f43e4c88.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,126 @@
++from pathlib import Path
++
++import cv2
++import numpy as np
++from PIL import Image
++
++import artifact_io
++
++
++CASE_DIR = Path(__file__).resolve().parent
++WIDTH, HEIGHT = 256, 144
++FRAME_COUNT = 20
++FPS = 4
++
++
++def balloon_mask(frame: np.ndarray) -&gt; np.ndarray:
++    &quot;&quot;&quot;Find the connected dark balloon body above the hose.&quot;&quot;&quot;
++    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
++    roi = np.zeros_like(gray, dtype=np.uint8)
++    roi[24:84, 76:148] = 255
++    dark = ((gray &lt; 120) &amp; (roi &gt; 0)).astype(np.uint8) * 255
++    dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8))
++
++    contours, _ = cv2.findContours(dark, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
++    body = max(contours, key=cv2.contourArea)
++    mask = np.zeros_like(gray, dtype=np.uint8)
++    cv2.drawContours(mask, [body], -1, 255, cv2.FILLED)
++
++    # Include the antialiased rim without bringing in the background.
++    expanded = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
++    rim = (gray &lt; 132).astype(np.uint8) * 255
++    return cv2.bitwise_and(expanded, rim)
++
++
++def smoothstep(value: float) -&gt; float:
++    value = float(np.clip(value, 0.0, 1.0))
++    return value * value * (3.0 - 2.0 * value)
++
++
++def inflation_scales(frame_index: int) -&gt; tuple[float, float]:
++    &quot;&quot;&quot;Return width and height scale about the fixed hose attachment.&quot;&quot;&quot;
++    t = frame_index / (FRAME_COUNT - 1)
++    progress = smoothstep(t)
++
++    # Small elastic pulses are layered on a monotonic, modest inflation.
++    pulse = 0.5 - 0.5 * np.cos(2.0 * np.pi * 2.25 * t)
++    scale_x = 1.0 + 0.155 * progress + 0.0025 * pulse
++    scale_y = 1.0 + 0.145 * progress + 0.0040 * pulse
++    return scale_x, scale_y
++
++
++def warped_balloon(
++    frame: np.ndarray, mask: np.ndarray, scale_x: float, scale_y: float
++) -&gt; tuple[np.ndarray, np.ndarray]:
++    pivot_x, pivot_y = 111.0, 81.0
++    inverse = np.array(
++        [
++            [1.0 / scale_x, 0.0, pivot_x - pivot_x / scale_x],
++            [0.0, 1.0 / scale_y, pivot_y - pivot_y / scale_y],
++        ],
++        dtype=np.float32,
++    )
++
++    source = cv2.GaussianBlur(frame, (3, 3), 0.45)
++    texture = cv2.warpAffine(
++        source,
++        inverse,
++        (WIDTH, HEIGHT),
++        flags=cv2.INTER_LINEAR,
++        borderMode=cv2.BORDER_REFLECT_101,
++    )
++    alpha = cv2.warpAffine(
++        mask,
++        inverse,
++        (WIDTH, HEIGHT),
++        flags=cv2.INTER_LINEAR,
++        borderMode=cv2.BORDER_CONSTANT,
++        borderValue=0,
++    ).astype(np.float32) / 255.0
++    alpha = np.clip((alpha - 0.035) / 0.93, 0.0, 1.0)
++    return texture, alpha
++
++
++def add_membrane_light(frame: np.ndarray, alpha: np.ndarray, frame_index: int) -&gt; np.ndarray:
++    &quot;&quot;&quot;Add a restrained moving sheen while preserving the photographed reflections.&quot;&quot;&quot;
++    yy, xx = np.mgrid[0:HEIGHT, 0:WIDTH]
++    phase = 2.0 * np.pi * frame_index / FRAME_COUNT
++
++    # A broad upper-left light wrap, strongest inside the balloon body.
++    cx = 101.5 + 0.7 * np.sin(phase)
++    cy = 49.0 + 0.5 * np.cos(phase)
++    glow = np.exp(-(((xx - cx) / 19.0) ** 2 + ((yy - cy) / 15.0) ** 2))
++    glow *= alpha * (0.018 + 0.008 * smoothstep(frame_index / (FRAME_COUNT - 1)))
++
++    # Keep the effect neutral and slightly cool, like the scene&#x27;s soft daylight.
++    light = np.array([170.0, 185.0, 178.0], dtype=np.float32)
++    result = frame.astype(np.float32)
++    result += glow[:, :, None] * light
++    return np.clip(result, 0, 255)
++
++
++def render_frame(first: np.ndarray, mask: np.ndarray, frame_index: int) -&gt; np.ndarray:
++    if frame_index == 0:
++        return first.copy()
++
++    scale_x, scale_y = inflation_scales(frame_index)
++    texture, alpha = warped_balloon(first, mask, scale_x, scale_y)
++
++    foreground = add_membrane_light(texture, alpha, frame_index)
++    composite = alpha[:, :, None] * foreground + (1.0 - alpha[:, :, None]) * first
++    return np.clip(np.rint(composite), 0, 255).astype(np.uint8)
++
++
++def main() -&gt; None:
++    first = np.asarray(Image.open(CASE_DIR / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;))
++    if first.shape != (HEIGHT, WIDTH, 3):
++        raise ValueError(f&quot;Unexpected first-frame shape: {first.shape}&quot;)
++
++    mask = balloon_mask(first)
++    frames = np.stack([render_frame(first, mask, i) for i in range(FRAME_COUNT)])
++    frames[0] = first
++    artifact_io.save(frames, CASE_DIR)
++
++
++if __name__ == &quot;__main__&quot;:
++    main()
+</pre></details></details><details><summary>候选 02 · 2026-11-08T23:41:03.149967+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;pixels_file&quot;: &quot;pixels_5e8fb8b0e50beb5e.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;f49338b6da147d89ec737423334585aa2e80f67b8dec23b4fdefe2ca64ab16f6&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_5e8fb8b0e50beb5e.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -53,10 +53,11 @@
+     frame: np.ndarray, mask: np.ndarray, scale_x: float, scale_y: float
+ ) -&gt; tuple[np.ndarray, np.ndarray]:
+     pivot_x, pivot_y = 111.0, 81.0
++    # warpAffine maps destination coordinates back into the source image.
+     inverse = np.array(
+         [
+-            [1.0 / scale_x, 0.0, pivot_x - pivot_x / scale_x],
+-            [0.0, 1.0 / scale_y, pivot_y - pivot_y / scale_y],
++            [scale_x, 0.0, pivot_x - pivot_x * scale_x],
++            [0.0, scale_y, pivot_y - pivot_y * scale_y],
+         ],
+         dtype=np.float32,
+     )
+</pre></details></details><details><summary>候选 03 · 2026-11-08T23:41:39.137207+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 20, &quot;fps&quot;: 4.0, &quot;pixels_file&quot;: &quot;pixels_9fa723384c7e865a.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;4c655924ddc326b9818aa3f0b1984e3cf63d696c4d1fa225429eef024d09d94e&quot;, &quot;pixels&quot;: &quot;candidate_02/pixels_9fa723384c7e865a.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_02/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_02/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -40,12 +40,13 @@
+ def inflation_scales(frame_index: int) -&gt; tuple[float, float]:
+     &quot;&quot;&quot;Return width and height scale about the fixed hose attachment.&quot;&quot;&quot;
+     t = frame_index / (FRAME_COUNT - 1)
+-    progress = smoothstep(t)
++    # Elastic inflation begins promptly and then tapers as membrane tension rises.
++    progress = 0.25 * t + 0.75 * (1.0 - (1.0 - t) ** 1.6)
+ 
+     # Small elastic pulses are layered on a monotonic, modest inflation.
+     pulse = 0.5 - 0.5 * np.cos(2.0 * np.pi * 2.25 * t)
+-    scale_x = 1.0 + 0.155 * progress + 0.0025 * pulse
+-    scale_y = 1.0 + 0.145 * progress + 0.0040 * pulse
++    scale_x = 1.0 + 0.22 * progress + 0.0030 * pulse
++    scale_y = 1.0 + 0.20 * progress + 0.0045 * pulse
+     return scale_x, scale_y
+ 
+ 
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T23:34:12.579182+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.git*&#x27;&quot;&#x27; | sed -n &#x27;1,120p&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T23:34:12.695285+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T23:34:12.886161+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,280p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T23:34:13.281031+00:00</strong><pre>/bin/bash -c &#x27;file first_frame.png &amp;&amp; identify first_frame.png 2&gt;/dev/null || true &amp;&amp; ls -la&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T23:34:22.911779+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T23:34:23.461442+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.mode, im.size, im.info)
+a=np.asarray(im.convert(&#x27;RGB&#x27;))
+print(a.shape,a.dtype,a.min(),a.max(),a.mean(axis=(0,1)))
+# common colors quantized 16 bins
+q=(a//16)*16
+u,c=np.unique(q.reshape(-1,3),axis=0,return_counts=True)
+for i in np.argsort(c)[-20:][::-1]: print(tuple(u[i]),int(c[i]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T23:34:23.950111+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# luminance ascii 80x45 average, reversed ramp
+l=0.2126*a[:,:,0]+0.7152*a[:,:,1]+0.0722*a[:,:,2]
+# downsample exact-ish via PIL
+im=Image.fromarray(np.uint8(np.clip(l,0,255))).resize((80,45),Image.Resampling.BOX)
+x=np.asarray(im)
+ramp=&#x27; .:-=+*#%@&#x27;
+for row in x:
+ print(&#x27;&#x27;.join(ramp[min(len(ramp)-1,int(v)*(len(ramp)-1)//256)] for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T23:34:30.264761+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*a[:,:,0]+.7152*a[:,:,1]+.0722*a[:,:,2]
+# crop center, 1 pixel horizontal and 2 vertical maybe print each 2px avg
+for y0,y1,x0,x1 in [(0,95,55,200),(0,144,0,256)]:
+ c=l[y0:y1,x0:x1]
+ im=Image.fromarray(np.uint8(c)).resize((110,64),Image.Resampling.BOX)
+ x=np.asarray(im)
+ print(&#x27;\\nCROP&#x27;,x0,x1,y0,y1)
+ ramp=&#x27; .:-=+*#%@&#x27;
+ for row in x:
+  print(&#x27;&#x27;.join(ramp[min(9,int(v)*10//256)] for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T23:34:38.761492+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+gray=cv2.cvtColor(a,cv2.COLOR_RGB2GRAY)
+for t in [15,25,35,45,55,65,75,85,95,105]:
+ m=(gray&lt;t).astype(np.uint8)
+ n,lab,stats,cent=cv2.connectedComponentsWithStats(m,8)
+ comps=sorted([(int(s[4]),tuple(map(int,s[:4])),tuple(np.round(c,1))) for s,c in zip(stats[1:],cent[1:])],reverse=True)[:8]
+ print(&#x27;THR&#x27;,t,&#x27;count&#x27;,m.sum(),&#x27;comps&#x27;,comps)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T23:34:43.688774+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print crop as character by RGB class. 3x2 averaged, x 70..160 y25..130
+for y in range(24,134,2):
+ s=&#x27;&#x27;
+ for x in range(64,164,2):
+  p=a[y:y+2,x:x+2].mean(axis=(0,1)); r,g,b=p
+  if max(p)&lt;25: c=&#x27;@&#x27;
+  elif max(p)&lt;45: c=&#x27;#&#x27;
+  elif max(p)&lt;70: c=&#x27;O&#x27;
+  elif max(p)&lt;90: c=&#x27;o&#x27;
+  elif r&gt;g+20 and r&gt;b+20: c=&#x27;R&#x27;
+  elif b&gt;r+20 and b&gt;g+10: c=&#x27;B&#x27;
+  elif g&gt;r+15: c=&#x27;G&#x27;
+  elif max(p)&lt;115: c=&#x27;+&#x27;
+  elif max(p)&lt;140: c=&#x27;-&#x27;
+  else: c=&#x27;.&#x27;
+  s+=c
+ print(f&#x27;{y:3d}&#x27;,s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T23:34:57.459290+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+pts=[(110,60),(110,35),(110,45),(95,55),(120,55),(105,70),(113,82),(114,90),(114,100),(114,110),(80,70),(150,70),(110,20),(110,125),(70,130),(180,130),(110,115),(100,115)]
+for x,y in pts: print((x,y),a[y,x].tolist())
+# stats in rectangles
+for name,(x0,y0,x1,y1) in {&#x27;balloon&#x27;:(88,33,133,83),&#x27;rim&#x27;:(85,35,135,85),&#x27;bgleft&#x27;:(55,30,85,85),&#x27;bgright&#x27;:(135,30,180,85),&#x27;hose&#x27;:(110,84,121,112),&#x27;table&#x27;:(80,118,140,140)}.items():
+ p=a[y0:y1,x0:x1].reshape(-1,3)
+ print(name,&#x27;mean&#x27;,p.mean(0).round(1),&#x27;p5&#x27;,np.percentile(p,5,axis=0).round(0),&#x27;p95&#x27;,np.percentile(p,95,axis=0).round(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T23:35:09.013475+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=.2126*a[:,:,0]+.7152*a[:,:,1]+.0722*a[:,:,2]
+for t in [30,50,70,90,110,125]:
+ print(&#x27;THRESH&#x27;,t)
+ for y in range(28,122,2):
+  s=&#x27;&#x27;
+  for x in range(80,145,2):
+   p=g[y:y+2,x:x+2].mean()
+   s += &#x27;#&#x27; if p&lt;t else &#x27;.&#x27;
+  print(s)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T23:35:14.908882+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy.ndimage import gaussian_filter
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+a=np.asarray(im).astype(float)
+g=np.dot(a,[.2126,.7152,.0722])
+m=(g&lt;115).astype(float)
+m=gaussian_filter(m,3)
+# estimate inpaint whole central object by OpenCV, candidates
+import cv2
+mask=np.zeros(a.shape[:2],np.uint8)
+# object mask include y&lt;121, dark connected, x 75..145
+mask[(g&lt;118)&amp;(np.indices(g.shape)[1]&gt;=78)&amp;(np.indices(g.shape)[1]&lt;145)&amp;(np.indices(g.shape)[0]&lt;120)]=255
+mask=cv2.dilate(mask,np.ones((5,5),np.uint8),iterations=1)
+for rad in [3,7,15]:
+ out=cv2.inpaint(np.asarray(im),mask,rad,cv2.INPAINT_TELEA)
+ Image.fromarray(out).save(f&#x27;.tmp/inpaint{rad}.png&#x27;)
+# Save mask visual
+Image.fromarray(mask).save(&#x27;.tmp/mask.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T23:35:30.124107+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=.2126*a[:,:,0]+.7152*a[:,:,1]+.0722*a[:,:,2]
+for t in [60,90,110]:
+ print(&#x27;threshold&#x27;,t)
+ for y in range(28,120,2):
+  xs=np.flatnonzero(g[y]&lt;t)
+  xs=xs[(xs&gt;=75)&amp;(xs&lt;=145)]
+  if len(xs):
+   print(f&#x27;{y:3d}: {xs.min():3d}-{xs.max():3d} n={len(xs):2d}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T23:36:13.803053+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+for f in [&#x27;first_frame.png&#x27;,&#x27;.tmp/inpaint3.png&#x27;,&#x27;.tmp/inpaint7.png&#x27;,&#x27;.tmp/inpaint15.png&#x27;]:
+ a=np.asarray(Image.open(f).convert(&#x27;RGB&#x27;))
+ l=.2126*a[:,:,0]+.7152*a[:,:,1]+.0722*a[:,:,2]
+ print(&#x27;\\n&#x27;,f)
+ for y in range(28,88,3):
+  print(&#x27;&#x27;.join(&#x27; .:-=+*#%@&#x27;[min(9,int(l[y,x])*10//180)] for x in range(80,142,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T23:36:19.773473+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+Y,X=np.indices(g.shape)
+# balloon and hose mask based on dark local object, restricted to rough silhouette
+m=((Y&lt;82)&amp;(g&lt;115)&amp;(((X-111)/24.5)**2+((Y-57)/25.5)**2&lt;1.08))
+# hose polygon rough
+poly=np.array([[106,80],[118,80],[119,117],[106,117]],np.int32)
+m |= cv2.fillPoly(np.zeros_like(g,np.uint8),[poly],1).astype(bool)&amp;(g&lt;125)&amp;(Y&gt;=79)&amp;(Y&lt;117)
+# manual mask exact silhouette threshold plus halo expansion
+m=cv2.dilate(m.astype(np.uint8),np.ones((5,5),np.uint8),iterations=1)&gt;0
+Image.fromarray((m*255).astype(np.uint8)).save(&#x27;.tmp/mask2.png&#x27;)
+for rad in [2,4,8]:
+ out=cv2.inpaint(A,m.astype(np.uint8),rad,cv2.INPAINT_TELEA)
+ Image.fromarray(out).save(f&#x27;.tmp/plate{rad}.png&#x27;)
+ print(rad,np.asarray(out)[60,111],np.asarray(out)[40,111],np.asarray(out)[100,114])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T23:36:55.160798+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+lum=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+roi=np.zeros_like(lum,np.uint8); roi[24:84,76:148]=255
+m=((lum&lt;118)&amp;(roi&gt;0)).astype(np.uint8)*255
+m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+cs,_=cv2.findContours(m,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+for c in sorted(cs,key=cv2.contourArea,reverse=True)[:8]:
+ print(&#x27;area&#x27;,cv2.contourArea(c),&#x27;bbox&#x27;,cv2.boundingRect(c),&#x27;center&#x27;,cv2.mean(c)[:2])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T23:37:01.851928+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+# sample smooth background model via median-ish local blur on areas outside mask, then inpaint
+roi=np.zeros_like(l,np.uint8); roi[24:84,76:148]=255
+m=((l&lt;120)&amp;(roi&gt;0)).astype(np.uint8)*255
+m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((5,5),np.uint8))
+# expand 4px
+m=cv2.dilate(m,np.ones((7,7),np.uint8))
+# only central area and hose
+hose=np.zeros_like(m); cv2.rectangle(hose,(106,79),(121,117),255,-1)
+# mask hose dark only
+mh=((l&lt;120)&amp;(hose&gt;0)).astype(np.uint8)*255
+mh=cv2.dilate(mh,np.ones((5,5),np.uint8))
+m=cv2.bitwise_or(m,mh)
+out=cv2.inpaint(A,m,5,cv2.INPAINT_NS)
+Image.fromarray(out).save(&#x27;.tmp/plate_ns.png&#x27;)
+Image.fromarray(m).save(&#x27;.tmp/mask_ns.png&#x27;)
+# create visual magnified crop nearest 4x
+Image.fromarray(A[24:124,76:148]).resize((288,400),Image.Resampling.NEAREST).save(&#x27;.tmp/orig_crop.png&#x27;)
+Image.fromarray(out[24:124,76:148]).resize((288,400),Image.Resampling.NEAREST).save(&#x27;.tmp/plate_crop.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T23:37:06.486399+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+for f in [&#x27;.tmp/orig_crop.png&#x27;,&#x27;.tmp/plate_crop.png&#x27;]:
+ a=np.asarray(Image.open(f).convert(&#x27;RGB&#x27;))
+ l=.2126*a[:,:,0]+.7152*a[:,:,1]+.0722*a[:,:,2]
+ print(&#x27;\\n&#x27;,f)
+ im=Image.fromarray(np.uint8(l)).resize((72,50),Image.Resampling.BOX)
+ x=np.asarray(im)
+ ramp=&#x27; .:-=+*#%@&#x27;
+ for row in x: print(&#x27;&#x27;.join(ramp[min(9,int(v)*10//256)] for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-08T23:37:44.233869+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+for y in range(34,82,4):
+ s=&#x27;&#x27;
+ for x in range(86,138,2):
+  v=l[y,x]
+  s += &#x27; .:-=+*#%@&#x27;[min(9,int(v)*10//130)]
+ print(f&#x27;{y:3d}&#x27;,s)
+print(&#x27;max coords luma in mask&#x27;)
+m=(l&lt;120); m[:24]=0;m[84:]=0;m[:,:76]=0;m[:,148:]=0
+ys,xs=np.where(m)
+print(xs.max()-xs.min(),ys.max()-ys.min())
+# top bright pixel positions within balloon
+for y in [36,40,44,48,52,56,60,64,68,72,76,80]:
+ vals=l[y,86:138]; ix=np.argsort(vals)[-5:][::-1]+86
+ print(y,[(int(x),int(l[y,x]),A[y,x].tolist()) for x in ix])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-08T23:37:49.177223+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+# print full pixel values and luma for interesting crop 90..132 x 34..80 compact
+for y in range(34,82,2):
+ print(f&#x27;y={y:02d}&#x27;, &#x27; &#x27;.join(f&#x27;{int(l[y,x]):3d}&#x27; for x in range(88,136,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-08T23:37:53.979054+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+# average RGB for bands to infer shading
+for reg in [(100,40,108,50),(95,50,102,60),(120,50,128,65),(115,70,125,78),(106,52,118,66)]:
+ x0,y0,x1,y1=reg;p=A[y0:y1,x0:x1].reshape(-1,3)
+ print(reg,&#x27;mean&#x27;,p.mean(0).round(1),&#x27;min&#x27;,p.min(0),&#x27;max&#x27;,p.max(0))
+# color delta black (rgb diff)
+p=A[35:80,87:135].reshape(-1,3)
+print(&#x27;overall&#x27;,p.mean(0), &#x27;percentiles&#x27;,np.percentile(p,[5,25,50,75,95],axis=0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-08T23:38:14.169830+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+roi=np.zeros_like(l,np.uint8);roi[24:84,76:148]=255
+m=((l&lt;120)&amp;(roi&gt;0)).astype(np.uint8)*255
+m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+cs,_=cv2.findContours(m,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+c=max(cs,key=cv2.contourArea)
+print(&#x27;fit&#x27;,cv2.fitEllipse(c))
+# hu moments maybe
+print(&#x27;area&#x27;,cv2.contourArea(c),&#x27;arc&#x27;,cv2.arcLength(c,True))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-08T23:38:19.179912+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+# fit ellipse centers/radii for each threshold and row extents
+for t in [60,80,100,120]:
+ m=l&lt;t;m[:25]=0;m[84:]=0;m[:,:75]=0;m[:,148:]=0
+ ys,xs=np.where(m)
+ # covariance ellipse
+ xy=np.stack([xs,ys],1);mu=xy.mean(0);cov=np.cov(xy.T);ev,evec=np.linalg.eigh(cov)
+ print(t,&#x27;bbox&#x27;,xs.min(),xs.max(),ys.min(),ys.max(),&#x27;cent&#x27;,mu,&#x27;std&#x27;,np.sqrt(ev),&#x27;ang&#x27;,np.degrees(np.arctan2(evec[1,-1],evec[0,-1])))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-08T23:39:29.069600+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+l=.2126*A[:,:,0]+.7152*A[:,:,1]+.0722*A[:,:,2]
+for y in range(78,122,2):
+ print(f&#x27;{y:3d}&#x27;, &#x27; &#x27;.join(f&#x27;{int(l[y,x]):3d}&#x27; for x in range(100,126)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-08T23:40:14.875122+00:00</strong><pre>/bin/bash -c &#x27;python generate.py&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-08T23:40:21.121067+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+print(&#x27;shape&#x27;,F.shape,&#x27;dtype&#x27;,F.dtype)
+print(&#x27;frame0 exact&#x27;,np.array_equal(F[0],A),&#x27;maxdiff&#x27;,np.abs(F[0].astype(int)-A).max())
+# changed bbox per frame and dark region extents
+for i in [0,1,4,8,12,16,19]:
+ d=np.any(F[i]&quot;&#x27;!=A,axis=2); ys,xs=np.where(d)
+ l=.2126*F[i,:,:,0]+.7152*F[i,:,:,1]+.0722*F[i,:,:,2]
+ m=(l&lt;120);m[:24]=0;m[84:]=0;m[:,:75]=0;m[:,148:]=0
+ ys2,xs2=np.where(m)
+ print(i,&#x27;&quot;&#x27;changes&#x27;,d.sum(),&#x27;bbox&#x27;, (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else None,&#x27;darkbbox&#x27;,(xs2.min(),ys2.min(),xs2.max(),ys2.max()))
+print(&#x27;frame diffs&#x27;,np.abs(F[1:].astype(int)-F[:-1].astype(int)).mean(axis=(1,2,3)).round(3))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-08T23:40:27.265212+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+# render montage with crops nearest at 4x for easy numeric/visual artifact review
+crops=[]
+for i in range(20):
+ im=Image.fromarray(F[i]).crop((68,20,156,124)).resize((352,416),Image.Resampling.NEAREST)
+ crops.append(im)
+out=Image.new(&#x27;RGB&#x27;,(352*5,416*4),(20,20,20))
+for i,im in enumerate(crops): out.paste(im,((i%5)*352,(i//5)*416))
+out.save(&#x27;.tmp/progression.png&#x27;)
+# print silhouette bounds at several luma thresholds, normalized by mask criterion
+for i in [0,4,8,12,16,19]:
+ l=.2126*F[i,:,:,0]+.7152*F[i,:,:,1]+.0722*F[i,:,:,2]
+ m=(l&lt;120);m[:24]=0;m[84:]=0;m[:,:75]=0;m[:,148:]=0
+ ys,xs=np.where(m)
+ print(i,&#x27;bbox&#x27;,(xs.min(),ys.min(),xs.max(),ys.max()),&#x27;area&#x27;,len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-08T23:40:32.501672+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+# compare outer background at silhouette points
+for i in [0,1,4,8,12,16,19]:
+ A=F[i]
+ print(&#x27;\\nframe&#x27;,i)
+ for y in [31,32,33,34,35,36,38,40,80,82,84]:
+  vals=[int(.2126*A[y,x,0]+.7152*A[y,x,1]+.0722*A[y,x,2]) for x in [84,85,86,87,88,134,135,136,137]]
+  print(y,vals)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-08T23:40:40.040871+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;));m=g.balloon_mask(A)
+for sx,sy in [(1,1),(1.155,1.145)]:
+ t,a=g.warped_balloon(A,m,sx,sy)
+ ys,xs=np.where(a&gt;.5)
+ print(sx,sy,&#x27;bbox&#x27;,xs.min(),xs.max(),ys.min(),ys.max(),&#x27;area&#x27;,len(xs),&#x27;sum&#x27;,a.sum())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-08T23:40:44.977303+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;));m=g.balloon_mask(A)
+# matrix coordinate convention&quot;&#x27;! verify warpAffine inverse and try forward/inverse
+for mat in [np.array([[1/1.15,0,111-111/1.15],[0,1/1.15,81-81/1.15]],np.float32),np.array([[1.15,0,111-111*1.15],[0,1.15,81-81*1.15]],np.float32)]:
+ al=g.cv2.warpAffine(m,mat,(256,144),flags=g.cv2.INTER_LINEAR)
+ ys,xs=np.where(al&gt;127)
+ print(mat.tolist(),&#x27;&quot;&#x27;bbox&#x27;,xs.min(),xs.max(),ys.min(),ys.max())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-08T23:40:51.144315+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+# find actual changed pixel bbox and alpha mask predicted for key frames
+import generate as g
+A=F[0];m=g.balloon_mask(A)
+for i in [1,4,8,12,16,19]:
+ sx,sy=g.inflation_scales(i)
+ _,al=g.warped_balloon(A,m,sx,sy)
+ for th in [.02,.1,.5,.9]:
+  ys,xs=np.where(al&gt;th)
+  print(i,round(sx,3),round(sy,3),th,(xs.min(),ys.min(),xs.max(),ys.max()),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-08T23:41:02.480785+00:00</strong><pre>/bin/bash -c &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, generate as g
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+print(&#x27;shape&#x27;,F.shape,&#x27;dtype&#x27;,F.dtype,&#x27;frame0 exact&#x27;,np.array_equal(F[0],A))
+m=g.balloon_mask(A)
+for i in [0,1,4,8,12,16,19]:
+ sx,sy=g.inflation_scales(i);_,al=g.warped_balloon(A,m,sx,sy)
+ ys,xs=np.where(al&gt;.5)
+ d=np.any(F[i]&quot;&#x27;!=A,axis=2)
+ print(i,&#x27;&quot;&#x27;scale&#x27;,round(sx,3),round(sy,3),&#x27;alpha bbox&#x27;,(xs.min(),ys.min(),xs.max(),ys.max()),&#x27;area&#x27;,len(xs),&#x27;changed&#x27;,d.sum())
+print(&#x27;consecutive mean abs diff&#x27;,np.abs(F[1:].astype(int)-F[:-1].astype(int)).mean(axis=(1,2,3)).round(3))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-08T23:41:38.487514+00:00</strong><pre>/bin/bash -c &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, generate as g
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+F=np.stack([np.asarray(Image.open(f&#x27;frames/{i:02d}.png&#x27;).convert(&#x27;RGB&#x27;)) for i in range(20)])
+m=g.balloon_mask(A)
+print(&#x27;frame0 exact:&#x27;,np.array_equal(F[0],A))
+for i in [0,1,4,8,12,16,19]:
+ sx,sy=g.inflation_scales(i);_,al=g.warped_balloon(A,m,sx,sy)
+ ys,xs=np.where(al&gt;.5)
+ d=np.any(F[i]&quot;&#x27;!=A,axis=2)
+ print(i,&#x27;&quot;&#x27;scale&#x27;,round(sx,3),round(sy,3),&#x27;alpha bbox&#x27;,(xs.min(),ys.min(),xs.max(),ys.max()),&#x27;area&#x27;,len(xs),&#x27;changed&#x27;,d.sum())
+print(&#x27;diffs&#x27;,np.abs(F[1:].astype(int)-F[:-1].astype(int)).mean(axis=(1,2,3)).round(3))
+# check table and background outside object remain fixed
+for i in [1,8,19]:
+ D=np.any(F[i]&quot;&#x27;!=F[0],axis=2); ys,xs=np.where(D)
+ print(&#x27;&quot;&#x27;changed frame&#x27;,i,&#x27;bbox&#x27;,(xs.min(),ys.min(),xs.max(),ys.max()))
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 3 份；完成命令 34 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
