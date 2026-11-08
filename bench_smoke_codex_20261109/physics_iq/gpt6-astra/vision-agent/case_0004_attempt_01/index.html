@@ -15,7 +15,50 @@ for x in range(80,211,10):
 for y in range(40,145,10):
  d.line([(320,y*4),(840,y*4)],fill=(255,0,0),width=1);d.text((800,y*4),str(y),fill=(255,0,0))
 im.save(&#x27;.tmp/grid.png&#x27;)
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 3 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T19:10:23.850356+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; .tmp/fit.py &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from scipy.optimize import least_squares
+obs=np.array([[113.,51.],[182.5,47.],[191.5,109.5],[123.,127.5],[101.,109.]])
+def proj(p,ret=False):
+ f,R,e,theta,d,h,cx,cy=p;e=np.deg2rad(e);theta=np.deg2rad(theta)
+ X=np.array([[-1,0,h],[1,0,h],[1,-d,0],[-1,-d,0],[-1,d,0]],float)
+ x=X[:,0]*np.cos(theta)-X[:,1]*np.sin(theta); y=X[:,0]*np.sin(theta)+X[:,1]*np.cos(theta);z=X[:,2]
+ depth=R+y*np.cos(e)-z*np.sin(e)
+ uv=np.array([cx+f*x/depth,cy-f*(y*np.sin(e)+z*np.cos(e))/depth]).T
+ return (uv,depth) if ret else uv
+p0=[240,7,30,25,.6,1.8,146,115]
+def fun(p):
+ return np.r_[(proj(p)-obs).ravel(),(p[0]-240)/100,(p[-2]-146)/10,(p[-1]-114)/10]
+r=least_squares(fun,p0,bounds=([100,3,10,5,.1,1,130,105],[600,20,60,60,1.5,3,165,125]),max_nfev=20000)
+print(r.x, r.cost);print(proj(r.x));np.save(&#x27;.tmp/camera.npy&#x27;,r.x)
+PY
+python .tmp/fit.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T19:10:49.072546+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;); im.crop((92,40,132,112)).resize((320,576)).save(&#x27;.tmp/grab.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T19:13:26.866642+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+exec(open(&#x27;.tmp/fit.py&#x27;).read().split(&#x27;p0=&#x27;)[0]);p=np.load(&#x27;.tmp/camera.npy&#x27;); f,R,e,th,d,h,cx,cy=p;e=np.deg2rad(e)
+for u,v,z in [(113,51,h),(182.5,47,h),(191.5,109.5,0),(123,127.5,0),(101,109,0),(172,96,0)]:
+ q=(cy-v)/f;y=(q*R-z*(q*np.sin(e)+np.cos(e)))/(np.sin(e)-q*np.cos(e));depth=R+y*np.cos(e)-z*np.sin(e);x=(u-cx)*depth/f;print(u,v, x,y,z)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T19:14:16.018146+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+for y in [100,105,110,115,120,125,130,135,140]:
+ print(y,[(x,im.getpixel((x,y))) for x in [110,114,118,122,130,145,160,175,180,184]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T19:15:18.740098+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; .tmp/testgeom.py &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image,ImageDraw
+p=np.load(&#x27;.tmp/camera.npy&#x27;);f,R,e,th,d,h,cx,cy=p;e=np.deg2rad(e)
+def inv(u,v,z):
+ q=(cy-v)/f;y=(q*R-z*(q*np.sin(e)+np.cos(e)))/(np.sin(e)-q*np.cos(e));dep=R+y*np.cos(e)-z*np.sin(e);return [(u-cx)*dep/f,y,z]
+X=np.array([inv(113,51,h),inv(183,47,h),inv(191.5,109.5,0),inv(123,127.5,0),inv(101,109,0)]);X=np.r_[X, [X[4]+X[1]-X[0]]]
+def proj(X,angle):
+ a=np.deg2rad(angle);x=X[:,0]*np.cos(a)+X[:,1]*np.sin(a);y=-X[:,0]*np.sin(a)+X[:,1]*np.cos(a);z=X[:,2];dep=R+y*np.cos(e)-z*np.sin(e);return np.stack([cx+f*x/dep,cy-f*(y*np.sin(e)+z*np.cos(e))/dep],1)
+im=Image.new(&#x27;RGB&#x27;,(256*4,144*2));bg=Image.open(&#x27;first_frame.png&#x27;)
+for i,a in enumerate([0,20,40,60,80,100,120,145]):
+ cell=bg.copy();d=ImageDraw.Draw(cell);uv=proj(X,a);d.polygon([tuple(q) for q in uv[:4]], fill=(180,173,171));d.line([tuple(q) for q in uv[[0,4,5,1]]],fill=&#x27;red&#x27;,width=1);d.ellipse((110,87,135,112),fill=&#x27;orange&#x27;);d.text((2,2),str(a));im.paste(cell,(i%4*256,i//4*144))
+im.save(&#x27;.tmp/geom.png&#x27;)
+PY
+python .tmp/testgeom.py&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 8 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
