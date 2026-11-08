@@ -60,7 +60,48 @@ for y in range(114,144):
  print(y,&#x27;&#x27;.join(&#x27;C&#x27; if v[0]&gt;120 and v[1]&gt;100 else (&#x27;P&#x27; if max(v)-min(v)&lt;15 and v[0]&lt;55 else (&#x27;.&#x27; if v[0]&gt;65 else &#x27;-&#x27;)) for v in im[y,78:184]))
 print(&#x27;row edges exact top of card, r&#x27;)
 for y in range(50,57): print(y,im[y,78:177:2,0].astype(int).tolist())
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 5 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T20:47:02.374555+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+src=np.float32([[-.5,1],[.5,1],[.5,0],[-.5,0]])
+dst=np.float32([[81.7,54.4],[170.65,52.9],[175.6,122.5],[83.7,130.25]])
+H=cv2.getPerspectiveTransform(src,dst); print(H)
+print(&#x27;corners&#x27;)
+for deg in [0,15,30,45,60,75,90,105,120]:
+ a=np.deg2rad(deg)
+ D=np.array([-10.,-24.,.16])
+ h=H.copy();h[:,0]=H[:,0]*np.cos(a)+D*np.sin(a)
+ pts=cv2.perspectiveTransform(src[None],h)[0]
+ print(deg,pts.round(1).tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T20:47:35.112617+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+uv=np.float32([[-.5,1],[.5,1],[.5,0],[-.5,0]])
+q=np.float32([[81.7,54.4],[170.65,52.9],[175.6,122.5],[83.7,130.25]])
+H=cv2.getPerspectiveTransform(uv,q)
+cx,cy=128,72
+p=H[:2,0]-np.array([cx,cy])*H[2,0];r=H[:2,1]-np.array([cx,cy])*H[2,1]
+f=np.sqrt(-p@r/(H[2,0]*H[2,1]));K=np.array([[f,0,cx],[0,f,cy],[0,0,1.]])
+N=np.linalg.inv(K)@H
+n0=np.linalg.norm(N[:,0]);n1=np.linalg.norm(N[:,1]);R0=N[:,0]/n0;R1=N[:,1]/n1;R2=np.cross(R0,R1)
+print(&#x27;f&#x27;,f,&#x27;R0&#x27;,R0,&#x27;R1&#x27;,R1,&#x27;R2&#x27;,R2,&#x27;ratio&#x27;,n0/n1)
+D=K@R2*n0
+print(&#x27;depth&#x27;,D)
+for sign in [1,-1]:
+ for deg in [0,10,20,30,45,60,75,90]:
+  a=np.deg2rad(deg)*sign
+  ht=H.copy();ht[:,0]=H[:,0]*np.cos(a)+D*np.sin(a)
+  pts=cv2.perspectiveTransform(uv[None],ht)[0]
+  print(sign,deg,pts.round(1).tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T20:52:02.610551+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np,cv2
+src=np.float32([[-.5,1],[.5,1],[.5,0],[-.5,0]]);dst=np.float32([[81.7,54.4],[170.65,52.9],[175.6,122.5],[83.7,130.25]])
+H=cv2.getPerspectiveTransform(src,dst);f=182.3142;K=np.array([[f,0,128],[0,f,72],[0,0,1.]])
+N=np.linalg.inv(K)@H;W=np.linalg.norm(N[:,0]);h=np.linalg.norm(N[:,1]);R0=N[:,0]/W;up=N[:,1]/h;front=np.cross(R0,up);C=N[:,2]
+for dep in [.10,.14,.18,.22,.28]:
+ base=C-front*dep+R0*(-.065)
+ def proj(P):r=K@P;return (r[:2]/r[2]).round(2)
+ print(dep,&#x27;base&#x27;,proj(base),&#x27;rest&#x27;,proj(base+up*.053),&#x27;start&#x27;,proj(base+up*.355),&#x27;high&#x27;,proj(base+up*.55),&#x27;r&#x27;,f*.053/base[2])
+print(&#x27;C&#x27;,C,&#x27;h&#x27;,h,&#x27;w&#x27;,W,&#x27;front&#x27;,front)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 8 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
