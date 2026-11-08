@@ -26,7 +26,784 @@ im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
 q=(im//16)*16+8
 c=Counter(map(tuple,q.reshape(-1,3)))
 for col,n in c.most_common(30): print(col,n,round(n/(im.shape[0]*im.shape[1])*100,1))
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 8 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T19:21:43.727003+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+try:
+ import scipy; print(&#x27;scipy&#x27;,scipy.__version__)
+except Exception as e: print(&#x27;no scipy&#x27;,e)
+try:
+ import sklearn; print(&#x27;sklearn&#x27;,sklearn.__version__)
+except Exception as e: print(&#x27;no sklearn&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T19:21:50.581256+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# 64x36 downsample median/average; print ansi color blocks perhaps
+h,w=im.shape[:2]
+chars=&#x27; .:-=+*#%@&#x27;
+gray=im.mean(2)
+for y in range(0,h,4):
+    line=&#x27;&#x27;
+    for x in range(0,w,4):
+        b=gray[y:min(y+4,h),x:min(x+4,w)]
+        line+=chars[min(9,int(b.mean()/256*10))]
+    print(line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T19:21:59.409019+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+lab=cv2.cvtColor(im,cv2.COLOR_BGR2LAB)
+Z=lab.reshape(-1,3).astype(np.float32)
+# sample all or stratified
+criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,100,0.2)
+K=20
+compact,labels,centers=cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_PP_CENTERS)
+labels=labels.reshape(im.shape[:2])
+centers_bgr=cv2.cvtColor(centers.reshape(-1,1,3).astype(np.uint8),cv2.COLOR_LAB2BGR).reshape(-1,3)
+# sort by count
+for i in np.argsort(np.bincount(labels.ravel()))[::-1]:
+    m=labels==i
+    ys,xs=np.where(m)
+    bgr=centers_bgr[i]; rgb=bgr[::-1]
+    print(f&#x27;{i:2} n={m.sum():5} rgb={tuple(rgb)} bbox=({xs.min()},{ys.min()})-({xs.max()},{ys.max()}) meanx={xs.mean():.1f} meany={ys.mean():.1f}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T19:22:14.059408+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print RGB at grid every 16 x 8 with hex
+for y in range(0,144,8):
+ print(f&#x27;{y:3}:&#x27;, &#x27; &#x27;.join(&#x27;%02x%02x%02x&#x27;%tuple(im[min(y+4,143),min(x+8,255)]) for x in range(0,256,16)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T19:22:21.983569+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# print binned grayscale 128x72 (2x2)
+for y in range(0,144,2):
+ line=&#x27;&#x27;
+ for x in range(0,256,2):
+  v=g[y:y+2,x:x+2].mean()
+  line+=&#x27;@%#*+=-:. &#x27;[min(9,int(v/256*10))]
+ print(line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T19:22:27.571289+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Edge maps and object color masks stats around duck
+for name,m in [
+ (&#x27;yellow&#x27;,(im[:,:,0]&gt;120)&amp;(im[:,:,1]&gt;110)&amp;(im[:,:,2]&lt;80)),
+ (&#x27;green&#x27;,(im[:,:,1]&gt;im[:,:,0]*1.2)&amp;(im[:,:,1]&gt;im[:,:,2]*2)),
+ (&#x27;dark&#x27;,(im.max(2)&lt;50)),
+ (&#x27;black&#x27;,(im.max(2)&lt;25)),
+]:
+ ys,xs=np.where(m)
+ print(name,len(xs), &#x27;bbox&#x27;, (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else None)
+# bbox of strong yellow by x bins
+m=(im[:,:,0]&gt;120)&amp;(im[:,:,1]&gt;110)&amp;(im[:,:,2]&lt;80)
+for y in range(40,82):
+ xs=np.where(m[y])[0]
+ if len(xs): print(y, xs.min(),xs.max(),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T19:22:33.138210+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# black pipe candidate in left-mid: print grayscale ascii x0:140,y55:90
+chars=&#x27;@%#*+=-:. &#x27;
+for y in range(54,94,2):
+ line=&#x27;&#x27;
+ for x in range(0,150,2):
+  v=g[y:y+2,x:x+2].mean()
+  line+=chars[min(9,int(v/256*10))]
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T19:22:38.261554+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# Sobel/edges coarse
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+e=cv2.Canny(g,30,80)
+for y in range(0,144,2):
+ line=&#x27;&#x27;
+ for x in range(0,256,2):
+  line+=&#x27;#&#x27; if e[y:y+2,x:x+2].max()&gt;0 else &#x27; &#x27;
+ print(line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T19:22:43.183536+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# print dominant edge orientations and Hough lines
+edges=cv2.Canny(cv2.cvtColor(im,cv2.COLOR_BGR2GRAY),30,80)
+lines=cv2.HoughLinesP(edges,1,np.pi/180,threshold=20,minLineLength=15,maxLineGap=4)
+if lines is not None:
+ for l in lines[:80]:
+  x1,y1,x2,y2=l[0]
+  if 0&lt;y1&lt;100 or 0&lt;y2&lt;100:
+   print((x1,y1,x2,y2),&#x27;len&#x27;,round(np.hypot(x2-x1,y2-y1),1),&#x27;ang&#x27;,round(np.degrees(np.arctan2(y2-y1,x2-x1)),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T19:22:48.576780+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# print table edge pixel colors at points
+pts=[(0,0),(10,10),(20,20),(40,30),(50,50),(100,80),(150,100),(200,120),(250,140),(150,60),(175,65),(150,30),(220,100)]
+for x,y in pts: print((x,y),im[y,x,::-1])
+# mask likely black/green ball candidates excluding borders and duck, look blobs of dark saturated pixels
+rgb=im[:,:,::-1].astype(int)
+# object mask dark but not border: x&lt;145, y60-120
+m=(rgb.max(2)&lt;80)&amp;(np.indices(rgb.shape[:2])[1]&lt;150)&amp;(np.indices(rgb.shape[:2])[0]&gt;55)
+num,lab,stats,cents=cv2.connectedComponentsWithStats(m.astype(np.uint8),8)
+for i in range(1,num):
+ x,y,w,h,area=stats[i]
+ if area&gt;10: print(&#x27;blob&#x27;,i,area,(x,y,w,h),cents[i])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T19:22:53.446895+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# Print high saturation pixels outside yellow duck, by hue
+import cv2
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
+h,s,v=hsv[:,:,0],hsv[:,:,1],hsv[:,:,2]
+for lo,hi,name in [(0,10,&#x27;red&#x27;),(10,25,&#x27;orange&#x27;),(25,40,&#x27;yellow&#x27;),(40,90,&#x27;green&#x27;),(90,130,&#x27;cyan&#x27;),(130,170,&#x27;blue&#x27;),(170,180,&#x27;magenta&#x27;)]:
+ m=(h&gt;=lo)&amp;(h&lt;hi)&amp;(s&gt;80)&amp;(v&gt;30)
+ ys,xs=np.where(m)
+ print(name,len(xs), (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else &#x27;&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-08T19:22:59.425496+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# display color segmentation classes via nearest palette rough
+rgb=im[:,:,::-1]
+# K=12 Lab map print compact labels as ascii where each cluster has char
+lab=cv2.cvtColor(im,cv2.COLOR_BGR2LAB).reshape(-1,3).astype(np.float32)
+criteria=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,100,.2)
+_,labels,centers=cv2.kmeans(lab,12,None,criteria,10,cv2.KMEANS_PP_CENTERS)
+labels=labels.reshape(im.shape[:2])
+centers_bgr=cv2.cvtColor(centers.reshape(-1,1,3).astype(np.uint8),cv2.COLOR_LAB2BGR).reshape(-1,3)
+# assign chars sorted brightness
+idx=np.argsort(centers_bgr.mean(1))
+chars=&#x27; .:-=+*#%@&amp;&quot;&#x27;$&#x27;&quot;&#x27;
+mp={i:chars[j] for j,i in enumerate(idx)}
+for i in idx: print(mp[i],centers_bgr[i,::-1])
+for y in range(0,144,2):
+ print(&#x27;&#x27;.join(mp[labels[y,x]] for x in range(0,256,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-08T19:23:03.830038+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# Let&#x27;s inspect rows for dark trough left area, values
+for y in range(60,125,3):
+ vals=rgb[y,:145].mean(1)
+ # lowest 10 positions and values
+ ix=np.argsort(vals)[:10]
+ print(&#x27;y&#x27;,y,&#x27;dark&#x27;,[(int(x),round(float(vals[x]),1)) for x in sorted(ix[:6])], &#x27;avg&#x27;,round(vals.mean(),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-08T19:23:09.701547+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+# Save edge-enhanced crops using permitted numeric local ops
+from PIL import ImageFilter
+for name,box in [(&#x27;left&#x27;,(0,35,155,130)),(&#x27;duck&#x27;,(145,40,205,90)),(&#x27;table&#x27;,(0,50,240,135))]:
+ c=Image.fromarray(im.astype(np.uint8)).crop(box)
+ c.resize((c.width*4,c.height*4),Image.Resampling.NEAREST).save(&#x27;.tmp/&#x27;+name+&#x27;_crop.png&#x27;)
+ c.filter(ImageFilter.UnsharpMask(radius=2,percent=180,threshold=2)).resize((c.width*4,c.height*4),Image.Resampling.NEAREST).save(&#x27;.tmp/&#x27;+name+&#x27;_sharp.png&#x27;)
+print(&#x27;wrote crops&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-08T19:23:14.619331+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# pipe geometry via dark elongated regions: Hough on threshold
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+for th in [40,60,80,100,120]:
+ m=(g&lt;th).astype(np.uint8)*255
+ m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+ n,lab,stats,cents=cv2.connectedComponentsWithStats(m,8)
+ print(&#x27;TH&#x27;,th)
+ for i in range(1,n):
+  x,y,w,h,area=stats[i]
+  if area&gt;80 and x&lt;170 and y&lt;130: print(i,area,(x,y,w,h),np.round(cents[i],1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-08T19:23:19.029899+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# Print local RGB at pipe mouth area and left diagonal area every 8 px
+for y in range(38,115,8):
+ print(&#x27;y&#x27;,y, &#x27; &#x27;.join(&#x27;%d,%d,%d&#x27;%tuple(rgb[y,x]) for x in range(0,170,16)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-08T19:23:25.342748+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# quantify frame content with row/col gradients and local texture; list strongest horizontal edges per row
+# pipe likely dark line across table? Find dark pixels not border/duck: x&gt;30 y&gt;55 and luminance&lt;70
+Y=im.mean(2)
+for y in range(50,130):
+ xs=np.where(Y[y]&lt;70)[0]
+ # group runs
+ runs=[]
+ if len(xs):
+  s=p=xs[0]
+  for x in xs[1:]:
+   if x&gt;p+1: runs.append((s,p)); s=x
+   p=x
+  runs.append((s,p))
+  if any(b-a&gt;=3 for a,b in runs): print(y,runs)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-08T19:23:29.842999+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY).astype(float)
+# Average luminance rows x0:140 and x 30:140
+for y in range(45,115):
+ print(y, round(g[y,:140].mean(),1), round(g[y,40:140].mean(),1), round(g[y,80:140].mean(),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-08T19:23:36.645837+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1].astype(float)
+# try locate ball via color relation brown: R&gt;G, G&gt;B, saturated, near table. Print hue/sat bins in central x30-220,y55-120 excluding yellow duck
+sub=rgb[55:121,30:221]
+mx=sub.max(2); mn=sub.min(2); sat=(mx-mn)/(mx+1e-6)
+# brown R&gt;G&gt;B and darker than table, sat&gt;0.15
+m=(sub[:,:,0]&gt;sub[:,:,1]*1.05)&amp;(sub[:,:,1]&gt;sub[:,:,2]*1.05)&amp;(sat&gt;.12)&amp;(mx&lt;180)&amp;(mx&gt;30)
+n,lab,stats,cents=cv2.connectedComponentsWithStats(m.astype(np.uint8),8)
+for i in range(1,n):
+ x,y,w,h,a=stats[i]
+ if a&gt;15: print(i,a,(x+30,y+55,w,h),cents[i]+[30,55])
+# print stats top brown colors
+from collections import Counter
+q=(sub//16*16).astype(int)
+c=Counter(map(tuple,q.reshape(-1,3)))
+print(c.most_common(20))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-08T19:23:41.649451+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# local patch text values as luminance x130:205 y44:80 step 2
+for y in range(44,81,2):
+ line=&#x27;&#x27;
+ for x in range(130,206,2):
+  v=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)[y:y+2,x:x+2].mean()
+  line+=&#x27;@%#*+=-:. &#x27;[min(9,int(v/256*10))]
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-08T19:23:46.534474+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# Try circle detection at multiple thresholds/blur
+for blur in [0,3,5]:
+ x=g if blur==0 else cv2.GaussianBlur(g,(blur,blur),0)
+ circles=cv2.HoughCircles(x,cv2.HOUGH_GRADIENT,dp=1,minDist=10,param1=50,param2=12,minRadius=3,maxRadius=20)
+ print(&#x27;blur&#x27;,blur)
+ if circles is not None:
+  for c in circles[0][:20]: print(tuple(np.round(c,1)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-08T19:23:51.728575+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# brown-ish ball search using HSV hue ~ 5-25 sat&gt;50 val&lt;200, components
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for lo,hi in [(0,20),(5,25),(0,15),(10,30)]:
+ m=((hsv[:,:,0]&gt;=lo)&amp;(hsv[:,:,0]&lt;=hi)&amp;(hsv[:,:,1]&gt;50)&amp;(hsv[:,:,2]&gt;30)&amp;(hsv[:,:,2]&lt;190)).astype(np.uint8)
+ m=cv2.morphologyEx(m,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+ n,lab,stats,cents=cv2.connectedComponentsWithStats(m,8)
+ print(&#x27;range&#x27;,lo,hi)
+ for i in range(1,n):
+  x,y,w,h,a=stats[i]
+  if a&gt;15 and x&gt;30: print(a,(x,y,w,h),np.round(cents[i],1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-08T19:23:56.550129+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# print colors around duck bottom to separate shadow
+for y in range(70,90,2):
+ print(&#x27;y&#x27;,y,&#x27; &#x27;.join(&#x27;%02x%02x%02x&#x27;%tuple(rgb[y,x]) for x in range(155,191,3)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-08T19:24:02.921820+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# circles from yellow segmentation
+m=((rgb[:,:,0]&gt;120)&amp;(rgb[:,:,1]&gt;110)&amp;(rgb[:,:,2]&lt;80)).astype(np.uint8)*255
+contours,_=cv2.findContours(m,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+for c in contours:
+ if cv2.contourArea(c)&gt;30:
+  print(&#x27;contour area&#x27;,cv2.contourArea(c),&#x27;bbox&#x27;,cv2.boundingRect(c))
+  (x,y),r=cv2.minEnclosingCircle(c); print(&#x27;circle&#x27;,x,y,r)
+  # ellipse
+  if len(c)&gt;=5: print(&#x27;ellipse&#x27;,cv2.fitEllipse(c))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-08T19:24:07.729886+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# examine Hough circles around table region and colors at center
+for c in [(39.5,51.5,13.4),(173.5,63.5,11.6),(58.5,38.5,12.7),(11.5,39.5,9.1)]:
+ x,y,r=c; xi,yi=int(x),int(y)
+ print(c, im[yi,xi,::-1], g[yi,xi])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-08T19:24:13.838843+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# print most likely ball area colors y60-110 x30-150 quantized smaller; look for distinct brown saturated. show saturation map chars
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+s=hsv[:,:,1]; v=hsv[:,:,2]
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(50,121,2):
+ line=&#x27;&#x27;
+ for x in range(20,151,2):
+  # score brown: sat
+  val=s[y:y+2,x:x+2].mean()
+  line+=chars[min(9,int(val/256*10))]
+ print(f&#x27;{y:03}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 35 · 2026-11-08T19:24:18.567686+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+# hue map, encode hue every 10 degrees chars, only sat&gt;25
+chars=&#x27;0123456789ABCDEFGH&#x27;
+for y in range(50,121,2):
+ line=&#x27;&#x27;
+ for x in range(20,151,2):
+  hh=hsv[y:y+2,x:x+2,0].mean(); ss=hsv[y:y+2,x:x+2,1].mean()
+  line+=chars[min(17,int(hh/10))] if ss&gt;25 else &#x27; &#x27;
+ print(f&#x27;{y:03}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 36 · 2026-11-08T19:24:24.232924+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# annotate likely ball candidates: nearest region distinct brown around x? create all local minima of Laplacian etc maybe view via pixel crop not possible.
+# print row runs where hue 0-15 sat&gt;30 value 30-190, central
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+m=(hsv[:,:,0]&lt;15)&amp;(hsv[:,:,1]&gt;30)&amp;(hsv[:,:,2]&gt;30)&amp;(hsv[:,:,2]&lt;190)
+for y in range(55,121):
+ xs=np.where(m[y,20:180])[0]+20
+ runs=[]
+ if len(xs):
+  s=p=xs[0]
+  for x in xs[1:]:
+   if x&gt;p+1:runs.append((s,p));s=x
+   p=x
+  runs.append((s,p))
+  if any(b-a&gt;=5 for a,b in runs): print(y,runs)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 37 · 2026-11-08T19:24:29.235134+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# save 8-bit image maybe can&#x27;t view, but can use tesseract? no
+# Determine connected low-gradient flat region representing table top. print HSV means for likely scene surfaces at coordinates
+pts=[(120,80),(120,90),(120,100),(120,110),(120,120),(80,70),(80,100),(200,80),(200,100),(200,120),(40,80),(40,100),(40,120),(10,60),(10,80),(10,100),(10,120),(225,70),(225,100),(225,120)]
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for x,y in pts: print((x,y),&#x27;rgb&#x27;,im[y,x,::-1],&#x27;hsv&#x27;,hsv[y,x])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 38 · 2026-11-08T19:24:35.777782+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print rows y around ball? color differences at x 40..140. Perhaps ball is at (42,46) according Hough; inspect 25x25
+for y in range(34,60):
+ line=&#x27;&#x27;
+ for x in range(30,70):
+  r,g,b=im[y,x]
+  if r&gt;g*1.2 and g&gt;b*1.2: c=&#x27;R&#x27;
+  elif max(r,g,b)&lt;50: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;80: c=&#x27;x&#x27;
+  elif max(r,g,b)&lt;110: c=&#x27;+&#x27;
+  elif max(r,g,b)&lt;140: c=&#x27;-&#x27;
+  else: c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 39 · 2026-11-08T19:24:39.872805+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for y in range(38,56):
+ print(&#x27;y&#x27;,y,[(x,tuple(im[y,x])) for x in range(42,66,2)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 40 · 2026-11-08T19:24:45.174451+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print ascii around x0:40 y35:55 hue/brown
+for y in range(34,56):
+ line=&#x27;&#x27;
+ for x in range(0,45):
+  r,g,b=im[y,x]
+  if r&gt;g*1.2 and g&gt;b*1.2: c=&#x27;R&#x27;
+  elif max(r,g,b)&lt;50: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;80: c=&#x27;x&#x27;
+  elif max(r,g,b)&lt;110: c=&#x27;+&#x27;
+  elif max(r,g,b)&lt;140: c=&#x27;-&#x27;
+  else: c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 41 · 2026-11-08T19:24:49.671908+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for y in range(40,54):
+ print(&#x27;y&#x27;,y,&#x27; &#x27;.join(&#x27;%3d&#x27;%int(im[y,x].mean()) for x in range(0,40,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 42 · 2026-11-08T19:24:55.325119+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# Sobel color difference: table light; find dark ball. candidate area x30:150 y55:115. Print pixels with local darkness relative blur
+blur=cv2.GaussianBlur(im,(21,21),0).astype(float)
+d=blur-im.astype(float)
+s=d.mean(2)
+# top negative locations
+for y in range(55,115):
+ xs=np.where(s[y,20:180]&gt;20)[0]+20
+ if len(xs): print(y,[(int(x),round(float(s[y,x]),1)) for x in xs[::max(1,len(xs)//10)]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 43 · 2026-11-08T19:25:01.142371+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1]
+# Print detailed RGB stats of 20x20 patches at candidate centers
+for name,(cx,cy) in [(&#x27;hough&#x27;,(40,52)),(&#x27;pipe&#x27;,(163,65)),(&#x27;leftlow&#x27;,(42,84)),(&#x27;mid&#x27;,(100,90)),(&#x27;mid2&#x27;,(130,100))]:
+ p=rgb[cy-10:cy+11,cx-10:cx+11]
+ print(name,&#x27;mean&#x27;,np.round(p.reshape(-1,3).mean(0),1),&#x27;min&#x27;,p.reshape(-1,3).min(0),&#x27;max&#x27;,p.reshape(-1,3).max(0),&#x27;std&#x27;,np.round(p.reshape(-1,3).std(0),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 44 · 2026-11-08T19:25:06.079972+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print ascii around x0:45 y35:56 using detailed thresholds
+for y in range(35,56):
+ line=&#x27;&#x27;
+ for x in range(0,48):
+  r,g,b=map(int,im[y,x])
+  if r&gt;70 and r&gt;g*1.15 and g&gt;b*1.1: c=&#x27;R&#x27;
+  elif max(r,g,b)&lt;40: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;80: c=&#x27;x&#x27;
+  elif max(r,g,b)&lt;110: c=&#x27;+&#x27;
+  elif max(r,g,b)&lt;135: c=&#x27;-&#x27;
+  else: c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 45 · 2026-11-08T19:25:34.074548+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+Y=im.mean(2)
+for y in range(0,90,2):
+ xs=np.where(Y[y]&lt;70)[0]
+ # find prefix run from x0
+ maxx=-1
+ for x in xs:
+  if x==maxx+1 or maxx==-1: maxx=x
+  else: break
+ print(y,maxx, tuple(im[y,max(0,maxx)].astype(int)) if maxx&gt;=0 else &#x27;&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 46 · 2026-11-08T19:25:38.569885+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+Y=im.mean(2)
+for y in [24,30,36,40,44,46,48,50,52,54,56,60,70,80,90,100,110]:
+ # find left boundary where Y&gt;100 after dark left
+ print(&#x27;y&#x27;,y,&#x27;first100&#x27;,np.where(Y[y]&gt;100)[0][:3], &#x27;first120&#x27;,np.where(Y[y]&gt;120)[0][:3])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 47 · 2026-11-08T19:25:43.369965+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# radial color patches around x40,y46 maybe ball; examine whether spherical shading patterns
+for cx,cy in [(48,46),(40,52)]:
+ print(&#x27;center&#x27;,cx,cy)
+ for y in range(cy-8,cy+9,2):
+  print(&#x27; &#x27;.join(&#x27;%3d&#x27;%int(im[y,x].mean()) for x in range(cx-8,cx+9,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 48 · 2026-11-08T19:25:53.376725+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+H,W=g.shape
+yy,xx=np.indices(g.shape)
+for th in [70,80,90,100,110]:
+ m=(g&lt;th)&amp;(xx&gt;25)&amp;(xx&lt;225)&amp;(yy&gt;45)&amp;(yy&lt;130)
+ m=m.astype(np.uint8)
+ m=cv2.morphologyEx(m,cv2.MORPH_OPEN,np.ones((2,2),np.uint8))
+ n,lab,stats,cents=cv2.connectedComponentsWithStats(m,8)
+ print(&#x27;TH&#x27;,th)
+ for i in range(1,n):
+  x,y,w,h,a=stats[i]
+  if a&gt;15: print(&#x27; &#x27;,a,(x,y,w,h),tuple(np.round(cents[i],1)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 49 · 2026-11-08T19:25:58.682604+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# Gradient magnitude and local color texture around candidates; circle (40,52) perhaps not object
+for cx,cy,r in [(48,46,10),(40,52,14),(160,63,7),(174,63,13),(50,50,15)]:
+ x0=max(0,cx-r);x1=min(256,cx+r);y0=max(0,cy-r);y1=min(144,cy+r)
+ p=im[y0:y1,x0:x1]
+ print((cx,cy,r),&#x27;mean&#x27;,p.reshape(-1,3).mean(0)[::-1].round(1),&#x27;std&#x27;,p.reshape(-1,3).std(0)[::-1].round(1),&#x27;grad&#x27;,cv2.Laplacian(cv2.cvtColor(p,cv2.COLOR_BGR2GRAY),cv2.CV_64F).var())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 50 · 2026-11-08T19:26:03.173320+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# inspect low chromatic rows: y48-55 x0:70 RGB values every 4, maybe table edge
+for y in range(44,57):
+ print(&#x27;y&#x27;,y)
+ for x in range(0,72,8): print(x,tuple(im[y,x]),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 51 · 2026-11-08T19:26:08.484383+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# crop stats: detect shadow/dark cluster around (48,46)
+for name,box in [(&#x27;obj&#x27;,(38,36,60,56)),(&#x27;around&#x27;,(24,30,74,60)),(&#x27;table&#x27;,(80,70,120,110)),(&#x27;duck&#x27;,(160,50,188,76))]:
+ x0,y0,x1,y1=box;p=im[y0:y1,x0:x1]
+ print(name,&#x27;shape&#x27;,p.shape,&#x27;mean&#x27;,p.reshape(-1,3).mean(0).round(1),&#x27;median&#x27;,np.median(p.reshape(-1,3),0),&#x27;q10&#x27;,np.percentile(p.reshape(-1,3),10,axis=0).round(1),&#x27;q90&#x27;,np.percentile(p.reshape(-1,3),90,axis=0).round(1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 52 · 2026-11-08T19:26:13.188870+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+Y=im.mean(2)
+# test circularity of dark pixels around x40,48; radial profiles
+for cx,cy in [(49,46),(49,49),(52,50)]:
+ print(&#x27;center&#x27;,cx,cy)
+ for ang in range(0,360,45):
+  vals=[]
+  for r in range(0,20):
+   x=round(cx+r*np.cos(np.deg2rad(ang)));y=round(cy+r*np.sin(np.deg2rad(ang)))
+   if 0&lt;=x&lt;256 and 0&lt;=y&lt;144:vals.append(Y[y,x])
+  print(ang,&#x27; &#x27;.join(&#x27;%3d&#x27;%int(v) for v in vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 53 · 2026-11-08T19:26:18.438095+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# Identify true pipe based on near-black elongated region maybe y43-54 x? Use threshold 50 and print runs per row x40..220
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+for y in range(30,70):
+ xs=np.where(g[y,35:225]&lt;60)[0]+35
+ runs=[]
+ if len(xs):
+  s=p=xs[0]
+  for x in xs[1:]:
+   if x&gt;p+1:runs.append((s,p));s=x
+   p=x
+  runs.append((s,p))
+  if any(b-a&gt;=4 for a,b in runs): print(y,runs)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 54 · 2026-11-08T19:26:23.435344+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# dark blob center 50,46 size 13 maybe tennis ball? print HSV/RGB center
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for y in range(40,54,2):
+ print(&#x27;y&#x27;,y,&#x27; &#x27;.join(&#x27;%02x%02x%02x&#x27;%tuple(im[y,x,::-1]) for x in range(42,60,2)))
+print(&#x27;mean center&#x27;,im[41:52,44:56,::-1].reshape(-1,3).mean(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 55 · 2026-11-08T19:26:27.877070+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+Y=im.mean(2)
+# print gradient at left boundary by row: table starts x?
+for y in range(50,114,2):
+ d=np.diff(Y[y,:180])
+ ix=np.argsort(np.abs(d))[-8:]
+ print(y, [(int(x),int(d[x])) for x in sorted(ix)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 56 · 2026-11-08T19:26:33.053478+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=im[:,:,::-1].astype(float)
+# test ball candidate by local structure: compare mean patch to ring and color ratios
+for cy in range(40,110,4):
+ vals=[]
+ for cx in range(35,160,4):
+  p=rgb[cy-5:cy+6,cx-5:cx+6]
+  if p.shape[:2]&quot;&#x27;!=(11,11): continue
+  mean=p.reshape(-1,3).mean(0)
+  # brownness saturation
+  brown=mean[0]-mean[2]
+  contrast=135-mean.mean()
+  if brown&gt;5 and contrast&gt;5: vals.append((round(brown,1),round(contrast,1),cx,cy,tuple(mean.round(0).astype(int))))
+ if vals: print(cy,sorted(vals,reverse=True)[:5])
+PY&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 57 · 2026-11-08T19:26:38.289648+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# Generate diagnostic color-map: pixels with high saturation around table are likely objects, write bbox masks
+rgb=im[:,:,::-1]
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for name,m in [(&#x27;sat&#x27;,hsv[:,:,1]&gt;30),(&#x27;dark&#x27;,hsv[:,:,2]&lt;80),(&#x27;brown&#x27;,(rgb[:,:,0]&gt;rgb[:,:,1]*1.1)&amp;(rgb[:,:,1]&gt;rgb[:,:,2]*1.1)&amp;(hsv[:,:,1]&gt;20))]:
+ out=np.zeros_like(im)
+ out[m]=im[m]
+ cv2.imwrite(&#x27;.tmp/&#x27;+name+&#x27;.png&#x27;,out)
+ # stats components
+ n,lab,stats,cents=cv2.connectedComponentsWithStats(m.astype(np.uint8),8)
+ print(name)
+ for i in range(1,n):
+  x,y,w,h,a=stats[i]
+  if a&gt;25:print(a,(x,y,w,h),np.round(cents[i],1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 58 · 2026-11-08T19:26:43.361695+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# HSV-ish map only region x30:150 y50:120 for high saturation, ascii chars grouped by hue/lightness
+import cv2
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
+for y in range(50,121,2):
+ line=&#x27;&#x27;
+ for x in range(30,151,2):
+  h,s,v=hsv[y:y+2,x:x+2].reshape(-1,3).mean(0)
+  if s&lt;18: c=&#x27; &#x27;
+  elif h&lt;8: c=&#x27;r&#x27;
+  elif h&lt;18: c=&#x27;o&#x27;
+  elif h&lt;35: c=&#x27;y&#x27;
+  elif h&lt;90: c=&#x27;g&#x27;
+  elif h&lt;130: c=&#x27;b&#x27;
+  else: c=&#x27;m&#x27;
+  line+=c
+ print(f&#x27;{y:03}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 59 · 2026-11-08T19:26:48.438465+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# cluster pixels in central object region 25:75,35:60 and list centers in RGB/HSV with coordinates
+from collections import Counter
+p=im[35:60,25:75,::-1]
+q=(p//16*16)
+c=Counter(map(tuple,q.reshape(-1,3)))
+for col,n in c.most_common(20): print(col,n)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 60 · 2026-11-08T19:26:54.700177+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# inspect row 70..110 column profiles find object-like local deviations from smooth surface
+Y=im.mean(2)
+for y in range(54,112,4):
+ vals=Y[y,:180]
+ # residual from median filter size 21
+ import scipy.ndimage as ndi
+ res=vals-ndi.median_filter(vals,size=21)
+ ix=np.where(np.abs(res)&gt;5)[0]
+ runs=[]
+ if len(ix):
+  s=p=ix[0]
+  for x in ix[1:]:
+   if x&gt;p+1:runs.append((s,p));s=x
+   p=x
+  runs.append((s,p))
+ print(y,[(a,b,round(float(res[a:b+1].min()),1),round(float(res[a:b+1].max()),1)) for a,b in runs if b-a&gt;=1])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 61 · 2026-11-08T19:27:01.055623+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# Write enlarged frames for inspection if we can use image metadata? no. still save.
+# detect ball by looking for pixels with dark center and high saturation in lower central. compute local 13x13 circular patch variance / mean
+import cv2
+Y=im.mean(2)
+best=[]
+for cy in range(60,111,2):
+ for cx in range(25,151,2):
+  yy,xx=np.ogrid[-7:8,-7:8];mask=xx*xx+yy*yy&lt;=49
+  p=im[cy-7:cy+8,cx-7:cx+8][mask]
+  if p.shape[0]&quot;&#x27;!=113: continue
+  mean=p.mean(0); std=p.std(0)
+  # candidate dark object but not shadow: low mean and significant texture
+  score=(140-mean.mean())+0.3*std.mean()
+  best.append((score,cx,cy,mean.round(0),std.round(0)))
+print(&#x27;&quot;&#x27;best&#x27;)
+for x in sorted(best,reverse=True)[:30]:print(x)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 62 · 2026-11-08T19:27:06.358569+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+yy,xx=np.ogrid[-7:8,-7:8];mask=xx*xx+yy*yy&lt;=49
+best=[]
+for cy in range(60,111,2):
+ for cx in range(25,151,2):
+  p=im[cy-7:cy+8,cx-7:cx+8][mask]
+  mean=p.mean(0); std=p.std(0)
+  score=(140-mean.mean())+0.2*std.mean()
+  best.append((score,cx,cy,tuple(mean.round(0).astype(int)),round(std.mean(),1)))
+print(&#x27;best&#x27;)
+for x in sorted(best,reverse=True)[:30]:print(x)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 63 · 2026-11-08T19:27:10.995215+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+Y=im.mean(2)
+# print detailed x/y cross sections around dark blob 50,46
+print(&#x27;row46 x40-60&#x27;,[(x,round(Y[46,x],1)) for x in range(40,61)])
+print(&#x27;col50 y36-58&#x27;,[(y,round(Y[y,50],1)) for y in range(36,59)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 64 · 2026-11-08T19:27:16.735619+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# inspect blue/magenta pixels and all hues in central lower
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+for y in range(55,121,3):
+ line=&#x27;&#x27;
+ for x in range(25,151,2):
+  h,s,v=hsv[y:y+3,x:x+2].reshape(-1,3).mean(0)
+  if s&gt;30 and 15&lt;h&lt;50: c=&#x27;O&#x27;
+  elif s&gt;30 and 50&lt;=h&lt;90: c=&#x27;G&#x27;
+  elif s&gt;30 and 90&lt;=h&lt;130: c=&#x27;B&#x27;
+  elif s&gt;30 and (h&lt;15 or h&gt;150): c=&#x27;R&#x27;
+  elif v&lt;80:c=&#x27;#&#x27;
+  elif v&lt;110:c=&#x27;+&#x27;
+  elif v&lt;130:c=&#x27;-&#x27;
+  else:c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:03}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 65 · 2026-11-08T19:27:21.892208+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Use all pixels in central region, PCA on RGB to see clusters? output colors of low luminance textured pixels.
+# print patches for candidate centers as colored ascii based on RGB distance from table mean [139,136,132]
+for cy,cx in [(46,50),(84,42),(63,160),(63,174)]:
+ print(&#x27;patch&#x27;,cx,cy)
+ for y in range(cy-7,cy+8):
+  line=&#x27;&#x27;
+  for x in range(cx-7,cx+8):
+   p=im[y,x]
+   d=np.linalg.norm(p-[139,136,132])
+   if p[0]-p[2]&gt;12 and p.mean()&lt;110:c=&#x27;R&#x27;
+   elif p.mean()&lt;60:c=&#x27;#&#x27;
+   elif d&gt;25:c=&#x27;o&#x27;
+   elif d&gt;12:c=&#x27;-&#x27;
+   else:c=&#x27;.&#x27;
+   line+=c
+  print(line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 66 · 2026-11-08T19:27:27.043739+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# Show RGB patch 30:65,32:60 numeric R,G,B via class mapping around dark blob
+rgb=im[:,:,::-1]
+for y in range(30,61,1):
+ line=&#x27;&#x27;
+ for x in range(25,76,1):
+  r,g,b=map(int,rgb[y,x]); m=max(r,g,b)
+  if r&gt;g*1.2 and g&gt;b*1.2 and m&gt;30: c=&#x27;R&#x27;
+  elif m&lt;45:c=&#x27;#&#x27;
+  elif m&lt;70:c=&#x27;X&#x27;
+  elif m&lt;95:c=&#x27;x&#x27;
+  elif m&lt;115:c=&#x27;+&#x27;
+  elif m&lt;130:c=&#x27;-&#x27;
+  else:c=&#x27;.&#x27;
+  line+=c
+ print(f&#x27;{y:02}&#x27;,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 67 · 2026-11-08T19:27:31.578747+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Check first 25 columns, rows 35-60 whether image has synthetic vertical dark band (left border)
+for y in range(30,65,2): print(y, np.round(im[y,0:25].mean(0),1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 68 · 2026-11-08T19:27:37.232237+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Print hue/sat for x40:60 y38:54
+import cv2
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+for y in range(38,55):
+ print(y,&#x27; &#x27;.join(f&#x27;{hsv[y,x,0]:3d}/{hsv[y,x,1]:3d}&#x27; for x in range(40,60,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 69 · 2026-11-08T19:27:42.730235+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+# nearest neighboring color distance from exact image? likely generated synthetic low-quality. Use optical clues.
+# Find all rounded objects as dark regions inside table excluding top/bottom by thresholding difference to table color with local chroma
+rgb=im[:,:,::-1].astype(float)
+table=np.array([138,136,132])
+d=np.linalg.norm(rgb-table,axis=2)
+# output components of d&gt;25 inside central bounds x20:220 y45:110
+m=(d&gt;20)
+yy,xx=np.indices(m.shape)
+m &amp;= (xx&gt;20)&amp;(xx&lt;220)&amp;(yy&gt;45)&amp;(yy&lt;110)
+m=cv2.morphologyEx(m.astype(np.uint8),cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+n,lab,stats,cents=cv2.connectedComponentsWithStats(m,8)
+for i in range(1,n):
+ x,y,w,h,a=stats[i]
+ if a&gt;20: print(a,(x,y,w,h),np.round(cents[i],1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 70 · 2026-11-08T19:27:48.684681+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# print table difference component bbox 78,102 40x8 details; maybe ball shadow?
+for y in range(98,113):
+ line=&#x27;&#x27;
+ for x in range(70,126):
+  d=np.linalg.norm(im[y,x]-[138,136,132])
+  line += &#x27;#&#x27; if d&gt;40 else &#x27;+&#x27; if d&gt;20 else &#x27;.&#x27; if d&gt;8 else &#x27; &#x27;
+ print(y,line)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 70 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
