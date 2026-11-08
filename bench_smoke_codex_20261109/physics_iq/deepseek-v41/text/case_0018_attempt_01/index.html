@@ -1,0 +1,397 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0018</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0018</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The green kinetic sand is located on a wooden table, and the blue-black grabber tool is suspended over it. The blue-black grabber tool releases the blue tennis ball above a pile of green kinetic sand.
+</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-08T20:40:02.018393+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.git*&#x27;&quot;&#x27; | sed -n &#x27;1,200p&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-08T20:40:02.136473+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-08T20:40:02.415581+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,280p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T20:40:02.826560+00:00</strong><pre>/bin/bash -c &#x27;ls -la &amp;&amp; file first_frame.png 2&gt;/dev/null || true &amp;&amp; git status --short&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T20:40:09.822159+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-08T20:40:10.224471+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; player_template.html&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T20:40:10.645435+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+a=np.array(im)
+print(im.size, a.shape, a.dtype, a.min(), a.max())
+# dominant colors quantized
+q=(a//16)*16
+u,c=np.unique(q.reshape(-1,3),axis=0,return_counts=True)
+for i in np.argsort(c)[-30:][::-1]: print(tuple(u[i]),int(c[i]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T20:40:18.262685+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from collections import Counter
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+h,w,_=A.shape
+R,G,B=A[...,0],A[...,1],A[...,2]
+masks={
+&#x27;blue&#x27;:(B&gt;R*1.15)&amp;(B&gt;G*1.05)&amp;(B&gt;55),
+&#x27;green&#x27;:(G&gt;R*1.25)&amp;(G&gt;B*1.15)&amp;(G&gt;45),
+&#x27;dark&#x27;:(R+G+B&lt;150),
+&#x27;wood&#x27;:(R&gt;G*1.08)&amp;(G&gt;B*1.12)&amp;(R&gt;50),
+&#x27;gray&#x27;:(abs(R-G)&lt;12)&amp;(abs(G-B)&lt;14)&amp;(R&gt;45),
+&#x27;white&#x27;:(R&gt;120)&amp;(G&gt;115)&amp;(B&gt;110),
+}
+for name,m in masks.items():
+ ys,xs=np.where(m)
+ print(name,len(xs),&#x27;bbox&#x27;, (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else None)
+ # row/col counts top
+ if len(xs):
+  print(&#x27; x peaks&#x27;, sorted(enumerate(np.bincount(xs,minlength=w)),key=lambda z:z[1],reverse=True)[:8])
+  print(&#x27; y peaks&#x27;, sorted(enumerate(np.bincount(ys,minlength=h)),key=lambda z:z[1],reverse=True)[:8])
+# print colors for blue mask
+q=(A[masks[&#x27;blue&#x27;]]//8)*8
+u,c=np.unique(q,axis=0,return_counts=True)
+print(&#x27;blue colors&#x27;)
+for i in np.argsort(c)[-20:][::-1]: print(tuple(u[i]),c[i])
+print(&#x27;green colors&#x27;)
+q=(A[masks[&#x27;green&#x27;]]//8)*8
+u,c=np.unique(q,axis=0,return_counts=True)
+for i in np.argsort(c)[-20:][::-1]: print(tuple(u[i]),c[i])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T20:40:26.826005+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+R,G,B=A[...,0],A[...,1],A[...,2]
+# ascii at 2x2 median, classify each 2x2 block based avg / max
+for y in range(0,144,2):
+ row=&#x27;&#x27;
+ for x in range(0,256,2):
+  p=A[y:y+2,x:x+2].mean((0,1)); r,g,b=p
+  # classify
+  if g&gt;r*1.22 and g&gt;b*1.12 and g&gt;40: c=&#x27;G&#x27;
+  elif b&gt;r*1.15 and b&gt;g*1.03 and b&gt;50: c=&#x27;B&#x27;
+  elif r&lt;45 and g&lt;45 and b&lt;60: c=&#x27;#&#x27;
+  elif r&gt;g*1.1 and g&gt;b*1.08 and r&gt;55: c=&#x27;w&#x27; # wood lower-case
+  elif max(r,g,b)-min(r,g,b)&lt;12 and r&lt;120: c=&#x27;k&#x27;
+  elif r&lt;110 and g&lt;110 and b&lt;110: c=&#x27;d&#x27;
+  elif max(r,g,b)&lt;90: c=&#x27;D&#x27;
+  elif r&gt;130 and g&gt;120: c=&#x27;.&#x27;
+  elif r&gt;95: c=&#x27;,&#x27;
+  else: c=&#x27; &#x27;
+  row+=c
+ print(f&#x27;{y:03d} &#x27;+row)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T20:40:31.231548+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,576),Image.Resampling.NEAREST).save(&#x27;.tmp/first_4x.png&#x27;)
+# crop main action area and zoom
+im.crop((60,0,190,140)).resize((520,560),Image.Resampling.NEAREST).save(&#x27;.tmp/action_4x.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T20:40:36.779043+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print rows 0-95 x=80..155 color categories and values around ball/gripper
+# connected comps for blue mask, report bounding boxes areas
+from scipy.ndimage import label
+R,G,B=A.transpose(2,0,1)
+m=(B&gt;R*1.15)&amp;(B&gt;G*1.03)&amp;(B&gt;50)
+lab,n=label(m)
+for i in range(1,n+1):
+ ys,xs=np.where(lab==i); a=len(xs)
+ if a&gt;5: print(a,(xs.min(),ys.min(),xs.max(),ys.max()), tuple(np.round(A[ys,xs].mean(0)).astype(int)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T20:40:53.569340+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+def cl(p):
+ r,g,b=p
+ if b&gt;r*1.15 and b&gt;g*1.02 and b&gt;45: return &#x27;B&#x27;
+ if r+g+b&lt;110: return &#x27;#&#x27;
+ if r+g+b&lt;180: return &#x27;d&#x27;
+ if abs(r-g)&lt;10 and abs(g-b)&lt;12 and r&gt;90: return &#x27;.&#x27;
+ if r&gt;g*1.10 and g&gt;b*1.08: return &#x27;w&#x27;
+ if max(r,g,b)-min(r,g,b)&lt;12: return &#x27;k&#x27;
+ if r&gt;90: return &#x27;,&#x27;
+ return &#x27; &#x27;
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x//100) if x%10==0 else (str((x//10)%10) if x%10==5 else &#x27; &#x27;) for x in range(92,146)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(92,146)))
+for y in range(36,82):
+ print(f&#x27;{y:03d} &#x27;+&#x27;&#x27;.join(cl(A[y,x]) for x in range(92,146)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T20:40:59.466485+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# row and column key average values
+for y in [0,5,20,40,43,50,70,76,77,78,80,85,90,100,120,132,143]:
+ print(&#x27;row&#x27;,y,&#x27;segments&#x27;)
+ for a,b in [(0,32),(32,64),(64,96),(96,128),(128,160),(160,192),(192,224),(224,256)]:
+  print((a,b),tuple(np.round(A[y,a:b].mean(0)).astype(int)),end=&#x27; &#x27;)
+ print()
+print(&#x27;columns&#x27;)
+for x in [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,220,240,255]:
+ print(x, tuple(A[::12,x].mean(0).round().astype(int)),end=&#x27;; &#x27;)
+print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-08T20:41:04.546685+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+R,G,B=A.transpose(2,0,1)
+# Estimate sand ellipse from green mask near center
+m=(G&gt;R*1.15)&amp;(G&gt;B*1.05)&amp;(G&gt;35)&amp;(np.indices(G.shape)[1]&gt;60)&amp;(np.indices(G.shape)[1]&lt;180)
+y,x=np.where(m)
+print(&#x27;sand bbox&#x27;,x.min(),y.min(),x.max(),y.max(), &#x27;centroid&#x27;,x.mean(),y.mean())
+# row ranges green
+for yy in range(88,133,2):
+ xs=np.where(m[yy])[0]
+ if len(xs): print(yy,xs.min(),xs.max(),len(xs))
+# local color stats of ball excluding edge? comp 104-132,45-76
+print(&#x27;ball comp&#x27;)
+for yy in range(45,77,2):
+ xs=np.where((B[yy]&gt;R[yy]*1.15)&amp;(B[yy]&gt;G[yy]*1.02)&amp;(B[yy]&gt;50)&amp;(np.arange(256)&gt;=100)&amp;(np.arange(256)&lt;=135))[0]
+ if len(xs): print(yy,xs.min(),xs.max(),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-08T20:41:08.848927+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# ball rows detailed exact rgb at sampled x
+for y in [46,48,50,52,55,58,60,62,65,68,70,72,74,76]:
+ print(&#x27;\\ny&#x27;,y)
+ for x in range(101,136):
+  r,g,b=A[y,x]
+  print(f&#x27;{r:3},{g:3},{b:3}&#x27;,end=&#x27; | &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-08T20:41:13.064389+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# identify blue gripper rows: categorize blue pixels x&gt;90 y&lt;44
+for y in range(0,46):
+ xs=[]
+ for x in range(90,145):
+  r,g,b=A[y,x]
+  if b&gt;r*1.15 and b&gt;g*1.02 and b&gt;45: xs.append(x)
+ if xs: print(y,min(xs),max(xs),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-08T20:41:17.846390+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# sample background patches (whole rows) exact, plus edges
+for y in [0,1,10,20,30,38,40,42,43,44,45,70,72,74,76,78,80,90,100,110,120,130,143]:
+ print(&#x27;y&#x27;,y,&#x27;x0..255 sample&#x27;,[(x,tuple(A[y,x])) for x in [0,8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128,136,144,152,160,168,176,184,192,200,208,216,224,232,240,248,255]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-08T20:41:22.785679+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# quantify row noise / smoothness: median abs adjacent differences
+print(&#x27;mean abs dx&#x27;,np.abs(np.diff(A,axis=1)).mean(), &#x27;dy&#x27;,np.abs(np.diff(A,axis=0)).mean())
+for name,sl in [(&#x27;bg&#x27;,(slice(0,40),slice(0,90))),(&#x27;ball&#x27;,(slice(45,75),slice(105,132))),(&#x27;sand&#x27;,(slice(92,128),slice(90,150))),(&#x27;wood&#x27;,(slice(90,143),slice(0,60)) )]:
+ a=A[sl]
+ print(name,&#x27;dx&#x27;,np.abs(np.diff(a,axis=1)).mean(),&#x27;dy&#x27;,np.abs(np.diff(a,axis=0)).mean(),&#x27;std&#x27;,a.std((0,1)))
+# unique row patterns count
+print(&#x27;unique rows&#x27;,len(np.unique(A.reshape(144,-1),axis=0)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-08T20:41:27.981339+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# average 3x3 patches to show gripper shape using RGB values, background approximate from left interpolation
+for y in range(4,46,2):
+ print(f&#x27;{y:02d}&#x27;,end=&#x27; &#x27;)
+ for x in range(92,144,2):
+  r,g,b=A[y:y+2,x:x+2].mean((0,1))
+  # dominant char based brightness/hue
+  if b&gt;r+20 and b&gt;g+10: c=&#x27;B&#x27;
+  elif max(r,g,b)&lt;55: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;85: c=&#x27;d&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;10: c=&#x27;.&#x27;
+  elif r&gt;g+15 and g&gt;b+10: c=&#x27;w&#x27;
+  elif r&lt;80 and g&lt;95: c=&#x27;m&#x27;
+  elif r&gt;120: c=&#x27;,&#x27;
+  else: c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-08T20:41:32.863093+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# estimate ball fit center/radius based mask plus edge threshold
+R,G,B=A.transpose(2,0,1)
+# test ball body edges via B-R &gt; 35 or saturation
+for th in [10,20,30,40,50]:
+ m=(B-R&gt;th)&amp;(np.indices(B.shape)[1]&gt;=100)&amp;(np.indices(B.shape)[1]&lt;=135)&amp;(np.indices(B.shape)[0]&gt;=44)&amp;(np.indices(B.shape)[0]&lt;=76)
+ ys,xs=np.where(m)
+ print(th,len(xs), xs.min(),xs.max(),ys.min(),ys.max(),xs.mean(),ys.mean())
+# print boundary color mask rows x min/max based B-R&gt;30
+m=(B-R&gt;30)
+for y in range(44,78):
+ xs=np.where(m[y,100:136])[0]+100
+ if len(xs): print(y,xs.min(),xs.max(),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-08T20:41:37.755019+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# sample some exact grid around gripper, x 94..143 y 0..44. use brightness quantized to chars
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(0,46):
+ s=&#x27;&#x27;
+ for x in range(94,144):
+  r,g,b=A[y,x]
+  # blue dominance vs brightness
+  if b&gt;r+25 and b&gt;g+10: c=&#x27;B&#x27;
+  elif b-r&gt;12 and b-g&gt;5: c=&#x27;b&#x27;
+  elif max(r,g,b)&lt;45: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;70: c=&#x27;d&#x27;
+  elif max(r,g,b)&lt;95: c=&#x27;+&#x27;
+  elif max(r,g,b)&lt;120: c=&#x27;-&#x27;
+  elif max(r,g,b)&lt;145: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-08T20:41:42.595711+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# estimate average chroma/luma noise around background flat patches, correlations
+for sl in [(slice(0,10),slice(0,90)),(slice(0,10),slice(145,255)),(slice(25,35),slice(0,90))]:
+ a=A[sl]
+ print(&#x27;mean&#x27;,a.mean((0,1)), &#x27;std&#x27;,a.std((0,1)))
+ # differences against 3x3 blur
+ from scipy.ndimage import gaussian_filter
+ blur=gaussian_filter(a,sigma=(1,1,0))
+ d=a-blur
+ print(&#x27;res std&#x27;,d.std((0,1)),&#x27;p&#x27;,np.percentile(d,[1,25,50,75,99]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-08T20:41:47.053842+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# grayscale average each row at x samples 0..90 to see top background vertical variation
+for x in [0,20,40,60,80]:
+ vals=[]
+ for y in range(0,78,4): vals.append(round(A[y,x].mean()))
+ print(x,vals)
+# horizontal each row segments at selected rows
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-08T20:41:51.557122+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Report x-gradient by row averages in bg; inspect row median in segments
+for y in [0,10,20,30,38,40,42,44,46,50,60,70,72,74,76,78]:
+ vals=[round(np.median(A[y,a:b].mean(1))) for a,b in [(0,16),(16,32),(32,48),(48,64),(64,80),(80,96),(96,112),(112,128),(128,144),(144,160),(160,176),(176,192),(192,208),(208,224),(224,240),(240,256)]]
+ print(y,vals)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-08T20:41:57.003932+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# estimate strongest image gradients to locate object edges and background structures
+import scipy.ndimage as ndi
+g=np.abs(np.diff(A.mean(2),axis=1))
+# top connected comps of gradient &gt;20
+m=g&gt;20
+lab,n=ndi.label(m)
+for i in range(1,n+1):
+ ys,xs=np.where(lab==i); a=len(xs)
+ if a&gt;10: print(a,(xs.min(),ys.min(),xs.max(),ys.max()))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-08T20:42:31.216661+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+try:
+ import scipy; print(&#x27;scipy&#x27;,scipy.__version__)
+except Exception as e: print(&#x27;no scipy&#x27;,e)
+try:
+ import skimage; print(&#x27;skimage&#x27;,skimage.__version__)
+except Exception as e: print(&#x27;no skimage&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-08T20:42:36.056440+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Calculate ball color shading normalized to infer simple sphere texture; print blue chroma b-r rows
+for y in range(50,76,3):
+ row=[]
+ for x in range(102,135):
+  r,g,b=A[y,x]; row.append(int(b-r))
+ print(y,&#x27; &#x27;.join(f&#x27;{v:3d}&#x27; for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-08T20:42:40.549682+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# column by row median background left/right of objects to inspect geometry
+for x in [0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240,255]:
+ vals=[]
+ for y in [0,10,20,30,40,50,60,70,76,78,80,85,90,100,110,120,130,143]: vals.append(round(A[y,x].mean()))
+ print(x,vals)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-08T20:42:44.949619+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# grayscale horizontal profile row 0 and 20, detect jumps
+for y in [0,10,20,30,38,40,42,70,72,74,76,78]:
+ v=A[y].mean(1)
+ d=np.abs(np.diff(v))
+ inds=np.where(d&gt;8)[0]
+ print(&#x27;y&#x27;,y,&#x27;jumps&#x27;,[(int(i),round(v[i],1),round(v[i+1],1)) for i in inds[:30]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-08T20:43:26.148903+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# test horizontal reconstruction quality around ball: compare fill from boundary columns vs analytic? print average residual on known left/right near rows.
+# Ball circle params and contact point based masks
+print(&#x27;size&#x27;,A.shape)
+# exact y spans for sand mask threshold at x center
+R,G,B=A.transpose(2,0,1)
+m=(G&gt;R*1.15)&amp;(G&gt;B*1.05)&amp;(G&gt;35)
+for x in [110,114,118,120,124,130]:
+ ys=np.where(m[:,x])[0]
+ print(&#x27;sand x&#x27;,x,&#x27;y&#x27;,ys.min(),ys.max(),&#x27;n&#x27;,len(ys))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-08T20:43:31.537286+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Analyze gripper symmetry, find local dark silhouette masks and their x spans; can derive alpha mask using difference from reconstructed background.
+# Try background approximation using linear interpolation from x=80..95 and 140..155 per row; compute residual for gripper bbox and print stats
+B=A.copy()
+for y in range(0,45):
+ for x in range(94,144):
+  # nearest clean left and right values average weighted by dist
+  l=A[y,94]; r=A[y,143]
+  B[y,x]=(l*(143-x)+r*(x-94))/49
+d=np.abs(A-B).mean(2)
+print(&#x27;res in bbox pct&#x27;,np.percentile(d[0:44,94:144],[0,25,50,75,90,95,99]))
+# alpha estimate max channel diff/40
+for y in range(0,44,4):
+ print(y,&#x27; &#x27;.join(f&#x27;{min(9,int(d[y,x]/10))}&#x27; for x in range(94,144,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-08T20:43:37.351919+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# reconstruct background using per-row nearest clean pixels via x edges and then print actual vs bg residual map.
+# inspect ball relation to background: ball right edge x132, background beyond x133. left x104.
+# determine first frame ball exact bbox by threshold
+R,G,B=A.transpose(2,0,1)
+m=(B-R&gt;12)&amp;(B-G&gt;2)&amp;(np.indices(B.shape)[0]&gt;43)&amp;(np.indices(B.shape)[0]&lt;78)&amp;(np.indices(B.shape)[1]&gt;95)&amp;(np.indices(B.shape)[1]&lt;140)
+ys,xs=np.where(m)
+print(&#x27;bbox&#x27;,xs.min(),ys.min(),xs.max(),ys.max(),&#x27;center&#x27;,xs.mean(),ys.mean())
+# fit circle to outer threshold contour: choose row extrema and least squares
+pts=[]
+for y in range(46,76):
+ xx=np.where(m[y])[0]
+ if len(xx): pts.append((xx.min()-0.5,y)); pts.append((xx.max()+0.5,y))
+p=np.array(pts,float)
+# circle fit x2+y2 + D x + E y + F=0
+X=np.c_[p[:,0],p[:,1],np.ones(len(p))]; bb=-(p[:,0]**2+p[:,1]**2)
+D,E,F=np.linalg.lstsq(X,bb,rcond=None)[0]; cx,cy=-D/2,-E/2; r=(cx*cx+cy*cy-F)**.5
+print(&#x27;circle fit&#x27;,cx,cy,r)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-08T20:43:41.651632+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# local sand row transitions: find y for left/right edge per x using green threshold
+R,G,B=A.transpose(2,0,1)
+m=(G&gt;R*1.18)&amp;(G&gt;B*1.08)&amp;(G&gt;40)
+for x in range(70,171,5):
+ ys=np.where(m[:,x])[0]
+ print(x,(ys.min(),ys.max(),len(ys)) if len(ys) else None)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-08T20:43:46.153233+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# image row 89-95 x=100..140 exact values to see sand surface and ball bottom relation
+for y in range(86,96):
+ print(&#x27;y&#x27;,y)
+ for x in range(105,136,3): print(x,tuple(A[y,x].astype(int)),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 34 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
