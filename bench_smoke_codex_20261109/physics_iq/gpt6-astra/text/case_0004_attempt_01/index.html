@@ -61,7 +61,78 @@ for y,row in enumerate(im):
  if y%2: continue
  print(&#x27;%3d&#x27;%(y+42)+&#x27;&#x27;.join(palette[min(9,int(v.mean())*10//200)] for v in row))
 # gradient maxima per row
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 6 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-08T19:03:20.742090+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+for y in range(0,92,2):
+ vals=[]
+ for x in range(92,128):
+  c=im[y,x];
+  if c.mean()&lt;100 or int(c[2])-int(c[0])&gt;10: vals.append(x)
+ if vals: print(y,vals)
+print(&#x27;First row shaft rgb&#x27;,[(x,im[0,x].tolist()) for x in range(110,125)])
+# Availability
+import cv2, scipy
+print(cv2.__version__)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-08T19:04:06.677905+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+for y in range(100,144):
+ s=&#x27;&#x27;
+ for x in range(90,201):
+  r,g,b=im[y,x]
+  if r&lt;25 and g&lt;25:s+=&#x27;K&#x27;
+  elif r&lt;50 and g&lt;40:s+=&#x27;k&#x27;
+  elif r-g&gt;15 and r-b&gt;30:s+=&#x27;w&#x27;
+  elif r&gt;140:s+=&#x27;C&#x27;
+  elif r&gt;110:s+=&#x27;c&#x27;
+  elif r-g&gt;7 and b&lt;g:s+=&#x27;s&#x27;
+  else:s+=&#x27;.&#x27;
+ print(y,s)
+# gradients corners
+for x,y in [(114,50),(182,46),(191,109),(124,127),(104,106),(160,132),(116,110)]: print(x,y,im[y,x])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-08T19:04:32.956437+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+p=np.array([[113.8,50.9],[182.6,46.5],[191.5,108.1],[123.7,127.2]])
+a=np.cross(np.cross([*p[0],1],[*p[3],1]),np.cross([*p[1],1],[*p[2],1])); print(&#x27;vertical vanish&#x27;,a/a[2])
+b=np.cross(np.cross([*p[0],1],[*p[1],1]),np.cross([*p[2],1],[*p[3],1])); print(&#x27;horizontal vanish&#x27;,b/b[2])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-08T19:06:09.870534+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+for y in [49,53,60,70,80,90,100,104,106,108]:
+ print(&#x27;\\ny&#x27;,y)
+ for x in range(100,125): print(x,tuple(im[y,x]),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-08T19:07:14.081985+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; .tmp/geometry.py &lt;&lt;&#x27;PY&#x27;
+import numpy as np, cv2
+from scipy.optimize import least_squares
+img=np.array([[123.4,127.4],[191.4,108.5],[113.3,50.5],[182.7,46.7],[100.7,108.3]],float)
+# x-right, y-up, z toward tent rear
+K=np.array([[230,0,128],[0,230,72],[0,0,1]],float)
+def vertices(h,d):return np.array([[-.5,0,-d/2],[.5,0,-d/2],[-.5,h,0],[.5,h,0],[-.5,0,d/2],[.5,0,d/2]],float)
+def proj(p):
+ r,t,h,d=p[:3],p[3:6],p[6],p[7]
+ return cv2.projectPoints(vertices(h,d),r,t,K,None)[0][:,0,:]
+def err(p):return np.r_[(proj(p)[:5]-img).ravel(),(p[6]-.90)*.5,(p[7]-.42)*.5]
+p=np.r_[[2.7,-.2,-.8],[.3,-.45,3],.9,.4]
+s=least_squares(err,p,bounds=([-6,-6,-6,-4,-4,1,.4,.05],[6,6,6,4,4,10,2,2]),max_nfev=2000)
+print(&#x27;fit&#x27;,s.cost,s.x,proj(s.x));
+r,t,h,d=s.x[:3],s.x[3:6],s.x[6],s.x[7]
+R=cv2.Rodrigues(r)[0]
+print(&#x27;R&#x27;,R,&#x27;center&#x27;,cv2.projectPoints(np.array([[0.,0.,0.]]),r,t,K,None)[0]);print(&#x27;cam vertices&#x27;,vertices(h,d)@R.T+t)
+for theta in [0,20,40,60,80,100,120]:
+ a=np.deg2rad(theta); rot=np.array([[np.cos(a),0,np.sin(a)],[0,1,0],[-np.sin(a),0,np.cos(a)]])
+ q=vertices(h,d)@rot.T
+ print(theta,cv2.projectPoints(q,r,t,K,None)[0][:,0,:].round(1))
+np.savez(&#x27;.tmp/geometry.npz&#x27;,p=s.x,K=K)
+PY
+python .tmp/geometry.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-08T19:07:28.565847+00:00</strong><pre>/bin/bash -lc &quot;sed &#x27;s/\\[\\[230,0,128\\],\\[0,230,72\\]/[[105,0,128],[0,105,72]/&#x27; .tmp/geometry.py &gt; .tmp/geometry2.py; python .tmp/geometry2.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-08T19:08:41.995850+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+p=open(&#x27;.tmp/geometry.py&#x27;).read();p=p.replace(&#x27;(proj(p)[:5]-img).ravel()&#x27;,&#x27;(proj(p)[:4]-img[:4]).ravel()&#x27;);open(&#x27;.tmp/geometry3.py&#x27;,&#x27;w&#x27;).write(p)
+PY
+python .tmp/geometry3.py&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 13 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
