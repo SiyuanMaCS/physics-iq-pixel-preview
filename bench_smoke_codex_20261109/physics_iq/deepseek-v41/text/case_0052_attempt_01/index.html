@@ -1921,7 +1921,86 @@ for r in [4,5,6,7]:
       ring.append(dot)
    vals.append((np.mean(ring),cx,cy))
  print(sorted(vals,reverse=True)[:5])
-PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 135 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
+PY&quot;</pre></details><details class=command><summary><strong>命令 136</strong><time>2026-11-09T06:20:30.288870+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# List stable-ish metallic highlights at center row and columns for balls
+for x in range(90,180):
+ vals=[]
+ for y in range(90,106):
+  r,g,b=A[y,x]; sat=max(r,g,b)-min(r,g,b)
+  if sat&lt;30 and (r+g+b)/3&gt;120 and b&lt;=r+10: vals.append(y)
+ if len(vals)&gt;=2: print(x,vals)
+PY&quot;</pre></details><details class=command><summary><strong>命令 137</strong><time>2026-11-09T06:20:48.373241+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# Locate simple circular Hough candidates manually in ROI and print image stats for circles
+for cx,cy in [(100,105),(99,104),(114,102),(113,102),(113,103)]:
+ r=7
+ Y,X=np.mgrid[cy-r:cy+r+1,cx-r:cx+r+1]
+ P=A[cy-r:cy+r+1,cx-r:cx+r+1]
+ mask=X*X+Y*Y&lt;=r*r
+ p=P[mask]
+ print((cx,cy),&#x27;mean&#x27;,np.round(p.mean(0),1),&#x27;std&#x27;,round(p.std(),1),&#x27;neutral&#x27;,round(((p.max(1)-p.min(1))&lt;30).mean(),2),&#x27;bright&#x27;,round((p.mean(1)&gt;100).mean(),2))
+PY&quot;</pre></details><details class=command><summary><strong>命令 138</strong><time>2026-11-09T06:21:05.331624+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for cx,cy in [(100,105),(99,104),(114,102),(113,102),(113,103)]:
+ r=7
+ yy,xx=np.ogrid[cy-r:cy+r+1,cx-r:cx+r+1]
+ P=A[cy-r:cy+r+1,cx-r:cx+r+1]
+ mask=(yy-cy)**2+(xx-cx)**2&lt;=r*r
+ p=P[mask]
+ print((cx,cy),&#x27;mean&#x27;,np.round(p.mean(0),1),&#x27;std&#x27;,round(p.std(),1),&#x27;neutral&#x27;,round(((p.max(1)-p.min(1))&lt;30).mean(),2),&#x27;bright&#x27;,round((p.mean(1)&gt;100).mean(),2))
+PY&quot;</pre></details><details class=command><summary><strong>命令 139</strong><time>2026-11-09T06:21:26.143342+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(90,113):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(126,145):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;18:c=&#x27;B&#x27;
+  elif b-r&gt;6 and lum&lt;115:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;100:c=&#x27;O&#x27;
+  elif sat&lt;24 and lum&gt;70:c=&#x27;M&#x27;
+  elif sat&lt;30 and lum&gt;45:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 140</strong><time>2026-11-09T06:21:43.559527+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# local mean highpass response at candidate ball centers, print top under grabber region
+import cv2
+g=cv2.cvtColor(A.astype(&#x27;uint8&#x27;),cv2.COLOR_RGB2GRAY).astype(np.float32)
+for sig in [3,5,8]:
+ base=cv2.GaussianBlur(g,(0,0),sig)
+ hp=g-base
+ # circular mean abs highpass for radii
+ for r in [5,6,7]:
+  vals=[]
+  for cy in range(98,113):
+   for cx in range(94,122):
+    yy,xx=np.ogrid[cy-r:cy+r+1,cx-r:cx+r+1]
+    P=hp[cy-r:cy+r+1,cx-r:cx+r+1]
+    m=(yy-cy)**2+(xx-cx)**2&lt;=r*r
+    vals.append((float(np.abs(P[m]).mean()),cx,cy))
+  print(sig,r,sorted(vals,reverse=True)[:3])
+PY&quot;</pre></details><details class=command><summary><strong>命令 141</strong><time>2026-11-09T06:21:51.059183+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# stats for vertical central strip y=100..112 x=108..122
+for y in range(96,113):
+ print(y,[(x,tuple(A[y,x]),round(A[y,x].mean())) for x in range(106,123)])
+PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 141 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
