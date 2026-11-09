@@ -71,7 +71,26 @@ for y in range(0,144,2):
 print(&#x27;PIXELS at 8 intervals&#x27;)
 for y in range(0,144,8):
  print(y, &#x27; &#x27;.join(f&#x27;{x}:{tuple(im[y,x])}&#x27; for x in range(0,256,16)))
-PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 3 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
+PY&quot;</pre></details><details class=command><summary><strong>命令 4</strong><time>2026-11-09T09:57:40.917808+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+p=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(int)
+for y in range(0,112,1):
+ row=&#x27;&#x27;
+ for x in range(100,180):
+  r,g,b=p[y,x];m=(r+g+b)/3
+  if r&gt;g*1.35 and r&gt;b*1.8 and r&gt;70:c=&#x27;O&#x27; if r&gt;110 else &#x27;o&#x27;
+  elif b&gt;r+17 and b&gt;g+7:c=&#x27;B&#x27; if b&gt;70 else &#x27;b&#x27;
+  elif m&gt;210:c=&#x27;W&#x27;
+  elif m&gt;170:c=&#x27;.&#x27;
+  elif m&gt;130:c=&#x27;-&#x27;
+  elif m&gt;90:c=&#x27;=&#x27;
+  elif m&gt;55:c=&#x27;+&#x27;
+  elif m&gt;28:c=&#x27;#&#x27;
+  else:c=&#x27;@&#x27;
+  row+=c
+ print(f&#x27;{y:03d} &#x27;+row)
+PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 4 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
