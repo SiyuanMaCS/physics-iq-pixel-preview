@@ -1,0 +1,389 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6-Astra · 0000_s4</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6-Astra · 0000_s4</h1><p class=muted>text · 256×144 · 16.0 FPS · 81 帧 · 状态 complete · 输出 tokens 6628</p><div class=box><strong>原始任务</strong><p>a close up of a blue and orange liquid</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_89383e63572d0578.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;4b8ba6c7ef73edd0e23f650c97cad54fd08d91935b56fcf85aa09cd4e8b51406&quot;, &quot;pixels&quot;: &quot;final/pixels_89383e63572d0578.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T00:20:21.628528+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_89383e63572d0578.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;4b8ba6c7ef73edd0e23f650c97cad54fd08d91935b56fcf85aa09cd4e8b51406&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_89383e63572d0578.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,160 @@
++&quot;&quot;&quot;Animate the supplied liquid photograph with incompressible flow and ripples.
++
++All image content comes from first_frame.png.  The coordinate field is advected
++rather than the RGB image, retaining the source&#x27;s small reflected highlights.
++&quot;&quot;&quot;
++from pathlib import Path
++import json
++import numpy as np
++from PIL import Image
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++
++
++def bilinear(a, x, y):
++    h, w = a.shape[:2]
++    x = np.clip(x, 0, w - 1)
++    y = np.clip(y, 0, h - 1)
++    ix = np.floor(x).astype(np.int32)
++    iy = np.floor(y).astype(np.int32)
++    jx = np.minimum(ix + 1, w - 1)
++    jy = np.minimum(iy + 1, h - 1)
++    fx, fy = x - ix, y - iy
++    if a.ndim == 3:
++        fx, fy = fx[..., None], fy[..., None]
++    return ((a[iy, ix] * (1-fx) + a[iy, jx] * fx) * (1-fy)
++            + (a[jy, ix] * (1-fx) + a[jy, jx] * fx) * fy)
++
++
++def cubic_weights(f):
++    return (-.5*f + f*f - .5*f*f*f,
++            1 - 2.5*f*f + 1.5*f*f*f,
++            .5*f + 2*f*f - 1.5*f*f*f,
++            -.5*f*f + .5*f*f*f)
++
++
++def bicubic(a, x, y):
++    h, w = a.shape[:2]
++    x = np.clip(x, 0, w-1)
++    y = np.clip(y, 0, h-1)
++    ix, iy = np.floor(x).astype(np.int32), np.floor(y).astype(np.int32)
++    wx, wy = cubic_weights(x-ix), cubic_weights(y-iy)
++    out = np.zeros(x.shape + (3,), dtype=np.float64)
++    for j in range(4):
++        row = np.zeros_like(out)
++        for i in range(4):
++            row += a[np.clip(iy+j-1, 0, h-1), np.clip(ix+i-1, 0, w-1)] * wx[i][..., None]
++        out += row * wy[j][..., None]
++    return out
++
++
++def velocity(x, y, t, w, h):
++    &quot;&quot;&quot;Curl of a smoothly evolving stream function: no compressing color blobs.&quot;&quot;&quot;
++    psi = np.zeros_like(x)
++    px = np.zeros_like(x)
++    py = np.zeros_like(x)
++    # Broad, overlapping eddies turn the ribbons in different directions.
++    vortices = [
++        (48., 36., 66., 43., 174., .7),
++        (163., 45., 65., 46., -212., 2.4),
++        (192., 120., 69., 47., 222., 4.0),
++        (67., 119., 61., 41., -125., 5.1),
++    ]
++    for cx, cy, sx, sy, strength, phase in vortices:
++        cx += 5.5 * (np.sin(.25*t + phase) - np.sin(phase))
++        cy += 3.5 * (np.cos(.21*t + phase) - np.cos(phase))
++        strength *= 1 + .12*np.sin(.39*t + phase)
++        dx, dy = x-cx, y-cy
++        p = strength*np.exp(-.5*((dx/sx)**2+(dy/sy)**2))
++        psi += p
++        px -= p*dx/(sx*sx)
++        py -= p*dy/(sy*sy)
++    a = 2*np.pi*x/280 + .19*t + .3
++    b = 2*np.pi*y/195 - .23*t + .6
++    psi += 43*np.sin(a)*np.sin(b)
++    px += 43*(2*np.pi/280)*np.cos(a)*np.sin(b)
++    py += 43*(2*np.pi/195)*np.sin(a)*np.cos(b)
++    # Smooth no-through-image-edge conditions; reflections never duplicate.
++    ex, ey = np.sin(np.pi*x/(w-1)), np.sin(np.pi*y/(h-1))
++    dex = np.pi/(w-1)*np.cos(np.pi*x/(w-1))
++    dey = np.pi/(h-1)*np.cos(np.pi*y/(h-1))
++    vx = ex*(ey*py + dey*psi)
++    vy = -ey*(ex*px + dex*psi)
++    return vx, vy
++
++
++def surface(x, y, t, w, h):
++    dx, dy, light = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
++    # Dispersive, oblique travelling surface waves, from broad swell to capillary ripples.
++    modes = [
++        (130., 2.30, 1.22, 12.0, .8),
++        (83., 1.35, 2.29, 9.1, 2.1),
++        (47., .60, .49, 7.0, 4.0),
++        (30., .18, 1.74, 5.6, 1.4),
++        (19., .07, 2.74, 4.7, 5.1),
++    ]
++    for k, (length, amplitude, angle, speed, phase) in enumerate(modes):
++        nx, ny = np.cos(angle), np.sin(angle)
++        p0 = 2*np.pi/length*(nx*x+ny*y)+phase
++        p = p0-2*np.pi*speed/length*t
++        wave = amplitude*(np.sin(p)-np.sin(p0))
++        dx += wave*nx
++        dy += wave*ny
++        if k &lt; 3:
++            light += (.020/(1+.6*k))*(np.cos(p)-np.cos(p0))
++    dx *= (1-np.exp(-x/10))*(1-np.exp(-(w-1-x)/10))
++    dy *= (1-np.exp(-y/10))*(1-np.exp(-(h-1-y)/10))
++    return x+dx, y+dy, light
++
++
++def generate():
++    spec = json.loads((ROOT/&#x27;task_spec.json&#x27;).read_text())
++    w, h, n, fps = spec[&#x27;width&#x27;], spec[&#x27;height&#x27;], spec[&#x27;frames&#x27;], spec[&#x27;fps&#x27;]
++    original = np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++    assert original.shape == (h,w,3)
++    source = original.astype(np.float64)
++    y, x = np.mgrid[:h,:w].astype(np.float64)
++    coordinates = np.stack((x,y), axis=-1)
++    frames = np.empty((n,h,w,3), dtype=np.uint8)
++    frames[0] = original
++    jacobians = []
++    dt = 1/(fps*3)
++    for f in range(1,n):
++        for sub in range(3):
++            end_t = (f-1)/fps + (sub+1)*dt
++            vx, vy = velocity(x,y,end_t,w,h)
++            mx, my = x-.5*dt*vx, y-.5*dt*vy
++            vmx, vmy = velocity(mx,my,end_t-.5*dt,w,h)
++            coordinates = bilinear(coordinates, x-dt*vmx, y-dt*vmy)
++        t = f/fps
++        rx, ry, illumination = surface(x,y,t,w,h)
++        warped = bilinear(coordinates,rx,ry)
++        u, v = warped[...,0], warped[...,1]
++        rgb = bicubic(source,u,v)
++        # Gentle illumination changes retain hue and the photographed sheen.
++        luminance = .2126*rgb[...,0]+.7152*rgb[...,1]+.0722*rgb[...,2]
++        sheen = .35+.65*np.clip(luminance/205,0,1)
++        rgb *= np.exp(illumination*sheen)[...,None]
++        frames[f] = np.clip(np.rint(rgb),0,255).astype(np.uint8)
++        if f in (1,20,40,60,80):
++            uy, ux = np.gradient(u)
++            vy, vx = np.gradient(v)
++            determinant = ux*vy-uy*vx
++            jacobians.append({&#x27;frame&#x27;:f,&#x27;jacobian_min&#x27;:float(determinant.min()),
++                              &#x27;jacobian_percentiles&#x27;:np.percentile(determinant,[1,50,99]).tolist(),
++                              &#x27;rms_displacement&#x27;:float(np.sqrt(np.mean((u-x)**2+(v-y)**2)))})
++    artifact_io.save(frames,ROOT)
++    differences = np.abs(np.diff(frames.astype(np.float32),axis=0))
++    report = {&#x27;shape&#x27;:list(frames.shape), &#x27;dtype&#x27;:str(frames.dtype),
++              &#x27;first_frame_exact&#x27;:bool(np.array_equal(frames[0],original)),
++              &#x27;mean_frame_delta&#x27;:float(differences.mean()),
++              &#x27;frame_delta_range&#x27;:[float(differences.mean((1,2,3)).min()),float(differences.mean((1,2,3)).max())],
++              &#x27;last_from_first_mae&#x27;:float(np.abs(frames[-1].astype(float)-source).mean()),
++              &#x27;coordinate_checks&#x27;:jacobians}
++    (ROOT/&#x27;generation_checks.json&#x27;).write_text(json.dumps(report,indent=2))
++    print(json.dumps(report,indent=2))
++
++
++if __name__ == &#x27;__main__&#x27;:
++    generate()
+</pre></details></details><details><summary>候选 02 · 2026-11-09T00:20:26.426991+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_89383e63572d0578.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;4b8ba6c7ef73edd0e23f650c97cad54fd08d91935b56fcf85aa09cd4e8b51406&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_89383e63572d0578.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T00:18:09.531416+00:00</strong><pre>/bin/bash -lc &quot;ls -la; cat prompt.txt; printf &#x27;\\n---RULES---\\n&#x27;; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T00:18:19.479028+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json; cat artifact_io.py; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(&#x27;shape&#x27;,im.shape)
+print(&#x27;range&#x27;,im.min((0,1)),im.max((0,1)), &#x27;mean&#x27;,im.mean((0,1)))
+for y in range(0,144,6):
+ s=&#x27;&#x27;
+ for x in range(0,256,4):
+  r,g,b=im[y:y+6,x:x+4].mean((0,1))
+  if max(r,g,b)&lt;22:c=&#x27; &#x27;
+  elif max(r,g,b)&lt;60:c=&#x27;.&#x27;
+  elif b&gt;r*1.3 and b&gt;g*1.15:c=&#x27;B&#x27; if b&gt;125 else &#x27;b&#x27;
+  elif g&gt;r*1.2 and b&gt;r*1.2:c=&#x27;C&#x27; if max(b,g)&gt;125 else &#x27;c&#x27;
+  elif r&gt;b*1.3:c=&#x27;O&#x27; if r&gt;155 else &#x27;o&#x27;
+  elif min(r,g,b)&gt;190:c=&#x27;W&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;30:c=&#x27;g&#x27;
+  else:c=&#x27;~&#x27;
+  s+=c
+ print(s)
+print(&#x27;patch means&#x27;)
+for y in range(0,144,24):
+ print([tuple(np.round(im[y:y+24,x:x+32].mean((0,1))).astype(int)) for x in range(0,256,32)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T00:18:44.489743+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+y=im.mean(2)
+gy,gx=np.gradient(y)
+print(&#x27;Spatial detail grad quantiles&#x27;,np.percentile(np.sqrt(gx*gx+gy*gy),[10,25,50,75,90,95,99]))
+print(&#x27;luminance map:&#x27;)
+chars=&#x27; .,:;irsXA253hMHGS#9B&amp;@&#x27;
+a=np.array(Image.open(&#x27;first_frame.png&#x27;).resize((96,40))).mean(2)
+for row in a: print(&#x27;&#x27;.join(chars[min(len(chars)-1,int(v/256*len(chars)))] for v in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T00:20:18.416939+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+\&quot;\&quot;\&quot;Animate the supplied liquid photograph with incompressible flow and ripples.
+
+All image content comes from first_frame.png.  The coordinate field is advected
+rather than the RGB image, retaining the source&#x27;s small reflected highlights.
+\&quot;\&quot;\&quot;
+from pathlib import Path
+import json
+import numpy as np
+from PIL import Image
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+
+
+def bilinear(a, x, y):
+    h, w = a.shape[:2]
+    x = np.clip(x, 0, w - 1)
+    y = np.clip(y, 0, h - 1)
+    ix = np.floor(x).astype(np.int32)
+    iy = np.floor(y).astype(np.int32)
+    jx = np.minimum(ix + 1, w - 1)
+    jy = np.minimum(iy + 1, h - 1)
+    fx, fy = x - ix, y - iy
+    if a.ndim == 3:
+        fx, fy = fx[..., None], fy[..., None]
+    return ((a[iy, ix] * (1-fx) + a[iy, jx] * fx) * (1-fy)
+            + (a[jy, ix] * (1-fx) + a[jy, jx] * fx) * fy)
+
+
+def cubic_weights(f):
+    return (-.5*f + f*f - .5*f*f*f,
+            1 - 2.5*f*f + 1.5*f*f*f,
+            .5*f + 2*f*f - 1.5*f*f*f,
+            -.5*f*f + .5*f*f*f)
+
+
+def bicubic(a, x, y):
+    h, w = a.shape[:2]
+    x = np.clip(x, 0, w-1)
+    y = np.clip(y, 0, h-1)
+    ix, iy = np.floor(x).astype(np.int32), np.floor(y).astype(np.int32)
+    wx, wy = cubic_weights(x-ix), cubic_weights(y-iy)
+    out = np.zeros(x.shape + (3,), dtype=np.float64)
+    for j in range(4):
+        row = np.zeros_like(out)
+        for i in range(4):
+            row += a[np.clip(iy+j-1, 0, h-1), np.clip(ix+i-1, 0, w-1)] * wx[i][..., None]
+        out += row * wy[j][..., None]
+    return out
+
+
+def velocity(x, y, t, w, h):
+    \&quot;\&quot;\&quot;Curl of a smoothly evolving stream function: no compressing color blobs.\&quot;\&quot;\&quot;
+    psi = np.zeros_like(x)
+    px = np.zeros_like(x)
+    py = np.zeros_like(x)
+    # Broad, overlapping eddies turn the ribbons in different directions.
+    vortices = [
+        (48., 36., 66., 43., 174., .7),
+        (163., 45., 65., 46., -212., 2.4),
+        (192., 120., 69., 47., 222., 4.0),
+        (67., 119., 61., 41., -125., 5.1),
+    ]
+    for cx, cy, sx, sy, strength, phase in vortices:
+        cx += 5.5 * (np.sin(.25*t + phase) - np.sin(phase))
+        cy += 3.5 * (np.cos(.21*t + phase) - np.cos(phase))
+        strength *= 1 + .12*np.sin(.39*t + phase)
+        dx, dy = x-cx, y-cy
+        p = strength*np.exp(-.5*((dx/sx)**2+(dy/sy)**2))
+        psi += p
+        px -= p*dx/(sx*sx)
+        py -= p*dy/(sy*sy)
+    a = 2*np.pi*x/280 + .19*t + .3
+    b = 2*np.pi*y/195 - .23*t + .6
+    psi += 43*np.sin(a)*np.sin(b)
+    px += 43*(2*np.pi/280)*np.cos(a)*np.sin(b)
+    py += 43*(2*np.pi/195)*np.sin(a)*np.cos(b)
+    # Smooth no-through-image-edge conditions; reflections never duplicate.
+    ex, ey = np.sin(np.pi*x/(w-1)), np.sin(np.pi*y/(h-1))
+    dex = np.pi/(w-1)*np.cos(np.pi*x/(w-1))
+    dey = np.pi/(h-1)*np.cos(np.pi*y/(h-1))
+    vx = ex*(ey*py + dey*psi)
+    vy = -ey*(ex*px + dex*psi)
+    return vx, vy
+
+
+def surface(x, y, t, w, h):
+    dx, dy, light = np.zeros_like(x), np.zeros_like(x), np.zeros_like(x)
+    # Dispersive, oblique travelling surface waves, from broad swell to capillary ripples.
+    modes = [
+        (130., 2.30, 1.22, 12.0, .8),
+        (83., 1.35, 2.29, 9.1, 2.1),
+        (47., .60, .49, 7.0, 4.0),
+        (30., .18, 1.74, 5.6, 1.4),
+        (19., .07, 2.74, 4.7, 5.1),
+    ]
+    for k, (length, amplitude, angle, speed, phase) in enumerate(modes):
+        nx, ny = np.cos(angle), np.sin(angle)
+        p0 = 2*np.pi/length*(nx*x+ny*y)+phase
+        p = p0-2*np.pi*speed/length*t
+        wave = amplitude*(np.sin(p)-np.sin(p0))
+        dx += wave*nx
+        dy += wave*ny
+        if k &lt; 3:
+            light += (.020/(1+.6*k))*(np.cos(p)-np.cos(p0))
+    dx *= (1-np.exp(-x/10))*(1-np.exp(-(w-1-x)/10))
+    dy *= (1-np.exp(-y/10))*(1-np.exp(-(h-1-y)/10))
+    return x+dx, y+dy, light
+
+
+def generate():
+    spec = json.loads((ROOT/&#x27;task_spec.json&#x27;).read_text())
+    w, h, n, fps = spec[&#x27;width&#x27;], spec[&#x27;height&#x27;], spec[&#x27;frames&#x27;], spec[&#x27;fps&#x27;]
+    original = np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+    assert original.shape == (h,w,3)
+    source = original.astype(np.float64)
+    y, x = np.mgrid[:h,:w].astype(np.float64)
+    coordinates = np.stack((x,y), axis=-1)
+    frames = np.empty((n,h,w,3), dtype=np.uint8)
+    frames[0] = original
+    jacobians = []
+    dt = 1/(fps*3)
+    for f in range(1,n):
+        for sub in range(3):
+            end_t = (f-1)/fps + (sub+1)*dt
+            vx, vy = velocity(x,y,end_t,w,h)
+            mx, my = x-.5*dt*vx, y-.5*dt*vy
+            vmx, vmy = velocity(mx,my,end_t-.5*dt,w,h)
+            coordinates = bilinear(coordinates, x-dt*vmx, y-dt*vmy)
+        t = f/fps
+        rx, ry, illumination = surface(x,y,t,w,h)
+        warped = bilinear(coordinates,rx,ry)
+        u, v = warped[...,0], warped[...,1]
+        rgb = bicubic(source,u,v)
+        # Gentle illumination changes retain hue and the photographed sheen.
+        luminance = .2126*rgb[...,0]+.7152*rgb[...,1]+.0722*rgb[...,2]
+        sheen = .35+.65*np.clip(luminance/205,0,1)
+        rgb *= np.exp(illumination*sheen)[...,None]
+        frames[f] = np.clip(np.rint(rgb),0,255).astype(np.uint8)
+        if f in (1,20,40,60,80):
+            uy, ux = np.gradient(u)
+            vy, vx = np.gradient(v)
+            determinant = ux*vy-uy*vx
+            jacobians.append({&#x27;frame&#x27;:f,&#x27;jacobian_min&#x27;:float(determinant.min()),
+                              &#x27;jacobian_percentiles&#x27;:np.percentile(determinant,[1,50,99]).tolist(),
+                              &#x27;rms_displacement&#x27;:float(np.sqrt(np.mean((u-x)**2+(v-y)**2)))})
+    artifact_io.save(frames,ROOT)
+    differences = np.abs(np.diff(frames.astype(np.float32),axis=0))
+    report = {&#x27;shape&#x27;:list(frames.shape), &#x27;dtype&#x27;:str(frames.dtype),
+              &#x27;first_frame_exact&#x27;:bool(np.array_equal(frames[0],original)),
+              &#x27;mean_frame_delta&#x27;:float(differences.mean()),
+              &#x27;frame_delta_range&#x27;:[float(differences.mean((1,2,3)).min()),float(differences.mean((1,2,3)).max())],
+              &#x27;last_from_first_mae&#x27;:float(np.abs(frames[-1].astype(float)-source).mean()),
+              &#x27;coordinate_checks&#x27;:jacobians}
+    (ROOT/&#x27;generation_checks.json&#x27;).write_text(json.dumps(report,indent=2))
+    print(json.dumps(report,indent=2))
+
+
+if __name__ == &#x27;__main__&#x27;:
+    generate()
+PY
+python generate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T00:20:56.420972+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from pathlib import Path
+from PIL import Image
+import numpy as np
+p=Path(&#x27;.&#x27;)
+a=np.load(p/&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+first=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+decoded=np.stack([(a[:,:,0]&gt;&gt;16)&amp;255,(a[:,:,0]&gt;&gt;8)&amp;255,a[:,:,0]&amp;255],axis=-1).astype(np.uint8)
+assert a.shape==(144,256,81)
+assert np.array_equal(first,decoded)
+assert len(list((p/&#x27;frames&#x27;).glob(&#x27;*.png&#x27;)))==81
+for f in (0,20,40,60,80):
+ im=np.asarray(Image.open(p/&#x27;frames&#x27;/f&#x27;{f:02d}.png&#x27;))
+ gy,gx=np.gradient(im.astype(float).mean(2))
+ print(f, &#x27;mean RGB&#x27;,np.round(im.mean((0,1)),2),&#x27;mean detail&#x27;,round(np.sqrt(gx*gx+gy*gy).mean(),2))
+print(&#x27;Saved output verified:&#x27;,a.shape, &#x27;81 RGB PNGs, exact first frame.&#x27;)
+PY
+ls -lh pixels.npz index.html generate.py&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 2 份；完成命令 5 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>

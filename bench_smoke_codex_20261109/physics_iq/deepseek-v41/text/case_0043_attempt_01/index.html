@@ -1,6 +1,6 @@
 <!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0043</title><style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
-</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0043</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two blue-black grabber tools pull the piece of green paper from opposite corners, causing it to tear.
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0043</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 failed · 输出 tokens 50003</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. Two blue-black grabber tools pull the piece of green paper from opposite corners, causing it to tear.
 </p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T00:04:08.670877+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;first_frame.png&#x27; -g &#x27;*&#x27; | sed -n &#x27;1,160p&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T00:04:08.966613+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T00:04:09.262248+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,280p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T00:04:09.360226+00:00</strong><pre>/bin/bash -c &quot;file first_frame.png &amp;&amp; python3 - &lt;&lt;&#x27;PY&#x27;
 from PIL import Image
 im=Image.open(&#x27;first_frame.png&#x27;)
@@ -240,7 +240,232 @@ for i in range(1,n):
  x,y,w,h,a=stats[i]
  vals=im[lab==i]
  print(i,&#x27;bbox&#x27;,x,y,w,h,&#x27;area&#x27;,a,&#x27;mean&#x27;,vals.mean(0),&#x27;med&#x27;,np.median(vals,0),&#x27;min&#x27;,vals.min(0),&#x27;max&#x27;,vals.max(0))
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 19 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-09T00:06:12.846828+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+# corners in normalized orientation: TL,TR,BR,BL
+src=np.float32([[0,0],[1,0],[1,1],[0,1]])
+dst=np.float32([[118,20],[208,0],[111,95],[68,46]])
+H=cv2.getPerspectiveTransform(src,dst)
+Hi=np.linalg.inv(H)
+# warp into 100x100
+out=cv2.warpPerspective(im.astype(np.uint8),Hi,(100,100),flags=cv2.INTER_LINEAR)
+Image.fromarray(out).save(&#x27;.tmp/paper_texture.png&#x27;)
+# ascii based on nearest semantic class, 2x2 -&gt; 50 chars
+centers={&#x27;g&#x27;:np.array([15,175,42]),&#x27;G&#x27;:np.array([15,120,25]),&#x27;s&#x27;:np.array([90,130,80]),&#x27;k&#x27;:np.array([20,25,30]),&#x27;b&#x27;:np.array([5,105,190]),&#x27;w&#x27;:np.array([125,112,88])}
+names=list(centers); cs=list(centers.values())
+for y in range(0,100,2):
+ s=&#x27;&#x27;
+ for x in range(0,100,2):
+  c=out[y:y+2,x:x+2].reshape(-1,3).mean(0)
+  ds=[((c-v)**2).sum() for v in cs]
+  s+=names[int(np.argmin(ds))]
+ print(s)
+print(&#x27;corners sampling&#x27;)
+for uv in [(0,0),(.5,0),(1,0),(0,.5),(.5,.5),(1,.5),(0,1),(.5,1),(1,1)]:
+ x,y=uv
+ print(uv,out[min(99,int(y*100)),min(99,int(x*100))])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-09T00:06:17.745898+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+m=((g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)).astype(np.uint8)
+n,lab,stats,cen=cv2.connectedComponentsWithStats(m,8)
+m=(lab==1+np.argmax(stats[1:,4])).astype(np.uint8)
+# fit hull
+pts=cv2.findNonZero(m); hull=cv2.convexHull(pts)
+print(&#x27;hull&#x27;,hull[:,0].tolist())
+# test homography source orientation A=(118,20), B=(208,0), C=(111,95), D=(68,46)
+src=np.float32([[0,0],[100,0],[100,100],[0,100]])
+dst=np.float32([[118,20],[208,0],[111,95],[68,46]])
+H=cv2.getPerspectiveTransform(src,dst)
+Hi=np.linalg.inv(H)
+# inverse project every actual paper pixel to source coords, collect bbox and samples
+for x,y in [(118,20),(208,0),(111,95),(68,46)]:
+ print(&#x27;corner&#x27;,x,y,&#x27;rgb&#x27;,im[y,x])
+# sample center and corners colors
+for u,v in [(5,5),(50,5),(95,5),(5,50),(50,50),(95,50),(5,95),(50,95),(95,95),(20,20),(80,20),(20,80),(80,80)]:
+ p=cv2.perspectiveTransform(np.float32([[[u,v]]]),H)[0,0]
+ x,y=np.round(p).astype(int)
+ print((u,v),&#x27;-&gt;&#x27;,p,&#x27;rgb&#x27;,im[y,x])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-09T00:06:23.363325+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+m=((g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)).astype(np.uint8)
+n,lab,stats,cen=cv2.connectedComponentsWithStats(m,8); m=(lab==1+np.argmax(stats[1:,4])).astype(np.uint8)
+pts=cv2.findNonZero(m)
+# try specific corner order based on desired rectangle aspect ratio 1.45 (width 110, height 76)
+# hull A=(118,20), B=(208,0), C=(111,95), D=(68,46)
+for order in [
+ [(118,20),(208,0),(111,95),(68,46)],
+ [(208,0),(118,20),(68,46),(111,95)],
+ [(118,20),(68,46),(111,95),(208,0)],
+]:
+ dst=np.float32(order); 
+ # edge lengths
+ print(order, np.linalg.norm(dst[1]-dst[0]),np.linalg.norm(dst[2]-dst[1]),np.linalg.norm(dst[3]-dst[2]),np.linalg.norm(dst[0]-dst[3]))
+# green only stats by x/y
+ys,xs=np.where(m)
+print(&#x27;bbox&#x27;,xs.min(),xs.max(),ys.min(),ys.max())
+# color hist green core vs edges
+core=(m&gt;0)&amp;(cv2.erode(m,np.ones((5,5),np.uint8))&gt;0)
+edge=(m&gt;0)&amp;~core
+print(&#x27;core mean/std&#x27;,im[core].mean(0),im[core].std(0))
+print(&#x27;edge mean/std&#x27;,im[edge].mean(0),im[edge].std(0))
+# compute row green median colors central pixels
+for y in [10,20,30,40,50,60,70,80,90]:
+ xs=np.flatnonzero(m[y]); vals=im[y,xs]
+ print(y,&#x27;x&#x27;,xs.min(),xs.max(),&#x27;med&#x27;,np.median(vals,0),&#x27;central&#x27;,im[y,(xs.min()+xs.max())//2])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-09T00:06:28.166273+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+m=((g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)).astype(np.uint8)
+n,lab,stats,cen=cv2.connectedComponentsWithStats(m,8); m=(lab==1+np.argmax(stats[1:,4])).astype(np.uint8)
+pts=cv2.findNonZero(m)
+# estimate quadrilateral boundaries with Hough-like edge
+# paper corners via line fit on hull ranges; print ranges y for each x edge
+for side in [&#x27;left&#x27;,&#x27;right&#x27;]:
+ print(side)
+ for y in range(0,100,5):
+  xs=np.flatnonzero(m[y])
+  if len(xs): print(y,int(xs.min()) if side==&#x27;left&#x27; else int(xs.max()))
+# test masks based on green values and pixel-level paper border
+# print original dimensions no metadata
+print(&#x27;done&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-09T00:06:33.544481+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+green=(g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)
+blue=(b&gt;r+20)&amp;(b&gt;g+5)&amp;(b&gt;55)
+dark=(r+g+b&lt;180)
+# major components labels
+for name,m in [(&#x27;green&#x27;,green),(&#x27;blue&#x27;,blue),(&#x27;dark&#x27;,dark)]:
+ n,lab,stats,cen=cv2.connectedComponentsWithStats(m.astype(np.uint8),8)
+ print(&#x27;\\n&#x27;,name)
+ for i in range(1,n):
+  if stats[i,4]&gt;=30:
+   x,y,w,h,a=stats[i]; print(i,(x,y,w,h,a),&#x27;center&#x27;,cen[i])
+# per blue major component pixels, print x ranges each y
+n,lab,stats,cen=cv2.connectedComponentsWithStats(blue.astype(np.uint8),8)
+for i in [10,14]:
+ x,y,w,h,a=stats[i]
+ print(&#x27;\\ncomponent&#x27;,i)
+ for yy in range(y,y+h):
+  xs=np.flatnonzero(lab[yy]==i)
+  if len(xs): print(yy,xs.min(),xs.max(),len(xs))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-09T00:06:37.567225+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# exact pixel colors around blue gripper and paper boundaries
+for y in range(32,58,2):
+ print(&#x27;y&#x27;,y)
+ print(&#x27;L&#x27;,[(x,tuple(im[y,x])) for x in range(24,78,4)])
+ print(&#x27;R&#x27;,[(x,tuple(im[y,x])) for x in range(185,222,4)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-09T00:06:42.740946+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+# background estimate per-row median from lower region / global wood; compute residual over frame
+# identify primary colors and their shapes
+# paper quad polygon threshold segmentation, output in exact pixels in 2x
+poly=np.array([[118,20],[208,0],[111,95],[68,46]],np.int32)
+mask=np.zeros((144,256),np.uint8); cv2.fillPoly(mask,[poly],255)
+print(&#x27;poly area&#x27;,mask.sum()//255,&#x27;green pixels inside&#x27;,(((g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55))&amp;(mask&gt;0)).sum())
+# background lower rows texture statistics, correlation
+for y in [100,110,120,130,140]:
+ row=im[y]
+ print(&#x27;row&#x27;,y,&#x27;mean&#x27;,row.mean(0),&#x27;std&#x27;,row.std(0))
+# region likely table background no objects: sample block and spectrum / neighbor differences
+for box in [(0,100,256,144),(0,65,256,100),(0,0,65,26)]:
+ x0,y0,x1,y1=box; a=im[y0:y1,x0:x1]
+ print(&#x27;box&#x27;,box,&#x27;mean&#x27;,a.mean((0,1)),&#x27;std&#x27;,a.std((0,1)),&#x27;gradx&#x27;,np.abs(np.diff(a,axis=1)).mean(),&#x27;grady&#x27;,np.abs(np.diff(a,axis=0)).mean())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-09T00:06:46.657675+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print all pixels around green edge / gripper as nearest palette
+# paper pixel mask simple
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+green=(g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)
+for y in range(0,100,1):
+ xs=np.flatnonzero(green[y])
+ if len(xs): print(f&#x27;{y:2d}: {xs.min():3d}-{xs.max():3d} n={len(xs):3d}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-09T00:06:51.394829+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# display all image in 2x2 char categories with richer colors, using kmeans
+import cv2
+z=im.reshape(-1,3).astype(np.float32)
+crit=(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,30,0.5)
+K=12
+_,labels,centers=cv2.kmeans(z,K,None,crit,5,cv2.KMEANS_PP_CENTERS)
+centers=centers.astype(int)
+print(&#x27;centers sorted brightness&#x27;)
+for i,c in sorted(enumerate(centers), key=lambda p:sum(p[1])): print(i,tuple(c),int((labels==i).sum()))
+# save segmentation preview
+palette=np.array([[0,0,0],[255,0,0],[0,255,0],[0,0,255],[255,255,0],[255,0,255],[0,255,255],[255,255,255],[128,128,128],[128,0,0],[0,128,0],[0,0,128]],np.uint8)
+# instead assign class colors based centers for easier
+lab=labels.reshape(144,256)
+Image.fromarray(palette[lab%12]).resize((1024,576),Image.Resampling.NEAREST).save(&#x27;.tmp/kmeans.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-09T00:06:55.382108+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Check if wood background is an affine/radial gradient and local texture. Print row medians and selected x columns medians.
+for y in range(0,144,8):
+ row=im[y]
+ print(&#x27;y&#x27;,y,&#x27;med&#x27;,np.median(row,0),&#x27;mean&#x27;,row.mean(0),&#x27;min&#x27;,row.min(0),&#x27;max&#x27;,row.max(0))
+for x in range(0,256,16):
+ col=im[:,x]
+ print(&#x27;x&#x27;,x,&#x27;med&#x27;,np.median(col,0),&#x27;mean&#x27;,col.mean(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-09T00:08:07.820187+00:00</strong><pre>/bin/bash -c &#x27;ls -la&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-09T00:08:11.847160+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# inspect foreground versus background using frame border expected texture. print local gradients hotspots
+# save crops enlarged
+for name,box in [(&#x27;left&#x27;,(0,20,90,65)),(&#x27;right&#x27;,(175,0,230,40)),(&#x27;center&#x27;,(90,0,220,100))]:
+ x0,y0,x1,y1=box
+ Image.fromarray(im[y0:y1,x0:x1].astype(np.uint8)).resize(((x1-x0)*8,(y1-y0)*8),Image.Resampling.NEAREST).save(f&#x27;.tmp/{name}.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-09T00:08:16.945368+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.int16)
+r,g,b=im[:,:,0],im[:,:,1],im[:,:,2]
+green=(g&gt;r+18)&amp;(g&gt;b+18)&amp;(g&gt;55)
+# non-green pixels inside paper polygon: values and spatial stats
+poly=np.array([[118,20],[208,0],[111,95],[68,46]],np.int32)
+mask=np.zeros((144,256),np.uint8); cv2.fillPoly(mask,[poly],1)
+m=(mask&gt;0)&amp;~green
+ys,xs=np.where(m)
+print(&#x27;inside nongreen&#x27;,len(xs))
+# clusters
+for name,sel in [(&#x27;left&#x27;,xs&lt;118),(&#x27;right&#x27;,xs&gt;=118)]:
+ print(name,len(xs[sel]))
+# print component labels in polygon
+n,lab,stats,cen=cv2.connectedComponentsWithStats(m.astype(np.uint8),8)
+for i in range(1,n):
+ if stats[i,4]&gt;5:
+  x,y,w,h,a=stats[i]; print(i,(x,y,w,h,a),im[lab==i].mean(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-09T00:08:20.469321+00:00</strong><pre>/bin/bash -c &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# sample RGB in right gripper/non-paper region and paper center
+for y in range(0,34,2):
+ print(&#x27;y&#x27;,y,&#x27; &#x27;.join(f&#x27;{x}:{tuple(im[y,x])}&#x27; for x in range(165,226,5)))
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 33 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}

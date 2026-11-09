@@ -1,0 +1,368 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · 0002_s0</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · 0002_s0</h1><p class=muted>text · 256×144 · 16.0 FPS · 81 帧 · 状态 complete · 输出 tokens 7857</p><div class=box><strong>原始任务</strong><p>a close up of a blue and orange liquid, camera pans right</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_bfde14a4a35e4bcc.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;f1bb6112d38a48864df6d881c8dd6dd51b695538de4fa4f046c35906d0da6a23&quot;, &quot;pixels&quot;: &quot;final/pixels_bfde14a4a35e4bcc.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T00:19:57.947119+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_bfde14a4a35e4bcc.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;f1bb6112d38a48864df6d881c8dd6dd51b695538de4fa4f046c35906d0da6a23&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_bfde14a4a35e4bcc.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,134 @@
++&quot;&quot;&quot;Animate the supplied RGB photograph with an advected liquid surface and pan.
++
++No external images or learned assets are used.  All visible texture is sampled
++from first_frame.png; off-camera texture is continued by a curved reflection.
++The velocity field is analytic, incompressible, and integrated on coordinates,
++not on RGB, so the fine photographic detail does not diffuse over time.
++&quot;&quot;&quot;
++from pathlib import Path
++import json
++import numpy as np
++from PIL import Image
++from artifact_io import save
++
++ROOT = Path(__file__).resolve().parent
++
++
++def bilinear(a, x, y):
++    h, w = a.shape[:2]
++    x = np.clip(x, 0, w - 1)
++    y = np.clip(y, 0, h - 1)
++    ix = np.minimum(np.floor(x).astype(np.int32), w - 2)
++    iy = np.minimum(np.floor(y).astype(np.int32), h - 2)
++    u = x - ix
++    v = y - iy
++    if a.ndim == 3:
++        u, v = u[..., None], v[..., None]
++    return ((a[iy, ix] * (1-u) + a[iy, ix+1] * u) * (1-v) +
++            (a[iy+1, ix] * (1-u) + a[iy+1, ix+1] * u) * v)
++
++
++def reflect(q, extent):
++    q = np.mod(q, 2 * extent)
++    return np.where(q &lt;= extent, q, 2 * extent - q)
++
++
++def source_sample(source, x, y):
++    # Continue the intricate liquid strata rather than introducing unrelated
++    # colors at the newly revealed right edge. Curvature breaks mirror symmetry.
++    q = np.maximum(x - 255.0, 0.0)
++    a = 1 - np.exp(-q / 13.0)
++    xx = np.where(x &lt;= 255, x,
++                  255 - q * (0.92 + 0.12 * np.sin(y / 29.0 + .4))
++                  - 3.0 * a * np.sin(q / 19.0 + y / 43.0))
++    yy = y + a * (6.0 * np.sin(q / 37 + y / 57.0) + .10 * q)
++    # The normal camera region is left untouched. Vertical reflected margins
++    # are only a few pixels and receive gentle liquid-driven motion.
++    xx = reflect(xx, source.shape[1] - 1)
++    yy = reflect(yy, source.shape[0] - 1)
++    return bilinear(source, xx, yy)
++
++
++def velocity(x, y):
++    # Spectral stream-function modes; (dpsi/dy, -dpsi/dx) has zero divergence.
++    vx = np.zeros_like(x)
++    vy = np.zeros_like(y)
++    for wavelength, angle, speed, phase in [
++            (206.0, .55, 1.50, .7),
++            (122.0, 2.10, .82, 2.1),
++            (77.0, -.82, .44, .1),
++            (46.0, 1.30, .19, 1.7)]:
++        k = 2 * np.pi / wavelength
++        co, si = np.cos(angle), np.sin(angle)
++        wave = np.cos(k * (co*x + si*y) + phase)
++        vx += speed * si * wave
++        vy -= speed * co * wave
++    # Wide, smooth eddies gently curl the colored liquid interfaces.
++    for cx, cy, radius, omega in [
++            (195., 20., 39., -.046),
++            (175., 121., 48., .043),
++            (94., 56., 54., -.026),
++            (248., 77., 28., .044)]:
++        dx, dy = x-cx, y-cy
++        attenuation = np.exp(-(dx*dx+dy*dy)/(2*radius*radius))
++        vx -= omega * dy * attenuation
++        vy += omega * dx * attenuation
++    return vx + .24, vy + .08
++
++
++def generate():
++    spec = json.loads((ROOT / &#x27;task_spec.json&#x27;).read_text())
++    source = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++    n, h, w = spec[&#x27;frames&#x27;], spec[&#x27;height&#x27;], spec[&#x27;width&#x27;]
++    fps = float(spec[&#x27;fps&#x27;])
++    assert source.shape == (h, w, 3)
++    rgb = source.astype(np.float32)
++    frames = np.empty((n, h, w, 3), dtype=np.uint8)
++    frames[0] = source
++
++    # Coordinate advection in a generously padded world canvas.
++    pad = 48
++    grid_y, grid_x = np.mgrid[-pad:h+pad, -pad:w+160].astype(np.float32)
++    position = np.stack([grid_x, grid_y], axis=-1)
++    material = position.copy()
++    vx, vy = velocity(grid_x, grid_y)
++    dt = 1.0/fps
++    vmx, vmy = velocity(grid_x - .5*dt*vx, grid_y - .5*dt*vy)
++    footx = grid_x - dt*vmx + pad
++    footy = grid_y - dt*vmy + pad
++    screen_y, screen_x = np.mgrid[0:h, 0:w].astype(np.float32)
++
++    for i in range(1, n):
++        t = i/fps
++        material = bilinear(material, footx, footy).astype(np.float32)
++        # Positive camera translation moves existing material to screen left.
++        pan = 12.2 * t
++        camera_x = screen_x + pan
++        camera_y = screen_y + .30*np.sin(t*.52)
++        traced = bilinear(material, camera_x+pad, camera_y+pad)
++        sx, sy = traced[..., 0], traced[..., 1]
++
++        # Small travelling surface ripples refract the source, on top of the
++        # slower liquid advection. Subtract the initial phase for continuity.
++        p1 = camera_x*.161 + camera_y*.068
++        p2 = camera_x*.054 - camera_y*.196 + .9
++        ramp = 1 - np.exp(-t/1.1)
++        sx += ramp * (.57*np.sin(p1-1.47*t) + .26*np.sin(p2+1.03*t))
++        sy += ramp * (.41*np.cos(p1-1.47*t) + .38*np.sin(p2+1.03*t))
++        image = source_sample(rgb, sx, sy)
++
++        # Very modest mobile glints, restricted to the pale reflective liquid.
++        lum = image[..., 0]*.299 + image[..., 1]*.587 + image[..., 2]*.114
++        shine = np.clip((lum-110.)/95., 0., 1.)
++        glint = (np.sin(camera_x*.051 + camera_y*.039 - t*.94)
++                 - np.sin(camera_x*.051 + camera_y*.039)) * 1.6 * ramp
++        image += (glint * shine)[..., None]
++        frames[i] = np.clip(np.rint(image), 0, 255).astype(np.uint8)
++    return frames
++
++
++if __name__ == &#x27;__main__&#x27;:
++    result = generate()
++    assert np.array_equal(result[0], np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)))
++    save(result, ROOT)
++    print(&#x27;Saved&#x27;, result.shape, result.dtype)
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T00:17:16.479773+00:00</strong><pre>/bin/bash -lc &quot;ls -la &amp;&amp; cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T00:17:26.919580+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; cat artifact_io.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(&#x27;shape&#x27;,im.shape)
+print(&#x27;min/max&#x27;,im.min((0,1)), im.max((0,1)))
+print(&#x27;mean/std&#x27;,im.mean((0,1)), im.std((0,1)))
+print(&#x27;samples in 8x8 blocks (RGB mean):&#x27;)
+for y in range(0,144,12):
+ print(y,[tuple(np.round(im[y:y+12,x:x+16].mean((0,1))).astype(int)) for x in range(0,256,16)])
+print(&#x27;COLOR MAP (B blue, C cyan, O orange, R red, W white, K dark)&#x27;)
+for y in range(0,144,3):
+ s=&#x27;&#x27;
+ for x in range(0,256,4):
+  r,g,b=im[y:y+3,x:x+4].mean((0,1))
+  if max(r,g,b)&lt;60: c=&#x27;k&#x27;
+  elif min(r,g,b)&gt;180: c=&#x27;w&#x27;
+  elif b&gt;r*1.15: c=&#x27;b&#x27; if b&gt;g*1.3 else &#x27;c&#x27;
+  elif r&gt;b*1.15:c=&#x27;o&#x27; if g&gt;70 else &#x27;r&#x27;
+  else: c=&#x27;.&#x27;
+  s+=c
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T00:17:35.989769+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for k in [&#x27;scipy&#x27;,&#x27;cv2&#x27;,&#x27;numpy&#x27;,&#x27;PIL&#x27;]:
+ print(k, bool(importlib.util.find_spec(k)))
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+g=(im[:,:,0]*.299+im[:,:,1]*.587+im[:,:,2]*.114)
+s=&#x27; .,:;irsXAM#@&#x27;
+for y in range(0,144,3):
+ print(&#x27;&#x27;.join(s[min(len(s)-1,int(g[y:y+3,x:x+3].mean()/256*len(s)))] for x in range(0,256,3)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T00:17:52.684075+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+# Color-class detail in right 64 columns, to guide offscreen continuation.
+for y in range(0,144,2):
+ s=&#x27;&#x27;
+ for x in range(192,256,2):
+  r,g,b=im[y:y+2,x:x+2].mean((0,1))
+  if r&gt;1.2*b and r&gt;1.08*g: c=&#x27;O&#x27; if r&gt;120 else &#x27;o&#x27;
+  elif b&gt;1.5*r: c=&#x27;B&#x27; if g&lt;100 else &#x27;C&#x27;
+  elif b&gt;1.1*r:c=&#x27;c&#x27;
+  elif min(r,g,b)&gt;170:c=&#x27;W&#x27;
+  elif max(r,g,b)&lt;70:c=&#x27;.&#x27;
+  else:c=&#x27;-&#x27;
+  s+=c
+ print(f&#x27;{y:3}&#x27;,s)
+print(&#x27;Spatial texture RMS&#x27;,np.sqrt(np.mean(np.diff(im,axis=1)**2)),np.sqrt(np.mean(np.diff(im,axis=0)**2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T00:18:21.273711+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+# Texture detail and color composition; no image viewer.
+for y0,y1 in [(0,40),(40,90),(90,144)]:
+ for x0,x1 in [(0,80),(80,160),(160,256)]:
+  a=im[y0:y1,x0:x1].astype(float)
+  print((x0,y0,x1,y1),&#x27;orange&#x27;,np.mean((a[:,:,0]&gt;1.2*a[:,:,2])&amp;(a[:,:,0]&gt;1.1*a[:,:,1])),&#x27;blue&#x27;,np.mean(a[:,:,2]&gt;1.3*a[:,:,0]),&#x27;sd&#x27;,a.std((0,1)))
+print(&#x27;file&#x27;,Image.open(&#x27;first_frame.png&#x27;).mode)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T00:19:24.200898+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+\&quot;\&quot;\&quot;Animate the supplied RGB photograph with an advected liquid surface and pan.
+
+No external images or learned assets are used.  All visible texture is sampled
+from first_frame.png; off-camera texture is continued by a curved reflection.
+The velocity field is analytic, incompressible, and integrated on coordinates,
+not on RGB, so the fine photographic detail does not diffuse over time.
+\&quot;\&quot;\&quot;
+from pathlib import Path
+import json
+import numpy as np
+from PIL import Image
+from artifact_io import save
+
+ROOT = Path(__file__).resolve().parent
+
+
+def bilinear(a, x, y):
+    h, w = a.shape[:2]
+    x = np.clip(x, 0, w - 1.00001)
+    y = np.clip(y, 0, h - 1.00001)
+    ix = np.floor(x).astype(np.int32)
+    iy = np.floor(y).astype(np.int32)
+    u = x - ix
+    v = y - iy
+    if a.ndim == 3:
+        u, v = u[..., None], v[..., None]
+    return ((a[iy, ix] * (1-u) + a[iy, ix+1] * u) * (1-v) +
+            (a[iy+1, ix] * (1-u) + a[iy+1, ix+1] * u) * v)
+
+
+def reflect(q, extent):
+    q = np.mod(q, 2 * extent)
+    return np.where(q &lt;= extent, q, 2 * extent - q)
+
+
+def source_sample(source, x, y):
+    # Continue the intricate liquid strata rather than introducing unrelated
+    # colors at the newly revealed right edge. Curvature breaks mirror symmetry.
+    q = np.maximum(x - 255.0, 0.0)
+    a = 1 - np.exp(-q / 13.0)
+    xx = np.where(x &lt;= 255, x,
+                  255 - q * (0.92 + 0.12 * np.sin(y / 29.0 + .4))
+                  - 3.0 * a * np.sin(q / 19.0 + y / 43.0))
+    yy = y + a * (6.0 * np.sin(q / 37 + y / 57.0) + .10 * q)
+    # The normal camera region is left untouched. Vertical reflected margins
+    # are only a few pixels and receive gentle liquid-driven motion.
+    xx = reflect(xx, source.shape[1] - 1)
+    yy = reflect(yy, source.shape[0] - 1)
+    return bilinear(source, xx, yy)
+
+
+def velocity(x, y):
+    # Spectral stream-function modes; (dpsi/dy, -dpsi/dx) has zero divergence.
+    vx = np.zeros_like(x)
+    vy = np.zeros_like(y)
+    for wavelength, angle, speed, phase in [
+            (206.0, .55, 1.50, .7),
+            (122.0, 2.10, .82, 2.1),
+            (77.0, -.82, .44, .1),
+            (46.0, 1.30, .19, 1.7)]:
+        k = 2 * np.pi / wavelength
+        co, si = np.cos(angle), np.sin(angle)
+        wave = np.cos(k * (co*x + si*y) + phase)
+        vx += speed * si * wave
+        vy -= speed * co * wave
+    # Wide, smooth eddies gently curl the colored liquid interfaces.
+    for cx, cy, radius, omega in [
+            (195., 20., 39., -.046),
+            (175., 121., 48., .043),
+            (94., 56., 54., -.026),
+            (248., 77., 28., .044)]:
+        dx, dy = x-cx, y-cy
+        attenuation = np.exp(-(dx*dx+dy*dy)/(2*radius*radius))
+        vx -= omega * dy * attenuation
+        vy += omega * dx * attenuation
+    return vx + .24, vy + .08
+
+
+def generate():
+    spec = json.loads((ROOT / &#x27;task_spec.json&#x27;).read_text())
+    source = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+    n, h, w = spec[&#x27;frames&#x27;], spec[&#x27;height&#x27;], spec[&#x27;width&#x27;]
+    fps = float(spec[&#x27;fps&#x27;])
+    assert source.shape == (h, w, 3)
+    rgb = source.astype(np.float32)
+    frames = np.empty((n, h, w, 3), dtype=np.uint8)
+    frames[0] = source
+
+    # Coordinate advection in a generously padded world canvas.
+    pad = 48
+    grid_y, grid_x = np.mgrid[-pad:h+pad, -pad:w+160].astype(np.float32)
+    position = np.stack([grid_x, grid_y], axis=-1)
+    material = position.copy()
+    vx, vy = velocity(grid_x, grid_y)
+    dt = 1.0/fps
+    vmx, vmy = velocity(grid_x - .5*dt*vx, grid_y - .5*dt*vy)
+    footx = grid_x - dt*vmx + pad
+    footy = grid_y - dt*vmy + pad
+    screen_y, screen_x = np.mgrid[0:h, 0:w].astype(np.float32)
+
+    for i in range(1, n):
+        t = i/fps
+        material = bilinear(material, footx, footy).astype(np.float32)
+        # Positive camera translation moves existing material to screen left.
+        pan = 12.2 * t
+        camera_x = screen_x + pan
+        camera_y = screen_y + .30*np.sin(t*.52)
+        traced = bilinear(material, camera_x+pad, camera_y+pad)
+        sx, sy = traced[..., 0], traced[..., 1]
+
+        # Small travelling surface ripples refract the source, on top of the
+        # slower liquid advection. Subtract the initial phase for continuity.
+        p1 = camera_x*.161 + camera_y*.068
+        p2 = camera_x*.054 - camera_y*.196 + .9
+        ramp = 1 - np.exp(-t/1.1)
+        sx += ramp * (.57*np.sin(p1-1.47*t) + .26*np.sin(p2+1.03*t))
+        sy += ramp * (.41*np.cos(p1-1.47*t) + .38*np.sin(p2+1.03*t))
+        image = source_sample(rgb, sx, sy)
+
+        # Very modest mobile glints, restricted to the pale reflective liquid.
+        lum = image[..., 0]*.299 + image[..., 1]*.587 + image[..., 2]*.114
+        shine = np.clip((lum-110.)/95., 0., 1.)
+        glint = (np.sin(camera_x*.051 + camera_y*.039 - t*.94)
+                 - np.sin(camera_x*.051 + camera_y*.039)) * 1.6 * ramp
+        image += (glint * shine)[..., None]
+        frames[i] = np.clip(np.rint(image), 0, 255).astype(np.uint8)
+    return frames
+
+
+if __name__ == &#x27;__main__&#x27;:
+    result = generate()
+    assert np.array_equal(result[0], np.asarray(Image.open(ROOT/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)))
+    save(result, ROOT)
+    print(&#x27;Saved&#x27;, result.shape, result.dtype)
+PY
+python generate.py&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 7 · 2026-11-09T00:19:53.820229+00:00</strong><pre>/bin/bash -lc &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+import cv2
+from pathlib import Path
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+f=np.stack([(z&gt;&gt;16)&amp;255,(z&gt;&gt;8)&amp;255,z&amp;255],axis=-1).transpose(2,0,1,3).astype(np.uint8)
+print(&#x27;shape/dtype&#x27;,f.shape,f.dtype)
+print(&#x27;first exact&#x27;,np.array_equal(f[0],np.asarray(Image.open(&#x27;first_frame.png&#x27;))))
+print(&#x27;frame diffs mean&#x27;,np.abs(np.diff(f.astype(float),axis=0)).mean((1,2,3))[[0,1,19,39,59,79]])
+for i in [0,20,40,60,80]:
+ a=f[i].astype(float)
+ print(i,&#x27;mean/std&#x27;,a.mean((0,1)).round(2),a.std((0,1)).round(2),&#x27;edge&#x27;,np.abs(np.diff(a,axis=1)).mean().round(2))
+for i in [0,20,40,60]:
+ gray=lambda a:cv2.cvtColor(a,cv2.COLOR_RGB2GRAY)
+ flow=cv2.calcOpticalFlowFarneback(gray(f[i]),gray(f[i+1]),None,.5,3,15,3,5,1.2,0)
+ print(&#x27;flow&#x27;,i,np.median(flow[12:-12,12:-48],axis=(0,1)).round(3))
+# Guard against a conspicuous seam in the continuation at the last frame.
+edge=np.abs(np.diff(f[-1].astype(float),axis=1)).mean((0,2))
+print(&#x27;last frame column discontinuity&#x27;,np.percentile(edge,[50,90,99]).round(2), &#x27;maximum&#x27;,edge.max().round(2))
+print(&#x27;artifacts&#x27;,[(p.name,p.stat().st_size) for p in Path(&#x27;.&#x27;).glob(&#x27;*&#x27;) if p.is_file()])
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 1 份；完成命令 7 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
