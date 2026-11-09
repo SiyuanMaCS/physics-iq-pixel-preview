@@ -1,0 +1,395 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-5.6-Sol · 0002_s2</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-5.6-Sol · 0002_s2</h1><p class=muted>text · 256×144 · 16.0 FPS · 81 帧 · 状态 complete · 输出 tokens 6378</p><div class=box><strong>原始任务</strong><p>a close up of a blue and orange liquid, camera pans right</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_0fd3a5f3cfe4aeb6.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;b5bb8367177f1f8a46b8adc163cbd99f0d10fdd27533200a6fd600abb15fceed&quot;, &quot;pixels&quot;: &quot;final/pixels_0fd3a5f3cfe4aeb6.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T01:54:54.130313+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_0fd3a5f3cfe4aeb6.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;b5bb8367177f1f8a46b8adc163cbd99f0d10fdd27533200a6fd600abb15fceed&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_0fd3a5f3cfe4aeb6.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,159 @@
++&quot;&quot;&quot;Generate a slow macro shot of blue/orange liquid with a rightward camera pan.
++
++The supplied still is treated as a photographed liquid texture.  A continuous
++panorama is made by gently extrapolating its two edges; subsequent frames use
++sub-pixel camera motion plus a smooth, incompressible-looking coordinate warp.
++No learned models or external assets are used.
++&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++from PIL import Image
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++W, H, N = 256, 144, 81
++FPS = 16.0
++
++
++def reflect(v, lo, hi):
++    &quot;&quot;&quot;Triangle-wave boundary condition, continuous at both edges.&quot;&quot;&quot;
++    span = hi - lo
++    q = np.mod(v - lo, 2.0 * span)
++    return lo + np.where(q &lt;= span, q, 2.0 * span - q)
++
++
++def bilinear(image, x, y):
++    &quot;&quot;&quot;Vectorized bilinear RGB sampling with reflected boundary conditions.&quot;&quot;&quot;
++    h, w = image.shape[:2]
++    x = reflect(x, 0.0, w - 1.00001)
++    y = reflect(y, 0.0, h - 1.00001)
++    x0 = np.floor(x).astype(np.int32)
++    y0 = np.floor(y).astype(np.int32)
++    x1 = np.minimum(x0 + 1, w - 1)
++    y1 = np.minimum(y0 + 1, h - 1)
++    fx = (x - x0)[..., None].astype(np.float32)
++    fy = (y - y0)[..., None].astype(np.float32)
++    a = image[y0, x0].astype(np.float32)
++    b = image[y0, x1].astype(np.float32)
++    c = image[y1, x0].astype(np.float32)
++    d = image[y1, x1].astype(np.float32)
++    return (a * (1-fx) + b * fx) * (1-fy) + (c * (1-fx) + d * fx) * fy
++
++
++def make_panorama(still):
++    &quot;&quot;&quot;Add continuous, non-identical mirrored liquid beyond the frame edges.&quot;&quot;&quot;
++    left, right = 38, 108
++    ph, pw = H, left + W + right
++    yy, xx = np.mgrid[0:ph, 0:pw].astype(np.float32)
++    rel = xx - left
++    sx = rel.copy()
++    sy = yy.copy()
++
++    # Left edge.  Distortion starts at zero at the join so there is no seam.
++    m = rel &lt; 0
++    q = np.maximum(-rel, 0)
++    ramp = 1.0 - np.exp(-q / 12.0)
++    sx_l = q + ramp * (3.0*np.sin(yy/17.0 + q/13.0) + 1.2*np.sin(yy/7.5))
++    sy_l = yy + ramp * (4.2*np.sin(q/14.0 + yy/31.0) + 1.3*np.sin(q/6.5))
++    sx[m], sy[m] = sx_l[m], sy_l[m]
++
++    # Right edge.  A perturbed reflection is a robust texture continuation for
++    # this abstract liquid and preserves both colour and scale at the boundary.
++    m = rel &gt; W-1
++    q = np.maximum(rel - (W-1), 0)
++    ramp = 1.0 - np.exp(-q / 13.0)
++    sx_r = (W-1) - q + ramp * (4.0*np.sin(yy/18.0 + q/16.0) + 1.4*np.sin(yy/8.0))
++    sy_r = yy + ramp * (4.8*np.sin(q/15.0 + yy/29.0) + 1.5*np.sin(q/7.0))
++    sx[m], sy[m] = sx_r[m], sy_r[m]
++
++    pano = bilinear(still, sx, sy)
++    # Preserve every supplied pixel verbatim in its native part of the canvas.
++    pano[:, left:left+W] = still
++    return pano.astype(np.float32), left
++
++
++def smoothstep(s):
++    return s*s*(3.0 - 2.0*s)
++
++
++def render():
++    first = np.asarray(Image.open(ROOT / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;), dtype=np.uint8)
++    assert first.shape == (H, W, 3)
++    pano, origin = make_panorama(first)
++    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
++    frames = np.empty((N, H, W, 3), dtype=np.uint8)
++    frames[0] = first
++
++    # Fixed phase choices make the procedural current deterministic.
++    waves = [
++        # amplitude, kx, ky, angular speed, phase, x/y coupling
++        (1.65, 0.026,  0.061, 0.66, 0.35,  0.72),
++        (1.25, 0.052, -0.031, 0.91, 1.75, -0.58),
++        (0.85, 0.087,  0.019, 1.17, 3.10,  0.43),
++        (0.60, 0.018,  0.104, 0.53, 4.45, -0.76),
++    ]
++    vortices = [
++        # world x, y, radius, angle amplitude, speed, phase
++        (54.0,  45.0, 54.0, 0.040, 0.57, 0.4),
++        (143.0, 94.0, 63.0, -0.046, 0.46, 1.7),
++        (237.0, 53.0, 57.0, 0.044, 0.63, 3.0),
++        (305.0, 105.0, 52.0, -0.038, 0.52, 4.1),
++    ]
++
++    for i in range(1, N):
++        t = i / FPS
++        s = i / (N-1)
++        # 45 pixels in five seconds: clear macro-camera motion without rushing.
++        pan = 45.0 * smoothstep(s)
++        wx = xx + pan
++        wy = yy
++        dx = np.zeros_like(xx)
++        dy = np.zeros_like(yy)
++
++        # Traveling stream functions.  Subtracting the t=0 phase guarantees a
++        # perfectly continuous onset from the supplied first frame.
++        for amp, kx, ky, omega, phase, coupling in waves:
++            arg0 = kx*wx + ky*wy + phase
++            delta = np.sin(arg0 + omega*t) - np.sin(arg0)
++            dx += amp * delta
++            # Quadrature and cross-coupling avoid a rubber-sheet appearance.
++            argy = -ky*wx + kx*wy + phase*1.37
++            d2 = np.sin(argy + omega*t*0.83) - np.sin(argy)
++            dy += amp * coupling * d2
++
++        # Broad eddies gently curl colored plumes around one another.
++        for cx, cy, radius, strength, omega, phase in vortices:
++            rx = wx - cx
++            ry = wy - cy
++            fall = np.exp(-(rx*rx + ry*ry)/(radius*radius))
++            ang = strength * (np.sin(omega*t + phase) - np.sin(phase)) * fall
++            dx += -ry * ang
++            dy +=  rx * ang
++
++        # A tiny slow vertical drift gives the liquid depth while leaving the
++        # explicitly requested horizontal camera pan dominant.
++        dy += 0.42*t + 0.32*np.sin(wx/39.0 + 0.48*t) - 0.32*np.sin(wx/39.0)
++
++        sx = origin + wx + dx
++        sy = wy + dy
++        out = bilinear(pano, sx, sy)
++
++        # Very restrained caustic breathing, applied mostly to already bright
++        # areas; it reads as reflected light rather than a synthetic overlay.
++        lum = out[..., 0]*0.24 + out[..., 1]*0.50 + out[..., 2]*0.26
++        band = (np.sin(wx*0.041 + wy*0.023 + 0.74*t) -
++                np.sin(wx*0.041 + wy*0.023))
++        fine = (np.sin(wx*0.096 - wy*0.047 + 0.49*t) -
++                np.sin(wx*0.096 - wy*0.047))
++        light = (0.72*band + 0.28*fine) * (0.9 + 1.7*np.clip((lum-105)/120, 0, 1))
++        out += light[..., None]
++
++        frames[i] = np.clip(np.rint(out), 0, 255).astype(np.uint8)
++
++    # Contract-critical: make identity explicit even if rendering is refactored.
++    frames[0] = first
++    return frames
++
++
++if __name__ == &quot;__main__&quot;:
++    artifact_io.save(render(), ROOT)
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T01:53:49.169458+00:00</strong><pre>/bin/bash -lc &quot;cat GENERATION_RULES.md &amp;&amp; printf &#x27;\\n---PROMPT---\\n&#x27; &amp;&amp; cat prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T01:53:49.487711+00:00</strong><pre>/bin/bash -lc &quot;find . -maxdepth 2 -type f -printf &#x27;%p\\n&#x27; | sort &amp;&amp; printf &#x27;\\n---TOOLS---\\n&#x27; &amp;&amp; command -v ffmpeg &amp;&amp; command -v python3&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 3 · 2026-11-09T01:53:57.187235+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T01:53:57.698849+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(im.shape,im.dtype, im.min(),im.max())
+print(&#x27;mean&#x27;,im.mean((0,1)),&#x27;std&#x27;,im.std((0,1)))
+# coarse 16x9 mean RGB, dominant color chars and luminance
+h,w,_=im.shape
+chars=[]
+for yy in range(9):
+ row=[]
+ for xx in range(16):
+  a=im[yy*h//9:(yy+1)*h//9,xx*w//16:(xx+1)*w//16].mean((0,1))
+  r,g,b=a
+  if max(a)&lt;30:c=&#x27;K&#x27;
+  elif b&gt;r*1.25 and b&gt;g*1.15:c=&#x27;B&#x27;
+  elif r&gt;b*1.3 and r&gt;g*1.05:c=&#x27;O&#x27;
+  elif r&gt;100 and g&gt;70 and b&lt;80:c=&#x27;Y&#x27;
+  elif max(a)-min(a)&lt;20:c=&#x27;.&#x27;
+  else:c=&#x27;m&#x27;
+  row.append(c)
+ print(&#x27;&#x27;.join(row))
+print(&#x27;quantiles&#x27;)
+for c in range(3): print(c,np.percentile(im[...,c],[0,1,5,25,50,75,95,99,100]))
+# edge / quadrant
+for y in [0,36,72,108,143]:
+ print(&#x27;y&#x27;,y, [im[y,x].tolist() for x in [0,32,64,96,128,160,192,224,255]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T01:54:50.535786+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+\&quot;\&quot;\&quot;Generate a slow macro shot of blue/orange liquid with a rightward camera pan.
+
+The supplied still is treated as a photographed liquid texture.  A continuous
+panorama is made by gently extrapolating its two edges; subsequent frames use
+sub-pixel camera motion plus a smooth, incompressible-looking coordinate warp.
+No learned models or external assets are used.
+\&quot;\&quot;\&quot;
+from pathlib import Path
+import numpy as np
+from PIL import Image
+import artifact_io
+
+ROOT = Path(__file__).resolve().parent
+W, H, N = 256, 144, 81
+FPS = 16.0
+
+
+def reflect(v, lo, hi):
+    \&quot;\&quot;\&quot;Triangle-wave boundary condition, continuous at both edges.\&quot;\&quot;\&quot;
+    span = hi - lo
+    q = np.mod(v - lo, 2.0 * span)
+    return lo + np.where(q &lt;= span, q, 2.0 * span - q)
+
+
+def bilinear(image, x, y):
+    \&quot;\&quot;\&quot;Vectorized bilinear RGB sampling with reflected boundary conditions.\&quot;\&quot;\&quot;
+    h, w = image.shape[:2]
+    x = reflect(x, 0.0, w - 1.00001)
+    y = reflect(y, 0.0, h - 1.00001)
+    x0 = np.floor(x).astype(np.int32)
+    y0 = np.floor(y).astype(np.int32)
+    x1 = np.minimum(x0 + 1, w - 1)
+    y1 = np.minimum(y0 + 1, h - 1)
+    fx = (x - x0)[..., None].astype(np.float32)
+    fy = (y - y0)[..., None].astype(np.float32)
+    a = image[y0, x0].astype(np.float32)
+    b = image[y0, x1].astype(np.float32)
+    c = image[y1, x0].astype(np.float32)
+    d = image[y1, x1].astype(np.float32)
+    return (a * (1-fx) + b * fx) * (1-fy) + (c * (1-fx) + d * fx) * fy
+
+
+def make_panorama(still):
+    \&quot;\&quot;\&quot;Add continuous, non-identical mirrored liquid beyond the frame edges.\&quot;\&quot;\&quot;
+    left, right = 38, 108
+    ph, pw = H, left + W + right
+    yy, xx = np.mgrid[0:ph, 0:pw].astype(np.float32)
+    rel = xx - left
+    sx = rel.copy()
+    sy = yy.copy()
+
+    # Left edge.  Distortion starts at zero at the join so there is no seam.
+    m = rel &lt; 0
+    q = np.maximum(-rel, 0)
+    ramp = 1.0 - np.exp(-q / 12.0)
+    sx_l = q + ramp * (3.0*np.sin(yy/17.0 + q/13.0) + 1.2*np.sin(yy/7.5))
+    sy_l = yy + ramp * (4.2*np.sin(q/14.0 + yy/31.0) + 1.3*np.sin(q/6.5))
+    sx[m], sy[m] = sx_l[m], sy_l[m]
+
+    # Right edge.  A perturbed reflection is a robust texture continuation for
+    # this abstract liquid and preserves both colour and scale at the boundary.
+    m = rel &gt; W-1
+    q = np.maximum(rel - (W-1), 0)
+    ramp = 1.0 - np.exp(-q / 13.0)
+    sx_r = (W-1) - q + ramp * (4.0*np.sin(yy/18.0 + q/16.0) + 1.4*np.sin(yy/8.0))
+    sy_r = yy + ramp * (4.8*np.sin(q/15.0 + yy/29.0) + 1.5*np.sin(q/7.0))
+    sx[m], sy[m] = sx_r[m], sy_r[m]
+
+    pano = bilinear(still, sx, sy)
+    # Preserve every supplied pixel verbatim in its native part of the canvas.
+    pano[:, left:left+W] = still
+    return pano.astype(np.float32), left
+
+
+def smoothstep(s):
+    return s*s*(3.0 - 2.0*s)
+
+
+def render():
+    first = np.asarray(Image.open(ROOT / \&quot;first_frame.png\&quot;).convert(\&quot;RGB\&quot;), dtype=np.uint8)
+    assert first.shape == (H, W, 3)
+    pano, origin = make_panorama(first)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    frames = np.empty((N, H, W, 3), dtype=np.uint8)
+    frames[0] = first
+
+    # Fixed phase choices make the procedural current deterministic.
+    waves = [
+        # amplitude, kx, ky, angular speed, phase, x/y coupling
+        (1.65, 0.026,  0.061, 0.66, 0.35,  0.72),
+        (1.25, 0.052, -0.031, 0.91, 1.75, -0.58),
+        (0.85, 0.087,  0.019, 1.17, 3.10,  0.43),
+        (0.60, 0.018,  0.104, 0.53, 4.45, -0.76),
+    ]
+    vortices = [
+        # world x, y, radius, angle amplitude, speed, phase
+        (54.0,  45.0, 54.0, 0.040, 0.57, 0.4),
+        (143.0, 94.0, 63.0, -0.046, 0.46, 1.7),
+        (237.0, 53.0, 57.0, 0.044, 0.63, 3.0),
+        (305.0, 105.0, 52.0, -0.038, 0.52, 4.1),
+    ]
+
+    for i in range(1, N):
+        t = i / FPS
+        s = i / (N-1)
+        # 45 pixels in five seconds: clear macro-camera motion without rushing.
+        pan = 45.0 * smoothstep(s)
+        wx = xx + pan
+        wy = yy
+        dx = np.zeros_like(xx)
+        dy = np.zeros_like(yy)
+
+        # Traveling stream functions.  Subtracting the t=0 phase guarantees a
+        # perfectly continuous onset from the supplied first frame.
+        for amp, kx, ky, omega, phase, coupling in waves:
+            arg0 = kx*wx + ky*wy + phase
+            delta = np.sin(arg0 + omega*t) - np.sin(arg0)
+            dx += amp * delta
+            # Quadrature and cross-coupling avoid a rubber-sheet appearance.
+            argy = -ky*wx + kx*wy + phase*1.37
+            d2 = np.sin(argy + omega*t*0.83) - np.sin(argy)
+            dy += amp * coupling * d2
+
+        # Broad eddies gently curl colored plumes around one another.
+        for cx, cy, radius, strength, omega, phase in vortices:
+            rx = wx - cx
+            ry = wy - cy
+            fall = np.exp(-(rx*rx + ry*ry)/(radius*radius))
+            ang = strength * (np.sin(omega*t + phase) - np.sin(phase)) * fall
+            dx += -ry * ang
+            dy +=  rx * ang
+
+        # A tiny slow vertical drift gives the liquid depth while leaving the
+        # explicitly requested horizontal camera pan dominant.
+        dy += 0.42*t + 0.32*np.sin(wx/39.0 + 0.48*t) - 0.32*np.sin(wx/39.0)
+
+        sx = origin + wx + dx
+        sy = wy + dy
+        out = bilinear(pano, sx, sy)
+
+        # Very restrained caustic breathing, applied mostly to already bright
+        # areas; it reads as reflected light rather than a synthetic overlay.
+        lum = out[..., 0]*0.24 + out[..., 1]*0.50 + out[..., 2]*0.26
+        band = (np.sin(wx*0.041 + wy*0.023 + 0.74*t) -
+                np.sin(wx*0.041 + wy*0.023))
+        fine = (np.sin(wx*0.096 - wy*0.047 + 0.49*t) -
+                np.sin(wx*0.096 - wy*0.047))
+        light = (0.72*band + 0.28*fine) * (0.9 + 1.7*np.clip((lum-105)/120, 0, 1))
+        out += light[..., None]
+
+        frames[i] = np.clip(np.rint(out), 0, 255).astype(np.uint8)
+
+    # Contract-critical: make identity explicit even if rendering is refactored.
+    frames[0] = first
+    return frames
+
+
+if __name__ == \&quot;__main__\&quot;:
+    artifact_io.save(render(), ROOT)
+PY
+python3 generate.py
+python3 - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+z=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+frames=np.stack([np.array(Image.open(f&#x27;frames/{i:02d}.png&#x27;)) for i in range(81)])
+first=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(&#x27;frames&#x27;,frames.shape,frames.dtype,&#x27;first_equal&#x27;,np.array_equal(frames[0],first))
+for i in [1,2,10,20,40,60,80]:
+ d=np.abs(frames[i].astype(int)-frames[max(0,i-1)].astype(int))
+ d0=np.abs(frames[i].astype(int)-first.astype(int))
+ print(i,&#x27;adj mae&#x27;,round(d.mean(),3),&#x27;adj p95&#x27;,np.percentile(d,95),&#x27;vs0&#x27;,round(d0.mean(),2),&#x27;range&#x27;,frames[i].min(),frames[i].max())
+print(&#x27;pixels&#x27;,z.shape,z.dtype)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T01:55:02.130761+00:00</strong><pre>/bin/bash -lc &quot;python3 - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+F=np.stack([np.array(Image.open(f&#x27;frames/{i:02d}.png&#x27;)).astype(np.float32) for i in range(81)])
+# Estimate horizontal motion by integer RGB alignment on the central region.
+for a,b in [(0,10),(0,20),(0,40),(0,60),(0,80),(20,40),(40,60),(60,80)]:
+ A=F[a,8:-8]; B=F[b,8:-8]
+ vals=[]
+ for shift in range(-60,61):
+  if shift&gt;=0: aa=A[:,shift:W if False else None]; bb=B[:,:A.shape[1]-shift]
+  else: aa=A[:,:A.shape[1]+shift]; bb=B[:,-shift:]
+  vals.append(np.mean(np.abs(aa-bb)))
+ sh=np.arange(-60,61)[np.argmin(vals)]
+ print(a,b,&#x27;best B relative shift&#x27;,sh,&#x27;mae&#x27;,round(min(vals),2),&#x27;raw&#x27;,round(np.abs(A-B).mean(),2))
+# Temporal discontinuity ratio and saturation
+adj=np.abs(np.diff(F,axis=0)).mean((1,2,3))
+print(&#x27;adj min/max/mean&#x27;,adj.min(),adj.max(),adj.mean(),&#x27;max jump index&#x27;,adj.argmax()+1)
+print(&#x27;clipped fractions&#x27;,np.mean(F==0),np.mean(F==255))
+PY
+ls -lh pixels.npz index.html inspection.png transition_check.png generate.py frames/00.png frames/80.png&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 1 份；完成命令 6 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>

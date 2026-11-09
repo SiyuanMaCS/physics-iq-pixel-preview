@@ -1,0 +1,421 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0058</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0058</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 running · 输出 tokens None</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. An orange-black grabber tool is suspended above the open dark green fabric box on a wooden table. The orange-black grabber tool releases the yellow rubber duck above the open dark green fabric box.
+</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T02:01:14.746847+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.pyc&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!__pycache__&#x27;&quot;&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T02:01:14.876294+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T02:01:15.236854+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T02:01:15.447417+00:00</strong><pre>/bin/bash -c &#x27;ls -la &amp;&amp; file first_frame.png &amp;&amp; identify first_frame.png 2&gt;/dev/null || true&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T02:01:24.176758+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+a=np.asarray(im)
+print(&#x27;size&#x27;,im.size,&#x27;shape&#x27;,a.shape,&#x27;dtype&#x27;,a.dtype)
+print(&#x27;unique&#x27;,len(np.unique(a.reshape(-1,3),axis=0)))
+print(&#x27;mean&#x27;,a.mean((0,1)),&#x27;min&#x27;,a.min((0,1)),&#x27;max&#x27;,a.max((0,1)))
+# dominant quantized colors
+q=(a//16)*16
+u,c=np.unique(q.reshape(-1,3),axis=0,return_counts=True)
+for i in np.argsort(c)[-25:][::-1]: print(tuple(u[i]),c[i])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T02:01:34.643132+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+R,G,B=a[...,0],a[...,1],a[...,2]
+tests={
+&#x27;yellow&#x27;:(R&gt;110)&amp;(G&gt;70)&amp;(B&lt;90)&amp;(R&gt;G*1.15)&amp;(G&gt;B*1.3),
+&#x27;orange&#x27;:(R&gt;110)&amp;(G&gt;35)&amp;(G&lt;130)&amp;(B&lt;80)&amp;(R&gt;G*1.25)&amp;(G&gt;B*1.25),
+&#x27;green&#x27;:(G&gt;R*1.1)&amp;(G&gt;B*1.15)&amp;(G&gt;25),
+&#x27;darkgreen&#x27;:(G&gt;R*1.05)&amp;(G&gt;B*1.08)&amp;(G&lt;110)&amp;(G&gt;20),
+&#x27;bright&#x27;:(R&gt;145)&amp;(G&gt;140)&amp;(B&gt;130),
+&#x27;black&#x27;:(R&lt;35)&amp;(G&lt;35)&amp;(B&lt;35),
+}
+for name,m in tests.items():
+ ys,xs=np.where(m)
+ print(name,len(xs),&#x27;bbox&#x27;, (xs.min(),ys.min(),xs.max(),ys.max()) if len(xs) else None,&#x27;mean&#x27;,a[m].mean(0) if len(xs) else None)
+ lab,n=ndimage.label(m)
+ comps=[]
+ for i in range(1,n+1):
+  yy,xx=np.where(lab==i)
+  if len(xx)&gt;=5: comps.append((len(xx),xx.min(),yy.min(),xx.max(),yy.max(),a[lab==i].mean(0)))
+ for c in sorted(comps,reverse=True)[:12]: print(&#x27; &#x27;,c)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-09T02:01:39.606401+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-09T02:01:51.194424+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, colorsys
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# 4x4 semantic map. char from average then categories
+for y in range(0,144,4):
+ s=&#x27;&#x27;
+ for x in range(0,256,4):
+  p=a[y:y+4,x:x+4].reshape(-1,3).mean(0); r,g,b=p
+  mx,mn=max(p),min(p); sat=(mx-mn)/(mx+1e-6)
+  if r&gt;90 and g&gt;60 and b&lt;75 and r&gt;g*1.12 and g&gt;b*1.25: c=&#x27;Y&#x27; # yellow/orange
+  elif g&gt;r*1.03 and g&gt;b*1.08 and g&gt;18: c=&#x27;G&#x27;
+  elif mx&lt;22: c=&#x27;@&#x27;
+  elif mx&lt;45: c=&#x27;#&#x27;
+  elif mx&lt;75: c=&#x27;8&#x27;
+  elif mx&lt;105: c=&#x27;o&#x27;
+  elif mx&lt;135: c=&#x27;:&#x27;
+  elif mx&lt;160: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:03d} &#x27;+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-09T02:01:55.722014+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;)
+im.resize((1024,576),Image.Resampling.NEAREST).save(&#x27;.tmp/first_nearest.png&#x27;)
+im.resize((1024,576),Image.Resampling.LANCZOS).save(&#x27;.tmp/first_smooth.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-09T02:02:02.581912+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# print precise runs by color classes on selected rows
+for y in [8,14,20,28,34,40,48,60,80,84,88,96,104,112,120,124,128,132,136,140,143]:
+ row=a[y]
+ # coarse sample every 4 px as rgb hex compact
+ vals=[]
+ for x in range(0,256,4):
+  p=row[x:x+4].mean(0).astype(int); vals.append(f&#x27;{p[0]:02x}{p[1]:02x}{p[2]:02x}&#x27;)
+ print(y,&#x27; &#x27;.join(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-09T02:02:10.226642+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# candidate yellow duck at top: x115..145 y0..38; get row/col occupancy in HSV-like
+r,g,b=a[...,0],a[...,1],a[...,2]
+y=(r&gt;100)&amp;(g&gt;65)&amp;(b&lt;80)&amp;(r&gt;g*1.1)&amp;(g&gt;b*1.25)
+print(&#x27;top yellow per row&#x27;)
+for yy in range(0,50):
+ xs=np.where(y[yy,100:160])[0]+100
+ if len(xs): print(yy, xs.min(),xs.max(),len(xs),np.median(xs))
+# exact pixel colors at points
+pts=[(128,8),(128,12),(128,16),(128,20),(128,24),(128,28),(128,32),(130,36),(120,20),(136,20),(125,8),(140,15),(140,30),(120,30)]
+for x,yy in pts: print((x,yy),tuple(a[yy,x].astype(int)))
+# changes candidates: green box region x104..168 y82..143
+print(&#x27;green region samples&#x27;)
+for yy in range(82,144,6):
+ print(yy,[tuple(a[yy,x].astype(int)) for x in [105,110,115,120,125,130,135,140,145,150,155,160,165]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-09T02:02:22.285492+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# crop x100:160 y0:60; pixel category every pixel, 2 px cols aggregated by priority
+for y in range(0,64):
+ s=&#x27;&#x27;
+ for x in range(96,160,2):
+  p=a[y:y+1,x:x+2].reshape(-1,3).mean(0); r,g,b=p
+  if r&lt;35 and g&lt;35 and b&lt;35: c=&#x27;@&#x27;
+  elif r&gt;100 and g&gt;65 and b&lt;80 and r&gt;g*1.1 and g&gt;b*1.25: c=&#x27;Y&#x27;
+  elif r&gt;105 and g&lt;95 and b&lt;65 and r&gt;g*1.25: c=&#x27;O&#x27;
+  elif r&lt;80 and g&lt;80 and b&lt;80: c=&#x27;#&#x27;
+  elif max(p)&lt;110: c=&#x27;8&#x27;
+  elif max(p)&lt;140: c=&#x27;o&#x27;
+  elif max(p)&lt;160: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-09T02:02:29.068554+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# mask coordinates where colors significantly saturated around duck, x118:143 y12:36
+for y in range(10,38):
+ vals=[]
+ for x in range(118,144):
+  r,g,b=map(int,a[y,x]);
+  if (r&gt;100 and g&gt;65 and b&lt;85 and r&gt;g*1.08 and g&gt;b*1.15): vals.append((x,(r,g,b)))
+ print(y,vals)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-09T02:02:37.126648+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=a[...,0],a[...,1],a[...,2]
+# duck region broad, connected component
+m=(r&gt;100)&amp;(g&gt;60)&amp;(b&lt;90)&amp;(r&gt;g*1.08)&amp;(g&gt;b*1.15)
+m[:12]=False;m[37:]=False;m[:,:115]=False;m[:,145:]=False
+lab,n=ndimage.label(m)
+for i in range(1,n+1):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;10:
+  print(len(xx),xx.min(),yy.min(),xx.max(),yy.max())
+  print(&#x27;centroid&#x27;,xx.mean(),yy.mean())
+# look around box for visible fabric and opening: local color and lines
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-09T02:02:45.945772+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+r,g,b=a[...,0],a[...,1],a[...,2]
+# candidate fabric greens in lower area
+for expr,name in [((g&gt;r*1.02)&amp;(g&gt;b*1.05)&amp;(g&gt;25),&#x27;g1&#x27;),((g&gt;r)&amp;(g&gt;b)&amp;(g&gt;30)&amp;(r&lt;100),&#x27;g2&#x27;),((g&gt;r*1.05)&amp;(g&gt;b*1.1)&amp;(g&gt;20)&amp;(g&lt;120),&#x27;g3&#x27;)]:
+ m=expr
+ print(name,m.sum(),a[m].mean(0))
+ lab,n=ndimage.label(m)
+ for i in range(1,n+1):
+  yy,xx=np.where(lab==i)
+  if len(xx)&gt;20: print(len(xx),(xx.min(),yy.min(),xx.max(),yy.max()),a[lab==i].mean(0))
+# boxes of likely orange-black grabber: saturated orange red
+m=(r&gt;90)&amp;(r&gt;g*1.3)&amp;(g&lt;100)&amp;(b&lt;80)
+print(&#x27;orange&#x27;,m.sum())
+lab,n=ndimage.label(m)
+for i in range(1,n+1):
+ yy,xx=np.where(lab==i)
+ if len(xx)&gt;10: print(len(xx),(xx.min(),yy.min(),xx.max(),yy.max()),a[lab==i].mean(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-09T02:02:50.174402+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Find strong vertical/horizontal structures: print variance across rows/cols
+for x in range(100,180,5):
+ print(x, a[80:140,x].mean(0).astype(int), a[80:140,x].std(0).astype(int))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-09T02:03:02.434004+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+mods=[&#x27;cv2&#x27;,&#x27;scipy&#x27;,&#x27;skimage&#x27;,&#x27;numpy&#x27;,&#x27;PIL&#x27;]
+for m in mods:
+ try:
+  x=__import__(m); print(m,&#x27;ok&#x27;,getattr(x,&#x27;__version__&#x27;,&#x27;&#x27;))
+ except Exception as e: print(m,&#x27;no&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-09T02:03:10.205987+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# local image around duck and box using ANSI truecolor block samples perhaps output escapes? make ascii based on dominant hue and brightness finer
+def char(p):
+ r,g,b=p; mx=max(p); mn=min(p)
+ if r&gt;90 and r&gt;g*1.35 and g&gt;b*1.4: return &#x27;R&#x27;
+ if r&gt;90 and g&gt;60 and b&lt;90 and r&gt;g*1.08 and g&gt;b*1.2: return &#x27;Y&#x27;
+ if g&gt;r*1.02 and g&gt;b*1.05 and g&gt;18: return &#x27;G&#x27;
+ if mx&lt;25:return &#x27;@&#x27;
+ if mx&lt;45:return &#x27;#&#x27;
+ if mx&lt;65:return &#x27;8&#x27;
+ if mx&lt;85:return &#x27;o&#x27;
+ if mx&lt;105:return &#x27;:&#x27;
+ if mx&lt;125:return &#x27;.&#x27;
+ if mx&lt;145:return &#x27; &#x27;
+ return &#x27; &#x27;
+# crop x110-170 y75-143, scale x 1, y 1
+for y in range(75,144):
+ s=&#x27;&#x27;
+ for x in range(100,180):
+  p=a[y,x]
+  s+=char(p)
+ print(f&#x27;{y:03d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-09T02:03:18.630490+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# all pixels with hue orange etc in top region, save masks maybe inspect by row exact
+r,g,b=a[...,0],a[...,1],a[...,2]
+# print full RGB for x120-142 y12-37 in hex grid, focus edge detection
+for y in range(11,38):
+ print(f&#x27;{y:02d}&#x27;, &#x27; &#x27;.join(f&#x27;{int(r[y,x]):02x}{int(g[y,x]):02x}{int(b[y,x]):02x}&#x27; for x in range(119,141)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-09T02:03:25.631879+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Detect near-duplicate neutral background columns around duck: show means and pixels
+for y in range(10,37):
+ print(y, &#x27; &#x27;.join(f&#x27;{a[y,x].mean():.0f}&#x27; for x in range(115,145)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-09T02:03:32.688235+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Source coordinate guesses: wall/table boundary etc. compute row median/means
+for y in range(0,144,4):
+ print(y, a[y].mean(0).astype(int), np.median(a[y],axis=0).astype(int), a[y,:].min(0),a[y,:].max(0))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-09T02:03:40.690628+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# crop x100-160 y0-45 print detailed edge chars using colorfulness magnitude
+for y in range(0,45):
+ s=&#x27;&#x27;
+ for x in range(110,150):
+  r,g,b=a[y,x]
+  sat=max(r,g,b)-min(r,g,b)
+  if sat&gt;45 and r&gt;g*1.15: c=&#x27;X&#x27;
+  elif sat&gt;30 and r&gt;g*1.08: c=&#x27;x&#x27;
+  elif max(r,g,b)&lt;35: c=&#x27;@&#x27;
+  elif max(r,g,b)&lt;70: c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;100: c=&#x27;8&#x27;
+  elif max(r,g,b)&lt;125: c=&#x27;o&#x27;
+  elif max(r,g,b)&lt;145: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-09T02:03:48.529774+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+r,g,b=a[...,0],a[...,1],a[...,2]
+# Grabber likely black/orange above duck. show color grid y0:16 x112:150 categories
+for y in range(0,15):
+ s=&#x27;&#x27;
+ for x in range(110,152):
+  p=a[y,x]; r0,g0,b0=p
+  if r0&lt;35 and g0&lt;35 and b0&lt;35: c=&#x27;@&#x27;
+  elif r0&gt;100 and g0&lt;75 and r0&gt;g0*1.5: c=&#x27;O&#x27;
+  elif r0&gt;110 and g0&lt;100 and r0&gt;g0*1.25: c=&#x27;o&#x27;
+  elif max(p)&lt;80:c=&#x27;#&#x27;
+  elif max(p)&lt;110:c=&#x27;8&#x27;
+  elif max(p)&lt;135:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-09T02:03:56.864391+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# gradient stats for duck vs background; inspect x124-139 y16-32 channels
+print(&#x27;r&#x27;)
+for y in range(13,36): print(y,&#x27; &#x27;.join(f&#x27;{int(a[y,x,0]):3d}&#x27; for x in range(121,140)))
+print(&#x27;g&#x27;)
+for y in range(13,36): print(y,&#x27; &#x27;.join(f&#x27;{int(a[y,x,1]):3d}&#x27; for x in range(121,140)))
+print(&#x27;b&#x27;)
+for y in range(13,36): print(y,&#x27; &#x27;.join(f&#x27;{int(a[y,x,2]):3d}&#x27; for x in range(121,140)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-09T02:04:05.843104+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+from scipy import ndimage
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# inspect source as regions with texture orientation via grayscale blur and derivatives
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;L&#x27;)
+# resize and save contrast/structure for ourselves via numeric stats only
+for y in range(75,145,2):
+ row=[]
+ for x in range(95,180,3):
+  p=np.asarray(im)[y:y+2,x:x+3].mean()
+  row.append(f&#x27;{p:3.0f}&#x27;)
+ print(y,&#x27; &#x27;.join(row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-09T02:04:14.897339+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print x runs of saturation at each y 0..45, using r-g and b dark
+for y in range(0,45):
+ vals=[]
+ for x in range(100,160):
+  r,g,b=a[y,x]; s=max(r,g,b)-min(r,g,b)
+  if s&gt;35 and r&gt;=g: vals.append(x)
+ # group
+ groups=[]
+ for x in vals:
+  if not groups or x&gt;groups[-1][-1]+1:groups.append([x])
+  else:groups[-1].append(x)
+ print(y,[(g[0],g[-1]) for g in groups])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-09T02:04:23.083274+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Get boundaries of box via row derivative around x100-175 and y80-143
+L=a.mean(2)
+for y in [80,81,82,83,84,85,86,87,88,90,95,100,110,120,130,140,143]:
+ d=np.abs(np.diff(L[y]))
+ ids=np.argsort(d)[-12:]
+ print(y, sorted([(int(x),round(float(d[x]),1)) for x in ids]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-09T02:04:29.620669+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Print representative pixels from duck with b &lt; 10 and background around. exact coordinate map rows y14..34 x120..140
+for y in range(13,36):
+ s=&#x27;&#x27;
+ for x in range(120,141):
+  r,g,b=a[y,x]
+  if b&lt;20 and r&gt;100: c=&#x27;Y&#x27;
+  elif b&lt;50 and r&gt;90: c=&#x27;y&#x27;
+  elif r&gt;g+10 and g&gt;b+20:c=&#x27;x&#x27;
+  elif max(r,g,b)&lt;50:c=&#x27;@&#x27;
+  elif max(r,g,b)&lt;80:c=&#x27;#&#x27;
+  elif max(r,g,b)&lt;110:c=&#x27;8&#x27;
+  elif max(r,g,b)&lt;130:c=&#x27;o&#x27;
+  elif max(r,g,b)&lt;145:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-09T02:04:36.086673+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# inspect exact R,G,B at x122-140 y14-34, output only luminance + saturation matrices
+for y in range(13,35):
+ print(f&#x27;{y:02d} sat&#x27;, &#x27; &#x27;.join(f&#x27;{int(max(a[y,x])-min(a[y,x])):2d}&#x27; for x in range(120,142)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-09T02:04:44.885582+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Estimate local row/col background near duck from left and right strips
+# Compare a pixel&#x27;s neutral background to extrapolation from x110 and x145 to understand radial vignette
+for y in [14,20,26,32,40]:
+ print(&#x27;y&#x27;,y)
+ for x in range(115,146,2):
+  print(x,tuple(a[y,x].astype(int)),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-09T02:04:53.466531+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# candidate mask from saturation, extract alpha based on color distance from estimated neutral background
+# inspect edges via hue saturation; print grayscale hue-ish for y10:40 x118:145 with saturation levels
+for y in range(10,40):
+ s=&#x27;&#x27;
+ for x in range(116,146):
+  p=a[y,x]; sat=max(p)-min(p)
+  if sat&lt;15:c=&#x27;.&#x27;
+  elif sat&lt;35:c=&#x27;:&#x27;
+  elif sat&lt;65:c=&#x27;o&#x27;
+  elif sat&lt;105:c=&#x27;O&#x27;
+  else:c=&#x27;Y&#x27;
+  s+=c
+ print(f&#x27;{y:02d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-09T02:05:03.083225+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# For box, classify color saturation and likely fabric vs interior
+for y in range(80,144,4):
+ s=&#x27;&#x27;
+ for x in range(96,180,2):
+  p=a[y:y+4,x:x+2].reshape(-1,3).mean(0); r,g,b=p
+  if max(p)-min(p)&gt;40 and r&gt;g*1.2: c=&#x27;R&#x27;
+  elif g&gt;r*1.08 and g&gt;b*1.12 and g&gt;25: c=&#x27;G&#x27;
+  elif max(p)&lt;50:c=&#x27;@&#x27;
+  elif max(p)&lt;80:c=&#x27;#&#x27;
+  elif max(p)&lt;110:c=&#x27;8&#x27;
+  elif max(p)&lt;135:c=&#x27;o&#x27;
+  elif max(p)&lt;155:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:03d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-09T02:05:10.296391+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# duck mask from sat plus coordinates. create source analysis mask and determine alpha by sat thresholds
+# Print exact x range and saturation maxima for each row
+for y in range(10,37):
+ xs=[]; vals=[]
+ for x in range(115,145):
+  s=int(max(a[y,x])-min(a[y,x]));
+  if s&gt;15:xs.append(x);vals.append(s)
+ if xs: print(y,min(xs),max(xs),max(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-09T02:05:19.186019+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+a=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Build source mask by chroma excess r-b and likely duck. Determine color centroid trajectory possible. 
+# Look at lines extending from duck upward to edge
+for x in [123,124,125,126,127,134,135,136,137,138]:
+ print(&#x27;x&#x27;,x,&#x27;top sat&#x27;,[(y,int(max(a[y,x])-min(a[y,x]))) for y in range(0,16)])
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 34 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>

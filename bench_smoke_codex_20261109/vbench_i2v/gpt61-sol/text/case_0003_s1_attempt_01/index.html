@@ -1,0 +1,306 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · 0003_s1</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · 0003_s1</h1><p class=muted>text · 256×144 · 16.0 FPS · 81 帧 · 状态 complete · 输出 tokens 6055</p><div class=box><strong>原始任务</strong><p>a close up of a blue and orange liquid, camera tilts up</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_9876674d6d5eb82e.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d18c8bc3ef70e69aca84eb663c728684f5a06aab452f027937efcc23f9d31cf6&quot;, &quot;pixels&quot;: &quot;final/pixels_9876674d6d5eb82e.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T01:52:56.589248+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_9876674d6d5eb82e.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d18c8bc3ef70e69aca84eb663c728684f5a06aab452f027937efcc23f9d31cf6&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_9876674d6d5eb82e.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,111 @@
++&quot;&quot;&quot;Texture-preserving macro-liquid animation, with an upward camera tilt.
++
++No learned components: solve a smooth, incompressible transport field for
++pixel coordinates, then sample the original photographic RGB texture.
++&quot;&quot;&quot;
++from pathlib import Path
++import numpy as np
++import cv2
++from PIL import Image
++import artifact_io
++
++HERE = Path(__file__).resolve().parent
++
++
++def velocity(x, y, t):
++    # A stream-function field. Circular cells and travelling shears keep the
++    # liquid coherent, but allow the orange/blue interfaces to slowly curl.
++    vx = np.full_like(x, 0.65)
++    vy = np.full_like(y, -0.28)
++    cells = [(198, 13, 44, .075, 0.3),
++             (198, 127, 56, -.066, 1.5),
++             (68, 45, 57, .050, 3.1),
++             (119, 96, 37, -.065, 4.4),
++             (12, 90, 35, .047, 2.0)]
++    for cx, cy, radius, spin, phase in cells:
++        # Each eddy moves very slightly as larger-scale currents carry it.
++        dx = x - cx - 3.5 * (np.sin(.34*t+phase)-np.sin(phase))
++        dy = y - cy - 2.5 * (np.cos(.29*t+phase)-np.cos(phase))
++        strength = spin * (.88 + .18*np.sin(.52*t+phase))
++        envelope = strength*np.exp(-(dx*dx+dy*dy)/(2*radius*radius))
++        vx -= dy*envelope
++        vy += dx*envelope
++    for kx, ky, amplitude, speed, phase in [
++            (.024, .032, 33.0, .55, .1),
++            (-.035, .018, 26.0, -.43, 1.7),
++            (.057, .045, 9.0, .72, 3.0)]:
++        c = amplitude*np.cos(kx*x+ky*y+speed*t+phase)
++        vx += ky*c
++        vy -= kx*c
++    return vx, vy
++
++
++def sample_texture(image, sx, sy):
++    # Continue the cropped macro surface beyond its upper edge. Slanted,
++    # compressed reflection avoids a repeated straight-edge strip and allows
++    # the camera to reveal a little more of the same orange/blue pools.
++    above = np.maximum(-sy, 0)
++    below = np.maximum(sy-(image.shape[0]-1), 0)
++    sx = sx - .43*above + .20*below + 2.0*np.sin(above/18)*np.sin(sx/41)
++    sy = np.where(sy &lt; 0, .72*above, sy)
++    sy = np.where(sy &gt; image.shape[0]-1, image.shape[0]-1-.80*below, sy)
++    return cv2.remap(image, sx.astype(np.float32), sy.astype(np.float32),
++                     interpolation=cv2.INTER_LINEAR,
++                     borderMode=cv2.BORDER_REFLECT_101)
++
++
++def generate():
++    cv2.setNumThreads(1)
++    original = np.asarray(Image.open(HERE/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++    h,w = original.shape[:2]
++    count, fps = 81,16
++    frames = np.empty((count,h,w,3),dtype=np.uint8)
++    frames[0] = original
++    # Semi-Lagrangian coordinate advection: unlike advecting RGB repeatedly,
++    # this retains the source&#x27;s fine texture all the way through the shot.
++    pad = 88
++    gy,gx = np.mgrid[-pad:h+pad,-pad:w+pad].astype(np.float32)
++    qx,qy = gx.copy(),gy.copy()
++    py,px = np.mgrid[0:h,0:w].astype(np.float32)
++    centerx,centery = (w-1)/2,(h-1)/2
++    dt = 1/fps/2
++    t = 0.
++    for i in range(1,count):
++        for _ in range(2):
++            vx,vy = velocity(gx,gy,t+dt)
++            mx,my = gx-.5*dt*vx,gy-.5*dt*vy
++            vx,vy = velocity(mx,my,t+.5*dt)
++            bx,by = gx-dt*vx+pad,gy-dt*vy+pad
++            qx = cv2.remap(qx,bx,by,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
++            qy = cv2.remap(qy,bx,by,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
++            t += dt
++        u=i/(count-1)
++        # Tilt up roughly four degrees, easing only at the ends. Projective
++        # sampling provides the gentle perspective change of a rotating camera.
++        progress = .72*u+.28*(u*u*(3-2*u))
++        angle=.073*progress
++        f=335.
++        c,s=np.cos(angle),np.sin(angle)
++        denom=f*c+(py-centery)*s
++        camera_x=(centerx+(px-centerx)*f/denom).astype(np.float32)
++        camera_y=(centery+f*((py-centery)*c-f*s)/denom).astype(np.float32)
++        sx=cv2.remap(qx,camera_x+pad,camera_y+pad,cv2.INTER_LINEAR,
++                     borderMode=cv2.BORDER_REPLICATE)
++        sy=cv2.remap(qy,camera_x+pad,camera_y+pad,cv2.INTER_LINEAR,
++                     borderMode=cv2.BORDER_REPLICATE)
++        # Small capillary waves travel through the larger swirls, gently
++        # changing the reflections rather than generating independent speckles.
++        ramp=1-np.exp(-t/1.1)
++        sx += .65*ramp*(np.sin(.096*sx+.074*sy-1.08*t)-np.sin(.096*sx+.074*sy))
++        sy += .52*ramp*(np.sin(-.068*sx+.113*sy+.83*t)-np.sin(-.068*sx+.113*sy))
++        rgb=sample_texture(original,sx,sy).astype(np.float32)
++        # Weak moving illumination on the liquid&#x27;s reflective surface.
++        light = .009*ramp*(np.sin(.045*sx+.071*sy-.78*t)-np.sin(.045*sx+.071*sy))
++        rgb *= (1+light[...,None])
++        frames[i]=np.clip(np.rint(rgb),0,255).astype(np.uint8)
++    assert np.array_equal(frames[0],original)
++    artifact_io.save(frames,HERE)
++    return frames
++
++if __name__==&#x27;__main__&#x27;:
++    generate()
+</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T01:51:03.810671+00:00</strong><pre>/bin/bash -lc &#x27;ls -la; cat prompt.txt; cat GENERATION_RULES.md&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T01:51:12.675353+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json; cat artifact_io.py; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)); print(im.shape)
+print(&#x27;min,max,mean&#x27;,im.min(axis=(0,1)),im.max(axis=(0,1)),im.mean(axis=(0,1)))
+small=np.array(Image.fromarray(im).resize((64,36)))
+# represent hues color/light levels
+for row in small:
+ s=&#x27;&#x27;
+ for r,g,b in row.astype(float):
+  mx=max(r,g,b);mn=min(r,g,b)
+  if mx&lt;25: c=&#x27; &#x27;
+  elif mx-mn&lt;25:c=&#x27;.&#x27; if mx&lt;90 else &#x27;o&#x27; if mx&lt;180 else &#x27;W&#x27;
+  elif b&gt;r*1.25:c=&#x27;B&#x27; if b&gt;100 else &#x27;b&#x27;
+  elif r&gt;b*1.4:c=&#x27;O&#x27; if g&gt;r*.32 else &#x27;R&#x27;
+  elif g&gt;r*1.2 and g&gt;b*1.1:c=&#x27;G&#x27;
+  else:c=&#x27;p&#x27; if b&gt;g*1.3 else &#x27;c&#x27;
+  s+=c
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T01:51:27.071980+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for p in [&#x27;numpy&#x27;,&#x27;scipy&#x27;,&#x27;cv2&#x27;,&#x27;PIL&#x27;]:
+ print(p,bool(importlib.util.find_spec(p)))
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+for y in range(0,144,8):
+ print(y, &#x27; &#x27;.join(&#x27;%3d,%3d,%3d&#x27;%tuple(im[y:y+8,x:x+8].mean((0,1))) for x in range(0,256,16)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T01:52:28.171991+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; generate.py &lt;&lt;&#x27;PY&#x27;
+\&quot;\&quot;\&quot;Texture-preserving macro-liquid animation, with an upward camera tilt.
+
+No learned components: solve a smooth, incompressible transport field for
+pixel coordinates, then sample the original photographic RGB texture.
+\&quot;\&quot;\&quot;
+from pathlib import Path
+import numpy as np
+import cv2
+from PIL import Image
+import artifact_io
+
+HERE = Path(__file__).resolve().parent
+
+
+def velocity(x, y, t):
+    # A stream-function field. Circular cells and travelling shears keep the
+    # liquid coherent, but allow the orange/blue interfaces to slowly curl.
+    vx = np.full_like(x, 0.65)
+    vy = np.full_like(y, -0.28)
+    cells = [(198, 13, 44, .075, 0.3),
+             (198, 127, 56, -.066, 1.5),
+             (68, 45, 57, .050, 3.1),
+             (119, 96, 37, -.065, 4.4),
+             (12, 90, 35, .047, 2.0)]
+    for cx, cy, radius, spin, phase in cells:
+        # Each eddy moves very slightly as larger-scale currents carry it.
+        dx = x - cx - 3.5 * (np.sin(.34*t+phase)-np.sin(phase))
+        dy = y - cy - 2.5 * (np.cos(.29*t+phase)-np.cos(phase))
+        strength = spin * (.88 + .18*np.sin(.52*t+phase))
+        envelope = strength*np.exp(-(dx*dx+dy*dy)/(2*radius*radius))
+        vx -= dy*envelope
+        vy += dx*envelope
+    for kx, ky, amplitude, speed, phase in [
+            (.024, .032, 33.0, .55, .1),
+            (-.035, .018, 26.0, -.43, 1.7),
+            (.057, .045, 9.0, .72, 3.0)]:
+        c = amplitude*np.cos(kx*x+ky*y+speed*t+phase)
+        vx += ky*c
+        vy -= kx*c
+    return vx, vy
+
+
+def sample_texture(image, sx, sy):
+    # Continue the cropped macro surface beyond its upper edge. Slanted,
+    # compressed reflection avoids a repeated straight-edge strip and allows
+    # the camera to reveal a little more of the same orange/blue pools.
+    above = np.maximum(-sy, 0)
+    below = np.maximum(sy-(image.shape[0]-1), 0)
+    sx = sx - .43*above + .20*below + 2.0*np.sin(above/18)*np.sin(sx/41)
+    sy = np.where(sy &lt; 0, .72*above, sy)
+    sy = np.where(sy &gt; image.shape[0]-1, image.shape[0]-1-.80*below, sy)
+    return cv2.remap(image, sx.astype(np.float32), sy.astype(np.float32),
+                     interpolation=cv2.INTER_LINEAR,
+                     borderMode=cv2.BORDER_REFLECT_101)
+
+
+def generate():
+    cv2.setNumThreads(1)
+    original = np.asarray(Image.open(HERE/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+    h,w = original.shape[:2]
+    count, fps = 81,16
+    frames = np.empty((count,h,w,3),dtype=np.uint8)
+    frames[0] = original
+    # Semi-Lagrangian coordinate advection: unlike advecting RGB repeatedly,
+    # this retains the source&#x27;s fine texture all the way through the shot.
+    pad = 88
+    gy,gx = np.mgrid[-pad:h+pad,-pad:w+pad].astype(np.float32)
+    qx,qy = gx.copy(),gy.copy()
+    py,px = np.mgrid[0:h,0:w].astype(np.float32)
+    centerx,centery = (w-1)/2,(h-1)/2
+    dt = 1/fps/2
+    t = 0.
+    for i in range(1,count):
+        for _ in range(2):
+            vx,vy = velocity(gx,gy,t+dt)
+            mx,my = gx-.5*dt*vx,gy-.5*dt*vy
+            vx,vy = velocity(mx,my,t+.5*dt)
+            bx,by = gx-dt*vx+pad,gy-dt*vy+pad
+            qx = cv2.remap(qx,bx,by,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+            qy = cv2.remap(qy,bx,by,cv2.INTER_LINEAR,borderMode=cv2.BORDER_REPLICATE)
+            t += dt
+        u=i/(count-1)
+        # Tilt up roughly four degrees, easing only at the ends. Projective
+        # sampling provides the gentle perspective change of a rotating camera.
+        progress = .72*u+.28*(u*u*(3-2*u))
+        angle=.073*progress
+        f=335.
+        c,s=np.cos(angle),np.sin(angle)
+        denom=f*c+(py-centery)*s
+        camera_x=centerx+(px-centerx)*f/denom
+        camera_y=centery+f*((py-centery)*c-f*s)/denom
+        sx=cv2.remap(qx,camera_x+pad,camera_y+pad,cv2.INTER_LINEAR,
+                     borderMode=cv2.BORDER_REPLICATE)
+        sy=cv2.remap(qy,camera_x+pad,camera_y+pad,cv2.INTER_LINEAR,
+                     borderMode=cv2.BORDER_REPLICATE)
+        # Small capillary waves travel through the larger swirls, gently
+        # changing the reflections rather than generating independent speckles.
+        ramp=1-np.exp(-t/1.1)
+        sx += .65*ramp*(np.sin(.096*sx+.074*sy-1.08*t)-np.sin(.096*sx+.074*sy))
+        sy += .52*ramp*(np.sin(-.068*sx+.113*sy+.83*t)-np.sin(-.068*sx+.113*sy))
+        rgb=sample_texture(original,sx,sy).astype(np.float32)
+        # Weak moving illumination on the liquid&#x27;s reflective surface.
+        light = .009*ramp*(np.sin(.045*sx+.071*sy-.78*t)-np.sin(.045*sx+.071*sy))
+        rgb *= (1+light[...,None])
+        frames[i]=np.clip(np.rint(rgb),0,255).astype(np.uint8)
+    assert np.array_equal(frames[0],original)
+    artifact_io.save(frames,HERE)
+    return frames
+
+if __name__==&#x27;__main__&#x27;:
+    generate()
+PY
+python generate.py
+python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+p=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]; f=np.stack([(p&gt;&gt;16)&amp;255,(p&gt;&gt;8)&amp;255,p&amp;255],axis=-1).transpose(2,0,1,3).astype(&#x27;uint8&#x27;)
+print(&#x27;shape&#x27;,f.shape,&#x27;first frame identical&#x27;,np.array_equal(f[0],np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))))
+d=np.abs(np.diff(f.astype(float),axis=0)); print(&#x27;adjacent mean differences min/mean/max&#x27;,d.mean((1,2,3)).min(),d.mean(),d.mean((1,2,3)).max());print(&#x27;last vs first&#x27;,np.abs(f[-1].astype(float)-f[0]).mean())
+PY&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 5 · 2026-11-09T01:52:53.580419+00:00</strong><pre>/bin/bash -lc &quot;python generate.py
+python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+p=np.load(&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]; f=np.stack([(p&gt;&gt;16)&amp;255,(p&gt;&gt;8)&amp;255,p&amp;255],axis=-1).transpose(2,0,1,3).astype(&#x27;uint8&#x27;)
+print(&#x27;shape&#x27;,f.shape,&#x27;first frame identical&#x27;,np.array_equal(f[0],np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))))
+d=np.abs(np.diff(f.astype(float),axis=0)); print(&#x27;adjacent mean differences min/mean/max&#x27;,d.mean((1,2,3)).min(),d.mean(),d.mean((1,2,3)).max());print(&#x27;last vs first&#x27;,np.abs(f[-1].astype(float)-f[0]).mean())
+for i in [0,20,40,60,80]:
+ im=f[i].astype(float)
+ orange=(im[:,:,0]&gt;1.4*im[:,:,2])&amp;(im[:,:,0]&gt;95)
+ blue=(im[:,:,2]&gt;1.25*im[:,:,0])&amp;(im[:,:,2]&gt;65)
+ print(i,&#x27;color area orange/blue&#x27;,orange.mean(),blue.mean(),&#x27;mean&#x27;,im.mean((0,1)),&#x27;detail&#x27;,np.abs(np.diff(im,axis=1)).mean())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T01:53:04.069996+00:00</strong><pre>/bin/bash -lc &#x27;if command -v ffmpeg &gt;/dev/null 2&gt;&amp;1; then ffmpeg -hide_banner -loglevel error -y -framerate 16 -i frames/%02d.png -frames:v 81 -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart video.mp4; fi
+ls -lh video.mp4 pixels.npz index.html generate.py&#x27;</pre><span class=pill>exit 2</span></div><div class=step><strong>命令 7 · 2026-11-09T01:53:08.825135+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for n in [&#x27;imageio&#x27;,&#x27;imageio_ffmpeg&#x27;,&#x27;av&#x27;]:
+ print(n, bool(importlib.util.find_spec(n)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-09T01:53:14.889355+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import av
+from PIL import Image
+with av.open(&#x27;video.mp4&#x27;,&#x27;w&#x27;) as container:
+ stream=container.add_stream(&#x27;libx264&#x27;,rate=16)
+ stream.width=256;stream.height=144;stream.pix_fmt=&#x27;yuv420p&#x27;;stream.options={&#x27;crf&#x27;:&#x27;17&#x27;,&#x27;preset&#x27;:&#x27;slow&#x27;}
+ for i in range(81):
+  image=Image.open(&#x27;frames/%02d.png&#x27;%i).convert(&#x27;RGB&#x27;)
+  frame=av.VideoFrame.from_image(image)
+  for packet in stream.encode(frame):container.mux(packet)
+ for packet in stream.encode():container.mux(packet)
+with av.open(&#x27;video.mp4&#x27;) as container:
+ print(&#x27;MP4 decoded frames:&#x27;,sum(1 for _ in container.decode(video=0)))
+PY
+ls -lh video.mp4&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 1 份；完成命令 8 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
