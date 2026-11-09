@@ -28,8 +28,8 @@
 </tr>
 <tr>
 <td>RoboJudge shared50</td>
-<td>原始9B权重完整校验；三个模型完成单例PA/IA评分；50个输入身份匹配</td>
-<td>论文Table8的每模型生成次数、prompt选择与平均分母尚未公开对齐</td>
+<td>原始9B权重完整校验；三个模型完成Vision单例PA/IA评分；新增同例Text结果已进入双轨对比；50个输入身份匹配</td>
+<td>论文Table8的每模型生成次数、prompt选择与平均分母尚未公开对齐；DeepSeek交付失败保留</td>
 <td>紧凑的具身语义补充，比较口径确认后正式纳入</td>
 </tr>
 <tr>
@@ -128,6 +128,16 @@ FPS为2/4/8/16（固定256宽）；宽度为128/256/512/1024（固定4FPS），�
 可验证的看图事件、token与渲染耗时。修订数量不能用执行次数代替。
 token用于主成本比较；墙钟时间单列，因为API排队与限流会改变延迟。
 详细设计见<a href="OUTPUT_SPEC_AND_ABLATION_PLAN.md">OUTPUT_SPEC_AND_ABLATION_PLAN.md</a>。</p>
+<h2>同例Text／Vision检查</h2>
+<p>RoboJudge <code>common50_0001</code> 已有GPT-6.1-Sol Text的原版9B评分：PA2、IA2；
+原先Vision-Agent为PA3、IA5。GPT-5.6-Sol Text已完成交付并排入同一原版judge评分。
+单个场景的差异仅用于核对双轨链路和定位后续分析，不据此推出Vision普遍优于Text。
+完整状态、失败候选和每次保存版本在可播放页面更新。</p>
+<p>本次还发现Codex在发出最终<code>turn.completed</code>与用量后偶尔卡在进程退出阶段。
+harness现在只在已完成终止事件后给CLI收尾60秒宽限；不为模型生成或API排队
+设置这个时限。已保存结果仍要通过原有RGB、首帧、工具和文件访问检查，
+原始退出码、终止日志哈希及恢复凭据保留；不会重生成、改写用量或把失败视频补成成功。
+历史墙钟记录保留，另记录实际模型完成时间，避免将CLI收尾时间混入模型延迟分析。</p>
 <h2>可复现的评测交接</h2>
 <p>Physics-IQ现已使用独立198-case清单，现有全部输入的图像/BPP哈希已核对；<code>watch_physics_evaluation.py</code>会在完整有效交付后自动评分，避免共用输入父目录的通用manifest被其他bench覆盖。</p>
 <p>新增的<code>prepare_vbench_submission.py</code>已经用现有五会话完成真实输入/输出检查、
