@@ -871,7 +871,425 @@ for y in range(48,130,2):
   v=g[y:y+2,x:x+2].mean()
   s += &#x27;#&#x27; if v&lt;40 else &#x27;D&#x27; if v&lt;70 else &#x27;m&#x27; if v&lt;100 else &#x27;M&#x27; if v&lt;140 else &#x27;W&#x27; if v&lt;180 else &#x27;@&#x27;
  print(&#x27;%3d &#x27;%y+s)
-PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 66 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
+PY&quot;</pre></details><details class=command><summary><strong>命令 67</strong><time>2026-11-09T06:05:43.340078+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(40,120)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(40,120)))
+for y in range(72,116):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(40,120)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 68</strong><time>2026-11-09T06:06:04.924532+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# Crop 65:105, 55:115 with block 1x2, threshold around structural components
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(65,106):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(55,116)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 69</strong><time>2026-11-09T06:06:45.284088+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(18,105)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(18,105)))
+for y in range(70,131):
+ s=&#x27;&#x27;
+ for x in range(18,105):
+  r,g,b=im[y,x]; h,sa,v=hsv[y,x]
+  if b-r&gt;70 and b&gt;55:c=&#x27;B&#x27;
+  elif b-r&gt;25 and b&gt;35:c=&#x27;b&#x27;
+  elif v&lt;18:c=&#x27;#&#x27;
+  elif v&lt;35:c=&#x27;@&#x27;
+  elif sa&lt;32 and v&gt;145:c=&#x27;W&#x27;
+  elif sa&lt;55 and v&gt;90:c=&#x27;g&#x27;
+  elif sa&lt;70 and v&gt;65:c=&#x27;m&#x27;
+  elif v&lt;55:c=&#x27;d&#x27;
+  else:c=&#x27;.&#x27;
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre></details><details class=command><summary><strong>命令 70</strong><time>2026-11-09T06:07:42.495397+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for cx in [87,100,113,126,139,152]:
+ print(&#x27;\\ncenter&#x27;,cx,117)
+ for y in range(108,127):
+  print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(cx-10,cx+11)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 71</strong><time>2026-11-09T06:08:05.961283+00:00</time><span class=pill>exit 1</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+# use Hough on strong blurred edges for circles centered near y117, radii 3-6
+for sig in [1,2,3]:
+ a=cv2.GaussianBlur(g.astype(np.float32),(0,0),sig)
+ for p2 in [5,6,7,8,9,10]:
+  cs=cv2.HoughCircles(a[108:128,90:170],cv2.HOUGH_GRADIENT,dp=1,minDist=12,param1=30,param2=p2,minRadius=3,maxRadius=7)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=90;arr[:,1]+=108
+   print(&#x27;s&#x27;,sig,&#x27;p&#x27;,p2,arr.tolist())
+PY&quot;</pre></details><details class=command><summary><strong>命令 72</strong><time>2026-11-09T06:08:28.481182+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY)
+for sig in [1,2,3]:
+ a=cv2.GaussianBlur(g,(0,0),sig)
+ for p2 in [5,6,7,8,9,10]:
+  cs=cv2.HoughCircles(a[108:128,90:170],cv2.HOUGH_GRADIENT,dp=1,minDist=12,param1=30,param2=p2,minRadius=3,maxRadius=7)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=90;arr[:,1]+=108
+   print(&#x27;s&#x27;,sig,&#x27;p&#x27;,p2,arr.tolist())
+PY&quot;</pre></details><details class=command><summary><strong>命令 73</strong><time>2026-11-09T06:08:54.093302+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+# radial symmetry centered candidate lower balls with r=3-7
+for cx in [101,114,127,140,153,161]:
+ best=[]
+ for cy in np.arange(114,124,.5):
+  for r in np.arange(3,8,.5):
+   th=np.linspace(0,2*np.pi,72,endpoint=False)
+   px=np.rint(cx+r*np.cos(th)).astype(int);py=np.rint(cy+r*np.sin(th)).astype(int)
+   vals=g[py,px]
+   # circle boundary should have high variance across angle, center low variance
+   best.append((vals.std(),vals.mean(),cy,r))
+ print(cx,sorted(best,reverse=True)[:4])
+PY&quot;</pre></details><details class=command><summary><strong>命令 74</strong><time>2026-11-09T06:09:19.632652+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# values y 96..104 x 90..160, detect high contrast light balls in grabber
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,105):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(88,160)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 75</strong><time>2026-11-09T06:09:44.618878+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(88,106):
+ s=&#x27;&#x27;
+ for x in range(85,175,2):
+  v=g[y:y+2,x:x+2].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre></details><details class=command><summary><strong>命令 76</strong><time>2026-11-09T06:10:11.685514+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# find ball region using color near neutral and dark but circular. print columns x=95..160 values y=94..100 exact
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(85,170)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(85,170)))
+for y in range(93,102):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(&#x27;%X&#x27;%min(15,int(im[y,x].mean()/16)) for x in range(85,170)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 77</strong><time>2026-11-09T06:10:36.127673+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(93,102):
+ s=&#x27;&#x27;
+ for x in range(85,170):
+  s+=chars[min(9,int(g[y,x]/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre></details><details class=command><summary><strong>命令 78</strong><time>2026-11-09T06:11:02.894316+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# generate compact luminance map 2x2 around likely ball lattice x=95-165 y=90-110 with numeric indices
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,112,2):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(im[y:y+2,x:x+2].mean()/25.6))] for x in range(88,168,2)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(88,168,2)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//2)%10) for x in range(88,168,2)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 79</strong><time>2026-11-09T06:11:33.790206+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print all pixels of row 96/97 in x 85..170 using 2-char codes hex
+print(&#x27;   &#x27;+&#x27;&#x27;.join(f&#x27;{x:02d}&#x27;[-1] for x in range(85,170)))
+for y in [94,95,96,97,98,99,100]:
+ print(y,&#x27;&#x27;.join(f&#x27;{min(15,int(im[y,x].mean()/16)):X}&#x27; for x in range(85,170)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 80</strong><time>2026-11-09T06:12:02.918951+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in [94,95,96,97,98,99,100,101]:
+ a=im[y].mean(1)
+ # local maxima over +/-1 within x80..180, threshold &gt;70
+ peaks=[]
+ for x in range(82,180):
+  if a[x]&gt;=a[x-1] and a[x]&gt;a[x+1] and a[x]&gt;65: peaks.append((x,int(a[x])))
+ print(y,peaks)
+PY&quot;</pre></details><details class=command><summary><strong>命令 81</strong><time>2026-11-09T06:12:18.399031+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,112):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(80,190)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 82</strong><time>2026-11-09T06:12:35.400368+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# compare region y95-100 to find strong ball highlights at x 86..160: detect connected regions &gt;100 with local windows
+mask=g&gt;100
+n,lab,stats,cents=cv2.connectedComponentsWithStats(mask.astype(np.uint8))
+for i in range(1,n):
+ x,y,w,h,a=stats[i]
+ if 80&lt;x&lt;180 and 88&lt;y&lt;105 and a&gt;=3:
+  print(stats[i].tolist(),np.round(cents[i],1).tolist())
+PY&quot;</pre></details><details class=command><summary><strong>命令 83</strong><time>2026-11-09T06:12:50.718761+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+# print 4x4 block luminance map full scene to see cradle actual layout, x 80..175 y 88..126
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(88,126,4):
+ s=&#x27;&#x27;
+ for x in range(80,176,4):
+  v=g[y:y+4,x:x+4].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(f&#x27;{y:3d} {s}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 84</strong><time>2026-11-09T06:13:04.393385+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(93,101):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(82,190)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 85</strong><time>2026-11-09T06:13:21.988640+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print crop as 8-bit values with rows y=96-100 and x 120..170, focus on 5-ball pattern
+for y in range(94,102):
+ print(&#x27;y&#x27;,y,[(x,int(im[y,x].mean())) for x in range(118,170)])
+PY&quot;</pre></details><details class=command><summary><strong>命令 86</strong><time>2026-11-09T06:13:36.897801+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(92,104):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(110,170)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(110,170)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(110,170)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 87</strong><time>2026-11-09T06:13:53.678067+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# classify likely top ball zone x120-160 y94-100 by local peaks pattern. List RGB of bright points
+for x in [122,123,128,129,135,136,141,142,148,149,154,155,164,165]:
+ print(&#x27;x&#x27;,x,[(y,tuple(im[y,x])) for y in range(94,101)])
+PY&quot;</pre></details><details class=command><summary><strong>命令 88</strong><time>2026-11-09T06:14:10.135929+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+# Estimate perspective frame lines. Make Canny and Hough with lower threshold, list long lines central area
+ed=cv2.Canny(im,25,70)
+lines=cv2.HoughLinesP(ed,1,np.pi/180,threshold=12,minLineLength=12,maxLineGap=4)
+for l in sorted(lines[:,0].tolist(),key=lambda z:-np.hypot(z[2]-z[0],z[3]-z[1]))[:150]:
+ x1,y1,x2,y2=l
+ if max(x1,x2)&gt;60 and min(y1,y2)&gt;40:
+  print(l,&#x27;len&#x27;,round(np.hypot(x2-x1,y2-y1),1),&#x27;angle&#x27;,round(np.degrees(np.arctan2(y2-y1,x2-x1)),1))
+PY&quot;</pre></details><details class=command><summary><strong>命令 89</strong><time>2026-11-09T06:14:26.017614+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# determine gray balls positions via edge line endpoints. use circle Hough lower p2 multiple and inspect only y100-124 with r 4-8
+im8=im.astype(np.uint8); g=cv2.cvtColor(im8,cv2.COLOR_RGB2GRAY)
+cs=cv2.HoughCircles(cv2.GaussianBlur(g,(3,3),0),cv2.HOUGH_GRADIENT,dp=1,minDist=9,param1=40,param2=5,minRadius=3,maxRadius=9)
+arr=[]
+if cs is not None:
+ for x,y,r in cs[0]:
+  if 90&lt;x&lt;180 and 105&lt;y&lt;126: arr.append((round(float(r),1),round(float(x),1),round(float(y),1)))
+print(sorted(arr,reverse=True))
+PY&quot;</pre></details><details class=command><summary><strong>命令 90</strong><time>2026-11-09T06:14:40.272947+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(100,126,2):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y:y+2,x:x+2].mean()/25.6))] for x in range(90,172,2)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 91</strong><time>2026-11-09T06:15:23.288801+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for cx,cy in [(101,120),(114,120),(127,120),(140,120),(153,120),(160,120)]:
+ print(&#x27;\\ncenter&#x27;,cx,cy)
+ for y in range(cy-8,cy+9):
+  print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(cx-10,cx+11)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 92</strong><time>2026-11-09T06:15:38.824999+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(110,128):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(115,165)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(115,165)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(115,165)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 93</strong><time>2026-11-09T06:15:55.192592+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(98,127):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(120,168)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(120,168)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(120,168)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 94</strong><time>2026-11-09T06:16:11.095762+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,104):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(115,165)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(115,165)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(115,165)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 95</strong><time>2026-11-09T06:16:25.895779+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# Check column pattern in clean 5-ball top region x120-160 y96-100 using exact value sequence
+for y in [95,96,97,98,99,100]:
+ print(y, &#x27; &#x27;.join(f&#x27;{int(g[y,x]):3d}&#x27; for x in range(118,161)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 96</strong><time>2026-11-09T06:16:40.919542+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(92,102):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(115,175)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 97</strong><time>2026-11-09T06:17:22.594887+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for cy,cx in [(105,126),(105,139),(105,152),(99,86),(99,99)]:
+ print(&#x27;\\ncenter&#x27;,cx,cy)
+ for y in range(cy-9,cy+10):
+  print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(cx-9,cx+10)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 98</strong><time>2026-11-09T06:17:40.202717+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# print local radial pattern around lower balls via angular mean radius
+for cx in [101,114,127,140,153]:
+ for cy in [120]:
+  th=np.linspace(0,2*np.pi,16,endpoint=False)
+  vals=[]
+  for r in range(1,9):
+   px=np.rint(cx+r*np.cos(th)).astype(int);py=np.rint(cy+r*np.sin(th)).astype(int)
+   vals.append(round(float(g[py,px].mean()),1))
+  print(cx,cy,vals)
+PY&quot;</pre></details><details class=command><summary><strong>命令 99</strong><time>2026-11-09T06:17:58.094344+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(98,126):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(90,170)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 100</strong><time>2026-11-09T06:18:47.224565+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV); g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY)
+for lo in [60,80,100,120,140]:
+ mask=((g&gt;lo)&amp;(hsv[:,:,1]&lt;100)).astype(np.uint8)
+ n,lab,stats,cents=cv2.connectedComponentsWithStats(mask)
+ print(&#x27;lo&#x27;,lo)
+ for i in range(1,n):
+  x,y,w,h,a=stats[i]
+  if 20&lt;x&lt;105 and 75&lt;y&lt;112 and a&gt;=8:
+   print(stats[i].tolist(),np.round(cents[i],1).tolist())
+PY&quot;</pre></details><details class=command><summary><strong>命令 101</strong><time>2026-11-09T06:19:04.474406+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+# print x55..110 y74..103 actual RGB as class with blue strength and brightness
+for y in range(74,103):
+ s=&#x27;&#x27;
+ for x in range(55,112):
+  r,g,b=im[y,x];h,sa,v=hsv[y,x]
+  if b-r&gt;80:c=&#x27;B&#x27;
+  elif b-r&gt;40:c=&#x27;b&#x27;
+  elif v&lt;15:c=&#x27;#&#x27;
+  elif v&lt;32:c=&#x27;@&#x27;
+  elif sa&lt;40 and v&gt;150:c=&#x27;W&#x27;
+  elif sa&lt;60 and v&gt;90:c=&#x27;g&#x27;
+  elif v&lt;65:c=&#x27;d&#x27;
+  else:c=&#x27;.&#x27;
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre></details><details class=command><summary><strong>命令 102</strong><time>2026-11-09T06:19:20.411368+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(92,104):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(80,112)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(80,112)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(80,112)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 103</strong><time>2026-11-09T06:19:38.175702+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(92,103):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(78,130)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(78,130)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(78,130)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 104</strong><time>2026-11-09T06:19:54.530293+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print columns x80..110 y90..100 values high precision
+print(&#x27;   &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(78,112)))
+print(&#x27;   &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(78,112)))
+for y in range(90,101):
+ print(&#x27;%2d &#x27;%y+&#x27;&#x27;.join(&#x27;%X&#x27;%min(15,int(im[y,x].mean()/16)) for x in range(78,112)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 105</strong><time>2026-11-09T06:20:10.198864+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Get saturation of highlight positions and local luma. likely spheres center = dark parts around x86 and x99 y100. Print RGB x80..110 y94..102 as 3-digit packed maybe too much
+for y in range(94,102):
+ print(&#x27;y&#x27;,y)
+ for x in range(80,112):
+  if im[y,x].mean()&gt;100 or im[y,x].mean()&lt;20: print(x,tuple(im[y,x]),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 105 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}

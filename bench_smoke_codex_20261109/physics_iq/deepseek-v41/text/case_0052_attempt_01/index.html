@@ -1122,7 +1122,806 @@ for y in range(88,111):
    v=im[y,x].mean(); c=&#x27; .:-=+*#%@&#x27;[min(9,int(v/256*10))]
   row+=c
  print(f&#x27;{y:3d} {row}&#x27;)
-PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 77 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
+PY&quot;</pre></details><details class=command><summary><strong>命令 78</strong><time>2026-11-09T06:01:52.051652+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;ls -la generate.py 2&gt;/dev/null || true; python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+roi=g[78:118,100:215]
+for scale in [1,2,3,4]:
+ r=cv2.resize(roi,None,fx=scale,fy=scale,interpolation=cv2.INTER_CUBIC)
+ r=cv2.GaussianBlur(r,(3,3),0)
+ for p2 in [12,16,20,24,28]:
+  c=cv2.HoughCircles(r,cv2.HOUGH_GRADIENT,dp=1,minDist=6*scale,param1=80,param2=p2,minRadius=4*scale,maxRadius=12*scale)
+  if c is not None:
+   cs=np.round(c[0]/scale).astype(int)
+   cs=[(int(x+100),int(y+78),int(rad)) for x,y,rad in cs]
+   print(&#x27;scale&#x27;,scale,&#x27;p2&#x27;,p2,cs[:20])
+PY&quot;</pre></details><details class=command><summary><strong>命令 79</strong><time>2026-11-09T06:02:05.403750+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# dump 2x upsample of likely sphere row to tmp and produce a sixel-less ANSI truecolor half-block rendering to inspect in tool output.
+# Use 2 vertical pixels per char with ANSI background/foreground.
+crop=im[82:116,105:210]
+for y in range(0,crop.shape[0]-1,2):
+ line=&#x27;&#x27;
+ for x in range(crop.shape[1]):
+  a=crop[y,x]; b=crop[y+1,x]
+  line += f&#x27;\\x1b[38;2;{a[0]};{a[1]};{a[2]}m\\x1b[48;2;{b[0]};{b[1]};{b[2]}mâ&#x27;
+ line+=&#x27;\\x1b[0m&#x27;
+ print(line)
+PY&quot;</pre></details><details class=command><summary><strong>命令 80</strong><time>2026-11-09T06:02:23.543499+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
+# Neutral metal: low saturation, moderate brightness, in cradle ROI
+m=((hsv[:,:,1]&lt;28)&amp;(hsv[:,:,2]&gt;70)).astype(&#x27;uint8&#x27;)
+m[:80]=0;m[120:]=0;m[:,:90]=0;m[:,220:]=0
+n,lab,st,cent=cv2.connectedComponentsWithStats(m,8)
+print(&#x27;components&#x27;)
+for i in np.argsort(st[1:,4])[-30:][::-1]+1:
+ x,y,w,h,a=st[i]
+ if a&gt;3: print(st[i].tolist(),np.round(cent[i],1).tolist())
+# print neutral mask 1px for x95-215 y80-120
+print(&#x27;mask&#x27;)
+for y in range(80,121):
+ row=&#x27;&#x27;
+ for x in range(90,221):
+  row += &#x27;#&#x27; if m[y,x] else &#x27; &#x27;
+ print(f&#x27;{y:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 81</strong><time>2026-11-09T06:02:38.199746+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# Print compact 2x downsampled colors for the suspected cradle row; visual focus x90-210 y80-120
+# use ansi truecolor with half blocks but only 60x20 crop, output manageable.
+crop=im[82:122,92:212]
+for y in range(0,crop.shape[0]-1,2):
+ line=&#x27;&#x27;
+ for x in range(crop.shape[1]):
+  a=crop[y,x]; b=crop[y+1,x]
+  line += f&#x27;\\x1b[38;2;{a[0]};{a[1]};{a[2]}m\\x1b[48;2;{b[0]};{b[1]};{b[2]}mâ&#x27;
+ line+=&#x27;\\x1b[0m&#x27;
+ print(line)
+PY&quot;</pre></details><details class=command><summary><strong>命令 82</strong><time>2026-11-09T06:03:09.492044+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for cx,cy in [(145,101),(134,102),(123,103),(156,100)]:
+ print(&#x27;\\n&#x27;,cx,cy)
+ a=im[cy-9:cy+10,cx-9:cx+10]
+ chars=&#x27; .:-=+*#%@&#x27;
+ for row in a.mean(2): print(&#x27;&#x27;.join(chars[min(9,int(v/256*10))] for v in row))
+ print(&#x27;mean&#x27;,a.mean((0,1)),&#x27;std&#x27;,a.std((0,1)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 83</strong><time>2026-11-09T06:04:17.107192+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; GENERATION_RULES.md&quot;</pre></details><details class=command><summary><strong>命令 84</strong><time>2026-11-09T06:04:17.311990+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;sed -n &#x27;1,200p&#x27; prompt.txt&quot;</pre></details><details class=command><summary><strong>命令 85</strong><time>2026-11-09T06:04:17.545986+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre></details><details class=command><summary><strong>命令 86</strong><time>2026-11-09T06:04:17.932691+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.mode, im.size)
+a=np.asarray(im.convert(&#x27;RGB&#x27;))
+print(a.shape,a.dtype,a.min(),a.max(),a.mean(axis=(0,1)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 87</strong><time>2026-11-09T06:04:41.644337+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# region around cradle and grabber, 2px blocks, classify pixels
+chars=[]
+for y in range(36,134,2):
+ row=&#x27;&#x27;
+ for x in range(72,190,2):
+  b=A[y:y+2,x:x+2].reshape(-1,3).mean(0)
+  r,g,bl=b
+  mx=max(b); mn=min(b); sat=mx-mn; lum=b.mean()
+  if bl &gt; r+18 and bl &gt; g+5 and lum&lt;145: c=&#x27;B&#x27;
+  elif lum&lt;42: c=&#x27;#&#x27;
+  elif sat&lt;20 and lum&gt;80: c=&#x27;M&#x27;
+  elif lum&gt;175 and sat&lt;45: c=&#x27;m&#x27;
+  elif r&gt;g+15 and g&gt;bl+7 and lum&lt;125: c=&#x27;t&#x27;
+  elif lum&gt;145: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  row+=c
+ chars.append(row)
+print(&#x27;x:&#x27;,72,&#x27;..&#x27;,190,&#x27;step2; y 36..134&#x27;)
+for i,row in enumerate(chars): print(f&#x27;{36+2*i:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 88</strong><time>2026-11-09T06:05:04.788599+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x//10%10) for x in range(84,124)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(84,124)))
+for y in range(88,112):
+ row=&#x27;&#x27;
+ for x in range(84,124):
+  r,g,b=A[y,x]; mx=max(r,g,b); mn=min(r,g,b); sat=mx-mn; lum=(r+g+b)/3
+  if b&gt;r+22 and b&gt;g+5 and lum&lt;145: c=&#x27;B&#x27;
+  elif b&gt;r+10 and b&gt;g+2 and lum&lt;100: c=&#x27;b&#x27;
+  elif lum&lt;35: c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;135: c=&#x27;@&#x27;
+  elif sat&lt;24 and lum&gt;88: c=&#x27;M&#x27;
+  elif sat&lt;34 and lum&gt;60: c=&#x27;m&#x27;
+  elif r&gt;g+18 and g&gt;b+7 and lum&lt;125: c=&#x27;t&#x27;
+  elif lum&gt;170: c=&#x27;.&#x27;
+  else: c=&#x27; &#x27;
+  row+=c
+ print(f&#x27;{y:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 89</strong><time>2026-11-09T06:05:26.009906+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+for name,img in [(&#x27;gray&#x27;,g),(&#x27;b&#x27;,A[:,:,2]),(&#x27;sat&#x27;,cv2.cvtColor(A,cv2.COLOR_RGB2HSV)[:,:,1]),(&#x27;lab&#x27;,cv2.cvtColor(A,cv2.COLOR_RGB2LAB)[:,:,0])]:
+ for p2 in [10,12,14,16,18,20]:
+  cs=cv2.HoughCircles(img,cv2.HOUGH_GRADIENT,dp=1,minDist=6,param1=60,param2=p2,minRadius=3,maxRadius=10)
+  if cs is not None:
+   vals=np.round(cs[0]).astype(int)
+   vals=vals[(vals[:,0]&gt;85)&amp;(vals[:,0]&lt;185)&amp;(vals[:,1]&gt;70)&amp;(vals[:,1]&lt;115)]
+   if len(vals): print(name,p2,[tuple(v) for v in vals])
+PY&quot;</pre></details><details class=command><summary><strong>命令 90</strong><time>2026-11-09T06:05:44.028223+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# detect candidate neutral metallic pixels in rows 86:112 by coordinate and value
+for y in range(88,112):
+ xs=[]
+ for x in range(85,182):
+  r,g,b=A[y,x]; mx=max(r,g,b); mn=min(r,g,b); lum=(r+g+b)/3; sat=mx-mn
+  if sat&lt;22 and lum&gt;60 and b&lt;=r+5:
+   xs.append(x)
+ # runs
+ runs=[]
+ for x in xs:
+  if not runs or x&gt;runs[-1][-1]+1:runs.append([x])
+  else:runs[-1].append(x)
+ print(y,[(r[0],r[-1]) for r in runs if len(r)&gt;=2])
+PY&quot;</pre></details><details class=command><summary><strong>命令 91</strong><time>2026-11-09T06:06:05.293616+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(88,112):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(84,124):
+  r,g,b=A[y,x]
+  # tiny palette using color relationships
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 92</strong><time>2026-11-09T06:06:29.235684+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(82,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(128,178):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 93</strong><time>2026-11-09T06:06:51.300974+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(88,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(126,177):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 94</strong><time>2026-11-09T06:07:13.597754+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(91,110):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(130,175):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 95</strong><time>2026-11-09T06:07:37.417950+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(91,110):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(138,175):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 96</strong><time>2026-11-09T06:08:02.821859+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(91,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(136,176):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 97</strong><time>2026-11-09T06:08:22.991021+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Generate rough crop as nearest upsample for inspection artifact; no visual access, but retain local candidate.
+Image.fromarray(A[78:118,128:184].astype(&#x27;uint8&#x27;)).resize((560,400),Image.Resampling.NEAREST).save(&#x27;.tmp/cradle_crop.png&#x27;)
+print(&#x27;saved .tmp/cradle_crop.png&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 98</strong><time>2026-11-09T06:08:46.235623+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(89,108):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(100,125):
+  r,g,b=A[y,x]
+  if b-r&gt;20: c=&#x27;B&#x27;
+  elif b-r&gt;8 and (r+g+b)/3&lt;100:c=&#x27;b&#x27;
+  elif (r+g+b)/3&lt;32:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;13 and (r+g+b)/3&gt;128:c=&#x27;@&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;19 and (r+g+b)/3&gt;78:c=&#x27;M&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;25 and (r+g+b)/3&gt;50:c=&#x27;m&#x27;
+  elif (r+g+b)/3&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 99</strong><time>2026-11-09T06:09:14.539596+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# mean blocks 4x4, classify rough colors/luminance
+for y in range(0,144,4):
+ row=&#x27;&#x27;
+ for x in range(0,256,4):
+  b=A[y:y+4,x:x+4].reshape(-1,3).mean(0)
+  r,g,bl=b; lum=b.mean(); sat=b.max()-b.min()
+  if bl&gt;r+20 and bl&gt;g+3: c=&#x27;B&#x27;
+  elif lum&lt;30:c=&#x27;#&#x27;
+  elif lum&lt;50:c=&#x27;@&#x27;
+  elif sat&lt;18 and lum&gt;140:c=&#x27;M&#x27;
+  elif sat&lt;25 and lum&gt;85:c=&#x27;m&#x27;
+  elif r&gt;g+12 and g&gt;bl+5:c=&#x27;t&#x27;
+  elif lum&gt;170:c=&#x27;.&#x27;
+  elif lum&gt;125:c=&#x27;-&#x27;
+  else:c=&#x27; &#x27;
+  row+=c
+ print(f&#x27;{y:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 100</strong><time>2026-11-09T06:09:41.442926+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Search for neutral circular clusters by connected components of neutral-ish pixels in cradle ROI.
+import cv2
+R=A[84:112,118:182]
+mx=R.max(2); mn=R.min(2); sat=mx-mn; lum=R.mean(2)
+mask=((sat&lt;25)&amp;(lum&gt;50)&amp;(R[:,:,2]&lt;=R[:,:,0]+8)).astype(&#x27;uint8&#x27;)*255
+mask=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((2,2),np.uint8))
+n,lab,stats,cen=cv2.connectedComponentsWithStats(mask)
+for i in range(1,n):
+ x,y,w,h,area=stats[i]
+ if area&gt;=4:
+  print(area, (x+118,y+84,w,h),tuple(np.round(cen[i]+[118,84],1)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 101</strong><time>2026-11-09T06:10:08.492419+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Print 1-px ROI as chars for x 92-120 y 86-108 with a more luminance-driven palette
+for y in range(86,109):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(92,122):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;22:c=&#x27;B&#x27;
+  elif b-r&gt;8 and lum&lt;100:c=&#x27;b&#x27;
+  elif lum&lt;28:c=&#x27;#&#x27;
+  elif sat&lt;15 and lum&gt;120:c=&#x27;O&#x27;
+  elif sat&lt;25 and lum&gt;75:c=&#x27;M&#x27;
+  elif sat&lt;32 and lum&gt;50:c=&#x27;m&#x27;
+  elif lum&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 102</strong><time>2026-11-09T06:10:29.134270+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+for y in range(88,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(112,138):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;22:c=&#x27;B&#x27;
+  elif b-r&gt;8 and lum&lt;100:c=&#x27;b&#x27;
+  elif lum&lt;28:c=&#x27;#&#x27;
+  elif sat&lt;15 and lum&gt;120:c=&#x27;O&#x27;
+  elif sat&lt;25 and lum&gt;75:c=&#x27;M&#x27;
+  elif sat&lt;32 and lum&gt;50:c=&#x27;m&#x27;
+  elif lum&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 103</strong><time>2026-11-09T06:10:55.310419+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+for y in range(88,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(128,154):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;22:c=&#x27;B&#x27;
+  elif b-r&gt;8 and lum&lt;100:c=&#x27;b&#x27;
+  elif lum&lt;28:c=&#x27;#&#x27;
+  elif sat&lt;15 and lum&gt;120:c=&#x27;O&#x27;
+  elif sat&lt;25 and lum&gt;75:c=&#x27;M&#x27;
+  elif sat&lt;32 and lum&gt;50:c=&#x27;m&#x27;
+  elif lum&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 104</strong><time>2026-11-09T06:11:25.615472+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+for y in range(90,110):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(142,178):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;22:c=&#x27;B&#x27;
+  elif b-r&gt;8 and lum&lt;100:c=&#x27;b&#x27;
+  elif lum&lt;28:c=&#x27;#&#x27;
+  elif sat&lt;15 and lum&gt;120:c=&#x27;O&#x27;
+  elif sat&lt;25 and lum&gt;75:c=&#x27;M&#x27;
+  elif sat&lt;32 and lum&gt;50:c=&#x27;m&#x27;
+  elif lum&gt;185:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 105</strong><time>2026-11-09T06:11:59.985817+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+e=cv2.Canny(g,35,85)
+# edge density 2x2
+for y in range(80,116,2):
+ row=&#x27;&#x27;
+ for x in range(84,180,2):
+  d=e[y:y+2,x:x+2].sum()
+  row += &#x27;#&#x27; if d&gt;500 else &#x27;O&#x27; if d&gt;250 else &#x27;+&#x27; if d&gt;90 else &#x27;.&#x27; if d&gt;0 else &#x27; &#x27;
+ print(f&#x27;{y:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 106</strong><time>2026-11-09T06:12:16.877485+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# color sample lists for stationary suspected balls
+for name,(cx,cy) in [(&#x27;a&#x27;,(144,100)),(&#x27;b&#x27;,(156,99)),(&#x27;c&#x27;,(166,96)),(&#x27;held1&#x27;,(110,100)),(&#x27;held2&#x27;,(98,99))]:
+ print(name, &#x27;center&#x27;,A[cy,cx], &#x27;mean&#x27;,np.round(A[cy-5:cy+6,cx-5:cx+6].reshape(-1,3).mean(0),1))
+ print(&#x27; brightest&#x27;, A[cy-5:cy+6,cx-5:cx+6].reshape(-1,3)[np.argsort(A[cy-5:cy+6,cx-5:cx+6].reshape(-1,3).mean(1))[-5:]].tolist())
+PY&quot;</pre></details><details class=command><summary><strong>命令 107</strong><time>2026-11-09T06:12:45.701767+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x//10%10) for x in range(90,130)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(90,130)))
+for y in range(86,116):
+ row=&#x27;&#x27;
+ for x in range(90,130):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  # M for any neutral, b for blue
+  if b-r&gt;20:c=&#x27;B&#x27;
+  elif b-r&gt;7 and lum&lt;120:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;20 and lum&gt;90:c=&#x27;M&#x27;
+  elif sat&lt;28 and lum&gt;55:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  row+=c
+ print(f&#x27;{y:3d} {row}&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 108</strong><time>2026-11-09T06:13:01.612727+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# 1px color-coded at ball center x=104..130,y=95..112
+for y in range(93,113):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(104,132):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;20:c=&#x27;B&#x27;
+  elif b-r&gt;7 and lum&lt;120:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;20 and lum&gt;90:c=&#x27;M&#x27;
+  elif sat&lt;28 and lum&gt;55:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 109</strong><time>2026-11-09T06:13:18.348077+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &#x27;ls -la&#x27;</pre></details><details class=command><summary><strong>命令 110</strong><time>2026-11-09T06:13:18.626132+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;find .tmp -maxdepth 2 -type f -printf &#x27;%p %s bytes\\n&#x27;&quot;</pre></details><details class=command><summary><strong>命令 111</strong><time>2026-11-09T06:13:18.984993+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &#x27;git status --short&#x27;</pre></details><details class=command><summary><strong>命令 112</strong><time>2026-11-09T06:13:44.165871+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+R=A[70:125,75:140]
+mx=R.max(2); mn=R.min(2); sat=mx-mn; lum=R.mean(2)
+for th in [(20,70),(28,50),(35,40)]:
+ mask=((sat&lt;th[0])&amp;(lum&gt;th[1])&amp;(R[:,:,2]&lt;=R[:,:,0]+6)).astype(&#x27;uint8&#x27;)*255
+ mask=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((2,2),np.uint8))
+ n,lab,stats,cen=cv2.connectedComponentsWithStats(mask)
+ print(&#x27;TH&#x27;,th)
+ for i in range(1,n):
+  x,y,w,h,area=stats[i]
+  if area&gt;=8: print(&#x27; &#x27;,area,(x+75,y+70,w,h),tuple(np.round(cen[i]+[75,70],1)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 113</strong><time>2026-11-09T06:13:59.801946+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(84,110):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(96,124):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;18:c=&#x27;B&#x27;
+  elif b-r&gt;6 and lum&lt;115:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;100:c=&#x27;O&#x27;
+  elif sat&lt;24 and lum&gt;70:c=&#x27;M&#x27;
+  elif sat&lt;30 and lum&gt;45:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 114</strong><time>2026-11-09T06:14:15.296670+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Variance/highlight stats over 13x13 around suspected circles
+for cx in range(92,124,2):
+ for cy in range(96,110,2):
+  P=A[cy-5:cy+6,cx-5:cx+6]
+  neutral=(P.max(2)-P.min(2)&lt;25).mean()
+  bright=(P.mean(2)&gt;150).mean()
+  score=neutral+0.4*bright
+  if score&gt;.55: print(cx,cy,round(score,2),round(neutral,2),round(bright,2))
+PY&quot;</pre></details><details class=command><summary><strong>命令 115</strong><time>2026-11-09T06:14:31.394540+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(91,111):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(90,130):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;18:c=&#x27;B&#x27;
+  elif b-r&gt;6 and lum&lt;115:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;100:c=&#x27;O&#x27;
+  elif sat&lt;24 and lum&gt;70:c=&#x27;M&#x27;
+  elif sat&lt;30 and lum&gt;45:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 116</strong><time>2026-11-09T06:14:46.465880+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# luminance and color stats at probable exact center positions
+for y in range(98,112):
+ print(y,[(x, tuple(A[y,x]), round(A[y,x].mean())) for x in range(100,121,2)])
+PY&quot;</pre></details><details class=command><summary><strong>命令 117</strong><time>2026-11-09T06:15:04.995949+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# color stats circles around hypothetical held balls
+for cx,cy,r in [(103,106,6),(116,107,6),(105,104,7),(116,104,7),(120,106,6),(132,100,6),(144,100,6),(156,99,6),(168,96,6)]:
+ y0,y1=cy-r,cy+r+1;x0,x1=cx-r,cx+r+1
+ Y,X=np.ogrid[-r:r+1,-r:r+1]; mask=X*X+Y*Y&lt;=r*r
+ P=A[y0:y1,x0:x1][mask]
+ print((cx,cy,r),&#x27;mean&#x27;,np.round(P.mean(0),1),&#x27;lum med&#x27;,round(np.median(P.mean(1)),1),&#x27;neutral&#x27;,round((P.max(1)-P.min(1)&lt;30).mean(),2),&#x27;blue&#x27;,round(((P[:,2]-P[:,0])&gt;15).mean(),2))
+PY&quot;</pre></details><details class=command><summary><strong>命令 118</strong><time>2026-11-09T06:15:21.079234+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(96,114):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(110,138):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;18:c=&#x27;B&#x27;
+  elif b-r&gt;6 and lum&lt;115:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;100:c=&#x27;O&#x27;
+  elif sat&lt;24 and lum&gt;70:c=&#x27;M&#x27;
+  elif sat&lt;30 and lum&gt;45:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 119</strong><time>2026-11-09T06:15:37.624501+00:00</time><span class=pill>exit 1</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+# output high-contrast ROI to local only
+for x in [100,104,110,116,120,128,136,144,156,166]: cv2.line(A,(x,88),(x,112),(255,0,255),1)
+for y in [96,100,104,108]: cv2.line(A,(90,y),(175,y),(0,255,255),1)
+Image.fromarray(A[84:118,88:180]).resize((920,340),Image.Resampling.NEAREST).save(&#x27;.tmp/grid_crop.png&#x27;)
+print(&#x27;saved&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 120</strong><time>2026-11-09T06:15:55.142005+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).copy()
+for x in [100,104,110,116,120,128,136,144,156,166]: cv2.line(A,(x,88),(x,112),(255,0,255),1)
+for y in [96,100,104,108]: cv2.line(A,(90,y),(175,y),(0,255,255),1)
+Image.fromarray(A[84:118,88:180]).resize((920,340),Image.Resampling.NEAREST).save(&#x27;.tmp/grid_crop.png&#x27;)
+print(&#x27;saved&#x27;)
+PY&quot;</pre></details><details class=command><summary><strong>命令 121</strong><time>2026-11-09T06:16:12.419983+00:00</time><span class=pill>exit 1</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY).astype(np.float32)
+# Try blob detection at varied thresholds in ROI; report circles
+p=cv2.SimpleBlobDetector_Params(); p.minThreshold=15;p.maxThreshold=250;p.thresholdStep=5;p.filterByArea=True;p.minArea=20;p.maxArea=180;p.filterByCircularity=True;p.minCircularity=.28;p.filterByConvexity=False;p.filterByInertia=False;p.minDistBetweenBlobs=5
+for inv in [False,True]:
+ p.filterByColor=True;p.blobColor=0 if not inv else 255
+ d=cv2.SimpleBlobDetector_create(p); im=255-g if inv else g
+ ks=d.detect(im)
+ vals=[]
+ for k in ks:
+  x,y=k.pt
+  if 85&lt;x&lt;180 and 70&lt;y&lt;115:vals.append((round(x,1),round(y,1),round(k.size,1)))
+ print(inv, vals)
+PY&quot;</pre></details><details class=command><summary><strong>命令 122</strong><time>2026-11-09T06:16:27.300981+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+p=cv2.SimpleBlobDetector_Params(); p.minThreshold=10;p.maxThreshold=250;p.thresholdStep=5;p.filterByArea=True;p.minArea=12;p.maxArea=260;p.filterByCircularity=True;p.minCircularity=.25;p.filterByConvexity=False;p.filterByInertia=False;p.minDistBetweenBlobs=5
+for inv in [False,True]:
+ p.filterByColor=True;p.blobColor=0 if not inv else 255
+ d=cv2.SimpleBlobDetector_create(p); im=255-g if inv else g
+ ks=d.detect(im)
+ vals=[]
+ for k in ks:
+  x,y=k.pt
+  if 85&lt;x&lt;180 and 70&lt;y&lt;115:vals.append((round(x,1),round(y,1),round(k.size,1)))
+ print(inv, vals)
+PY&quot;</pre></details><details class=command><summary><strong>命令 123</strong><time>2026-11-09T06:16:41.095332+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+hsv=cv2.cvtColor(A,cv2.COLOR_RGB2HSV)
+# output metrics around held region rows to distinguish metal balls: saturation and hue
+for y in range(94,114):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(90,124):
+  h,s,v=hsv[y,x]
+  if s&gt;150 and h&gt;90:c=&#x27;B&#x27;
+  elif s&gt;90 and h&gt;85:c=&#x27;b&#x27;
+  elif v&lt;45:c=&#x27;#&#x27;
+  elif s&lt;40 and v&gt;150:c=&#x27;O&#x27;
+  elif s&lt;55 and v&gt;90:c=&#x27;M&#x27;
+  elif s&lt;75 and v&gt;60:c=&#x27;m&#x27;
+  elif v&gt;210:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 124</strong><time>2026-11-09T06:16:57.170482+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.float32)
+hsv=cv2.cvtColor(A.astype(&#x27;uint8&#x27;),cv2.COLOR_RGB2HSV).astype(float)
+# detect likely metallic pixels: low sat bright, or low sat gray in ROI
+roi=A[86:116,90:128]; hs=hsv[86:116,90:128]
+mask=((hs[:,:,1]&lt;80)&amp;(hs[:,:,2]&gt;65)&amp;(roi[:,:,2]&lt;=roi[:,:,0]+12)).astype(&#x27;uint8&#x27;)*255
+mask=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((2,2),np.uint8))
+n,lab,stats,cen=cv2.connectedComponentsWithStats(mask)
+for i in range(1,n):
+ x,y,w,h,area=stats[i]
+ if area&gt;3: print(area,(x+90,y+86,w,h),tuple(np.round(cen[i]+[90,86],1)))
+PY&quot;</pre></details><details class=command><summary><strong>命令 125</strong><time>2026-11-09T06:17:12.728507+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# compare pixel patch similarities to stationary balls to find held centers; normalized gray correlation over 9x9
+g=A.mean(2)
+for refname,(rx,ry) in [(&#x27;mid&#x27;,(144,100)),(&#x27;right&#x27;,(156,98)),(&#x27;far&#x27;,(166,96))]:
+ r=g[ry-4:ry+5,rx-4:rx+5]; r=(r-r.mean())/(r.std()+1e-6)
+ best=[]
+ for cy in range(96,112):
+  for cx in range(94,122):
+   p=g[cy-4:cy+5,cx-4:cx+5]; p=(p-p.mean())/(p.std()+1e-6)
+   best.append((float((p*r).mean()),cx,cy))
+ print(refname,sorted(best,reverse=True)[:8])
+PY&quot;</pre></details><details class=command><summary><strong>命令 126</strong><time>2026-11-09T06:17:28.762504+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Find circles with edge orientations/gradient radial consistency in held ROI
+import cv2
+g=cv2.cvtColor(A.astype(&#x27;uint8&#x27;),cv2.COLOR_RGB2GRAY).astype(float)
+gx=cv2.Sobel(g,cv2.CV_64F,1,0,ksize=3); gy=cv2.Sobel(g,cv2.CV_64F,0,1,ksize=3)
+Y,X=np.mgrid[0:144,0:256]
+for cx,cy in [(100,110),(114,107),(103,108),(116,106),(100,106),(113,104)]:
+ rr=np.hypot(X-cx,Y-cy); mask=(rr&gt;=3.8)&amp;(rr&lt;=6.5)
+ # radial gradient alignment
+ ux=(X-cx)/np.maximum(rr,1e-6); uy=(Y-cy)/np.maximum(rr,1e-6)
+ dot=(gx*ux+gy*uy); print((cx,cy),round(dot[mask].mean(),1),round(np.abs(dot[mask]).mean(),1),round(np.hypot(gx,gy)[mask].mean(),1))
+PY&quot;</pre></details><details class=command><summary><strong>命令 127</strong><time>2026-11-09T06:17:48.454209+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+for y in range(86,113):
+ print(f&#x27;{y:3d}&#x27;,end=&#x27; &#x27;)
+ for x in range(88,123):
+  r,g,b=A[y,x]; lum=(r+g+b)/3; sat=max(r,g,b)-min(r,g,b)
+  if b-r&gt;18:c=&#x27;B&#x27;
+  elif b-r&gt;6 and lum&lt;115:c=&#x27;b&#x27;
+  elif lum&lt;24:c=&#x27;#&#x27;
+  elif sat&lt;18 and lum&gt;100:c=&#x27;O&#x27;
+  elif sat&lt;24 and lum&gt;70:c=&#x27;M&#x27;
+  elif sat&lt;30 and lum&gt;45:c=&#x27;m&#x27;
+  elif lum&gt;190:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  print(c,end=&#x27;&#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 128</strong><time>2026-11-09T06:18:06.294496+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# sample vertical object profiles at x=100 and x=115: print actual rgb each y
+for x in [97,100,103,106,110,114,117,120]:
+ print(&#x27;x&#x27;,x)
+ for y in range(100,116):
+  r,g,b=A[y,x]
+  print(y,(r,g,b),end=&#x27;; &#x27;)
+ print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 129</strong><time>2026-11-09T06:18:25.070738+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+for method in [&#x27;gradient&#x27;,&#x27;canny&#x27;]:
+ if method==&#x27;gradient&#x27;:
+  gx=cv2.Sobel(g,cv2.CV_32F,1,0,ksize=3);gy=cv2.Sobel(g,cv2.CV_32F,0,1,ksize=3);ed=cv2.magnitude(gx,gy);ed=np.clip(ed/4,0,255).astype(&#x27;uint8&#x27;)
+ else: ed=cv2.Canny(g,20,60)
+ vals=cv2.HoughCircles(ed,cv2.HOUGH_GRADIENT,dp=1,minDist=8,param1=80,param2=6,minRadius=4,maxRadius=9)
+ print(method)
+ if vals is not None:
+  for x,y,r in np.round(vals[0]).astype(int):
+   if 85&lt;x&lt;180 and 85&lt;y&lt;120:print((x,y,r))
+PY&quot;</pre></details><details class=command><summary><strong>命令 130</strong><time>2026-11-09T06:18:42.007476+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Print RGB matrix around likely center 114,106 and 100,106 as compact rgb codes
+for name,(cx,cy) in [(&#x27;a&#x27;,(114,106)),(&#x27;b&#x27;,(100,106)),(&#x27;c&#x27;,(144,100))]:
+ print(name)
+ for y in range(cy-6,cy+7):
+  print(y,end=&#x27; &#x27;)
+  for x in range(cx-6,cx+7):
+   r,g,b=A[y,x]
+   print(f&#x27;{r//16:x}{g//16:x}{b//16:x}&#x27;,end=&#x27; &#x27;)
+  print()
+PY&quot;</pre></details><details class=command><summary><strong>命令 131</strong><time>2026-11-09T06:18:59.292142+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# list pixels meeting obvious bright metallic in region
+for y in range(86,114):
+ xs=[]
+ for x in range(90,180):
+  r,g,b=A[y,x]; sat=max(r,g,b)-min(r,g,b); lum=(r+g+b)/3
+  if sat&lt;35 and lum&gt;140 and b&lt;=r+8: xs.append((x,lum))
+ if xs: print(y,[(x,round(v)) for x,v in xs])
+PY&quot;</pre></details><details class=command><summary><strong>命令 132</strong><time>2026-11-09T06:19:23.150984+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+from PIL import Image
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(A,cv2.COLOR_RGB2GRAY)
+pts=[]
+for blur in [0,1,2]:
+ gg=g if blur==0 else cv2.GaussianBlur(g,(blur*2+1,blur*2+1),0)
+ for dp in [1,1.2,1.5]:
+  for p1 in [30,50,70,100]:
+   for p2 in [5,7,9,11,13,15]:
+    for r0,r1 in [(3,8),(5,10)]:
+     cs=cv2.HoughCircles(gg,cv2.HOUGH_GRADIENT,dp=dp,minDist=5,param1=p1,param2=p2,minRadius=r0,maxRadius=r1)
+     if cs is not None:
+      for x,y,r in cs[0]:
+       if 88&lt;x&lt;180 and 82&lt;y&lt;118: pts.append((x,y,r))
+print(&#x27;detections&#x27;,len(pts))
+# cluster centers within 3px
+clusters=[]
+for x,y,r in pts:
+ best=None
+ for c in clusters:
+  if (c[&#x27;x&#x27;]-x)**2+(c[&#x27;y&#x27;]-y)**2 &lt; 3.2**2:
+   best=c;break
+ if best is None: clusters.append({&#x27;x&#x27;:x,&#x27;y&#x27;:y,&#x27;r&#x27;:r,&#x27;n&#x27;:1,&#x27;rs&#x27;:[r]})
+ else:
+  n=best[&#x27;n&#x27;];best[&#x27;x&#x27;]=(best[&#x27;x&#x27;]*n+x)/(n+1);best[&#x27;y&#x27;]=(best[&#x27;y&#x27;]*n+y)/(n+1);best[&#x27;r&#x27;]=(best[&#x27;r&#x27;]*n+r)/(n+1);best[&#x27;n&#x27;]=n+1;best[&#x27;rs&#x27;].append(r)
+for c in sorted(clusters,key=lambda c:c[&#x27;n&#x27;],reverse=True)[:30]:
+ print(c[&#x27;n&#x27;],round(c[&#x27;x&#x27;],1),round(c[&#x27;y&#x27;],1),round(c[&#x27;r&#x27;],1), &#x27;rng&#x27;,round(min(c[&#x27;rs&#x27;]),1),round(max(c[&#x27;rs&#x27;]),1))
+PY&quot;</pre></details><details class=command><summary><strong>命令 133</strong><time>2026-11-09T06:19:39.906661+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Display mean RGB 3x3 at centers from clustering
+for x,y in [(144,102),(167,97),(112,101),(157,106),(114,107),(90,114),(99,89),(160,98),(156,97),(149,100),(113,96),(100,109),(101,103),(97,98)]:
+ P=A[y-1:y+2,x-1:x+2].reshape(-1,3)
+ print((x,y),np.round(P.mean(0),1),np.round(P.max(0),1))
+PY&quot;</pre></details><details class=command><summary><strong>命令 134</strong><time>2026-11-09T06:19:58.296739+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# edge/shape through local gradient around suspected objects
+for name,(cx,cy,r) in [(&#x27;mid&#x27;,(144,102,6)),(&#x27;right&#x27;,(156,97,6)),(&#x27;far&#x27;,(167,97,6)),(&#x27;held1&#x27;,(100,109,6)),(&#x27;held2&#x27;,(114,107,6))]:
+ Y,X=np.mgrid[cy-8:cy+9,cx-8:cx+9]
+ P=A[cy-8:cy+9,cx-8:cx+9]
+ print(name)
+ for yy in range(P.shape[0]):
+  print(&#x27;&#x27;.join(&#x27;M&#x27; if (P[yy,xx].max()-P[yy,xx].min()&lt;25 and P[yy,xx].mean()&gt;80) else &#x27;B&#x27; if P[yy,xx,2]&gt;P[yy,xx,0]+20 else &#x27;#&#x27; if P[yy,xx].mean()&lt;40 else &#x27;.&#x27; for xx in range(P.shape[1])))
+PY&quot;</pre></details><details class=command><summary><strong>命令 135</strong><time>2026-11-09T06:20:13.762083+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+A=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# spatial gradients around held candidates, inspect candidate maxima response ring score
+import cv2
+g=cv2.cvtColor(A.astype(&#x27;uint8&#x27;),cv2.COLOR_RGB2GRAY).astype(float)
+gx=cv2.Sobel(g,cv2.CV_64F,1,0,ksize=3);gy=cv2.Sobel(g,cv2.CV_64F,0,1,ksize=3)
+for r in [4,5,6,7]:
+ print(&#x27;radius&#x27;,r)
+ vals=[]
+ for cy in range(98,112):
+  for cx in range(94,122):
+   ring=[]; align=[]
+   for yy in range(cy-r-1,cy+r+2):
+    for xx in range(cx-r-1,cx+r+2):
+     d=np.hypot(xx-cx,yy-cy)
+     if r-.8&lt;=d&lt;=r+.8:
+      ux=(xx-cx)/d;uy=(yy-cy)/d
+      dot=gx[yy,xx]*ux+gy[yy,xx]*uy
+      ring.append(dot)
+   vals.append((np.mean(ring),cx,cy))
+ print(sorted(vals,reverse=True)[:5])
+PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 135 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
