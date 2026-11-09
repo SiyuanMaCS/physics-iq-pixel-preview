@@ -10,7 +10,29 @@ for x in [&#x27;cv2&#x27;,&#x27;scipy&#x27;,&#x27;numpy&#x27;,&#x27;PIL&#x27;]:
  print(x, bool(importlib.util.find_spec(x)))
 from PIL import Image
 im=Image.open(&#x27;first_frame.png&#x27;); im.crop((20,30,70,61)).resize((800,496)).save(&#x27;.tmp/crop.png&#x27;)
-PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 3 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-08T23:54:46.964365+00:00</strong><pre>/bin/bash -lc &quot;cat &gt; .tmp/test_plate.py &lt;&lt;&#x27;PY&#x27;
+import cv2
+import numpy as np
+from PIL import Image
+im=np.array(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+y,x=np.mgrid[:144,:256]
+mask=(((x-37.4)/9.0)**2+((y-45.1)/8.7)**2&lt;1)
+# elongated shadow running away from light
+u=(x-47.7)*.95-(y-47.5)*.31
+v=(x-47.7)*.31+(y-47.5)*.95
+mask|=(u/15)**2+(v/4.8)**2&lt;1
+m=mask.astype(&#x27;uint8&#x27;)*255
+ns=cv2.inpaint(im,m,4,cv2.INPAINT_NS)
+te=cv2.inpaint(im,m,4,cv2.INPAINT_TELEA)
+Image.fromarray(ns).resize((1024,576)).save(&#x27;.tmp/plate_ns.png&#x27;)
+Image.fromarray(te).resize((1024,576)).save(&#x27;.tmp/plate_te.png&#x27;)
+Image.fromarray(im).save(&#x27;.tmp/ref.png&#x27;)
+np.save(&#x27;.tmp/mask.npy&#x27;,m)
+PY
+python .tmp/test_plate.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-08T23:56:52.914548+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+im=Image.open(&#x27;first_frame.png&#x27;); im.crop((15,27,120,70)).resize((1260,516)).save(&#x27;.tmp/table.png&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 5 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
