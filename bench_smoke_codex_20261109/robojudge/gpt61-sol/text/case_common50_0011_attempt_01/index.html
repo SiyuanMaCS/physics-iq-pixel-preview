@@ -56,7 +56,22 @@ for y in range(0,144,3):
  for x in range(0,256,3):
   p=im[y:y+3,x:x+3].mean((0,1)); row+=keys[np.argmin(((a-p)**2).sum(1))]
  print(f&#x27;{y:03d} &#x27;+row)
-PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 2 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
+PY&quot;</pre></details><details class=command><summary><strong>命令 3</strong><time>2026-11-09T09:05:18.459721+00:00</time><span class=pill>exit 0</span></summary><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+# show at 2x2 blocks semantic shade chars
+cs={&#x27; &#x27;: (230,230,230),&#x27;.&#x27;:(173,173,173),&#x27;-&#x27;:(125,125,125),&#x27;+&#x27;:(82,82,82),&#x27;#&#x27;:(39,39,39),&#x27;@&#x27;:(12,12,12),&#x27;o&#x27;:(135,76,36),&#x27;r&#x27;:(87,48,25),&#x27;y&#x27;:(178,135,71),&#x27;b&#x27;:(49,72,100),&#x27;B&#x27;:(20,42,67)}
+colors=np.array(list(cs.values()));keys=list(cs)
+for y in range(0,144,2):
+ row=&#x27;&#x27;
+ for x in range(0,256,2):
+  p=im[y:y+2,x:x+2].mean((0,1));row+=keys[np.argmin(((colors-p)**2).sum(1))]
+ print(f&#x27;{y:03d}|&#x27;+row)
+print(&#x27;PIXELS at 8 intervals&#x27;)
+for y in range(0,144,8):
+ print(y, &#x27; &#x27;.join(f&#x27;{x}:{tuple(im[y,x])}&#x27; for x in range(0,256,16)))
+PY&quot;</pre></details><p class=muted>保存候选 0 份；完成命令 3 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p><footer><span>PixelWorld · 研究预览</span><span>视频 · 候选版本 · 可观测生成过程</span></footer></main><script>
 class PixelPlayer{
  constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
  async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
