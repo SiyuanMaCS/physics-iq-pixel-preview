@@ -1,0 +1,524 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/GPT-6.1-Sol · common50_0001</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/GPT-6.1-Sol · common50_0001</h1><p class=muted>text · 256×192 · 4 FPS · 20 帧 · 状态 complete · 输出 tokens 32695</p><div class=box><strong>原始任务</strong><p>In a fixed robotic workspace, a rigid and physically consistent embodied robotic arm with high stability and no deformation proceeds to Toast two slices of the brown square bread with the left gripper from the woven basket into the white two-slot toaster.
+</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels_file&quot;: &quot;pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;85c8a5ed6c56ea58f4bf1235956089a254c793c9e6f21a2d77acc98350e9387c&quot;, &quot;pixels&quot;: &quot;final/pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T01:28:43.797274+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels_file&quot;: &quot;pixels_60c189377a14cc25.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;a7ffcfb8ba43c8b5789a51d7fc652259e9e82b59f8bffaae3899603fa31df504&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_60c189377a14cc25.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,276 @@
++from pathlib import Path
++import numpy as np
++from PIL import Image, ImageDraw, ImageFilter
++import cv2
++from scipy.ndimage import gaussian_filter
++import artifact_io
++
++ROOT = Path(__file__).resolve().parent
++W, H = 256, 192
++SRC = np.asarray(Image.open(ROOT / &#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
++
++
++def polygon_mask(points):
++    im = Image.new(&#x27;L&#x27;, (W, H))
++    ImageDraw.Draw(im).polygon(points, fill=255)
++    return np.asarray(im).astype(np.float32) / 255
++
++
++# The three machined links and their end effector are separate rigid pieces.
++# The photograph&#x27;s texture, bearings, bolts and finger tips are retained.
++outline = [(0,35),(24,33),(28,31),(36,33),(48,33),(51,28),
++           (58,23),(64,20),(69,21),(77,22),(81,25),(88,26),
++           (94,28),(94,33),(90,35),(82,35),(78,35),(74,38),
++           (71,44),(70,46),(72,50),(74,55),(77,58),(80,60),
++           (89,59),(96,60),(102,62),(103,65),(103,68),(108,68),
++           (110,72),(109,77),(109,87),(107,93),(101,94),
++           (99,93),(98,90),(96,87),(95,84),(95,82),(91,80),
++           (84,80),(78,80),(73,80),(65,78),(60,77),(56,75),
++           (52,73),(45,72),(37,72),(30,73),(20,74),(0,77)]
++whole = polygon_mask(outline)
++fore = polygon_mask([(45,33),(49,27),(64,19),(78,21),(95,27),
++                     (95,35),(79,36),(71,45),(71,48),(76,55),
++                     (78,59),(74,66),(65,67),(48,62),(39,54)]) * whole
++wrist = polygon_mask([(55,59),(70,56),(80,59),(90,58),(101,61),
++                      (105,65),(105,73),(96,78),(93,81),(75,81),
++                      (57,77),(51,71),(52,65)]) * whole
++hand = polygon_mask([(97,66),(104,65),(110,69),(111,77),(110,94),
++                     (101,95),(96,89),(94,80),(95,70)]) * whole
++upper = whole * (1 - fore) * (1 - wrist) * (1 - hand)
++# Restore small round overlapping bearings so articulation never tears.
++def circle_mask(c, radius):
++    yy, xx = np.mgrid[:H, :W]
++    return (((xx-c[0])**2 + (yy-c[1])**2) &lt; radius**2).astype(np.float32)
++
++upper = np.maximum(upper, whole * circle_mask((66,31),8))
++fore = np.maximum(fore * (1-wrist)*(1-hand), whole*circle_mask((72,62),9))
++wrist = np.maximum(wrist * (1-hand), whole*circle_mask((97,69),5))
++parts = [upper, fore, wrist, hand]
++
++# A static clean plate from local table pixels.  No image outside the case is
++# involved.  Large occluded regions are filled with the tabletop&#x27;s existing
++# softly varying lighting, then its small-scale grain is copied into the fill.
++erasure = cv2.dilate((whole*255).astype(np.uint8), np.ones((3,3),np.uint8))
++clean = cv2.inpaint(SRC, erasure, 6, cv2.INPAINT_NS).astype(np.float32)
++tex = SRC.astype(np.float32) - gaussian_filter(SRC.astype(np.float32), (1.1,1.1,0))
++yy, xx = np.mgrid[:H,:W]
++grain = tex[np.maximum(3, np.minimum(62, yy-12)), 112 + (xx%59)]
++inner = cv2.distanceTransform(erasure, cv2.DIST_L2,3)
++clean += grain * np.minimum(inner/5,1)[...,None]*0.6
++clean = np.clip(clean,0,255)
++
++A = np.array([-5.,54.])
++B0 = np.array([66.,31.])
++C0 = np.array([72.,62.])
++D0 = np.array([97.,69.])
++L1 = np.linalg.norm(B0-A)
++L2 = np.linalg.norm(C0-B0)
++L3 = np.linalg.norm(D0-C0)
++theta0 = [np.arctan2(*(B0-A)[::-1]), np.arctan2(*(C0-B0)[::-1]),
++          np.arctan2(*(D0-C0)[::-1])]
++
++
++def rigid_matrix(origin, destination, angle):
++    co, si = np.cos(angle), np.sin(angle)
++    rot = np.array([[co,-si],[si,co]])
++    return np.column_stack((rot, destination - rot@origin)).astype(np.float32)
++
++
++def pose(tip, bend=0):
++    # Inverse kinematics with constant link lengths.  The tool remains vertical
++    # under its rotary cuff, independent of the elbow and forearm.
++    D = np.asarray(tip, dtype=float)-[5,20]
++    th3 = theta0[2] + bend
++    C = D - L3*np.array([np.cos(th3),np.sin(th3)])
++    vec = C-A
++    dist = np.linalg.norm(vec)
++    dist = np.clip(dist, abs(L1-L2)+.05, L1+L2-.05)
++    angle = np.arctan2(vec[1],vec[0])
++    phi = np.arccos(np.clip((L1*L1+dist*dist-L2*L2)/(2*L1*dist),-1,1))
++    th1 = angle-phi
++    B = A + L1*np.array([np.cos(th1),np.sin(th1)])
++    th2 = np.arctan2(*(C-B)[::-1])
++    return [rigid_matrix(A,A,th1-theta0[0]),
++            rigid_matrix(B0,B,th2-theta0[1]),
++            rigid_matrix(C0,C,th3-theta0[2]),
++            rigid_matrix(D0,D,0.)]
++
++
++def composite(im, rgb, alpha):
++    return im*(1-alpha[...,None])+rgb*alpha[...,None]
++
++
++def transformed_part(im, mask, matrix):
++    # Premultiplied resampling prevents a gray halo around dark steel.
++    alpha = cv2.warpAffine(mask, matrix, (W,H), flags=cv2.INTER_LINEAR)
++    color = cv2.warpAffine(SRC.astype(np.float32)*mask[...,None], matrix,
++                           (W,H),flags=cv2.INTER_LINEAR)
++    return im*(1-alpha[...,None])+color
++
++
++# The original upper bread face is used as its material, with no new colors
++# painted over the woven basket.  A homography only represents the changing
++# perspective of this rigid square, never an elastic shape change.
++Q0 = np.float32([[54,109],[82,107],[87,127],[62,133]])
++LOAF_MASK = polygon_mask(Q0.tolist())
++N = 96
++CANON_Q = np.float32([[0,0],[N-1,0],[N-1,N-1],[0,N-1]])
++map0 = cv2.getPerspectiveTransform(Q0, CANON_Q)
++loaf_tex = cv2.warpPerspective(SRC, map0, (N,N), flags=cv2.INTER_LINEAR).astype(np.float32)
++# The face&#x27;s original pores and color variations are preserved; the edge is a
++# narrow rounded crust, sampled in the same brown family as the original.
++u,v = np.meshgrid(np.linspace(0,1,N),np.linspace(0,1,N))
++edge = np.minimum.reduce([u,1-u,v,1-v])
++loaf_tex *= (0.87+0.13*np.clip(edge/.06,0,1))[...,None]
++loaf_alpha = np.ones((N,N),np.float32)
++corner = np.ones((N,N),np.uint8)*255
++ci = Image.fromarray(corner)
++cd = ImageDraw.Draw(ci)
++cd.rectangle([0,0,N-1,N-1],fill=0)
++cd.rounded_rectangle([0,0,N-1,N-1],radius=6,fill=255)
++loaf_alpha = np.asarray(ci).astype(np.float32)/255
++
++
++def draw_loaf(im, quad, clip=None, toast=0):
++    q=np.asarray(quad,dtype=np.float32)
++    M=cv2.getPerspectiveTransform(CANON_Q,q)
++    al=cv2.warpPerspective(loaf_alpha,M,(W,H),flags=cv2.INTER_LINEAR)
++    col=loaf_tex.copy()
++    col *= np.array([1-.07*toast,1-.16*toast,1-.2*toast])
++    prem=cv2.warpPerspective(col*loaf_alpha[...,None],M,(W,H),flags=cv2.INTER_LINEAR)
++    if clip is not None:
++        cc=clip.astype(np.float32)
++        al*=cc
++        prem*=cc[...,None]
++    # The side of each slice has a stable, narrow crust thickness.
++    shifted=q+np.float32([2.1,.6])
++    Ms=cv2.getPerspectiveTransform(CANON_Q,shifted)
++    a2=cv2.warpPerspective(loaf_alpha,Ms,(W,H),flags=cv2.INTER_LINEAR)
++    side=cv2.warpPerspective(col*loaf_alpha[...,None]*.66,Ms,(W,H),flags=cv2.INTER_LINEAR)
++    if clip is not None:
++        a2*=clip
++        side*=clip[...,None]
++    im=im*(1-a2[...,None])+side
++    return im*(1-al[...,None])+prem
++
++
++def carried_quad(tip, lift):
++    g=np.array(tip,dtype=float)
++    # Grasp position fixed in the bread&#x27;s local coordinates.  The wrist tips
++    # the bread upright before entering a slot.
++    upright=np.array([[-10,-5],[16,-6],[17,18],[-9,19]],float)+g
++    flat=Q0.astype(float)+(g-np.array([68.,116.]))
++    return flat*(1-lift)+upright*lift
++
++
++def slot_quad(slot, sink=0):
++    if slot==0:
++        return np.array([[120,68+sink],[145,67+sink],[146,87+sink],[121,88+sink]],float)
++    return np.array([[121,81+sink],[148,80+sink],[149,101+sink],[122,102+sink]],float)
++
++
++# The narrow slot lip occludes the slice during insertion.  Its original
++# bright metal reflection is always retained in front of the bread.
++clip_back=(yy &lt; (80.6-.038*(xx-133))).astype(np.float32)
++clip_front=(yy &lt; (94.2-.03*(xx-134))).astype(np.float32)
++
++# Removing each picked slice exposes the next slice and, finally, the shaded
++# woven floor.  All basket pixels outside the original face stay unchanged.
++def basket_state(im, removed):
++    if not removed:
++        return im
++    if removed==1:
++        # A second square lies immediately underneath the first.
++        q = Q0 + np.float32([-.8,2.5])
++        im=draw_loaf(im,q)
++        return im
++    # Copy the basket&#x27;s lower interior weave and follow its existing shading.
++    srcy=np.clip(yy+22,131,146)
++    srcx=np.clip(xx,51,84)
++    woven=SRC[srcy,srcx].astype(np.float32)
++    # Low-key interior light, with a faint base weave of perpendicular reeds.
++    interior=woven*.83
++    stripe=(np.cos(xx*1.8)+np.cos((yy+.22*xx)*1.7))*1.4
++    interior+=stripe[...,None]*np.array([1,.64,.3])
++    m=LOAF_MASK
++    return composite(im,interior,m)
++
++
++def shadow(im, tip, strength=1):
++    x,y=tip
++    # A diffuse moving contact shadow, not a camera or workspace motion.
++    sx=x+8
++    sy=max(111,y+32)
++    ell=np.exp(-((xx-sx)/17)**2-((yy-sy)/5)**2)*.12*strength
++    ell*=((xx&gt;42)&amp;(xx&lt;170)&amp;(yy&gt;104)&amp;(yy&lt;166))
++    return im*(1-ell[...,None])
++
++
++def open_hand(im, matrix, amount):
++    if amount &lt; .05:
++        return transformed_part(im,hand,matrix)
++    # The parallel fingers separate at their mechanical slide; the palm is
++    # still one rigid object, and the fingertips translate without stretching.
++    palm=hand*(yy&lt;=76)
++    left=hand*(yy&gt;76)*(xx&lt;102)
++    right=hand*(yy&gt;76)*(xx&gt;=102)
++    im=transformed_part(im,palm,matrix)
++    for m,dx in [(left,-amount*1.35),(right,amount*1.35)]:
++        mm=matrix.copy(); mm[0,2]+=dx
++        im=transformed_part(im,m,mm)
++    return im
++
++
++def generate():
++    # Keyframes include two complete pick/transport/insert/release cycles.
++    tips=[(102,89),(88,101),(68,116),(72,102),(87,82),
++          (109,70),(128,71),(128,78),(128,70),(107,77),
++          (86,101),(67,118),(75,98),(100,77),(129,80),
++          (129,90),(129,82),(113,94),(113,103),(105,86)]
++    frames=[SRC.copy()]
++    for i in range(1,20):
++        tip=np.array(tips[i],float)
++        image=clean.copy()
++        removed=0 if i&lt;3 else 1 if i&lt;12 else 2
++        image=basket_state(image,removed)
++        # The first stationary slice remains in the rear slot throughout the
++        # entire second transfer, visibly establishing that there are two.
++        if i&gt;=8:
++            sinking=0 if i&lt;18 else 8.0 if i==18 else 10.0
++            image=draw_loaf(image,slot_quad(0,sinking),clip_back)
++        if i&gt;=16:
++            sinking=0 if i&lt;18 else 9.0 if i==18 else 11.0
++            image=draw_loaf(image,slot_quad(1,sinking),clip_front)
++        held=(3&lt;=i&lt;=7) or (12&lt;=i&lt;=15)
++        if held:
++            lift=.40 if i==3 else 1
++            if i&gt;=12:
++                lift=.7 if i==12 else 1
++            q=carried_quad(tip,lift)
++            # The final insertion frames reduce the visible height exactly at
++            # the corresponding slot&#x27;s near rim.
++            clip=clip_back if i==7 else clip_front if i==15 else None
++            image=shadow(image,tip,.65)
++            image=draw_loaf(image,q,clip)
++        matrices=pose(tip)
++        for m,mat in zip(parts[:3],matrices[:3]):
++            image=transformed_part(image,m,mat)
++        opening=1.0 if i in [1,8,9,10,16,17,19] else .05
++        image=open_hand(image,matrices[3],opening)
++        # Toasting is initiated with one downstroke of the left-side lever.
++        if i&gt;=18:
++            # Tiny warm elements deep in the slots, never a painted overlay
++            # on the white housing.
++            warm=polygon_mask([(117,81),(146,80),(146,82),(117,83)])
++            warm2=polygon_mask([(118,94),(147,93),(147,95),(118,96)])
++            a=(warm+warm2)*.12
++            image=composite(image,np.broadcast_to(np.array([155,66,23]),image.shape),a)
++        frames.append(np.clip(image,0,255).astype(np.uint8))
++    frames=np.stack(frames)
++    np.save(ROOT/&#x27;candidate_frames.npy&#x27;,frames)
++    artifact_io.save(frames,ROOT)
++    return frames
++
++
++if __name__==&#x27;__main__&#x27;:
++    generate()
+</pre></details></details><details><summary>候选 02 · 2026-11-09T01:30:23.786093+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels_file&quot;: &quot;pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;85c8a5ed6c56ea58f4bf1235956089a254c793c9e6f21a2d77acc98350e9387c&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -84,7 +84,8 @@
+     C = D - L3*np.array([np.cos(th3),np.sin(th3)])
+     vec = C-A
+     dist = np.linalg.norm(vec)
+-    dist = np.clip(dist, abs(L1-L2)+.05, L1+L2-.05)
++    if not abs(L1-L2) &lt; dist &lt; L1+L2:
++        raise ValueError(&#x27;Tool target outside the rigid arm workspace&#x27;)
+     angle = np.arctan2(vec[1],vec[0])
+     phi = np.arccos(np.clip((L1*L1+dist*dist-L2*L2)/(2*L1*dist),-1,1))
+     th1 = angle-phi
+@@ -165,8 +166,8 @@
+ 
+ def slot_quad(slot, sink=0):
+     if slot==0:
+-        return np.array([[120,68+sink],[145,67+sink],[146,87+sink],[121,88+sink]],float)
+-    return np.array([[121,81+sink],[148,80+sink],[149,101+sink],[122,102+sink]],float)
++        return np.array([[119,68+sink],[145,67+sink],[146,91+sink],[120,92+sink]],float)
++    return np.array([[120,81+sink],[146,80+sink],[147,104+sink],[121,105+sink]],float)
+ 
+ 
+ # The narrow slot lip occludes the slice during insertion.  Its original
+@@ -203,6 +204,7 @@
+     sy=max(111,y+32)
+     ell=np.exp(-((xx-sx)/17)**2-((yy-sy)/5)**2)*.12*strength
+     ell*=((xx&gt;42)&amp;(xx&lt;170)&amp;(yy&gt;104)&amp;(yy&lt;166))
++    ell[ell&lt;.003]=0
+     return im*(1-ell[...,None])
+ 
+ 
+@@ -224,9 +226,9 @@
+ def generate():
+     # Keyframes include two complete pick/transport/insert/release cycles.
+     tips=[(102,89),(88,101),(68,116),(72,102),(87,82),
+-          (109,70),(128,71),(128,78),(128,70),(107,77),
+-          (86,101),(67,118),(75,98),(100,77),(129,80),
+-          (129,90),(129,82),(113,94),(113,103),(105,86)]
++          (109,60),(129,65),(129,73),(129,65),(107,77),
++          (86,101),(67,118),(75,98),(100,69),(130,78),
++          (130,86),(130,78),(113,94),(113,103),(105,86)]
+     frames=[SRC.copy()]
+     for i in range(1,20):
+         tip=np.array(tips[i],float)
+@@ -249,7 +251,7 @@
+             q=carried_quad(tip,lift)
+             # The final insertion frames reduce the visible height exactly at
+             # the corresponding slot&#x27;s near rim.
+-            clip=clip_back if i==7 else clip_front if i==15 else None
++            clip=clip_back if i in [6,7] else clip_front if i in [14,15] else None
+             image=shadow(image,tip,.65)
+             image=draw_loaf(image,q,clip)
+         matrices=pose(tip)
+</pre></details></details><details><summary>候选 03 · 2026-11-09T01:30:25.722651+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 192, &quot;frames&quot;: 20, &quot;fps&quot;: 4, &quot;pixels_file&quot;: &quot;pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;85c8a5ed6c56ea58f4bf1235956089a254c793c9e6f21a2d77acc98350e9387c&quot;, &quot;pixels&quot;: &quot;candidate_02/pixels_6c88fd99c6ec5b4c.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_02/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_02/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T01:19:30.594181+00:00</strong><pre>/bin/bash -lc &quot;ls -la &amp;&amp; cat prompt.txt &amp;&amp; printf &#x27;\\n---RULES---\\n&#x27; &amp;&amp; cat GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T01:19:41.928210+00:00</strong><pre>/bin/bash -lc &quot;cat task_spec.json &amp;&amp; cat artifact_io.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+print(&#x27;shape&#x27;,im.shape)
+from collections import Counter
+print(Counter(map(tuple,(im//24*24).reshape(-1,3))).most_common(25))
+# Color/brightness map
+im=np.array(Image.fromarray(im).resize((85,64)))
+for row in im:
+ s=&#x27;&#x27;
+ for r,g,b in row.astype(int):
+  if max(r,g,b)&lt;45:c=&#x27;@&#x27;
+  elif max(r,g,b)&lt;80:c=&#x27;#&#x27;
+  elif max(r,g,b)-min(r,g,b)&lt;15:
+   c=&#x27;.&#x27; if r&gt;220 else &#x27;:&#x27; if r&gt;175 else &#x27;;&#x27; if r&gt;125 else &#x27;=&#x27; if r&gt;85 else &#x27;#&#x27;
+  elif r&gt;g*1.15 and g&gt;b*1.12:c=&#x27;B&#x27; if r&lt;155 else &#x27;b&#x27;
+  elif b&gt;r*1.18 and b&gt;g*1.05:c=&#x27;U&#x27;
+  elif r&gt;g*1.25:c=&#x27;R&#x27;
+  elif g&gt;r*1.12 and g&gt;b*1.05:c=&#x27;G&#x27;
+  else:c=&#x27;~&#x27;
+  s+=c
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T01:19:54.507512+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+chars=&#x27;@%#*+=-:. &#x27;
+for box in [(0,15,114,110),(45,101,98,165),(99,65,175,126),(0,80,56,192),(182,53,256,155)]:
+ a=Image.fromarray(im).crop(box); a=np.array(a.resize((a.width//2,a.height//2)))
+ print(&#x27;\\nBOX&#x27;,box,&#x27;scale2&#x27;)
+ print(&#x27;   &#x27;+&#x27;&#x27;.join(str((box[0]+j*2)//10%10) for j in range(a.shape[1])))
+ print(&#x27;   &#x27;+&#x27;&#x27;.join(str((box[0]+j*2)%10) for j in range(a.shape[1])))
+ for i,row in enumerate(a):
+  v=(row[:,:3].astype(float).mean(1)/256*len(chars)).astype(int)
+  print(&#x27;%03d&#x27;%(box[1]+i*2)+&#x27;&#x27;.join(chars[min(j,9)] for j in v))
+# sample colored objects xy ranges
+m=(im[:,:,0].astype(float)&gt;im[:,:,1]*1.15)&amp;(im[:,:,1]&gt;im[:,:,2]*1.1)&amp;(im[:,:,0]&gt;45)
+for y in range(20,170,5):
+ x=np.where(m[y:y+5].any(0))[0]
+ print(&#x27;brown&#x27;,y,x.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T01:20:07.635641+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(int)
+for box in [(0,20,115,102),(45,101,98,150)]:
+ a=im[box[1]:box[3],box[0]:box[2]]
+ print(&#x27;\\n REGION&#x27;,box)
+ for i,row in enumerate(a[::2,::1]):
+  s=&#x27;&#x27;
+  for r,g,b in row:
+   v=(r+g+b)/3
+   if r&gt;g*1.15 and r-b&gt;15:c=&#x27;B&#x27; if v&lt;80 else &#x27;b&#x27;
+   elif v&lt;12:c=&#x27;@&#x27;
+   elif v&lt;22:c=&#x27;M&#x27;
+   elif v&lt;35:c=&#x27;W&#x27;
+   elif v&lt;50:c=&#x27;#&#x27;
+   elif v&lt;65:c=&#x27;O&#x27;
+   elif v&lt;80:c=&#x27;o&#x27;
+   elif v&lt;95:c=&#x27;+&#x27;
+   elif v&lt;110:c=&#x27;=&#x27;
+   elif v&lt;130:c=&#x27;-&#x27;
+   elif v&lt;150:c=&#x27;:&#x27;
+   elif v&lt;180:c=&#x27;.&#x27;
+   else:c=&#x27; &#x27;
+   s+=c
+  print(&#x27;%03d &#x27;%(box[1]+i*2)+s)
+for p in [(70,113),(62,117),(60,125),(68,120),(78,119),(80,132),(74,137),(68,129),(55,109),(90,87),(75,66),(66,48),(42,38),(22,48),(126,80),(130,90),(141,106)]:
+ print(p,im[p[1],p[0]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T01:20:26.005836+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+# enhanced luminance textual plotting reveals robot details
+chars=&#x27;@#8&amp;ox+=-:,. &#x27;
+for box in [(25,20,110,94),(44,100,99,159),(105,66,166,116)]:
+ a=im[box[1]:box[3],box[0]:box[2]].astype(float)
+ v=a.mean(2); v=np.log1p(v)/np.log(256)
+ print(&#x27;\\n&#x27;,box)
+ print(&#x27;    &#x27;+&#x27;&#x27;.join(str((box[0]+i)//10%10) for i in range(a.shape[1])))
+ print(&#x27;    &#x27;+&#x27;&#x27;.join(str((box[0]+i)%10) for i in range(a.shape[1])))
+ for k,row in enumerate(v):
+  print(&#x27;%03d &#x27;%(box[1]+k)+&#x27;&#x27;.join(chars[min(12,int(c*13))] for c in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T01:21:16.080512+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+# basket red (shows bread values more directly than total luminance)
+chars=&#x27;@%#8OXxo+=-:,. &#x27;
+for ch in [0,1]:
+ print(&#x27;channel&#x27;,ch)
+ print(&#x27;    &#x27;+&#x27;&#x27;.join(str(i//10%10) for i in range(47,94)))
+ print(&#x27;    &#x27;+&#x27;&#x27;.join(str(i%10) for i in range(47,94)))
+ for y in range(105,149):
+  print(&#x27;%03d &#x27;%y+&#x27;&#x27;.join(chars[min(14,int(im[y,x,ch]/125*15))] for x in range(47,94)))
+# edge coordinate grouped local
+for y in range(105,145):
+ a=im[y,50:90]; mag=np.linalg.norm(np.diff(a,axis=0),axis=1)
+ idx=np.where(mag&gt;25)[0]+50
+ print(y,idx.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-09T01:22:24.075331+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import importlib.util
+for name in [&#x27;scipy&#x27;,&#x27;cv2&#x27;]:
+ print(name, bool(importlib.util.find_spec(name)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-09T01:23:23.698340+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+im=np.array(Image.open(&#x27;first_frame.png&#x27;)).astype(int)
+print(&#x27;     &#x27;+&#x27;&#x27;.join(str(i//10%10) for i in range(82,110)))
+print(&#x27;     &#x27;+&#x27;&#x27;.join(str(i%10) for i in range(82,110)))
+for y in range(58,95):
+ s=&#x27;&#x27;
+ for r,g,b in im[y,82:110]:
+  v=(r+g+b)/3
+  if v&lt;20:c=&#x27;@&#x27;
+  elif v&lt;35:c=&#x27;W&#x27;
+  elif v&lt;55:c=&#x27;#&#x27;
+  elif v&lt;80:c=&#x27;O&#x27;
+  elif v&lt;110:c=&#x27;=&#x27;
+  elif v&lt;145:c=&#x27;:&#x27;
+  elif v&lt;180:c=&#x27;.&#x27;
+  else:c=&#x27; &#x27;
+  s+=c
+ print(&#x27;%03d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-09T01:25:54.375454+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.array(Image.open(&#x27;first_frame.png&#x27;))
+for y in [5,20,30,40,50,60,70,80,90,100]:
+ print(y,[(x,tuple(im[y,x])) for x in [15,45,85,105,115,135,160,175,180]])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-09T01:28:42.834100+00:00</strong><pre>/bin/bash -lc &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np
+f=np.load(&#x27;candidate_frames.npy&#x27;)
+print(&#x27;shape&#x27;,f.shape, &#x27;first identical&#x27;,np.array_equal(f[0],g.SRC))
+print(&#x27;differences&#x27;,[int(np.any(a&quot;&#x27;!=g.SRC,2).sum()) for a in f])
+print(&#x27;&quot;&#x27;movement&#x27;,[round(float(np.abs(f[i].astype(float)-f[i-1]).mean()),2) for i in range(1,20)])
+for i,tip in enumerate([(102,89),(68,116),(128,71),(67,118),(129,90),(113,103)]):
+ M=g.pose(tip)
+ def tf(m,p):return m[:,:2]@p+m[:,2]
+ A=tf(M[0],g.A);B=tf(M[0],g.B0);BB=tf(M[1],g.B0);C=tf(M[1],g.C0);CC=tf(M[2],g.C0);D=tf(M[2],g.D0)
+ print(tip,&#x27;links&#x27;,np.linalg.norm(B-A),np.linalg.norm(C-BB),np.linalg.norm(D-CC),&#x27;joints&#x27;,np.linalg.norm(B-BB),np.linalg.norm(C-CC))
+# ascii representative frames gamma
+from PIL import Image
+chars=&#x27;@#8&amp;ox+=-:,. &#x27;
+for i in [0,2,4,6,8,11,14,16,19]:
+ a=np.array(Image.fromarray(f[i]).resize((85,64))).astype(float)
+ v=np.log1p(a.mean(2))/np.log(256)
+ print(&#x27;\\nFRAME&#x27;,i)
+ for row in v[5:52]:
+  print(&#x27;&#x27;.join(chars[min(12,int(c*13))] for c in row))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-09T01:29:13.259608+00:00</strong><pre>/bin/bash -lc &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate as g
+import numpy as np
+cov=np.maximum.reduce(g.parts)
+miss=(g.whole&gt;0)&amp;(cov&lt;.5)
+print(&#x27;whole&#x27;,g.whole.sum(),&#x27;missing&#x27;,miss.sum())
+if miss.any():
+ yy,xx=np.where(miss)
+ print(&#x27;missing range&#x27;,xx.min(),xx.max(),yy.min(),yy.max())
+for name,m in zip([&#x27;upper&#x27;,&#x27;fore&#x27;,&#x27;wrist&#x27;,&#x27;hand&#x27;],g.parts):
+ yy,xx=np.where(m)
+ print(name, m.sum(), (xx.min(),xx.max(),yy.min(),yy.max()))
+# Alpha centroids and joint poses per frame
+for tip in [(68,116),(72,102),(87,82),(129,65),(129,73),(107,77)]:
+ M=g.pose(tip)
+ print(tip, [(round(float(np.degrees(np.arctan2(m[1,0],m[0,0]))),1),list(np.round(m[:,:2]@p+m[:,2],1))) for m,p in zip(M,[g.B0,g.C0,g.D0,g.D0])])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-09T01:30:23.425557+00:00</strong><pre>/bin/bash -lc &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+f=np.load(&#x27;candidate_frames.npy&#x27;); src=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+print(f.shape,f.dtype,&#x27;identical frame00&#x27;,np.array_equal(f[0],src))
+print(&#x27;static right area&#x27;,np.array_equal(f[:,120:,175:],np.repeat(src[None,120:,175:],20,axis=0)))
+# slot patch color vs original; first and second both present before toaster downstroke
+for i in [6,7,8,14,15,16,18,19]:
+ brown=(f[i,:,:,0].astype(int)-f[i,:,:,1].astype(int)&gt;15)&amp;(f[i,:,:,1].astype(int)-f[i,:,:,2].astype(int)&gt;15)
+ print(i,&#x27;slot brown pixels&#x27;, brown[63:82,116:149].sum(),brown[81:95,116:152].sum())
+print(&#x27;artifacts ready&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 3 份；完成命令 12 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>

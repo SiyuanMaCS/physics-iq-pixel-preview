@@ -1,0 +1,841 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0053</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0053</h1><p class=muted>text · 256×144 · 4.0 FPS · 20 帧 · 状态 failed · 输出 tokens 50286</p><div class=box><strong>原始任务</strong><p>Static locked-off single-shot with fixed frame throughout filmed with constant framerate in real-time. The scene shows a realistic scientific demonstration. The scene only contains the described setup and actions. The blue-black grabber tool was holding two metal balls at the position of the amplitude of the Newton&#x27;s cradle. The Newton&#x27;s cradle with five metal balls is sitting on a table. Two metal balls of the Newton&#x27;s cradle device are released by the blue-black grabber tool.
+</p></div><p class=box>尚无格式正确的 RGB 视频；保留真实执行状态。</p><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T01:21:36.597759+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;&quot;&#x27;!*.mp4&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!*.mov&#x27;&quot;&#x27; -g &#x27;&quot;&#x27;!*.avi&#x27;&quot;&#x27; | sed -n &#x27;1,200p&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T01:21:36.721011+00:00</strong><pre>/bin/bash -c &#x27;cat prompt.txt&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T01:21:37.018758+00:00</strong><pre>/bin/bash -c &#x27;cat GENERATION_RULES.md&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T01:21:37.201654+00:00</strong><pre>/bin/bash -c &#x27;ls -la &amp;&amp; file first_frame.png 2&gt;/dev/null || true &amp;&amp; identify first_frame.png 2&gt;/dev/null || true&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T01:21:43.605339+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+a=np.asarray(im)
+print(im.size,a.shape,a.dtype)
+print(&#x27;mean&#x27;,a.mean((0,1)),&#x27;min&#x27;,a.min((0,1)),&#x27;max&#x27;,a.max((0,1)))
+# quantized dominant colors
+q=(a//16*16).reshape(-1,3)
+u,c=np.unique(q,axis=0,return_counts=True)
+for i in np.argsort(c)[-25:][::-1]: print(tuple(u[i]),int(c[i]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T01:21:47.977652+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-09T01:21:54.282959+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)
+a=np.asarray(im).astype(float)
+g=a.mean(2)
+# 2x2 block downsample, normalized contrast, edge-enhanced-ish ascii
+h,w=g.shape
+small=g.reshape(72,2,128,2).mean((1,3))
+chars=&#x27; .:-=+*#%@&#x27;
+# map percentiles 1,99
+lo,hi=np.percentile(small,[2,98])
+print(&#x27;luma range&#x27;,lo,hi)
+for row in small:
+    vals=np.clip((row-lo)/(hi-lo),0,.999)
+    print(&#x27;&#x27;.join(chars[int(v*len(chars))] for v in vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-09T01:22:00.098833+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+try:
+ import cv2; print(&#x27;cv2&#x27;,cv2.__version__)
+except Exception as e: print(&#x27;no cv2&#x27;,e)
+try:
+ import scipy; print(&#x27;scipy&#x27;,scipy.__version__)
+except Exception as e: print(&#x27;no scipy&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-09T01:22:04.724224+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+for p2 in [10,15,20,25,30]:
+ cs=cv2.HoughCircles(g,cv2.HOUGH_GRADIENT,dp=1,minDist=8,param1=60,param2=p2,minRadius=3,maxRadius=25)
+ print(&#x27;p2&#x27;,p2, None if cs is None else np.round(cs[0],1).tolist()[:50])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-09T01:22:08.576113+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# Print key horizontal/vertical samples as RGB around central area
+for y in [15,25,35,45,55,65,75,85,95,105,115,125,135]:
+ vals=[]
+ for x in [0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255]:
+  vals.append(&#x27;%3d,%3d,%3d&#x27;%tuple(im[y,x]))
+ print(&#x27;y&#x27;,y,&#x27; | &#x27;.join(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 11 · 2026-11-09T01:22:12.535543+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+# blue mask hue 90-130 high saturation
+mask=cv2.inRange(hsv,np.array([85,70,30]),np.array([135,255,255]))
+n,lab,stats,cents=cv2.connectedComponentsWithStats(mask)
+for i in np.argsort(stats[:,4])[-15:][::-1]:
+ print(i,stats[i].tolist(),np.round(cents[i],1).tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-09T01:22:16.624454+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# inspect blue grabber region in 2-px ascii using color distance to blue
+for y in range(76,106,2):
+ s=&#x27;&#x27;
+ for x in range(20,104,2):
+  b=im[y:y+2,x:x+2].mean(0)
+  # blue score b-r
+  sc=b[2]-b[0]
+  s += &#x27;#&#x27; if sc&gt;80 else &#x27;B&#x27; if sc&gt;30 else &#x27;+&#x27; if sc&gt;5 else &#x27; &#x27; if b.mean()&lt;40 else &#x27;.&#x27; if b.mean()&lt;100 else &#x27;-&#x27;
+ print(f&#x27;{y:3d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 13 · 2026-11-09T01:22:20.379008+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+for y in range(76,106,2):
+ s=&#x27;&#x27;
+ for x in range(20,104,2):
+  b=im[y:y+2,x:x+2].mean((0,1))
+  sc=b[2]-b[0]
+  s += &#x27;#&#x27; if sc&gt;80 else &#x27;B&#x27; if sc&gt;30 else &#x27;+&#x27; if sc&gt;5 else &#x27; &#x27; if b.mean()&lt;40 else &#x27;.&#x27; if b.mean()&lt;100 else &#x27;-&#x27;
+ print(f&#x27;{y:3d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-09T01:22:31.468671+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=cv2.cvtColor(im,cv2.COLOR_BGR2RGB)
+hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV)
+h,s,v=[hsv[:,:,i].astype(float) for i in range(3)]
+def ch(y,x):
+ r,g,b=rgb[y:y+2,x:x+2].mean((0,1)); H,S,V=h[y:y+2,x:x+2].mean(),s[y:y+2,x:x+2].mean(),v[y:y+2,x:x+2].mean()
+ if b-r&gt;35 and b&gt;50:return &#x27;B&#x27;
+ if V&lt;35:return &#x27;#&#x27;
+ if S&lt;35 and V&gt;150:return &#x27; &#x27;
+ if S&lt;50 and V&gt;95:return &#x27;M&#x27;
+ if H&lt;28 and S&gt;55:return &#x27;t&#x27;
+ if H&lt;20 and S&gt;35 and V&lt;120:return &#x27;d&#x27;
+ if H&lt;28 and S&gt;25:return &#x27;T&#x27;
+ return &#x27;.&#x27;
+for y in range(38,138,2):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(ch(y,x) for x in range(0,256,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-09T01:22:35.632247+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# use radial dark/gray/edge map around likely cradle
+g=im.mean(2)
+# print local minima coordinates/values in 55:125, 60:210, smoothed heavily
+import cv2
+sm=cv2.GaussianBlur(g,(5,5),1.2)
+roi=sm[55:125,60:205]
+# local min separated
+mx=cv2.dilate(roi,np.ones((9,9),np.uint8))
+ys,xs=np.where((roi==mx)&amp;(roi&lt;100))
+vals=sorted([(roi[y,x],x+60,y+55) for y,x in zip(ys,xs)])
+print(vals[:50])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-09T01:22:40.048662+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# metalness score: low saturation bright pixels in central ROI
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+S=hsv[:,:,1]; V=hsv[:,:,2]
+score=(V-0.4*S)
+# print 1 px table of V,S around y 88..124 x 82..166 every 2
+for y in range(88,125,2):
+ s=&#x27;&#x27;
+ for x in range(82,167,2):
+  v=V[y,x]; sat=S[y,x]
+  s += &#x27;#&#x27; if v&lt;50 else &#x27;o&#x27; if sat&lt;30 and v&lt;130 else &#x27;O&#x27; if sat&lt;45 and v&gt;120 else &#x27;m&#x27; if sat&lt;70 and v&gt;100 else &#x27;:&#x27; if sat&lt;100 else &#x27;.&#x27; 
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-09T01:22:44.334149+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# test circle hough constrained ROI
+roi=g[85:128,85:165]
+for p1 in [30,40,50,60,80,100]:
+ for p2 in [5,7,9,11,13]:
+  cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT,dp=1,minDist=10,param1=p1,param2=p2,minRadius=3,maxRadius=9)
+  if cs is not None:
+   arr=np.round(cs[0],1)
+   arr[:,0]+=85; arr[:,1]+=85
+   print(p1,p2,len(arr),arr.tolist()[:20])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-09T01:22:48.659616+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# contrast stretch crop, nearest neighbor 4x, save for numeric row scanning maybe use pixel clusters
+import cv2
+crop=im[85:130,80:175]
+# save enhanced
+lo=np.percentile(crop,[1,99],axis=(0,1))
+out=np.clip((crop-lo[0])/(lo[1]-lo[0]+1e-6)*255,0,255).astype(np.uint8)
+Image.fromarray(out).resize((95*6,45*6),Image.Resampling.NEAREST).save(&#x27;.tmp/cradle_crop.png&#x27;)
+print(&#x27;saved&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-09T01:22:52.844942+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# inspect hough with radius 8-15, avoid minDist issue
+roi=g[88:125,88:165]
+for p2 in [8,10,12,14,16,18,20]:
+ cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT,dp=1,minDist=14,param1=50,param2=p2,minRadius=8,maxRadius=14)
+ if cs is not None:
+  arr=np.round(cs[0],1); arr[:,0]+=88;arr[:,1]+=88
+  print(&#x27;p2&#x27;,p2,arr.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-09T01:22:59.912325+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# gradient direction display at grid around cradle. direction code for high gradients
+gx=cv2.Sobel(g,cv2.CV_32F,1,0,ksize=3);gy=cv2.Sobel(g,cv2.CV_32F,0,1,ksize=3)
+mag=np.hypot(gx,gy)
+# print local circles score: edge count near circle perimeter, radial orientation agreement
+ys,xs=np.mgrid[0:144,0:256]
+for cx in range(90,161,2):
+ vals=[]
+ for cy in range(96,122,1):
+  best=[]
+  for r in range(6,15):
+   pass
+# calculate accumulator for radii and centers coarse
+cands=[]
+for cx in np.arange(90,165,1):
+ for cy in np.arange(96,124,1):
+  for r in np.arange(7,15,0.5):
+   # sample 36 points and average gradient mag with radial alignment
+   th=np.linspace(0,2*np.pi,36,endpoint=False)
+   px=np.rint(cx+r*np.cos(th)).astype(int); py=np.rint(cy+r*np.sin(th)).astype(int)
+   ok=(px&gt;=0)&amp;(px&lt;256)&amp;(py&gt;=0)&amp;(py&lt;144)
+   dot=np.abs(gx[py[ok],px[ok]]*np.cos(th[ok])+gy[py[ok],px[ok]]*np.sin(th[ok]))
+   score=np.mean(dot)/(np.mean(mag[py[ok],px[ok]])+1)
+   cands.append((score,cx,cy,r,np.mean(dot)))
+for c in sorted(cands,reverse=True)[:30]: print(np.round(c,2))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-09T01:23:04.241568+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+roi=g[86:130,88:168]
+for dp in [0.5,1,1.5,2]:
+ for p2 in [6,8,10,12,14]:
+  cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT,dp=dp,minDist=14,param1=40,param2=p2,minRadius=8,maxRadius=15)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=88;arr[:,1]+=86
+   print(&#x27;dp&#x27;,dp,&#x27;p2&#x27;,p2,arr.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 22 · 2026-11-09T01:23:08.317292+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
+# print RGB central table every 4 x, 2 y with luma characters
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(82,126,2):
+ s=&#x27;&#x27;
+ for x in range(88,171,2):
+  rgb=im[y,x]
+  if rgb[2]-rgb[0]&gt;40: c=&#x27;B&#x27;
+  else:
+   v=rgb.mean()
+   c=chars[min(9,int(v/256*10))]
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 23 · 2026-11-09T01:23:12.183864+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(82,126,2):
+ s=&#x27;&#x27;
+ for x in range(88,171,2):
+  r,g,b=im[y,x]
+  if b-r&gt;40: c=&#x27;B&#x27;
+  else:
+   v=(r+g+b)/3
+   c=chars[min(9,int(v/256*10))]
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 24 · 2026-11-09T01:23:16.370500+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Print RGB around y 90-122, x 90-160 in numeric 4x? Detect dark metal/ball regions based local values
+for y in range(92,123,2):
+ print(&#x27;y&#x27;,y)
+ for x in range(90,161,6):
+  print(f&#x27;{x}:{tuple(im[y,x])}&#x27;,end=&#x27;  &#x27;)
+ print()
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 25 · 2026-11-09T01:23:20.683590+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# RGB with base64? print color patch in ANSI truecolor blocks maybe terminal output supports colors unseen here. Instead compute likely circles by symmetry edges.
+# report rows of dark region boundaries
+for y in range(96,126):
+ row=im[y]
+ # pixels with low RGB &lt;25
+ xs=np.where(row.mean(1)&lt;25)[0]
+ if len(xs):
+  # runs
+  runs=[]; st=xs[0];pr=xs[0]
+  for x in xs[1:]:
+   if x&gt;pr+1:runs.append((st,pr));st=x
+   pr=x
+  runs.append((st,pr))
+  print(y,runs)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 26 · 2026-11-09T01:23:24.494244+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# examine exact horizontal rows in grayscale character, x 85:180, every pixel, char based on intensity
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(88,128):
+ s=&#x27;&#x27;
+ for x in range(82,182):
+  v=im[y,x].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 27 · 2026-11-09T01:23:29.630399+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+# Enhance grayscale with CLAHE and edge, print crop using 2x1 chars, map structural. Use cv2.
+import cv2
+g=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2GRAY)
+cl=cv2.createCLAHE(clipLimit=3,tileGridSize=(8,8)).apply(g)
+roi=cl[88:128,88:168]
+chars=&#x27; .:-=+*#%@&#x27;
+for row in roi[::2,::1]:
+ vals=row
+ s=&#x27;&#x27;.join(chars[min(9,int(v/25.6))] for v in vals)
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 28 · 2026-11-09T01:23:44.671314+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+for y in range(90,101):
+ a=g[y,85:170]
+ # detrend 9 px, abs residual, list peaks
+ smooth=np.convolve(a,np.ones(9)/9,&#x27;same&#x27;)
+ r=a-smooth
+ peaks=np.where((r[1:-1]&gt;r[:-2])&amp;(r[1:-1]&gt;=r[2:])&amp;(r[1:-1]&gt;10))[0]+86
+ print(y,&#x27;minmax&#x27;,round(a.min()),round(a.max()),&#x27;peaks&#x27;,peaks.tolist())
+# row-to-row horizontal gradients summed in ROI
+print(&#x27;gradient sum&#x27;)
+for y in range(86,126):
+ dx=np.abs(np.diff(g[y,80:175])).sum()
+ dy=0 if y==86 else np.abs(g[y,80:175]-g[y-1,80:175]).sum()
+ print(y,round(dx),round(dy))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 29 · 2026-11-09T01:23:48.471450+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# 8x8 block mean from crop around cradle to inspect balls as gray blocks
+for y in range(88,128,2):
+ print(&#x27;%3d&#x27;%y, &#x27; &#x27;.join(&#x27;%3d&#x27;%int(g[y:y+2,x:x+2].mean()) for x in range(90,162,2)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 30 · 2026-11-09T01:23:56.787887+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY)
+roi=g[84:130,70:190]
+# CLAHE
+cl=cv2.createCLAHE(clipLimit=4,tileGridSize=(8,8)).apply(roi)
+# edge Canny
+ed=cv2.Canny(cl,30,80)
+chars=&#x27; .:-=+*#%@&#x27;
+# block 2x2 min/max? print edges every 1 pixel x, 1 y; crop width 120
+for y in range(0,ed.shape[0],1):
+ print(&#x27;&#x27;.join(&#x27;#&#x27; if ed[y,x]&gt;0 else &#x27; &#x27; for x in range(ed.shape[1])))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 31 · 2026-11-09T01:24:01.200698+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+for blur in [0,1,2,3]:
+ a=g if blur==0 else cv2.GaussianBlur(g,(blur*2+1,blur*2+1),0)
+ roi=a[86:132,88:168]
+ for p2 in [10,15,20,25,30,35]:
+  cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT,dp=1,minDist=15,param1=100,param2=p2,minRadius=9,maxRadius=16)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=88;arr[:,1]+=86
+   print(&#x27;blur&#x27;,blur,&#x27;p2&#x27;,p2,arr.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 32 · 2026-11-09T01:24:05.659871+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY)
+# white top rectangle bounds by threshold
+for y in range(20,65,5):
+ xs=np.where(g[y]&gt;175)[0]
+ # runs &gt;10
+ if len(xs):
+  runs=[];st=xs[0];pr=xs[0]
+  for x in xs[1:]:
+   if x&gt;pr+1:runs.append((st,pr));st=x
+   pr=x
+  runs.append((st,pr))
+  print(y,[r for r in runs if r[1]-r[0]&gt;=3])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 33 · 2026-11-09T01:24:09.794549+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# sample columns where balls likely x=100,113,126,139,152 at rows 95-115, print RGB
+for x in [99,100,101,111,112,113,114,124,125,126,127,137,138,139,140,150,151,152,153]:
+ print(&#x27;x&#x27;,x,[(y,tuple(im[y,x])) for y in range(95,121,3)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 34 · 2026-11-09T01:24:14.049907+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# gaussian then hough over radius 10-18 and inspect many
+for sigma in [1,2,3,4]:
+ a=cv2.GaussianBlur(g,(0,0),sigma)
+ for p2 in [10,12,14,16,18,20]:
+  cs=cv2.HoughCircles(a[88:132,88:168],cv2.HOUGH_GRADIENT,dp=1,minDist=20,param1=60,param2=p2,minRadius=10,maxRadius=18)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=88;arr[:,1]+=88
+   print(&#x27;s&#x27;,sigma,&#x27;p&#x27;,p2,arr.tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 35 · 2026-11-09T01:24:17.978288+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# values as signed colorfulness b-r, saturation, luma around candidate balls
+for y in range(92,122,2):
+ vals=[]
+ for x in range(90,163,4):
+  r,g,b=im[y,x]; vals.append(f&#x27;{b-r:+3d}/{b:3d}&#x27;)
+ print(&#x27;%3d &#x27;%y+&#x27; &#x27;.join(vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 36 · 2026-11-09T01:24:22.264348+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# compute variance in vertical strips 10 px high for metal gray regions, identify periodic texture centers
+for y in range(94,122,2):
+ vals=[]
+ for x in range(88,170,4):
+  p=g[max(0,y-1):y+2,max(0,x-1):x+2]
+  vals.append(int(p.mean()))
+ print(&#x27;%3d &#x27;%y+&#x27; &#x27;.join(&#x27;%3d&#x27;%v for v in vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 37 · 2026-11-09T01:24:26.766640+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# Find rows of gray near 46 and bright/dark blobs x periodicity
+for y in [100,102,104,106,108,110,112,114,116,118,120]:
+ row=im[y].mean(1)
+ # local minima/maxima in 88..170 with 3 window
+ mins=[];maxs=[]
+ for x in range(90,170):
+  if row[x]&lt;=row[x-2] and row[x]&lt;=row[x+2] and row[x]&lt;40: mins.append((x,int(row[x])))
+  if row[x]&gt;=row[x-2] and row[x]&gt;=row[x+2] and row[x]&gt;65:maxs.append((x,int(row[x])))
+ print(&#x27;y&#x27;,y,&#x27;mins&#x27;,mins,&#x27;maxs&#x27;,maxs)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 38 · 2026-11-09T01:24:34.942093+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+h,w,_=im.shape
+# print a compact map at 4x4 blocks using classes based on mean rgb / saturation
+for y in range(0,144,4):
+ s=&#x27;&#x27;
+ for x in range(0,256,4):
+  b=im[y:y+4,x:x+4].mean((0,1)); r,g,bb=b
+  if bb-r&gt;30 and bb&gt;45: c=&#x27;B&#x27;
+  elif r+g+bb&lt;100: c=&#x27;#&#x27;
+  elif r+g+bb&lt;250: c=&#x27;d&#x27;
+  elif r+g+bb&lt;500: c=&#x27;t&#x27;
+  elif r+g+bb&lt;620: c=&#x27;m&#x27;
+  else: c=&#x27; &#x27;
+  s+=c
+ print(f&#x27;{y:3d} &#x27;+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 39 · 2026-11-09T01:24:39.982796+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+# detect gray balls via template model: circles produce dark, background gray around 45. use LoG on inverted luma ROI
+g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY).astype(float)
+# bottom/ball region 96:128 90:165. smooth
+blur=cv2.GaussianBlur(g,(0,0),2)
+# Difference of gaussians approximate blob detection
+small=cv2.GaussianBlur(g,(0,0),6)
+dog=small-blur
+# list local maxima
+mx=cv2.dilate(dog,np.ones((7,7)))
+ys,xs=np.where((dog==mx)&amp;(dog&gt;3))
+for y,x in sorted(zip(ys,xs),key=lambda p:-dog[p[0],p[1]])[:50]: print(round(dog[y,x],1),x,y,round(g[y,x],1))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 40 · 2026-11-09T01:24:44.324202+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# print the region as 1x2 character blocks (x every 1, y every 2) using edge contrast; x 80-180
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(86,132,2):
+ s=&#x27;&#x27;
+ for x in range(80,181):
+  v=g[y:y+2,x].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 41 · 2026-11-09T01:24:48.366279+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# print col 95..165 values y=92..116 maybe balls rows as 1D
+for y in range(94,118,2):
+ vals=np.rint(g[y,90:170]).astype(int)
+ print(&#x27;%3d&#x27;%y,&#x27; &#x27;.join(f&#x27;{v:3d}&#x27; for v in vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 42 · 2026-11-09T01:24:51.974925+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# normalized vertical profiles in candidate centers x 100,113,126,139,152
+for x in [100,113,126,139,152]:
+ print(&#x27;x&#x27;,x)
+ print([(y,int(g[y,x])) for y in range(90,126)])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 43 · 2026-11-09T01:24:55.774754+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# Horizontal profile at y=104 (stable ball area), list all values x 80-180
+for y in [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114]:
+ print(y,&#x27; &#x27;.join(f&#x27;{int(g[y,x]):3d}&#x27; for x in range(90,170)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 44 · 2026-11-09T01:25:15.160822+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+# crop x 15-95 y65-120 print classes at full resolution x every 1, y every1
+# B blue, G metal gray bright, M medium gray, # dark, . table
+for y in range(64,122):
+ s=&#x27;&#x27;
+ for x in range(15,96):
+  r,g,b=im[y,x]; h,sa,v=hsv[y,x]
+  if b-r&gt;30 and b&gt;40: c=&#x27;B&#x27;
+  elif b-r&gt;10 and b&gt;40: c=&#x27;b&#x27;
+  elif v&lt;25: c=&#x27;#&#x27;
+  elif v&lt;55: c=&#x27;d&#x27;
+  elif sa&lt;45 and v&gt;120: c=&#x27;W&#x27;
+  elif sa&lt;70 and v&gt;75: c=&#x27;g&#x27;
+  elif v&lt;85: c=&#x27;m&#x27;
+  else: c=&#x27;.&#x27;
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 45 · 2026-11-09T01:25:19.281264+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print 6x6 mean luma map x 80-176 y 90-126 with symbols, each 2x2 average
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,126,2):
+ s=&#x27;&#x27;
+ for x in range(80,178,2):
+  v=im[y:y+2,x:x+2].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(f&#x27;{y:3d} {s}&#x27;)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 46 · 2026-11-09T01:25:23.085573+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# locate bright horizontal rail and posts
+for y in [52,53,54,55,92,93,94,95]:
+ vals=[]
+ for x in range(0,256,8): vals.append(int(g[y,x]))
+ print(y,vals)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 47 · 2026-11-09T01:25:29.342982+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# identify bright circles by circular radial symmetry score with r 4-8 in top ball region
+import cv2
+roi=g[86:102,90:165]
+cands=[]
+for cy in np.arange(90,101,.5):
+ for cx in np.arange(92,161,.5):
+  for r in np.arange(3,8,.5):
+   th=np.linspace(0,2*np.pi,32,endpoint=False)
+   px=np.clip(np.rint(cx+r*np.cos(th)).astype(int),0,255);py=np.clip(np.rint(cy+r*np.sin(th)).astype(int),0,143)
+   vals=g[py,px]
+   cands.append((vals.std(),vals.mean(),cx,cy,r))
+for c in sorted(cands,reverse=True)[:30]: print(tuple(round(v,1) for v in c))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 48 · 2026-11-09T01:25:33.283537+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+# Column brightness around x 88-170 at y 98-108: print chars for each exact pixel in compressed 1 char x,1 char y
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(94,113):
+ s=&#x27;&#x27;
+ for x in range(88,170):
+  v=g[y,x]
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 49 · 2026-11-09T01:25:37.587453+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# rows with local contrast patterns at top 95-100 exact x positions; report bright runs &gt;100 and dark runs &lt;40
+for y in range(93,103):
+ a=im[y].mean(1)
+ def runs(mask):
+  xs=np.where(mask)[0]; out=[]
+  if len(xs):
+   st=pr=xs[0]
+   for x in xs[1:]:
+    if x&gt;pr+1:out.append((st,pr));st=x
+    pr=x
+   out.append((st,pr))
+  return out
+ print(&#x27;y&#x27;,y,&#x27;bright&#x27;,runs(a&gt;100),&#x27;dark&#x27;,runs(a&lt;35))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 50 · 2026-11-09T01:26:03.154268+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+hsv=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2HSV)
+# 1-char per pixel over grabber, classify nuanced
+for y in range(70,108):
+ s=&#x27;&#x27;
+ for x in range(15,95):
+  r,g,b=im[y,x];h,sa,v=hsv[y,x]
+  if b-r&gt;90: c=&#x27;B&#x27;
+  elif b-r&gt;40 and b&gt;50: c=&#x27;b&#x27;
+  elif b-r&gt;15 and b&gt;35: c=&#x27;p&#x27;
+  elif v&lt;12:c=&#x27;#&#x27;
+  elif v&lt;28:c=&#x27;@&#x27;
+  elif v&lt;45:c=&#x27;d&#x27;
+  elif sa&lt;35 and v&gt;120:c=&#x27;W&#x27;
+  elif sa&lt;70 and v&gt;75:c=&#x27;g&#x27;
+  elif v&lt;85:c=&#x27;m&#x27;
+  else: c=&#x27;.&#x27;
+  s+=c
+ print(&#x27;%3d &#x27;%y+s)
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(15,95)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(15,95)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 51 · 2026-11-09T01:26:14.016026+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# upscale crop 4x with cubic and CLAHE for readability numerically
+roi=g[70:135,70:195]
+roi=cv2.resize(roi,None,fx=2,fy=2,interpolation=cv2.INTER_CUBIC)
+roi=cv2.createCLAHE(clipLimit=3,tileGridSize=(8,8)).apply(roi)
+# edge with canny
+ed=cv2.Canny(roi,30,80)
+# print edge at 2x downsample? full 250x130 too wide; make every 2 x =&gt;125, every 2 y =&gt;65
+for y in range(0,ed.shape[0],2):
+ s=&#x27;&#x27;
+ for x in range(0,ed.shape[1],2):
+  block=ed[y:y+2,x:x+2]
+  s += &#x27;#&#x27; if block.max()&gt;0 else &#x27; &#x27;
+ print(s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 52 · 2026-11-09T01:26:17.984164+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+# print grayscale values x 85-180, y 92-105 with 2-digit index header
+print(&#x27;   &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(85,181)))
+print(&#x27;   &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(85,181)))
+for y in range(92,105):
+ print(&#x27;%2d &#x27;%y+&#x27;&#x27;.join(&#x27;%X&#x27;%min(15,int(im[y,x].mean()/16)) for x in range(85,181)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 53 · 2026-11-09T01:26:22.269074+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+hsv=cv2.cvtColor(im,cv2.COLOR_RGB2HSV)
+mask=(hsv[:,:,1]&lt;45)&amp;(hsv[:,:,2]&gt;55)&amp;(hsv[:,:,2]&lt;140)
+# blur mask and connected comps
+m=(mask.astype(np.uint8)*255)
+m=cv2.morphologyEx(m,cv2.MORPH_OPEN,np.ones((3,3),np.uint8))
+n,lab,stats,cents=cv2.connectedComponentsWithStats(m)
+for i in np.argsort(stats[:,4])[-30:][::-1]:
+ x,y,w,h,area=stats[i]
+ if 80&lt;x&lt;180 and 80&lt;y&lt;135: print(stats[i].tolist(),np.round(cents[i],1).tolist())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 54 · 2026-11-09T01:26:28.124620+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+# use gradient orientation circles robustly with radial edge score and non-max suppress by center/radius
+ys,xs=np.mgrid[0:144,0:256]
+gx=cv2.Sobel(g,cv2.CV_32F,1,0,ksize=3);gy=cv2.Sobel(g,cv2.CV_32F,0,1,ksize=3)
+mag=np.hypot(gx,gy)
+res=[]
+for cy in np.arange(96,123,1.0):
+ for cx in np.arange(92,162,1.0):
+  for r in np.arange(7,13,1.0):
+   th=np.linspace(0,2*np.pi,72,endpoint=False)
+   px=np.rint(cx+r*np.cos(th)).astype(int);py=np.rint(cy+r*np.sin(th)).astype(int)
+   # positive radial gradient agreement (use signed dot), samples
+   dot=gx[py,px]*np.cos(th)+gy[py,px]*np.sin(th)
+   score=np.mean(np.abs(dot))/(np.mean(mag[py,px])+20)
+   res.append((score,cx,cy,r,np.mean(mag[py,px])))
+# NMS
+res=sorted(res,reverse=True)
+sel=[]
+for q in res:
+ if all((q[1]-p[1])**2+(q[2]-p[2])**2&gt;100 for p in sel):sel.append(q)
+ if len(sel)&gt;=20:break
+for q in sel:print(tuple(round(v,2) for v in q))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 55 · 2026-11-09T01:26:31.986480+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,127,2):
+ s=&#x27;&#x27;
+ for x in range(75,185,2):
+  v=g[y:y+2,x:x+2].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 56 · 2026-11-09T01:27:18.984597+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for cy,cx in [(98,86),(98,99),(99,126),(99,139),(99,152)]:
+ print(&#x27;\\ncenter&#x27;,cx,cy)
+ for y in range(cy-8,cy+9):
+  print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(cx-9,cx+10)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 57 · 2026-11-09T01:27:29.094978+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(np.uint8)
+g=cv2.cvtColor(im,cv2.COLOR_RGB2GRAY).astype(np.float32)
+# Create template synthetic ball? Instead analyze dark annulus centers: low mean inside radius 5 vs outside ring radius 7-10
+res=[]
+for cy in np.arange(98,124,.5):
+ for cx in np.arange(92,160,.5):
+  r=5.5
+  Y,X=np.mgrid[0:144,0:256]
+  d=np.hypot(X-cx,Y-cy)
+  inside=g[d&lt;=5]
+  ring=g[(d&gt;=8)&amp;(d&lt;=10)]
+  # inner should dark; compute contrast ring-inner and std
+  res.append((ring.mean()-inside.mean(),-inside.std(),cx,cy,inside.mean(),ring.mean()))
+res=sorted(res,reverse=True)
+sel=[]
+for q in res:
+ if all((q[2]-p[2])**2+(q[3]-p[3])**2&gt;100 for p in sel): sel.append(q)
+ if len(sel)&gt;=20:break
+for q in sel:print(tuple(round(v,1) for v in q))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 58 · 2026-11-09T01:27:32.871503+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(93,104):
+ print(&#x27;%3d &#x27;%y+&#x27;&#x27;.join(chars[min(9,int(g[y,x]/25.6))] for x in range(95,160)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str((x//10)%10) for x in range(95,160)))
+print(&#x27;    &#x27;+&#x27;&#x27;.join(str(x%10) for x in range(95,160)))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 59 · 2026-11-09T01:27:37.843360+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+roi=g[90:130,90:165]
+# hough alt with param1 20 and minradius 9, maxradius 14, p2 low
+for p1 in [20,30,40,50]:
+ for p2 in [5,6,7,8,9]:
+  cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT_ALT,dp=1.5,minDist=10,param1=p1,param2=p2,minRadius=8,maxRadius=14)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=90;arr[:,1]+=90
+   print(&#x27;alt&#x27;,p1,p2,arr.tolist()[:20])
+PY&quot;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 60 · 2026-11-09T01:27:42.336173+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+roi=g[90:130,90:165]
+for p1 in [20,30,40,50,70]:
+ for p2 in [.1,.2,.3,.4,.5,.6,.7,.8,.9]:
+  cs=cv2.HoughCircles(roi,cv2.HOUGH_GRADIENT_ALT,dp=1.5,minDist=10,param1=p1,param2=p2,minRadius=8,maxRadius=14)
+  if cs is not None:
+   arr=np.round(cs[0],1);arr[:,0]+=90;arr[:,1]+=90
+   print(&#x27;alt&#x27;,p1,p2,arr.tolist()[:20])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 61 · 2026-11-09T01:27:51.366128+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+rgb=cv2.cvtColor(im,cv2.COLOR_BGR2RGB)
+# edges &amp; line detection
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+ed=cv2.Canny(g,40,100)
+lines=cv2.HoughLinesP(ed,1,np.pi/180,threshold=20,minLineLength=15,maxLineGap=5)
+print(&#x27;lines&#x27;,len(lines) if lines is not None else 0)
+if lines is not None:
+ for l in sorted(lines[:,0].tolist(),key=lambda z:(-(z[2]-z[0])**2-(z[3]-z[1])**2))[:80]:
+  x1,y1,x2,y2=l
+  print(l,&#x27;len&#x27;,round(np.hypot(x2-x1,y2-y1),1))
+# contours on threshold white/background
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 62 · 2026-11-09T01:27:55.859694+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(86,132,2):
+ s=&#x27;&#x27;
+ for x in range(80,180,2):
+  v=g[y:y+2,x:x+2].mean()
+  s+=chars[min(9,int(v/25.6))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 63 · 2026-11-09T01:28:00.463136+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(int)
+g=im.mean(2)
+# Sobel gradient in central ball zone, threshold and print 2x2 blocks
+gx=cv2.Sobel(g.astype(np.float32),cv2.CV_32F,1,0,ksize=3);gy=cv2.Sobel(g.astype(np.float32),cv2.CV_32F,0,1,ksize=3)
+mag=np.hypot(gx,gy)
+chars=&#x27; .:-=+*#%@&#x27;
+for y in range(90,128,2):
+ s=&#x27;&#x27;
+ for x in range(85,175,2):
+  v=mag[y:y+2,x:x+2].mean()
+  s+=chars[min(9,int(v/80))]
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 64 · 2026-11-09T01:28:05.463401+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np, cv2
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+# estimate plate quadrilateral from dark edge map maybe use known corners manually
+# inspect full image with 2x2 class map 128x72 already, find bright top-right region boundary
+# Print rows as run lengths of broad regions using thresholds
+for y in [0,10,20,40,50,52,55,60,70,80,90,95,100,120,125,130,135,143]:
+ a=im[y].mean(1)
+ # bins 8
+ vals=[]
+ for i in range(0,256,8):vals.append(int(a[i:i+8].mean()))
+ print(&#x27;%3d&#x27;%y,&#x27; &#x27;.join(f&#x27;{v:3d}&#x27; for v in vals))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 65 · 2026-11-09T01:28:10.460872+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;)).astype(float)
+g=im.mean(2)
+# top balls centers via circular edge score around y94-100; report angular consistency across 360
+import cv2
+gx=cv2.Sobel(g.astype(np.float32),cv2.CV_32F,1,0,ksize=3);gy=cv2.Sobel(g.astype(np.float32),cv2.CV_32F,0,1,ksize=3)
+mag=np.hypot(gx,gy)
+for cx in [86,99,112,126,139,152]:
+ best=[]
+ for cy in np.arange(96,101,.5):
+  for r in np.arange(4,8,.5):
+   th=np.linspace(0,2*np.pi,72,endpoint=False)
+   px=np.rint(cx+r*np.cos(th)).astype(int);py=np.rint(cy+r*np.sin(th)).astype(int)
+   dot=gx[py,px]*np.cos(th)+gy[py,px]*np.sin(th)
+   score=np.mean(dot**2)/(np.mean(mag[py,px])**2+1)
+   best.append((score,cy,r,np.mean(mag[py,px])))
+ print(cx, sorted(best,reverse=True)[:5])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 66 · 2026-11-09T01:28:15.306588+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2,numpy as np
+im=cv2.imread(&#x27;first_frame.png&#x27;)
+g=cv2.cvtColor(im,cv2.COLOR_BGR2GRAY).astype(float)
+# identify horizontal metal bar at y52 across x 20:180 by intensity; then vertical post x positions
+# print local edge pixels around x50..180 y50..128 at 2x2 block as dark/bright structure
+for y in range(48,130,2):
+ s=&#x27;&#x27;
+ for x in range(20,190,2):
+  v=g[y:y+2,x:x+2].mean()
+  s += &#x27;#&#x27; if v&lt;40 else &#x27;D&#x27; if v&lt;70 else &#x27;m&#x27; if v&lt;100 else &#x27;M&#x27; if v&lt;140 else &#x27;W&#x27; if v&lt;180 else &#x27;@&#x27;
+ print(&#x27;%3d &#x27;%y+s)
+PY&quot;</pre><span class=pill>exit 0</span></div><p class=muted>保存候选 0 份；完成命令 66 次；可验证图片返回 0 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
