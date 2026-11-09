@@ -1,0 +1,364 @@
+<!doctype html><html lang=zh><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>traex/DeepSeek-V4.1-Flash · 0003_s2</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e6edf3;font:15px/1.65 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:28px 22px}a{color:#a7d6ff}h1{font-size:29px}h2{font-size:22px}p{max-width:900px}.muted{color:#9bacbe}.box,details{background:#19212b;border:1px solid #354151;border-radius:10px;padding:18px;margin:18px 0}table{border-collapse:collapse;width:100%;margin:15px 0}th,td{text-align:left;padding:13px;border:1px solid #354151;vertical-align:top}th{background:#213044}.scroll{overflow:auto}img{max-width:100%;object-fit:contain}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;max-height:600px;overflow:auto}.player{max-width:850px}canvas{width:100%;height:auto;background:#070b10;image-rendering:pixelated;border:1px solid #354151}.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}button,select{background:#26394c;color:white;border:1px solid #657789;border-radius:6px;padding:9px;cursor:pointer}input[type=range]{flex:1;min-width:150px}.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.step{border-left:3px solid #78b894;padding-left:15px;margin:22px 0}.badge{color:#bbedac}.status{font-size:12px;color:#b5c6d7}.pill{display:inline-block;padding:2px 8px;background:#293645;border-radius:5px}.back{display:inline-block;margin-bottom:20px}@media(max-width:600px){main{padding:15px}td,th{padding:8px;font-size:12px}}
+</style><main><a class=back href="../../../../index.html">← 本轮 smoke 总览</a><h1>traex/DeepSeek-V4.1-Flash · 0003_s2</h1><p class=muted>vision-agent · 256×144 · 16.0 FPS · 81 帧 · 状态 complete · 输出 tokens 19528</p><div class=box><strong>原始任务</strong><p>a close up of a blue and orange liquid, camera tilts up</p></div><h2>当前保存结果</h2><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_cb783a705b87263f.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;1957dd8b45e1dde0d301f1a59af3522b2a0b0cc4f39ee96bff7773ea39f1764b&quot;, &quot;pixels&quot;: &quot;final/pixels_cb783a705b87263f.rgb.gz&quot;, &quot;poster&quot;: &quot;final/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><h2>已保存候选与代码修改</h2><p class=muted>这里按时间展示外部捕获的候选，每份均可单独播放。保存新版本不等于完成视觉检查；下方工具证据记录实际看过的图。</p><details><summary>候选 01 · 2026-11-09T02:12:59.360446+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_017e245d8c87060f.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d9228f5640b8cc0322bcdccd3f9cf852c408b1c3755457bbdeb243de2072e649&quot;, &quot;pixels&quot;: &quot;candidate_00/pixels_017e245d8c87060f.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_00/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_00/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_00/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -0,0 +1,142 @@
++from pathlib import Path
++
++import cv2
++import numpy as np
++from PIL import Image
++
++import artifact_io
++
++
++WIDTH = 256
++HEIGHT = 144
++FRAME_COUNT = 81
++FPS = 16.0
++
++
++def smoothstep(value):
++    value = np.clip(value, 0.0, 1.0)
++    return value * value * (3.0 - 2.0 * value)
++
++
++def flow_velocity(x, y, seconds):
++    &quot;&quot;&quot;A sum of slow vortices in pixel coordinates.&quot;&quot;&quot;
++    vx = np.zeros_like(x, dtype=np.float32)
++    vy = np.zeros_like(y, dtype=np.float32)
++
++    # center x/y, radius, signed angular speed, phase drift
++    vortices = (
++        (0.10, 0.18, 0.23, 3.8, 0.00),
++        (0.53, 0.55, 0.30, -2.7, 0.17),
++        (0.86, 0.14, 0.21, 4.7, 0.09),
++        (0.82, 0.86, 0.25, -3.6, 0.23),
++        (0.20, 0.82, 0.20, 2.8, 0.12),
++        (0.43, 1.03, 0.22, 2.3, 0.20),
++    )
++    for cx, cy, radius, speed, phase in vortices:
++        drift_x = 0.008 * np.sin(seconds * 0.31 + phase * 7.0)
++        drift_y = 0.005 * np.cos(seconds * 0.27 + phase * 5.0)
++        dx = x / WIDTH - (cx + drift_x)
++        dy = y / HEIGHT - (cy + drift_y)
++        falloff = np.exp(-(dx * dx + dy * dy) / (2.0 * radius * radius))
++        safe_radius = max(radius, 1.0e-4)
++        vx += speed * (-dy / safe_radius) * falloff
++        vy += speed * (dx / safe_radius) * falloff
++
++    # Broad, non-repeating undulations keep the central blue ribbon alive.
++    vx += 0.85 * np.sin(y / 17.5 + seconds * 0.58)
++    vx += 0.55 * np.sin(x / 39.0 - y / 28.0 + seconds * 0.37)
++    vy += 0.70 * np.sin(x / 23.0 - seconds * 0.46)
++    vy += 0.42 * np.sin((x + y) / 41.0 + seconds * 0.29)
++    return vx, vy
++
++
++def make_extended_texture(image):
++    &quot;&quot;&quot;Reflect a narrow margin so the camera tilt never exposes a seam.&quot;&quot;&quot;
++    margin = 28
++    return cv2.copyMakeBorder(
++        image,
++        margin,
++        margin,
++        margin,
++        margin,
++        cv2.BORDER_REFLECT_101,
++    )
++
++
++def render_frames(first_frame):
++    source = first_frame.astype(np.float32)
++    extended = make_extended_texture(source)
++    margin = 28
++
++    yy, xx = np.mgrid[0:HEIGHT, 0:WIDTH].astype(np.float32)
++    base_x = xx + margin
++    base_y = yy + margin
++
++    # A soft mask lets flowing pigment pull slightly harder on visible edges.
++    gray = cv2.cvtColor(first_frame, cv2.COLOR_RGB2GRAY).astype(np.float32)
++    grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
++    grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
++    edge = cv2.GaussianBlur(cv2.magnitude(grad_x, grad_y), (0, 0), 2.2)
++    edge = np.clip(edge / 110.0, 0.0, 1.0)
++
++    frames = np.empty((FRAME_COUNT, HEIGHT, WIDTH, 3), dtype=np.uint8)
++    frames[0] = first_frame
++
++    for index in range(1, FRAME_COUNT):
++        seconds = index / FPS
++        progress = index / (FRAME_COUNT - 1)
++
++        vx, vy = flow_velocity(xx, yy, seconds)
++        # Displacement is integrated as a slow, smooth flow rather than jitter.
++        fluid_x = vx * seconds
++        fluid_y = vy * seconds
++
++        phase = seconds * 1.75
++        micro_x = 0.62 * edge * np.sin(yy / 3.8 + phase + xx / 29.0)
++        micro_y = 0.54 * edge * np.cos(xx / 4.4 - phase + yy / 31.0)
++
++        # Camera pitches upward: the pictured liquid travels down in frame.
++        camera_progress = smoothstep(progress * 1.06)
++        camera_y = 18.5 * camera_progress
++        camera_x = 0.8 * np.sin(progress * np.pi)
++
++        map_x = (base_x - fluid_x - micro_x + camera_x).astype(np.float32)
++        map_y = (base_y - fluid_y - micro_y - camera_y).astype(np.float32)
++
++        warped = cv2.remap(
++            extended,
++            map_x,
++            map_y,
++            interpolation=cv2.INTER_CUBIC,
++            borderMode=cv2.BORDER_REFLECT_101,
++        )
++
++        # Small, moving specular accents suggest a wet, illuminated surface.
++        low = cv2.GaussianBlur(warped, (0, 0), 3.0)
++        detail = warped - low
++        sheen_x = 0.5 + 0.5 * np.sin(xx / 58.0 + yy / 83.0 - seconds * 0.52)
++        sheen_y = 0.5 + 0.5 * np.cos(xx / 71.0 - yy / 47.0 + seconds * 0.39)
++        sheen = (0.55 * sheen_x + 0.45 * sheen_y)[..., None]
++        warped += detail * (0.055 + 0.045 * sheen)
++        warped += (sheen - 0.5) * np.array([1.4, 1.8, 2.0], dtype=np.float32)
++
++        # Keep colors within the source&#x27;s saturated, slightly muted range.
++        warped = np.clip(warped, 0.0, 255.0)
++        frames[index] = np.rint(warped).astype(np.uint8)
++
++    return frames
++
++
++def main():
++    case_dir = Path(__file__).resolve().parent
++    first_frame = np.asarray(Image.open(case_dir / &quot;first_frame.png&quot;).convert(&quot;RGB&quot;))
++    assert first_frame.shape == (HEIGHT, WIDTH, 3)
++    frames = render_frames(first_frame)
++    assert frames.shape == (FRAME_COUNT, HEIGHT, WIDTH, 3)
++    assert frames.dtype == np.uint8
++    assert np.array_equal(frames[0], first_frame)
++    artifact_io.save(frames, case_dir)
++
++
++if __name__ == &quot;__main__&quot;:
++    main()
+</pre></details></details><details><summary>候选 02 · 2026-11-09T02:13:04.591625+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_017e245d8c87060f.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;d9228f5640b8cc0322bcdccd3f9cf852c408b1c3755457bbdeb243de2072e649&quot;, &quot;pixels&quot;: &quot;candidate_01/pixels_017e245d8c87060f.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_01/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_01/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_01/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><details><summary>候选 03 · 2026-11-09T02:14:45.328140+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_4acb5c12395b558c.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;c0607fab0fc170f1839ca6ff5839dcb18406bb848de9e6b01f220bbfc7525a4f&quot;, &quot;pixels&quot;: &quot;candidate_02/pixels_4acb5c12395b558c.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_02/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_02/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_02/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -88,12 +88,12 @@
+ 
+         vx, vy = flow_velocity(xx, yy, seconds)
+         # Displacement is integrated as a slow, smooth flow rather than jitter.
+-        fluid_x = vx * seconds
+-        fluid_y = vy * seconds
++        fluid_x = 0.68 * vx * seconds
++        fluid_y = 0.68 * vy * seconds
+ 
+         phase = seconds * 1.75
+-        micro_x = 0.62 * edge * np.sin(yy / 3.8 + phase + xx / 29.0)
+-        micro_y = 0.54 * edge * np.cos(xx / 4.4 - phase + yy / 31.0)
++        micro_x = 0.44 * edge * np.sin(yy / 3.8 + phase + xx / 29.0)
++        micro_y = 0.38 * edge * np.cos(xx / 4.4 - phase + yy / 31.0)
+ 
+         # Camera pitches upward: the pictured liquid travels down in frame.
+         camera_progress = smoothstep(progress * 1.06)
+</pre></details></details><details><summary>候选 04 · 2026-11-09T02:15:47.476834+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_cb783a705b87263f.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;1957dd8b45e1dde0d301f1a59af3522b2a0b0cc4f39ee96bff7773ea39f1764b&quot;, &quot;pixels&quot;: &quot;candidate_03/pixels_cb783a705b87263f.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_03/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_03/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_03/transition_check.png"><details><summary>代码变化</summary><pre>--- 上一保存版本
++++ 本次保存版本
+@@ -1,8 +1,7 @@
+ from pathlib import Path
+ 
+-import cv2
+ import numpy as np
+-from PIL import Image
++from PIL import Image, ImageFilter
+ 
+ import artifact_io
+ 
+@@ -53,13 +52,32 @@
+ def make_extended_texture(image):
+     &quot;&quot;&quot;Reflect a narrow margin so the camera tilt never exposes a seam.&quot;&quot;&quot;
+     margin = 28
+-    return cv2.copyMakeBorder(
+-        image,
+-        margin,
+-        margin,
+-        margin,
+-        margin,
+-        cv2.BORDER_REFLECT_101,
++    return np.pad(image, ((margin, margin), (margin, margin), (0, 0)), mode=&quot;reflect&quot;)
++
++
++def bilinear_sample(image, x, y):
++    &quot;&quot;&quot;Sample an RGB image at floating-point coordinates.&quot;&quot;&quot;
++    height, width = image.shape[:2]
++    x0 = np.floor(x).astype(np.int32)
++    y0 = np.floor(y).astype(np.int32)
++    x1 = np.clip(x0 + 1, 0, width - 1)
++    y1 = np.clip(y0 + 1, 0, height - 1)
++    x0 = np.clip(x0, 0, width - 1)
++    y0 = np.clip(y0, 0, height - 1)
++
++    fx = (x - x0)[..., None]
++    fy = (y - y0)[..., None]
++    top = image[y0, x0] * (1.0 - fx) + image[y0, x1] * fx
++    bottom = image[y1, x0] * (1.0 - fx) + image[y1, x1] * fx
++    return top * (1.0 - fy) + bottom * fy
++
++
++def gaussian_blur(image, radius):
++    return np.asarray(
++        Image.fromarray(image.astype(np.uint8)).filter(
++            ImageFilter.GaussianBlur(radius)
++        ),
++        dtype=np.float32,
+     )
+ 
+ 
+@@ -73,10 +91,9 @@
+     base_y = yy + margin
+ 
+     # A soft mask lets flowing pigment pull slightly harder on visible edges.
+-    gray = cv2.cvtColor(first_frame, cv2.COLOR_RGB2GRAY).astype(np.float32)
+-    grad_x = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+-    grad_y = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+-    edge = cv2.GaussianBlur(cv2.magnitude(grad_x, grad_y), (0, 0), 2.2)
++    gray = np.dot(first_frame.astype(np.float32), [0.299, 0.587, 0.114])
++    grad_y, grad_x = np.gradient(gray)
++    edge = gaussian_blur(np.hypot(grad_x, grad_y), 2.2)
+     edge = np.clip(edge / 110.0, 0.0, 1.0)
+ 
+     frames = np.empty((FRAME_COUNT, HEIGHT, WIDTH, 3), dtype=np.uint8)
+@@ -103,16 +120,10 @@
+         map_x = (base_x - fluid_x - micro_x + camera_x).astype(np.float32)
+         map_y = (base_y - fluid_y - micro_y - camera_y).astype(np.float32)
+ 
+-        warped = cv2.remap(
+-            extended,
+-            map_x,
+-            map_y,
+-            interpolation=cv2.INTER_CUBIC,
+-            borderMode=cv2.BORDER_REFLECT_101,
+-        )
++        warped = bilinear_sample(extended, map_x, map_y)
+ 
+         # Small, moving specular accents suggest a wet, illuminated surface.
+-        low = cv2.GaussianBlur(warped, (0, 0), 3.0)
++        low = gaussian_blur(warped, 3.0)
+         detail = warped - low
+         sheen_x = 0.5 + 0.5 * np.sin(xx / 58.0 + yy / 83.0 - seconds * 0.52)
+         sheen_y = 0.5 + 0.5 * np.cos(xx / 71.0 - yy / 47.0 + seconds * 0.39)
+</pre></details></details><details><summary>候选 05 · 2026-11-09T02:15:52.980259+00:00 · 点开播放与检查图</summary><div class=player data-video='{&quot;width&quot;: 256, &quot;height&quot;: 144, &quot;frames&quot;: 81, &quot;fps&quot;: 16.0, &quot;pixels_file&quot;: &quot;pixels_cb783a705b87263f.rgb.gz&quot;, &quot;layout&quot;: &quot;pixel-time&quot;, &quot;last_rgb_sha256&quot;: &quot;1957dd8b45e1dde0d301f1a59af3522b2a0b0cc4f39ee96bff7773ea39f1764b&quot;, &quot;pixels&quot;: &quot;candidate_04/pixels_cb783a705b87263f.rgb.gz&quot;, &quot;poster&quot;: &quot;candidate_04/poster.png&quot;}'><canvas></canvas><div class=controls><button class=play>▶ 播放</button><button class=replay>↻ 重播</button><input class=seek type=range min=0 step=1 value=0></div><p class=status>点击播放 · 原生 RGB 像素</p></div><p>inspection.png</p><img loading=lazy src="candidate_04/inspection.png"><p>transition_check.png</p><img loading=lazy src="candidate_04/transition_check.png"><details><summary>代码变化</summary><pre>代码未变化；重新保存了产物。</pre></details></details><h2>可观测工具行为</h2><div class=step><strong>命令 1 · 2026-11-09T02:10:48.650626+00:00</strong><pre>/bin/bash -c &quot;pwd &amp;&amp; rg --files -g &#x27;prompt.txt&#x27; -g &#x27;GENERATION_RULES.md&#x27; -g &#x27;first_frame.png&#x27; -g &#x27;&quot;&#x27;!*.pyc&#x27;&quot;&#x27;&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 2 · 2026-11-09T02:10:48.775607+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; GENERATION_RULES.md&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 3 · 2026-11-09T02:10:49.067856+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,240p&#x27; prompt.txt&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 4 · 2026-11-09T02:10:49.265963+00:00</strong><pre>/bin/bash -c &#x27;file first_frame.png &amp;&amp; identify first_frame.png 2&gt;/dev/null || true &amp;&amp; ls -la&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 5 · 2026-11-09T02:11:03.065374+00:00</strong><pre>/bin/bash -c &quot;sed -n &#x27;1,260p&#x27; artifact_io.py&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 6 · 2026-11-09T02:11:03.278638+00:00</strong><pre>/bin/bash -c &#x27;cat task_spec.json&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 7 · 2026-11-09T02:11:03.694633+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=Image.open(&#x27;first_frame.png&#x27;)
+print(im.mode, im.size)
+a=np.array(im)
+print(a.shape, a.dtype, a.min(), a.max())
+for y,x in [(0,0),(0,128),(0,255),(143,0),(143,128),(143,255),(72,128)]: print((y,x),a[y,x])
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 8 · 2026-11-09T02:11:40.518665+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+mods=[&#x27;numpy&#x27;,&#x27;PIL&#x27;,&#x27;scipy&#x27;,&#x27;cv2&#x27;,&#x27;imageio&#x27;,&#x27;matplotlib&#x27;]
+for m in mods:
+ try:
+  x=__import__(m); print(m,&#x27;ok&#x27;,getattr(x,&#x27;__version__&#x27;,&#x27;&#x27;))
+ except Exception as e: print(m,&#x27;NO&#x27;,e)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 9 · 2026-11-09T02:11:40.744811+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+from PIL import Image
+import numpy as np
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(float)
+# basic structure/energy per row/column
+print(&#x27;mean rgb&#x27;,im.mean((0,1)))
+print(&#x27;row means&#x27;,[(i,round(im[i].mean(),1)) for i in range(0,144,16)])
+print(&#x27;col means&#x27;,[(i,round(im[:,i].mean(),1)) for i in range(0,256,32)])
+# palette clusters quick
+q=(im//16*16).reshape(-1,3)
+u,c=np.unique(q,axis=0,return_counts=True)
+ix=np.argsort(c)[-15:][::-1]
+print(list(zip(c[ix],u[ix].tolist())))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 10 · 2026-11-09T02:12:28.003190+00:00</strong><pre>/bin/bash -c &#x27;python generate.py&#x27;</pre><span class=pill>exit 1</span></div><div class=step><strong>命令 11 · 2026-11-09T02:12:55.779927+00:00</strong><pre>/bin/bash -c &#x27;python generate.py&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 12 · 2026-11-09T02:13:26.722790+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+from pathlib import Path
+p=Path(&#x27;frames&#x27;); fs=sorted(p.glob(&#x27;*.png&#x27;))
+a=np.stack([np.asarray(Image.open(f)) for f in fs])
+print(&#x27;shape&#x27;,a.shape)
+d=np.abs(a[1:].astype(np.int16)-a[:-1].astype(np.int16))
+print(&#x27;consecutive MAE min/median/max&#x27;, d.mean((1,2,3)).min(),np.median(d.mean((1,2,3))),d.mean((1,2,3)).max())
+print(&#x27;changed pixels median/max&#x27;,np.median((d.max(3)&gt;2).sum((1,2))), (d.max(3)&gt;2).sum((1,2)).max())
+print(&#x27;first exact&#x27;,np.array_equal(a[0],np.asarray(Image.open(&#x27;first_frame.png&#x27;))))
+for i in [0,10,20,30,40,50,60,70,80]: print(i,round(a[i].mean(),2),a[i].min(),a[i].max())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 13 · 2026-11-09T02:13:54.976355+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import cv2, numpy as np
+from PIL import Image
+im=np.asarray(Image.open(&#x27;first_frame.png&#x27;)).astype(np.float32)
+g=cv2.cvtColor(im.astype(np.uint8),cv2.COLOR_RGB2GRAY).astype(np.float32)
+gx=cv2.Sobel(g,cv2.CV_32F,1,0,ksize=3); gy=cv2.Sobel(g,cv2.CV_32F,0,1,ksize=3)
+e=cv2.GaussianBlur(cv2.magnitude(gx,gy),(0,0),2.2)
+for p in [50,75,90,95,97,99,99.5,99.9]: print(p,np.percentile(e,p))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 14 · 2026-11-09T02:14:09.688425+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import generate, numpy as np
+for s in [0.0625,1,2.5,5.0]:
+ yy,xx=np.mgrid[0:144,0:256].astype(np.float32)
+ vx,vy=generate.flow_velocity(xx,yy,s)
+ print(s,&#x27;vx&#x27;,np.percentile(vx,[5,50,95]),&#x27;vy&#x27;,np.percentile(vy,[5,50,95]),&#x27;disp&#x27;,np.percentile(np.hypot(vx*s,vy*s),[5,50,95]))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 15 · 2026-11-09T02:14:38.981315+00:00</strong><pre>/bin/bash -c &quot;python generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import numpy as np
+from PIL import Image
+from pathlib import Path
+a=np.stack([np.asarray(Image.open(f)) for f in sorted(Path(&#x27;frames&#x27;).glob(&#x27;*.png&#x27;))])
+d=np.abs(a[1:].astype(np.int16)-a[:-1].astype(np.int16))
+print(&#x27;shape&#x27;,a.shape,&#x27;dtype&#x27;,a.dtype)
+print(&#x27;consecutive MAE min/median/max&#x27;,*[round(float(x),3) for x in (d.mean((1,2,3)).min(),np.median(d.mean((1,2,3))),d.mean((1,2,3)).max())])
+print(&#x27;first exact&#x27;,np.array_equal(a[0],np.asarray(Image.open(&#x27;first_frame.png&#x27;))))
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 16 · 2026-11-09T02:15:11.118461+00:00</strong><pre>/bin/bash -c &quot;du -sh frames pixels.npz index.html inspection.png transition_check.png &amp;&amp; find . -maxdepth 1 -type d -name &#x27;matplotlib-*&#x27; -print&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 17 · 2026-11-09T02:15:11.683536+00:00</strong><pre>/bin/bash -c &#x27;git status --short 2&gt;/dev/null || true&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 18 · 2026-11-09T02:15:11.874839+00:00</strong><pre>/bin/bash -c &quot;python - &lt;&lt;&#x27;PY&#x27;
+import json
+from pathlib import Path
+import numpy as np
+from PIL import Image
+case=Path(&#x27;.&#x27;)
+spec=json.loads((case/&#x27;task_spec.json&#x27;).read_text())
+data=np.load(case/&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+frames=np.stack([np.asarray(Image.open(case/&#x27;frames&#x27;/f&#x27;{i:02d}.png&#x27;)) for i in range(spec[&#x27;frames&#x27;])])
+first=np.asarray(Image.open(case/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+assert data.shape == (spec[&#x27;height&#x27;],spec[&#x27;width&#x27;],spec[&#x27;frames&#x27;])
+assert data.dtype == np.uint32
+assert frames.shape == (spec[&#x27;frames&#x27;],spec[&#x27;height&#x27;],spec[&#x27;width&#x27;],3)
+assert frames.dtype == np.uint8
+assert np.array_equal(frames[0], first)
+assert np.array_equal(data[:,:,0], (frames[0,:,:,0].astype(np.uint32)&lt;&lt;16)|(frames[0,:,:,1].astype(np.uint32)&lt;&lt;8)|frames[0,:,:,2])
+assert (case/&#x27;index.html&#x27;).is_file() and (case/&#x27;index.html&#x27;).stat().st_size &gt; 100000
+print(&#x27;validated&#x27;, frames.shape, frames.dtype, &#x27;fps&#x27;, spec[&#x27;fps&#x27;], &#x27;duration&#x27;, spec[&#x27;frames&#x27;]/spec[&#x27;fps&#x27;])
+print(&#x27;first-frame exact: yes&#x27;)
+print(&#x27;pixel tensor:&#x27;, data.shape, data.dtype)
+print(&#x27;index.html bytes:&#x27;, (case/&#x27;index.html&#x27;).stat().st_size)
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 19 · 2026-11-09T02:15:45.695998+00:00</strong><pre>/bin/bash -c &#x27;python generate.py&#x27;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 20 · 2026-11-09T02:16:00.458735+00:00</strong><pre>/bin/bash -c &quot;python -m py_compile generate.py &amp;&amp; python - &lt;&lt;&#x27;PY&#x27;
+import hashlib, json
+from pathlib import Path
+import numpy as np
+from PIL import Image
+case=Path(&#x27;.&#x27;)
+spec=json.loads((case/&#x27;task_spec.json&#x27;).read_text())
+frames=np.stack([np.asarray(Image.open(case/&#x27;frames&#x27;/f&#x27;{i:02d}.png&#x27;)) for i in range(spec[&#x27;frames&#x27;])])
+tensor=np.load(case/&#x27;pixels.npz&#x27;)[&#x27;pixels&#x27;]
+first=np.asarray(Image.open(case/&#x27;first_frame.png&#x27;).convert(&#x27;RGB&#x27;))
+assert frames.shape == (81,144,256,3) and frames.dtype == np.uint8
+assert tensor.shape == (144,256,81) and tensor.dtype == np.uint32
+assert np.array_equal(frames[0], first)
+d=np.abs(frames[1:].astype(np.int16)-frames[:-1].astype(np.int16))
+assert d.mean() &gt; 0.5
+print(&#x27;frames&#x27;, frames.shape, frames.dtype)
+print(&#x27;first frame identical&#x27;, np.array_equal(frames[0], first))
+print(&#x27;mean consecutive delta&#x27;, round(float(d.mean()),3))
+print(&#x27;sha256&#x27;, hashlib.sha256((case/&#x27;pixels.npz&#x27;).read_bytes()).hexdigest())
+PY&quot;</pre><span class=pill>exit 0</span></div><div class=step><strong>命令 21 · 2026-11-09T02:16:04.406771+00:00</strong><pre>/bin/bash -c &quot;find . -maxdepth 2 -type f | sort | sed -n &#x27;1,120p&#x27;&quot;</pre><span class=pill>exit 0</span></div><details><summary>视觉工具实际返回图片 1</summary><img loading=lazy src="tool_view_01.png"></details><details><summary>视觉工具实际返回图片 2</summary><img loading=lazy src="tool_view_02.png"></details><details><summary>视觉工具实际返回图片 3</summary><img loading=lazy src="tool_view_03.png"></details><details><summary>视觉工具实际返回图片 4</summary><img loading=lazy src="tool_view_04.png"></details><details><summary>视觉工具实际返回图片 5</summary><img loading=lazy src="tool_view_05.png"></details><details><summary>视觉工具实际返回图片 6</summary><img loading=lazy src="tool_view_06.png"></details><p class=muted>保存候选 5 份；完成命令 21 次；可验证图片返回 6 张。原始 API 响应与完整日志保留在本地。</p></main><script>
+class PixelPlayer{
+ constructor(node,d){this.node=node;this.d=d;this.frames=null;this.frame=0;this.playing=false;this.epoch=0;this.ctx=node.querySelector('canvas').getContext('2d');this.ctx.canvas.width=d.width;this.ctx.canvas.height=d.height;this.seek=node.querySelector('.seek');this.seek.max=d.frames-1;this.note=node.querySelector('.status');node.querySelector('.play').onclick=()=>this.toggle();node.querySelector('.replay').onclick=async()=>{await this.load();this.frame=0;this.start()};this.seek.oninput=async()=>{await this.load();this.frame=+this.seek.value;this.draw();if(this.playing)this.epoch=performance.now()-this.frame*1000/this.d.fps};this.preview=new Image();this.preview.onload=()=>{if(!this.frames)this.ctx.drawImage(this.preview,0,0,d.width,d.height)};this.preview.src=d.poster;}
+ async load(){if(this.frames)return;if(this.loading)return this.loading;this.note.textContent='载入像素…';this.loading=(async()=>{try{let r=await fetch(this.d.pixels);if(!r.ok)throw Error('HTTP '+r.status);let decoded=r.body.pipeThrough(new DecompressionStream('gzip'));this.frames=new Uint8Array(await new Response(decoded).arrayBuffer());if(this.frames.length!==this.d.width*this.d.height*this.d.frames*3)throw Error('RGB 长度不匹配');this.draw()}catch(e){this.note.textContent='载入失败：'+e.message;this.loading=null;throw e}})();return this.loading}
+ draw(){let n=this.d.width*this.d.height,rgba=new Uint8ClampedArray(n*4);for(let i=0;i<n;i++){let o=this.d.layout==='pixel-time'?(i*this.d.frames+this.frame)*3:(this.frame*n+i)*3;rgba[4*i]=this.frames[o];rgba[4*i+1]=this.frames[o+1];rgba[4*i+2]=this.frames[o+2];rgba[4*i+3]=255}this.ctx.putImageData(new ImageData(rgba,this.d.width,this.d.height),0,0);this.seek.value=this.frame;this.note.textContent=(this.frame/this.d.fps).toFixed(2)+' / '+(this.d.frames/this.d.fps).toFixed(2)+' s · '+(this.frame+1)+'/'+this.d.frames;}
+ start(){this.playing=true;this.epoch=performance.now()-this.frame*1000/this.d.fps;this.node.querySelector('.play').textContent='Ⅱ 暂停';let tick=now=>{if(!this.playing)return;this.frame=Math.min(this.d.frames-1,Math.floor((now-this.epoch)*this.d.fps/1000));this.draw();if(now-this.epoch>=this.d.frames*1000/this.d.fps){this.pause();return}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+ pause(){this.playing=false;this.node.querySelector('.play').textContent='▶ 播放'}
+ async toggle(){try{await this.load();if(this.playing)this.pause();else{if(this.frame>=this.d.frames-1)this.frame=0;this.start()}}catch(e){}}
+}
+window.__benchPlayers=[];document.querySelectorAll('.player').forEach(n=>window.__benchPlayers.push(new PixelPlayer(n,JSON.parse(n.dataset.video))));window.__benchReady=true;
+</script></html>
