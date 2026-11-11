@@ -25,9 +25,47 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+      - name: Stage Pages payload under 1 GB artifact cap
+        run: |
+          set -euo pipefail
+          mkdir _site
+          # GitHub Pages artifacts are capped at 1 GB; the full repo is ~18 GB.
+          # Excluded from the deployed artifact only (all files stay in git):
+          #   bench_smoke_codex_20261109/  ~17.4 GB smoke-run rgb/png/mp4 media
+          #   assets/matrix_trace/         ~0.9 GB legacy traces, no in-repo references
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='_site/' \
+            --exclude='bench_smoke_codex_20261109/' \
+            --exclude='assets/matrix_trace/' \
+            ./ _site/
+          # Nav stubs so hub/index links do not hard-404; full media remains in the repo.
+          mkdir -p _site/bench_smoke_codex_20261109
+          for f in index.html readiness.html; do
+            cat > "_site/bench_smoke_codex_20261109/$f" <<'HTML'
+          <!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>bench_smoke_codex_20261109 · 媒体未随 Pages 部署</title>
+          <style>body{font-family:system-ui,sans-serif;max-width:760px;margin:64px auto;padding:0 20px;line-height:1.7;color:#222}
+          code{background:#f4f4f4;padding:2px 6px;border-radius:4px}</style></head>
+          <body><h1>bench_smoke_codex_20261109</h1>
+          <p>该实验目录约 17.4 GB，超过 GitHub Pages 1 GB 的 artifact 上限，媒体文件（rgb.gz / png / mp4）未随 Pages 站点部署。</p>
+          <p>全部文件仍完整保留在仓库目录 <code>bench_smoke_codex_20261109/</code> 中，可通过 GitHub 仓库浏览或 clone 查看。</p>
+          <p><a href="../hub.html">← 返回实验导航</a></p></body></html>
+          HTML
+          done
+          echo "staged size:"
+          du -sh _site
+          SIZE_MB=$(du -sm _site | cut -f1)
+          echo "staged payload: ${SIZE_MB} MB"
+          if [ "$SIZE_MB" -ge 950 ]; then
+            echo "::error::Pages payload ${SIZE_MB} MB approaches the 1 GB artifact cap"
+            exit 1
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
       - id: deployment
         uses: actions/deploy-pages@v4
