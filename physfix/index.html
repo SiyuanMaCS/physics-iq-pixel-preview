@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>修复结果判定 · PhysFixBench Sample50</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<header>
+  <a class="brand" href="./"><span class="mark">P</span> PhysFixBench <span class="divider">/</span> <span>模型修复结果判定</span></a>
+  <nav>
+    <a href="../hub.html">标注任务页</a>
+    <a id="hf-link" href="https://huggingface.co/datasets/HuggingFriends/PhysFixBench" target="_blank" rel="noopener">HF 数据 ↗</a>
+  </nav>
+</header>
+<main>
+  <section class="intro">
+    <div>
+      <p class="eyebrow">PHYSICS REPAIR · SAMPLE50 · 人工标注为 ground truth</p>
+      <h1>看见每一次修复，也看见判定。</h1>
+      <p class="muted">对照原始视频，逐模型、逐提示词检查物理问题是否真正被修复。判定随评审进度实时更新。</p>
+    </div>
+    <div class="snapshot"><span class="dot"></span> 数据快照 <span id="snapshot-date">加载中</span>
+      <small id="judge-updated"></small></div>
+  </section>
+
+  <section id="model-progress" class="model-progress" aria-label="各模型判定进度"></section>
+
+  <p id="load-status" role="status">正在读取结果清单…</p>
+
+  <div class="workspace" id="workspace" hidden>
+    <aside>
+      <div class="aside-title"><h2>视频列表</h2><span id="list-count"></span></div>
+      <label class="search">搜索编号 / 原模型
+        <input id="search" type="search" placeholder="例如 mechanics_293">
+      </label>
+      <div class="filters">
+        <select id="source-filter" aria-label="数据来源"><option value="">全部来源</option></select>
+        <select id="verdict-filter" aria-label="判定状态">
+          <option value="">全部判定</option>
+          <option value="fixed">已修复</option>
+          <option value="partially_fixed">部分修复</option>
+          <option value="not_fixed">未修复</option>
+          <option value="pending">待判定</option>
+        </select>
+      </div>
+      <div id="queue" class="queue" aria-label="样本列表"></div>
+    </aside>
+
+    <section class="detail">
+      <div class="detail-heading">
+        <div>
+          <p class="eyebrow" id="sample-source"></p>
+          <h2 id="sample-title"></h2>
+          <p id="record-id" class="muted record-id"></p>
+        </div>
+        <div class="pagination">
+          <button id="prev" aria-label="上一条">←</button><span id="position"></span>
+          <button id="next" aria-label="下一条">→</button>
+        </div>
+      </div>
+
+      <div class="settings">
+        <label>模型<select id="model"></select></label>
+        <div class="tabs" role="group" aria-label="提示词设置">
+          <button data-variant="self_fixing">自主修复</button>
+          <button data-variant="problem_only">仅问题</button>
+          <button data-variant="problem_expected">问题 + 预期</button>
+        </div>
+      </div>
+
+      <div class="videos">
+        <article>
+          <div class="video-heading"><strong>原始视频</strong><span>INPUT</span></div>
+          <video id="original" controls playsinline preload="metadata" aria-label="原始视频"></video>
+          <p id="original-status" class="video-status" role="status"></p>
+          <div class="video-footer"><a id="original-link" target="_blank" rel="noopener">单独打开 ↗</a></div>
+        </article>
+        <article>
+          <div class="video-heading"><strong id="output-title">生成结果</strong>
+            <span id="output-badge">已生成</span></div>
+          <video id="generated" controls playsinline preload="metadata" aria-label="生成结果"></video>
+          <p id="generated-status" class="video-status" role="status"></p>
+          <div class="video-footer"><a id="output-link" target="_blank" rel="noopener">单独打开 ↗</a></div>
+        </article>
+      </div>
+
+      <div class="playback">
+        <button id="play-both" class="primary">同时播放</button>
+        <button id="reset-both">回到开头</button>
+        <label>速度<select id="speed">
+          <option value="0.5">0.5×</option><option value="1" selected>1×</option>
+          <option value="1.5">1.5×</option></select></label>
+      </div>
+
+      <section class="verdict-panel" id="verdict-panel"></section>
+
+      <div class="context">
+        <section>
+          <h3>人工标注的物理问题（ground truth）</h3>
+          <div id="problems"></div>
+          <h3>期望行为</h3>
+          <div id="expected"></div>
+        </section>
+        <section>
+          <h3>本次实际提示词 <span>EN</span></h3>
+          <p id="prompt"></p>
+          <details><summary>生成参数</summary><pre id="params"></pre></details>
+        </section>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <span>PhysFixBench / Model repair judgment</span>
+  <span>判定口径：fixed / partially_fixed / not_fixed，仅颜色风格变化不计修复</span>
+</footer>
+<script src="./app.js"></script>
+</body>
+</html>
